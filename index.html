@@ -281,6 +281,48 @@ input[type="number"], input[type="text"] {
 .banker-table td:first-child {
   text-align: left;
 }
+/* === Mobile polish for Skins === */
+#skinsTable { 
+  table-layout: fixed;       /* predictable column widths */
+  width: 100%;
+}
+#skinsTable th, #skinsTable td { 
+  padding: 8px 10px; 
+}
+
+/* Name column: readable but not huge */
+#skinsTable th:first-child,
+#skinsTable td:first-child {
+  text-align: left;
+  min-width: 120px;          /* override banker-table default */
+  width: 1%;
+}
+
+/* Holes Skinned: left-align + wrap to kill empty space */
+#skinsTable td:nth-child(2) {
+  text-align: left;
+  white-space: normal;       /* allow wrapping */
+  word-break: break-word;
+  line-height: 1.25;
+}
+
+/* Total column: compact */
+#skinsTable td:nth-child(3),
+#skinsTable th:nth-child(3) {
+  width: 72px;
+}
+
+/* Small screens: tighter spacing */
+@media (max-width: 600px){
+  #skinsTable th, #skinsTable td { padding: 6px 8px; }
+  #skinsTable th:first-child, #skinsTable td:first-child { min-width: 110px; }
+}
+
+/* Very small phones */
+@media (max-width: 420px){
+  #skinsTable th, #skinsTable td { padding: 6px 6px; font-size: 14px; }
+  #skinsTable th:first-child, #skinsTable td:first-child { min-width: 100px; }
+}
 
 </style>
 
