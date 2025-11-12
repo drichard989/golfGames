@@ -76,8 +76,8 @@
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",printBtn:"#printBtn",saveStatus:"#saveStatus",
 
     // Games toggles
-    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins",
-    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection",
+    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleBankerVegas:"#toggleBankerVegas",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", bankerVegasSection:"#bankerVegasSection",
 
     // Vegas
   vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
@@ -322,17 +322,20 @@
     if(which==="vegas"){ $(ids.vegasSection).classList.add("open"); $(ids.vegasSection).setAttribute("aria-hidden","false"); $(ids.toggleVegas).classList.add("active"); }
     if(which==="banker"){ $(ids.bankerSection).classList.add("open"); $(ids.bankerSection).setAttribute("aria-hidden","false"); $(ids.toggleBanker).classList.add("active"); }
     if(which==="skins"){ $(ids.skinsSection).classList.add("open"); $(ids.skinsSection).setAttribute("aria-hidden","false"); $(ids.toggleSkins).classList.add("active"); }
+    if(which==="bankervegas"){ $(ids.bankerVegasSection).classList.add("open"); $(ids.bankerVegasSection).setAttribute("aria-hidden","false"); $(ids.toggleBankerVegas).classList.add("active"); }
   }
   function games_close(which){
     if(which==="vegas"){ $(ids.vegasSection).classList.remove("open"); $(ids.vegasSection).setAttribute("aria-hidden","true"); $(ids.toggleVegas).classList.remove("active"); }
     if(which==="banker"){ $(ids.bankerSection).classList.remove("open"); $(ids.bankerSection).setAttribute("aria-hidden","true"); $(ids.toggleBanker).classList.remove("active"); }
     if(which==="skins"){ $(ids.skinsSection).classList.remove("open"); $(ids.skinsSection).setAttribute("aria-hidden","true"); $(ids.toggleSkins).classList.remove("active"); }
+    if(which==="bankervegas"){ $(ids.bankerVegasSection).classList.remove("open"); $(ids.bankerVegasSection).setAttribute("aria-hidden","true"); $(ids.toggleBankerVegas).classList.remove("active"); }
   }
   function games_toggle(which){
     let sec;
     if(which==="vegas") sec = $(ids.vegasSection);
     else if(which==="banker") sec = $(ids.bankerSection);
     else if(which==="skins") sec = $(ids.skinsSection);
+    else if(which==="bankervegas") sec = $(ids.bankerVegasSection);
     const open = sec?.classList.contains("open");
     open? games_close(which) : games_open(which);
     saveDebounced();
@@ -647,6 +650,7 @@
     // Games: open/close
     $(ids.toggleVegas).addEventListener("click", ()=>games_toggle("vegas"));
     $(ids.toggleBanker).addEventListener("click", ()=>games_toggle("banker"));
+    $(ids.toggleBankerVegas).addEventListener("click", ()=>games_toggle("bankervegas"));
 
     // Vegas UI + wiring
     vegas_renderTeamControls();
