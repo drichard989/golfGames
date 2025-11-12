@@ -1069,6 +1069,7 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     mo.observe(a, { childList: true, characterData: true, subtree: true });
     mirrorVegasTotals();
   }
+  
 
   document.addEventListener('DOMContentLoaded', ()=>{
     observeA();
@@ -1077,6 +1078,48 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
       setTimeout(()=>{ observeA(); }, 0);
     });
   });
+
+// iOS-safe theme toggle
+(function(){
+  const btn = document.getElementById('themeToggle');
+  if (!btn) return;
+
+  const apply = (mode) => {
+    if (mode === 'light') {
+      document.documentElement.setAttribute('data-theme', 'light');
+      btn.textContent = '🌙 Dark Mode';
+      localStorage.setItem('theme', 'light');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      btn.textContent = '☀️ Light Mode';
+      localStorage.removeItem('theme');
+    }
+  };
+
+  // restore preference or system default once DOM is ready
+  const saved = localStorage.getItem('theme');
+  const systemLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+  apply(saved ? saved : (systemLight ? 'light' : 'dark'));
+
+  const toggle = () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    apply(isLight ? 'dark' : 'light');
+  };
+
+  // iOS: ensure touch toggles; prevent ghost click suppression
+  btn.addEventListener('touchend', function(e){
+    e.preventDefault();   // important on iOS
+    toggle();
+  }, {passive: false});
+
+  // fallback for all browsers
+  btn.addEventListener('click', toggle, {passive: true});
+})();
+
+
+
+
+
 })();
 
 // ============================
