@@ -81,7 +81,7 @@
 
     // Vegas
   vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
-  vegasTableBody:"#vegasBody", vegasTotalA:"#vegasTotalA", vegasTotalB:"#vegasTotalB", vegasPtsA:"#vegasPtsA",
+  vegasTableBody:"#vegasBody", vegasTotalA:"#vegasTotalA", vegasTotalB:"#vegasTotalB", vegasPtsA:"#vegasPtsA", vegasPtsB:"#vegasPtsB",
   optUseNet:"#optUseNet", optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
   vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB",
 
@@ -374,11 +374,11 @@
      * Compute per-hole and total Vegas results.
      * @param {{A:number[], B:number[]}} teams
      * @param {{useNet:boolean, doubleBirdie:boolean, tripleEagle:boolean, pointValue:number}} opts
-     * @returns {{perHole:object[], ptsA:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean}}
+     * @returns {{perHole:object[], ptsA:number, ptsB:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean}}
      */
     compute(teams, opts){
       if(!(teams.A.length===2 && teams.B.length===2)){
-        return {perHole:[], ptsA:0, totalA:0, totalB:0, dollarsA:0, dollarsB:0, valid:false};
+        return {perHole:[], ptsA:0, ptsB:0, totalA:0, totalB:0, dollarsA:0, dollarsB:0, valid:false};
       }
 
       const perHole=[];
@@ -416,8 +416,9 @@
       const per = Math.max(0, opts.pointValue || 0);
       const dollarsA = ptsA * per;
       const dollarsB = -dollarsA;
+      const ptsB = -ptsA;
 
-      return {perHole, ptsA, totalA, totalB, dollarsA, dollarsB, valid:true};
+      return {perHole, ptsA, ptsB, totalA, totalB, dollarsA, dollarsB, valid:true};
     },
     /**
      * Render Vegas results into the DOM.
@@ -431,8 +432,9 @@
           $(`[data-vegas-b="${h}"]`).textContent="—";
           $(`[data-vegas-m="${h}"]`).textContent="—";
           $(`[data-vegas-p="${h}"]`).textContent="—";
+          $(`[data-vegas-pb="${h}"]`).textContent="—";
         }
-        $(ids.vegasTotalA).textContent="—"; $(ids.vegasTotalB).textContent="—"; $(ids.vegasPtsA).textContent="—";
+        $(ids.vegasTotalA).textContent="—"; $(ids.vegasTotalB).textContent="—"; $(ids.vegasPtsA).textContent="—"; $(ids.vegasPtsB).textContent="—";
         if($(ids.vegasDollarA)) $(ids.vegasDollarA).textContent = '—';
         if($(ids.vegasDollarB)) $(ids.vegasDollarB).textContent = '—';
         return;
@@ -443,12 +445,16 @@
         $(`[data-vegas-a="${h}"]`).textContent=hole.vaStr;
         $(`[data-vegas-b="${h}"]`).textContent=hole.vbStr;
         $(`[data-vegas-m="${h}"]`).textContent=(hole.mult==='—')?'—':String(hole.mult);
-        const pts = hole.holePtsA;
-        $(`[data-vegas-p="${h}"]`).textContent=pts? (pts>0?`+${pts}`:`${pts}`) : "—";
+        const ptsA = hole.holePtsA;
+        $(`[data-vegas-p="${h}"]`).textContent=ptsA? (ptsA>0?`+${ptsA}`:`${ptsA}`) : "—";
+        const ptsB = -ptsA;
+        $(`[data-vegas-pb="${h}"]`).textContent=ptsB? (ptsB>0?`+${ptsB}`:`${ptsB}`) : "—";
       });
 
       const ptsA = data.ptsA;
       $(ids.vegasPtsA).textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
+      const ptsB = data.ptsB;
+      $(ids.vegasPtsB).textContent = ptsB===0? "0" : (ptsB>0? `+${ptsB}`:`${ptsB}`);
 
       const fmt = v => {
         const abs = Math.abs(v);
@@ -664,7 +670,7 @@
     recalcAll(); vegas_recalc(); loadState();
   }
 
-  function vegas_renderTable(){ const body=$(ids.vegasTableBody); body.innerHTML=""; for(let h=0;h<HOLES;h++){ const tr=document.createElement("tr"); tr.innerHTML=`<td>${h+1}</td><td data-vegas-a="${h}">—</td><td data-vegas-b="${h}">—</td><td data-vegas-m="${h}">—</td><td data-vegas-p="${h}">—</td>`; body.appendChild(tr);} }
+  function vegas_renderTable(){ const body=$(ids.vegasTableBody); body.innerHTML=""; for(let h=0;h<HOLES;h++){ const tr=document.createElement("tr"); tr.innerHTML=`<td>${h+1}</td><td data-vegas-a="${h}">—</td><td data-vegas-b="${h}">—</td><td data-vegas-m="${h}">—</td><td data-vegas-p="${h}">—</td><td data-vegas-pb="${h}">—</td>`; body.appendChild(tr);} }
 
   document.addEventListener("DOMContentLoaded", init);
 
