@@ -156,6 +156,69 @@
         filter: brightness(1.08)
       }
 
+      /* ---- Utilities Modal ---- */
+      .utilities-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .utilities-modal.open {
+        display: flex;
+      }
+
+      .utilities-content {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 24px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        position: relative;
+      }
+
+      .utilities-content h2 {
+        margin: 0 0 20px;
+        font-size: 22px;
+      }
+
+      .utilities-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        background: transparent;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: var(--ink);
+        padding: 4px 8px;
+        line-height: 1;
+      }
+
+      .utilities-close:hover {
+        opacity: 0.7;
+      }
+
+      .utilities-content .controls {
+        display: grid;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .utilities-content .btn {
+        width: 100%;
+      }
+
       /* =========================
    Scorecard (scrollable)
    ========================= */
@@ -1082,29 +1145,44 @@
   <body>
 
     <header>
-      <h1>Manito Golf Games v.3</h1>
+            <h1>Manito Golf Games v.3</h1>
       <div class="controls">
-        <div class="control">
-          <label for="courseName">Course</label>
-          <input id="courseName" type="text" placeholder="Enter course name…" />
-        </div>
-        <div class="control">
-          <label for="teeName">Tee</label>
-          <input id="teeName" type="text" placeholder="Optional (e.g., Blue)" />
-        </div>
-        <div class="control">
-          <label for="csvInput">CSV</label>
-          <input id="csvInput" type="file" accept=".csv" />
-        </div>
-  <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
-  <button id="resetBtn" class="btn">Reset Scores</button>
-  <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
-  <button id="printBtn" class="btn" onclick="try{console.log('[golfGames] inline onclick'); if(window.printScorecard){window.printScorecard();} else {window.print();}}catch(e){console.error('[golfGames] inline onclick error', e);}">🖨️ Print</button>
-  <button id="saveBtn" class="btn accent">Save to Browser</button>
-  <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
+        <button id="utilitiesToggle" class="btn accent">⚙️ Utilities</button>
+        <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
         <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
       </div>
-      <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men’s HCP are fixed from the card.</p>
+      <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
+    </header>
+
+    <!-- Utilities Modal -->
+    <div id="utilitiesModal" class="utilities-modal">
+      <div class="utilities-content">
+        <button class="utilities-close" id="utilitiesClose">×</button>
+        <h2>⚙️ Utilities</h2>
+        <div class="controls">
+          <div class="control">
+            <label for="courseName">Course</label>
+            <input id="courseName" type="text" placeholder="Enter course name…" />
+          </div>
+          <div class="control">
+            <label for="teeName">Tee</label>
+            <input id="teeName" type="text" placeholder="Optional (e.g., Blue)" />
+          </div>
+          <div class="control">
+            <label for="csvInput">CSV</label>
+            <input id="csvInput" type="file" accept=".csv" />
+          </div>
+          <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
+          <button id="resetBtn" class="btn">Reset Scores</button>
+          <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
+          <button id="printBtn" class="btn" onclick="try{console.log('[golfGames] inline onclick'); if(window.printScorecard){window.printScorecard();} else {window.print();}}catch(e){console.error('[golfGames] inline onclick error', e);}">🖨️ Print</button>
+          <button id="saveBtn" class="btn accent">Save to Browser</button>
+          <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
+        </div>
+      </div>
+    </div>
+
+    <header>
     </header>
     <header>
       <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>

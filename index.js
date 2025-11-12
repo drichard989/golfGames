@@ -403,6 +403,37 @@
   });
 })();
 
+// Utilities modal toggle
+(function(){
+  const modal = document.getElementById('utilitiesModal');
+  const toggleBtn = document.getElementById('utilitiesToggle');
+  const closeBtn = document.getElementById('utilitiesClose');
+  
+  if(!modal || !toggleBtn || !closeBtn) return;
+  
+  toggleBtn.addEventListener('click', () => {
+    modal.classList.add('open');
+  });
+  
+  closeBtn.addEventListener('click', () => {
+    modal.classList.remove('open');
+  });
+  
+  // Close on outside click
+  modal.addEventListener('click', (e) => {
+    if(e.target === modal) {
+      modal.classList.remove('open');
+    }
+  });
+  
+  // Close on Escape key
+  document.addEventListener('keydown', (e) => {
+    if(e.key === 'Escape' && modal.classList.contains('open')) {
+      modal.classList.remove('open');
+    }
+  });
+})();
+
   // ======================================================================
   // =============================== VEGAS ================================
   // ======================================================================
