@@ -117,7 +117,18 @@
       const tdp=document.createElement("td"), ip=document.createElement("input"); ip.type="number"; ip.value=PARS[h-1]; ip.readOnly=true; ip.tabIndex=-1; tdp.appendChild(ip); parRow.appendChild(tdp);
       const tdh=document.createElement("td"), ih=document.createElement("input"); ih.type="number"; ih.value=HCPMEN[h-1]; ih.readOnly=true; ih.tabIndex=-1; tdh.appendChild(ih); hcpRow.appendChild(tdh);
     }
-    for(let i=0;i<5;i++){ parRow.appendChild(document.createElement("td")); hcpRow.appendChild(document.createElement("td")); }
+    // Append Out / In / Total for course par, then placeholders for To Par / Net
+    // Per request: In = front 9, Out = back 9
+    const parFront = PARS.slice(0,9).reduce((a,b)=>a+b,0);
+    const parBack  = PARS.slice(9,18).reduce((a,b)=>a+b,0);
+    const parTot = parFront + parBack;
+    const outTd=document.createElement("td"); outTd.textContent=String(parBack);
+    const inTd =document.createElement("td"); inTd.textContent =String(parFront);
+    const totTd=document.createElement("td"); totTd.textContent=String(parTot);
+    parRow.append(outTd,inTd,totTd,document.createElement("td"),document.createElement("td"));
+
+    // Keep HCP row aligned with blank cells
+    for(let i=0;i<5;i++){ hcpRow.appendChild(document.createElement("td")); }
   }
 
   // ---------- Player rows ----------
@@ -163,6 +174,14 @@
     }
     const out=document.createElement("td"), inn=document.createElement("td"), total=document.createElement("td"), blank1=document.createElement("td"), blank2=document.createElement("td");
     out.className="subtle"; inn.className="subtle"; total.className="subtle"; totalsRow.append(out,inn,total,blank1,blank2);
+  }
+
+  function updateParBadge(){
+    const el = document.getElementById('parBadge'); if(!el) return;
+    const parFront = PARS.slice(0,9).reduce((a,b)=>a+b,0);
+    const parBack  = PARS.slice(9,18).reduce((a,b)=>a+b,0);
+    const parTot = parFront + parBack;
+    el.textContent = `Par — Out ${parBack} • In ${parFront} • Total ${parTot}`;
   }
 
   // ========== Handicap & Scoring Logic ==========
@@ -215,9 +234,12 @@
   function getPlayerHoleValues(rowEl){ return $$("input.score-input",rowEl).map(i=>Number(i.value)||0); }
 
   function recalcRow(rowEl){
-    const s=getPlayerHoleValues(rowEl), out=sum(s.slice(0,9)), inn=sum(s.slice(9,18)), total=out+inn;
-    $(".split:nth-of-type(1)",rowEl)?.replaceChildren(document.createTextNode(out||"—"));
-    $(".split:nth-of-type(2)",rowEl)?.replaceChildren(document.createTextNode(inn||"—"));
+    const s=getPlayerHoleValues(rowEl);
+    // Per request: In = front 9, Out = back 9
+    const inn=sum(s.slice(0,9)), out=sum(s.slice(9,18)), total=out+inn;
+    const splits = rowEl.querySelectorAll("td.split");
+    if(splits[0]) splits[0].textContent = out ? String(out) : "—";
+    if(splits[1]) splits[1].textContent = inn ? String(inn) : "—";
     $(".total",rowEl)?.replaceChildren(document.createTextNode(total||"—"));
 
     const parTotal=sum(PARS), delta=total&&parTotal? total-parTotal : 0, el=$(".to-par",rowEl);
@@ -240,8 +262,8 @@
       $(`[data-hole-total="${h}"]`).textContent = t? String(t) : "—";
     }
     const tds=$(ids.totalsRow).querySelectorAll("td"), base=LEADING_FIXED_COLS+HOLES;
-    const OUT=$$(".player-row").map(r=>Number($(".split:nth-of-type(1)",r)?.textContent)||0).reduce((a,b)=>a+b,0);
-    const INN=$$(".player-row").map(r=>Number($(".split:nth-of-type(2)",r)?.textContent)||0).reduce((a,b)=>a+b,0);
+    const OUT=$$(".player-row").map(r=>{ const s=r.querySelectorAll("td.split"); return Number(s[0]?.textContent)||0; }).reduce((a,b)=>a+b,0);
+    const INN=$$(".player-row").map(r=>{ const s=r.querySelectorAll("td.split"); return Number(s[1]?.textContent)||0; }).reduce((a,b)=>a+b,0);
     const TOT=$$(".player-row").map(r=>Number($(".total",r)?.textContent)||0).reduce((a,b)=>a+b,0);
     tds[base+0].textContent=OUT||"—"; tds[base+1].textContent=INN||"—"; tds[base+2].textContent=TOT||"—";
   }
@@ -721,7 +743,7 @@
   // ======================================================================
   function init(){
     console.log('[golfGames] init start');
-    buildHeader(); buildParAndHcpRows(); buildPlayerRows(); buildTotalsRow();
+    buildHeader(); buildParAndHcpRows(); buildPlayerRows(); buildTotalsRow(); updateParBadge();
 
   $(ids.resetBtn).addEventListener("click", () => { console.log('[golfGames] Reset clicked'); clearScoresOnly(); });
   $(ids.clearAllBtn).addEventListener("click", () => { console.log('[golfGames] Clear all clicked'); clearAll(); });

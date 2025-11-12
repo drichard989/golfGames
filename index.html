@@ -175,8 +175,8 @@
       }
 
       table {
-        width: max(100%, 980px);
-        min-width: 940px;
+        width: 100%;
+        min-width: 860px;
         border-collapse: separate;
         border-spacing: 0;
         background: var(--panel);
@@ -198,15 +198,15 @@
         text-align: center;
         font-variant-numeric: tabular-nums;
         vertical-align: middle;
-        padding: 8px 6px;
+        padding: 6px 5px;
         white-space: nowrap
       }
 
       th:first-child,
       td:first-child {
         text-align: left;
-        padding-left: 12px;
-        min-width: 170px;
+        padding-left: 10px;
+        min-width: 150px;
         position: sticky;
         left: 0;
         background-color: var(--panel);
@@ -245,14 +245,15 @@
       .hcp-row input,
       .score-input,
       .ch-input {
-        width: 54px;
+        width: 44px;
         text-align: center;
         border-radius: 8px;
         border: 1px solid var(--line);
         background: #0c1218;
         color: var(--ink);
         padding: 6px 4px;
-        -moz-appearance: textfield
+        -moz-appearance: textfield;
+        appearance: textfield
       }
 
       .par-row input::-webkit-outer-spin-button,
@@ -268,7 +269,7 @@
       }
 
       .ch-input {
-        width: 64px
+        width: 52px
       }
 
       .score-input.invalid {
@@ -328,6 +329,61 @@
       }
 
       /* ---- Scorecard responsive tweaks ---- */
+      @media (max-width:1400px) {
+
+        th,
+        td {
+          padding: 6px 4px;
+        }
+
+        .par-row input,
+        .hcp-row input,
+        .score-input {
+          width: 42px;
+          padding: 5px 3px;
+        }
+
+        .ch-input {
+          width: 50px;
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 150px;
+        }
+
+        table {
+          min-width: 840px;
+        }
+      }
+
+      @media (max-width:1200px) {
+
+        th,
+        td {
+          padding: 6px 3px;
+        }
+
+        .par-row input,
+        .hcp-row input,
+        .score-input {
+          width: 40px;
+          padding: 4px 2px;
+        }
+
+        .ch-input {
+          width: 48px;
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 140px;
+        }
+
+        table {
+          min-width: 820px;
+        }
+      }
       @media (max-width:900px) {
 
         th,
@@ -921,6 +977,7 @@
       <h1>Golf Games</h1>
       <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
     </header>
+    <p class="small" id="parBadge" aria-live="polite"></p>
     <!-- SCORECARD -->
     <div class="wrap">
       <table id="scorecard" aria-describedby="saveStatus">
