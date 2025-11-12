@@ -327,11 +327,40 @@ input[type="number"], input[type="text"] {
     <div class="gamesbar">
   <button id="toggleJunk" class="game-toggle">🧩 Play Junk</button>
 
+      <button id="toggleSkins" class="game-toggle">💎 Play Skins</button>
       <button id="toggleVegas"  class="game-toggle">🎲 Play Vegas</button>
       <button id="toggleBanker" class="game-toggle">🏦 Play Banker</button>
     </div>
 
-    <!-- VEGAS GAME -->
+    
+    <!-- SKINS GAME -->
+    <section class="game-section" id="skinsSection" aria-hidden="true">
+      <h2>Skins</h2>
+      <div class="banker-controls">
+        <div class="control-box">
+          <div class="pill">Options</div>
+          <label class="radio"><input type="checkbox" id="skinsCarry" checked /> Carry over on ties</label><br/>
+          <label class="radio"><input type="checkbox" id="skinsHalf" /> Half pops</label>
+        </div>
+        <div class="control-box">
+          <div class="pill">Legend</div>
+          <div class="small">Net = Gross − strokes (play off low CH). NDB cap applies.</div>
+          <div class="small">★ marks the winner for that hole. If pot &gt; 1 from carryovers, winner receives that many skins.</div>
+        </div>
+      </div>
+
+      <div class="banker-wrap">
+        <table class="banker-table" id="skinsTable">
+          <thead><tr><th>Name</th><th>Holes Skinned</th><th>Total</th></tr></thead>
+          <tbody id="skinsBody"></tbody>
+        </table>
+      </div>
+
+      <p class="small" id="skinsSummary">
+        <!-- Player hole summaries will render here -->
+      </p>
+    </section>
+<!-- VEGAS GAME -->
     <section class="game-section" id="vegasSection" aria-hidden="true">
       <h2>Vegas Game</h2>
       <div class="vegas-controls">
@@ -415,7 +444,7 @@ input[type="number"], input[type="text"] {
       Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6).
     </p>
 
-    <script src="js/index.js" defer></script>
+    <script src="index.js" defer></script>
   
 <!-- JUNK GAME -->
 <section class="game-section" id="junkSection" aria-hidden="true">

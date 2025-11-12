@@ -27,8 +27,8 @@
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
-    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker",
-    vegasSection:"#vegasSection", bankerSection:"#bankerSection",
+    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection",
 
     // Vegas
     vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
@@ -41,7 +41,14 @@
     bankerBody:"#bankerBody",
     bankerTotP1:"#bankerTotP1", bankerTotP2:"#bankerTotP2", bankerTotP3:"#bankerTotP3", bankerTotP4:"#bankerTotP4",
 
-    // CSV
+    
+    // Skins
+    skinsCarry:"#skinsCarry", skinsHalf:"#skinsHalf",
+    skinsBody:"#skinsBody", skinsPotTot:"#skinsPotTot",
+    skinsTotP1:"#skinsTotP1", skinsTotP2:"#skinsTotP2", skinsTotP3:"#skinsTotP3", skinsTotP4:"#skinsTotP4",
+    skinsP1:"#skinsP1", skinsP2:"#skinsP2", skinsP3:"#skinsP3", skinsP4:"#skinsP4",
+    skinsSummary:"#skinsSummary",
+// CSV
     csvInput:"#csvInput", dlTemplateBtn:"#dlTemplateBtn",
   };
 
@@ -560,6 +567,109 @@
   function vegas_renderTable(){ const body=$(ids.vegasTableBody); body.innerHTML=""; for(let h=0;h<HOLES;h++){ const tr=document.createElement("tr"); tr.innerHTML=`<td>${h+1}</td><td data-vegas-a="${h}">—</td><td data-vegas-b="${h}">—</td><td data-vegas-m="${h}">—</td><td data-vegas-p="${h}">—</td>`; body.appendChild(tr);} }
 
   document.addEventListener("DOMContentLoaded", init);
+
+
+// ============================
+// Skins game
+// ============================
+function strokesOnHoleHalfAware(adjCH, i, half){
+  const useAdj = half ? Math.floor(adjCH/2) : adjCH;
+  if(useAdj<=0) return 0;
+  const base=Math.floor(useAdj/18), rem=useAdj%18, holeHcp=HCPMEN[i];
+  return base+(holeHcp<=rem?1:0);
+}
+function getNetForSkins(playerIdx, holeIdx, half){
+  const adjCHsArr = adjustedCHs();
+  const gross = getGross(playerIdx, holeIdx);
+  if(!gross) return 0;
+  const adj = adjCHsArr[playerIdx];
+  const sr = strokesOnHoleHalfAware(adj, holeIdx, half);
+  const ndb = PARS[holeIdx] + 2 + sr;
+  const adjGross = Math.min(gross, ndb);
+  return adjGross - sr;
+}
+
+
+function buildSkinsTable(){
+  const body = document.getElementById('skinsBody');
+  if(!body) return;
+  if(body.dataset.simple === '1') return;
+  // Build summary-only table: Name | Holes Skinned | Total
+  body.innerHTML = '';
+  for(let p=0; p<4; p++){
+    const tr = document.createElement('tr');
+    const th = document.createElement('th'); th.id = 'skinsName'+p; th.textContent = 'P'+(p+1);
+    const tdH = document.createElement('td'); tdH.id = 'skinsHoles'+p;
+    const tdT = document.createElement('td'); tdT.id = 'skinsTotal'+p; tdT.textContent='0';
+    tr.append(th, tdH, tdT);
+    body.appendChild(tr);
+  }
+  body.dataset.simple = '1';
+}
+function refreshSkinsHeaderNames(){
+  const names = Array.from(document.querySelectorAll('.player-row .name-edit'))
+    .map((i,idx)=> i.value.trim()||i.placeholder||i.dataset.default||`P${idx+1}`);
+  names.forEach((n,idx)=>{ const el=document.getElementById('skinsName'+idx); if(el) el.textContent=n; });
+}
+function updateSkins(){
+  const carry = document.getElementById('skinsCarry')?.checked ?? true;
+  const half  = document.getElementById('skinsHalf')?.checked ?? false;
+
+  const totals=[0,0,0,0];
+  const holesWon=[[],[],[],[]];
+  let pot=1;
+
+  for(let h=0; h<HOLES; h++){
+    const nets = [0,1,2,3].map(p=>getNetForSkins(p,h,half));
+    const filled = nets.map((n,p)=>({n,p})).filter(x=>x.n>0);
+    if(filled.length<2){ if(carry) pot++; continue; }
+    const min = Math.min(...filled.map(x=>x.n));
+    const winners = filled.filter(x=>x.n===min).map(x=>x.p);
+    if(winners.length!==1){ if(carry) pot++; continue; }
+    const w = winners[0];
+    totals[w] += pot;
+    holesWon[w].push(String(h+1));
+    pot = 1;
+  }
+
+  for(let p=0;p<4;p++){
+    const holesCell = document.getElementById('skinsHoles'+p);
+    const totCell   = document.getElementById('skinsTotal'+p);
+    if(holesCell) holesCell.textContent = holesWon[p].join(', ');
+    if(totCell)   totCell.textContent = String(totals[p]||0);
+  }
+}
+function initSkins(){
+  buildSkinsTable();
+  refreshSkinsHeaderNames();
+  updateSkins();
+
+  // Recompute on option change
+  document.getElementById('skinsCarry')?.addEventListener('change', updateSkins);
+  document.getElementById('skinsHalf')?.addEventListener('change', updateSkins);
+
+  // Recompute on any score/par/ch input
+  document.addEventListener('input', (e)=>{
+  const t=e.target; if(!(t instanceof HTMLElement)) return;
+  if(t.classList?.contains('score-input') || t.classList?.contains('ch-input') || t.closest('#scorecard')){
+    updateSkins();
+  }
+  if(t.classList?.contains('name-edit')){ refreshSkinsHeaderNames(); }
+}, {passive:true});
+}
+
+// Open/close: when Skins tab is toggled, ensure table exists and render now
+document.getElementById('toggleSkins')?.addEventListener('click', ()=> { const sec = document.getElementById('skinsSection'); const open = !sec.classList.contains('open'); sec.classList.toggle('open', open); sec.setAttribute('aria-hidden', open ? 'false' : 'true'); document.getElementById('toggleSkins')?.classList.toggle('active', open); if(open){
+  setTimeout(()=>{ initSkins(); }, 0);}
+});
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Initialize if section already visible (e.g., state restored)
+  if(document.getElementById('skinsSection')?.classList.contains('open')){
+    initSkins();
+  }
+});
+
 })();
 
 
@@ -661,7 +771,7 @@
   }
 
   function toggleGame(sectionId, toggleBtn){
-    const sections = ['vegasSection','bankerSection','junkSection'];
+    const sections = ['vegasSection','bankerSection','junkSection','skinsSection'];
     sections.forEach(id=>{
       const sec = document.getElementById(id);
       if(!sec) return;
@@ -669,7 +779,7 @@
       sec.classList.toggle('open', open);
       sec.setAttribute('aria-hidden', open ? 'false' : 'true');
     });
-    const buttons = ['toggleVegas','toggleBanker','toggleJunk'];
+    const buttons = ['toggleVegas','toggleBanker','toggleJunk','toggleSkins'];
     buttons.forEach(bid=>{
       const b = document.getElementById(bid);
       b && b.classList.toggle('active', bid === toggleBtn && document.getElementById(sectionId)?.classList.contains('open'));
@@ -691,10 +801,19 @@
     }, { passive: true });
   }
 
-  document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
+  
+  document.getElementById('toggleSkins')?.addEventListener('click', ()=>{
+    initSkins();
+    toggleGame('skinsSection','toggleSkins');
+  });
+document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     initJunk();
     toggleGame('junkSection','toggleJunk');
   });
+
+
+
+
 })();
 
 
@@ -937,3 +1056,6 @@
 // Junk: ensure dropdown stays large enough on touch
 // (CSS handled in <style>, logic already present.)
 // ============================
+
+
+
