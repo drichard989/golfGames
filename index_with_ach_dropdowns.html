@@ -118,25 +118,7 @@
       @media (max-width:600px){ .banker-table th:first-child,.banker-table td:first-child{width:44px;min-width:44px;padding-left:6px;padding-right:6px} }
 
       .pill{font-size:12px;color:var(--muted)}
-    
-/* Junk column compaction: don't stretch table, tighten cells */
-#junkTable { width: max-content; table-layout: fixed; }
-#junkTable th:first-child, #junkTable td:first-child { width: 44px; }
-
-/* Player columns: compact but readable */
-#junkTable th:not(:first-child), #junkTable td:not(:first-child) { width: 76px; }
-
-/* Reduce internal gap between number and Ach. */
-.junk-cell { gap: 4px; }
-.junk-dot { display:inline-block; min-width: 18px; text-align:center; }
-
-/* Even tighter on small screens */
-@media (max-width: 768px) {
-  #junkTable th:not(:first-child), #junkTable td:not(:first-child) { width: 70px; }
-  .junk-dd > summary { padding: 4px 8px; min-height: 32px; }
-}
-
-</style>
+    </style>
   
 <style id="junk-achievements-style">
 /* Junk achievements dropdown */
@@ -146,77 +128,6 @@
 .junk-dd[open]>summary{filter:brightness(1.1)}
 .junk-dd .menu{border:1px solid var(--line, #333);background:#0f151b;border-radius:8px;padding:6px 8px;display:grid;gap:6px;margin-top:6px;position:absolute;z-index:10}
 .junk-dd .menu label{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink, #e6e6e6)}
-</style>
-
-
-<style id="mobile-junk-vegas-tweaks">
-/* General spacing tweaks for game tables */
-.banker-table th, .banker-table td {
-  padding: 8px 10px;
-}
-/* Dense rows for per-hole listing */
-#junkTable tbody td, #junkTable tbody th,
-#vegasTable tbody td, #vegasTable tbody th {
-  padding-top: 6px;
-  padding-bottom: 6px;
-}
-
-/* Larger, touch-friendly game toggles */
-.gamesbar .game-toggle {
-  min-height: 40px;
-  padding: 8px 14px;
-  border-radius: 16px;
-}
-
-/* Achievements: larger tap area */
-.junk-dd > summary {
-  min-height: 36px;
-  padding: 6px 10px;
-  display: inline-flex;
-  align-items: center;
-}
-
-/* Inputs compact but readable */
-input[type="number"], input[type="text"] {
-  padding: 6px 8px;
-  min-height: 34px;
-  font-size: 15px;
-}
-
-/* Make tables scrollable on small screens */
-.banker-wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Mobile-specific tightening */
-@media (max-width: 768px) {
-  .banker-table th, .banker-table td {
-    padding: 6px 8px;
-  }
-  #junkTable tbody td, #junkTable tbody th,
-  #vegasTable tbody td, #vegasTable tbody th {
-    padding-top: 4px;
-    padding-bottom: 4px;
-  }
-  .gamesbar {
-    gap: 8px;
-    display: flex;
-    flex-wrap: wrap;
-  }
-  .gamesbar .game-toggle {
-    flex: 1 1 auto;
-  }
-  h2 {
-    font-size: 18px;
-    margin: 8px 0;
-  }
-}
-/* Keep touch targets at least 36px on very small screens */
-@media (max-width: 420px) {
-  .junk-dd > summary { min-height: 40px; padding: 8px 12px; }
-  input[type="number"], input[type="text"] { min-height: 36px; }
-}
 </style>
 
 </head>
