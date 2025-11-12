@@ -665,9 +665,10 @@
       if (f) handleCSVFile(f);
       e.target.value = ""; // allow re-upload same file
     });
-    $(ids.dlTemplateBtn).addEventListener("click", downloadCSVTemplate);
+    const dlBtn = $(ids.dlTemplateBtn);
+    if (dlBtn) dlBtn.addEventListener("click", downloadCSVTemplate);
 
-    recalcAll(); vegas_recalc(); loadState();
+    recalcAll(); AppManager.recalcGames(); loadState();
   }
 
   function vegas_renderTable(){ const body=$(ids.vegasTableBody); body.innerHTML=""; for(let h=0;h<HOLES;h++){ const tr=document.createElement("tr"); tr.innerHTML=`<td>${h+1}</td><td data-vegas-a="${h}">—</td><td data-vegas-b="${h}">—</td><td data-vegas-m="${h}">—</td><td data-vegas-p="${h}">—</td><td data-vegas-pb="${h}">—</td>`; body.appendChild(tr);} }
