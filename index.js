@@ -109,8 +109,8 @@
   function buildParAndHcpRows(){
     const parRow=$(ids.parRow), hcpRow=$(ids.hcpRow);
     for(let h=1;h<=HOLES;h++){
-      const tdp=document.createElement("td"), ip=document.createElement("input"); ip.type="number"; ip.value=PARS[h-1]; ip.readOnly=true; ip.tabIndex=-1; tdp.appendChild(ip); parRow.appendChild(tdp);
-      const tdh=document.createElement("td"), ih=document.createElement("input"); ih.type="number"; ih.value=HCPMEN[h-1]; ih.readOnly=true; ih.tabIndex=-1; tdh.appendChild(ih); hcpRow.appendChild(tdh);
+      const tdp=document.createElement("td"), ip=document.createElement("input"); ip.type="number"; ip.inputMode="numeric"; ip.value=PARS[h-1]; ip.readOnly=true; ip.tabIndex=-1; tdp.appendChild(ip); parRow.appendChild(tdp);
+      const tdh=document.createElement("td"), ih=document.createElement("input"); ih.type="number"; ih.inputMode="numeric"; ih.value=HCPMEN[h-1]; ih.readOnly=true; ih.tabIndex=-1; tdh.appendChild(ih); hcpRow.appendChild(tdh);
     }
     // Append Out / In / Total for course par, then placeholders for To Par / Net
     // Standard golf: Out = front 9, In = back 9
@@ -133,12 +133,12 @@
       const tr=document.createElement("tr"); tr.className="player-row"; tr.dataset.player=String(p);
 
       const nameTd=document.createElement("td");
-      const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.className="name-edit"; nameInput.placeholder=`Player ${p+1}`;
+      const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.className="name-edit"; nameInput.placeholder=`Player ${p+1}`; nameInput.autocomplete="off";
       nameInput.addEventListener("input",()=>{ vegas_renderTeamControls(); saveDebounced(); });
       nameTd.appendChild(nameInput); tr.appendChild(nameTd);
 
       const chTd=document.createElement("td");
-      const chInput=document.createElement("input"); chInput.type="number"; chInput.className="ch-input"; chInput.placeholder="0"; chInput.min="-20"; chInput.max="54"; chInput.step="1";
+      const chInput=document.createElement("input"); chInput.type="number"; chInput.inputMode="numeric"; chInput.className="ch-input"; chInput.placeholder="0"; chInput.min="-20"; chInput.max="54"; chInput.step="1"; chInput.autocomplete="off";
   chInput.addEventListener("input",()=>{ if(chInput.value!=="") chInput.value=clampInt(chInput.value,-50,60); recalcAll(); AppManager.recalcGames(); saveDebounced(); });
       chTd.appendChild(chInput); tr.appendChild(chTd);
 
