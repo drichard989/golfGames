@@ -234,6 +234,38 @@ input[type="number"], input[type="text"] { padding: 6px 8px; min-height: 34px; f
   input[type="number"], input[type="text"] { min-height: 36px; }
 }
 
+
+
+
+    /* your existing CSS here */
+
+    /* --- eliminate white flash and keep full dark background --- */
+    html, body {
+      background-color: #0b0d10;          /* same as your --bg */
+      color-scheme: dark;                 /* helps Safari/WebKit */
+      overscroll-behavior: none;          /* prevents iOS pull-to-white bounce */
+    }
+
+    * {
+      background-color: transparent;      /* inherit the dark color unless specified */
+    }
+
+    .wrap,
+    .vegas-wrap,
+    .banker-wrap,
+    .skins-wrap {
+      background-color: #0b0d10;
+    }
+
+    @supports (-webkit-touch-callout: none) {
+      html, body {
+        background-color: #0b0d10;
+      }
+    }
+  </style>
+</head>
+
+
 </style>
 
 </head>
@@ -261,6 +293,11 @@ input[type="number"], input[type="text"] { padding: 6px 8px; min-height: 34px; f
       </div>
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men’s HCP are fixed from the card.</p>
     </header>
+    <header>
+  <h1>Golf Games</h1>
+  <button id="themeToggle" class="theme-toggle">☀️ Light Mode</button>
+</header>
+
 
     <!-- SCORECARD -->
     <div class="wrap">
