@@ -145,7 +145,22 @@
       for(let h=1;h<=HOLES;h++){
         const td=document.createElement("td"), inp=document.createElement("input");
         inp.type="number"; inp.inputMode="numeric"; inp.min="1"; inp.max="20"; inp.className="score-input"; inp.dataset.player=String(p); inp.dataset.hole=String(h); inp.placeholder="—";
-        inp.addEventListener("input",()=>{ if(inp.value!==""){const v=clampInt(inp.value,1,20); if(String(v)!==inp.value) inp.classList.add("invalid"); else inp.classList.remove("invalid"); inp.value=v;} else {inp.classList.remove("invalid");}
+        inp.addEventListener("input",()=>{ if(inp.value!==""){const v=clampInt(inp.value,1,20); if(String(v)!==inp.value) inp.classList.add("invalid"); else inp.classList.remove("invalid"); inp.value=v;
+          // Auto-advance to next player's input for same hole
+          const currentPlayer = Number(inp.dataset.player);
+          const currentHole = Number(inp.dataset.hole);
+          if(inp.value.length >= 1) {
+            let nextInput;
+            if(currentPlayer < PLAYERS - 1) {
+              // Move to next player, same hole
+              nextInput = document.querySelector(`.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`);
+            } else if(currentHole < HOLES) {
+              // Last player: move to first player, next hole
+              nextInput = document.querySelector(`.score-input[data-player="0"][data-hole="${currentHole+1}"]`);
+            }
+            if(nextInput) setTimeout(()=>nextInput.focus(), 50);
+          }
+        } else {inp.classList.remove("invalid");}
           recalcRow(tr); recalcTotalsRow(); AppManager.recalcGames(); saveDebounced(); });
         td.appendChild(inp); tr.appendChild(td);
       }
