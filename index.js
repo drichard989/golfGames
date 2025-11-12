@@ -845,23 +845,28 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
 
 
 // =============================================
-// JUNK Achievements Enhancement (Hogan/Sandy/Sadaam/Pulley)
-// Adds a dropdown per hole per player and includes the selected
-// achievements (+1 each) on top of base dots.
+// JUNK Achievements Enhancement (Hogan/Sandy/Sadaam/Pulley + Triple)
+// Weighted achievements support (+1, +2, +3, ...).
 // =============================================
 (function(){
-  const ACH_KEYS = ["hogan","sandy","sadaam","pulley"];
-  const ACH_LABELS = { hogan:"Hogan", sandy:"Sandy", sadaam:"Sadaam", pulley:"Pulley" };
+  // Each achievement has an id, label, and point value.
+  // You can change pts to 2 for any of these if needed.
+  const ACH = [
+    { id: "hogan",  label: "Hogan",  pts: 1 },
+    { id: "sandy",  label: "Sandy",  pts: 1 },
+    { id: "sadaam", label: "Sadaam", pts: 1 },
+    { id: "pulley", label: "Pulley", pts: 1 },
+    { id: "triple", label: "Triple", pts: 3 }, // NEW: 3-point dot
+  ];
 
   // Try to detect number of players from Junk header
   function getPlayerCount(){
     const head = document.querySelector('#junkTable thead tr');
     if(!head) return 4;
-    // minus the first "Hole" th
-    return Math.max(0, head.children.length - 1);
+    return Math.max(0, head.children.length - 1); // minus "Hole"
   }
 
-  // Existing helpers or fallbacks
+  // Base dots logic copied from earlier block
   function getPar(hole){
     let el = document.querySelector(`#parRow input[data-hole="${hole}"]`);
     if(!el){
@@ -872,8 +877,7 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     return Number.isFinite(v) ? v : NaN;
   }
   function getScore(playerIdx, hole){
-    let sel = `.score-input[data-player="${playerIdx}"][data-hole="${hole}"]`;
-    let el = document.querySelector(sel);
+    let el = document.querySelector(`.score-input[data-player="${playerIdx}"][data-hole="${hole}"]`);
     if(!el){
       const row = document.querySelector(`tr[data-player="${playerIdx}"]`) || document.querySelectorAll('tbody tr')[2 + playerIdx];
       if(row){
@@ -893,7 +897,7 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     return 0;
   }
 
-  // Enhance existing Junk cells: wrap number + add <details> menu
+  // Enhance existing Junk cells: wrap number + add <details> menu with weighted items
   function enhanceJunkCells(){
     const tbody = document.querySelector('#junkBody');
     if(!tbody) return;
@@ -901,10 +905,10 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     const players = getPlayerCount();
     rows.forEach((tr, holeIdx)=>{
       for(let p=0; p<players; p++){
-        const td = tr.children[p+1]; // skip first col (hole number)
+        const td = tr.children[p+1]; // skip first col (hole)
         if(!td) continue;
         if(td.querySelector('.junk-cell')) continue; // already enhanced
-        const currentText = (td.textContent || '').trim(); // preserve initial render
+        const currentText = (td.textContent || '').trim();
         td.textContent = '';
 
         const wrap = document.createElement('div');
@@ -926,16 +930,25 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
 
         const menu = document.createElement('div');
         menu.className = 'menu';
-        ACH_KEYS.forEach(k => {
+
+        // Build weighted options
+        ACH.forEach(({id,label,pts})=>{
           const lab = document.createElement('label');
-          const cb = document.createElement('input');
+          const cb  = document.createElement('input');
           cb.type = 'checkbox';
           cb.className = 'junk-ach';
           cb.dataset.player = String(p);
-          cb.dataset.hole = String(holeIdx+1);
-          cb.dataset.key = k;
+          cb.dataset.hole   = String(holeIdx+1);
+          cb.dataset.key    = id;
+          cb.dataset.pts    = String(pts); // <= weight used in totals
+          // restore if previously stored on the TD
+          cb.checked = td.dataset[id] === '1';
+          cb.addEventListener('change', ()=>{
+            td.dataset[id] = cb.checked ? '1' : '';
+            updateJunkTotalsWeighted();
+          });
           lab.appendChild(cb);
-          lab.appendChild(document.createTextNode(' ' + ACH_LABELS[k]));
+          lab.append(` ${label} (+${pts})`);
           menu.appendChild(lab);
         });
 
@@ -948,13 +961,19 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     });
   }
 
-  function achCount(p, h){
+  // Sum weighted achievements for a player/hole
+  function achPoints(p, h){
     const box = document.querySelector(`details.junk-dd[data-player="${p}"][data-hole="${h}"]`);
     if(!box) return 0;
-    return Array.from(box.querySelectorAll('input.junk-ach:checked')).length;
+    let total = 0;
+    box.querySelectorAll('input.junk-ach:checked').forEach(cb=>{
+      const w = Number(cb.dataset.pts) || 1;
+      total += w;
+    });
+    return total;
   }
 
-  function updateJunkTotals(){
+  function updateJunkTotalsWeighted(){
     const tbody = document.querySelector('#junkBody');
     const players = getPlayerCount();
     if(!tbody) return;
@@ -965,15 +984,14 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
       const par = getPar(h);
       for(let p=0; p<players; p++){
         const score = getScore(p, h);
-        const base = baseDots(score, par);
-        const bonus = achCount(p, h);
-        const sum = base + bonus;
-        totals[p] += sum;
+        const base  = baseDots(score, par);
+        const bonus = achPoints(p, h); // weighted (+1/+2/+3)
+        const total = base + bonus;
+        totals[p] += total;
         const span = tr.querySelector(`.junk-dot[data-player="${p}"][data-hole="${h}"]`);
-        if(span) span.textContent = Number.isFinite(sum) ? String(sum) : '—';
+        if(span) span.textContent = Number.isFinite(total) ? String(total) : '—';
       }
     });
-    // write footer totals if present
     const footIds = ['junkTotP1','junkTotP2','junkTotP3','junkTotP4'];
     footIds.forEach((id, i)=>{
       const el = document.getElementById(id);
@@ -985,30 +1003,28 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     const junkTable = document.getElementById('junkTable');
     if(!junkTable) return;
     enhanceJunkCells();
-    updateJunkTotals();
+    updateJunkTotalsWeighted();
 
-    // Input listeners (scores, pars, names, achievements)
+    // Update totals on any score/par/name or achievement toggle
     document.addEventListener('input', (e)=>{
       const t = e.target;
       if(t.classList?.contains('score-input') || t.closest('#parRow') || t.classList?.contains('name-edit') || t.classList?.contains('junk-ach')){
-        updateJunkTotals();
+        updateJunkTotalsWeighted();
       }
     }, { passive: true });
 
     document.addEventListener('change', (e)=>{
       const t = e.target;
       if(t.classList?.contains('junk-ach')){
-        updateJunkTotals();
+        updateJunkTotalsWeighted();
       }
     });
   }
 
-  // Initialize when Junk tab is opened (and also once at load in case it's already visible)
+  // Initialize when Junk tab opens (and once at load)
   document.getElementById('toggleJunk')?.addEventListener('click', ()=> {
-    // small delay to allow any show/hide transitions then enhance
     setTimeout(initJunkAchievements, 0);
   });
-  // Fallback init on DOMContentLoaded
   document.addEventListener('DOMContentLoaded', initJunkAchievements);
 })();
 
@@ -1083,5 +1099,3 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
 // Junk: ensure dropdown stays large enough on touch
 // (CSS handled in <style>, logic already present.)
 // ============================
-
-
