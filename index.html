@@ -161,6 +161,56 @@
   padding-bottom: 6px;
 }
 
+/* Junk achievements dropdown — mobile friendly, whole-row toggle */
+.junk-cell{
+  display:inline-flex;
+  gap:3px;                 /* tighter spacing between dot and Ach. */
+  align-items:center;
+  justify-content:center;
+}
+
+.junk-dd{ display:inline-block; position:relative }
+.junk-dd > summary{
+  list-style:none; cursor:pointer;
+  border:1px solid var(--line, #333);
+  background:#0f151b; color:var(--ink, #e6e6e6);
+  border-radius:8px; padding:6px 10px;  /* larger tap target */
+  font-size:12px; line-height:1.1;
+}
+.junk-dd[open] > summary{ filter:brightness(1.08) }
+
+.junk-dd .menu{
+  position:absolute; z-index:10; margin-top:6px;
+  display:grid; gap:6px; padding:8px;
+  border:1px solid var(--line, #333); background:#0f151b; border-radius:10px;
+  min-width:160px;
+}
+
+/* Each option is the tap target. Input is visually hidden. */
+.junk-dd .menu label{
+  position:relative; display:flex; align-items:center;
+  gap:8px; padding:10px 12px; border-radius:10px; cursor:pointer;
+  border:1px solid transparent; user-select:none;
+}
+.junk-dd .menu label input{
+  position:absolute; inset:0; opacity:0; pointer-events:none;
+}
+/* Selected state (works across modern mobile browsers) */
+.junk-dd .menu label:has(input:checked){
+  background:#14202a; border-color:#224;
+}
+/* Simple check indicator when selected */
+.junk-dd .menu label:has(input:checked)::after{
+  content:"✓"; margin-left:auto; font-weight:700;
+}
+
+/* Compact on small screens */
+@media (max-width:768px){
+  .junk-dd > summary{ padding:6px 8px; }
+  .junk-dd .menu label{ padding:8px 10px; }
+}
+
+
 /* Larger, touch-friendly game toggles */
 .gamesbar .game-toggle {
   min-height: 40px;

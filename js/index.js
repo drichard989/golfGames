@@ -776,7 +776,7 @@
         details.dataset.hole = String(holeIdx+1);
 
         const summary = document.createElement('summary');
-        summary.textContent = 'Ach.';
+        summary.textContent = 'Dots';
 
         const menu = document.createElement('div');
         menu.className = 'menu';
