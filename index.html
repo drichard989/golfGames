@@ -233,6 +233,14 @@
         font-size: 12px
       }
 
+      /* Emphasize Par and Handicap rows (dark mode default) */
+      .par-row th,
+      .par-row td,
+      .hcp-row th,
+      .hcp-row td {
+        background-color: #000;
+      }
+
       .par-row input,
       .hcp-row input,
       .score-input,
@@ -843,9 +851,11 @@
         color: #1a1c1f !important
       }
 
+      :root[data-theme="light"] .hcp-row th,
       :root[data-theme="light"] .hcp-row td,
+      :root[data-theme="light"] .par-row th,
       :root[data-theme="light"] .par-row td {
-        background-color: #fafbfc !important;
+        background-color: #eceff3 !important; /* darker than #fafbfc */
         color: #1a1c1f !important
       }
 
