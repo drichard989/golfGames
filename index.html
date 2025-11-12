@@ -222,6 +222,12 @@
         border-bottom: none
       }
 
+      /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
+      th:nth-child(12),
+      td:nth-child(12) {
+        border-left: 3px solid rgba(168, 179, 191, 0.4);
+      }
+
       .subtle {
         color: var(--muted);
         font-size: 12px
@@ -875,6 +881,7 @@
       }
     </style>
   </head>
+  <body>
 
     <header>
       <h1>Manito Golf Games v.1</h1>
@@ -891,10 +898,11 @@
           <label for="csvInput">CSV</label>
           <input id="csvInput" type="file" accept=".csv" />
         </div>
-        <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
-        <button id="resetBtn" class="btn">Reset Scores</button>
-        <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
-        <button id="saveBtn" class="btn accent">Save to Browser</button>
+  <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
+  <button id="resetBtn" class="btn">Reset Scores</button>
+  <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
+  <button id="printBtn" class="btn" onclick="try{console.log('[golfGames] inline onclick'); if(window.printScorecard){window.printScorecard();} else {window.print();}}catch(e){console.error('[golfGames] inline onclick error', e);}">🖨️ Print</button>
+  <button id="saveBtn" class="btn accent">Save to Browser</button>
         <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
       </div>
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men’s HCP are fixed from the card.</p>
@@ -957,11 +965,17 @@
           <br />
           <label class="radio">
             <input type="checkbox" id="skinsHalf" /> Half pops </label>
+          <br />
+          <label class="input-label">
+            Buy-in per player: $<input type="number" id="skinsBuyIn" min="0" step="0.01" value="10" 
+              style="width: 80px; display: inline-block; margin-left: 4px;" />
+          </label>
         </div>
         <div class="control-box">
           <div class="pill">Legend</div>
           <div class="small">Net = Gross − strokes (play off low CH). NDB cap applies.</div>
           <div class="small">★ marks the winner for that hole. If pot &gt; 1 from carryovers, winner receives that many skins.</div>
+          <div class="small">Pot = Buy-in × Active Players. Dollar winnings = (Skins won / Total skins) × Pot.</div>
         </div>
       </div>
       <div class="banker-wrap">
@@ -971,6 +985,7 @@
               <th>Name</th>
               <th>Holes Skinned</th>
               <th>Total</th>
+              <th>Winnings</th>
             </tr>
           </thead>
           <tbody id="skinsBody"></tbody>
@@ -999,6 +1014,11 @@
           <br />
           <label class="radio">
             <input type="checkbox" id="optTripleEagle" checked /> Triple on Eagle (winner) </label>
+          <br />
+          <label class="radio" title="Dollar value per Vegas point">
+            $/point
+            <input type="number" id="vegasPointValue" min="0" step="0.25" value="1" class="ch-input" style="width:96px; margin-left:8px" />
+          </label>
         </div>
       </div>
       <div class="vegas-wrap">
@@ -1022,6 +1042,15 @@
               <td id="vegasTotalB">—</td>
               <td></td>
               <td id="vegasPtsA">—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Dollars</strong>
+              </td>
+              <td id="vegasDollarA">—</td>
+              <td id="vegasDollarB">—</td>
+              <td></td>
+              <td></td>
             </tr>
           </tfoot>
         </table>
@@ -1084,6 +1113,18 @@
     </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     <script src="index.js" defer></script>
+    <!-- Inline bootstrap to verify scripts run and to wire a minimal listener as fallback -->
+    <script>
+      console.log('[golfGames] inline bootstrap script loaded');
+      (function(){
+        var btn = document.getElementById('printBtn');
+        if(btn){
+          btn.addEventListener('click', function(){
+            console.log('[golfGames] inline listener fired');
+          }, { once: false });
+        }
+      })();
+    </script>
     <!-- JUNK GAME -->
     <section class="game-section" id="junkSection" aria-hidden="true">
       <h2>Junk (Dots)</h2>
@@ -1108,6 +1149,15 @@
               <td id="junkTotP2">—</td>
               <td id="junkTotP3">—</td>
               <td id="junkTotP4">—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Net Totals</strong>
+              </td>
+              <td id="junkNetP1">—</td>
+              <td id="junkNetP2">—</td>
+              <td id="junkNetP3">—</td>
+              <td id="junkNetP4">—</td>
             </tr>
           </tfoot>
         </table>
