@@ -3,8 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <title>Manito Golf Games</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <style>
       /* =========================
    Manito Golf Games — Refactored CSS
@@ -41,6 +43,9 @@
         color: var(--ink);
         color-scheme: dark;
         overscroll-behavior: none;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        -webkit-tap-highlight-color: transparent;
+        /* Remove tap highlight on iOS */
       }
 
       /* iOS/WebKit ensure dark behind safe-area */
@@ -54,9 +59,9 @@
 
       /* ---- Header / controls ---- */
       header {
-        padding: 16px 12px 8px;
+        padding: 20px 16px 12px;
         display: grid;
-        gap: 10px
+        gap: 12px
       }
 
       h1 {
@@ -76,14 +81,16 @@
         background: var(--panel);
         border: 1px solid var(--line);
         border-radius: 10px;
-        padding: 6px 10px;
+        padding: 8px 12px;
         display: flex;
         gap: 8px;
-        align-items: center
+        align-items: center;
+        min-height: 44px;
+        /* iOS touch target minimum */
       }
 
       .control label {
-        font-size: 12px;
+        font-size: 13px;
         color: var(--muted);
         text-transform: uppercase;
         letter-spacing: .08em
@@ -94,17 +101,25 @@
         border: 1px solid var(--line);
         color: var(--ink);
         border-radius: 8px;
-        padding: 6px 8px;
-        min-width: 120px
+        padding: 10px 12px;
+        min-width: 120px;
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents iOS zoom on focus */
       }
 
       .btn {
         border: 1px solid var(--line);
         background: var(--panel);
         color: var(--ink);
-        padding: 8px 12px;
+        padding: 12px 16px;
         border-radius: 10px;
-        cursor: pointer
+        cursor: pointer;
+        min-height: 44px;
+        font-size: 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center
       }
 
       .btn:hover {
@@ -127,10 +142,14 @@
         color: var(--ink);
         border: 1px solid var(--line);
         border-radius: 10px;
-        padding: 8px 12px;
-        font-size: .9rem;
+        padding: 12px 16px;
+        font-size: 15px;
         cursor: pointer;
-        transition: background .25s, color .25s, border-color .25s
+        transition: background .25s, color .25s, border-color .25s;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center
       }
 
       .theme-toggle:hover {
@@ -141,16 +160,18 @@
    Scorecard (scrollable)
    ========================= */
       .wrap {
-        padding: 8px 0 20px;
+        padding: 12px 0 24px;
         overflow-x: auto;
         overflow-y: visible !important;
         /* allow page to scroll vertically on mobile */
         -webkit-overflow-scrolling: touch;
-        touch-action: auto !important;
-        /* natural gestures */
+        touch-action: pan-x pan-y;
+        /* Allow horizontal and vertical scrolling */
         overscroll-behavior-x: contain;
         position: relative;
         background: var(--panel);
+        /* Better momentum scrolling on iOS */
+        scroll-behavior: smooth;
       }
 
       .wrap::before,
@@ -175,8 +196,9 @@
       }
 
       table {
-        width: max(100%, 980px);
-        min-width: 940px;
+        width: 100%;
+        min-width: 860px;
+        /* Horizontal scroll enabled for full scorecard view */
         border-collapse: separate;
         border-spacing: 0;
         background: var(--panel);
@@ -198,20 +220,23 @@
         text-align: center;
         font-variant-numeric: tabular-nums;
         vertical-align: middle;
-        padding: 8px 6px;
+        padding: 6px 5px;
         white-space: nowrap
       }
 
       th:first-child,
       td:first-child {
         text-align: left;
-        padding-left: 12px;
-        min-width: 170px;
+        padding-left: 10px;
+        min-width: 150px;
         position: sticky;
         left: 0;
         background-color: var(--panel);
         z-index: 4;
-        border-right: 1px solid var(--line)
+        border-right: 1px solid var(--line);
+        /* iOS sticky fix */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
 
       thead th:first-child {
@@ -222,23 +247,43 @@
         border-bottom: none
       }
 
+      /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
+      th:nth-child(12),
+      td:nth-child(12) {
+        border-left: 3px solid rgba(168, 179, 191, 0.4);
+      }
+
       .subtle {
         color: var(--muted);
         font-size: 12px
+      }
+
+      /* Emphasize Par and Handicap rows (dark mode default) */
+      .par-row th,
+      .par-row td,
+      .hcp-row th,
+      .hcp-row td {
+        background-color: #000;
       }
 
       .par-row input,
       .hcp-row input,
       .score-input,
       .ch-input {
-        width: 54px;
+        width: 48px;
         text-align: center;
         border-radius: 8px;
         border: 1px solid var(--line);
         background: #0c1218;
         color: var(--ink);
-        padding: 6px 4px;
-        -moz-appearance: textfield
+        padding: 10px 6px;
+        -moz-appearance: textfield;
+        appearance: textfield;
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents iOS zoom on focus */
+        touch-action: manipulation;
+        /* Better mobile tap response */
       }
 
       .par-row input::-webkit-outer-spin-button,
@@ -248,13 +293,15 @@
       .score-input::-webkit-outer-spin-button,
       .score-input::-webkit-inner-spin-button,
       .ch-input::-webkit-outer-spin-button,
-      .ch-input::-webkit-inner-spin-button {
+      .ch-input::-webkit-inner-spin-button,
+      #skinsBuyIn::-webkit-outer-spin-button,
+      #skinsBuyIn::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0
       }
 
       .ch-input {
-        width: 64px
+        width: 60px
       }
 
       .score-input.invalid {
@@ -314,32 +361,92 @@
       }
 
       /* ---- Scorecard responsive tweaks ---- */
-      @media (max-width:900px) {
+      @media (max-width:1400px) {
 
         th,
         td {
-          padding: 6px 4px
-        }
-
-        .name-edit {
-          font-size: 13px;
-          padding: 6px 8px
-        }
-
-        th:first-child,
-        td:first-child {
-          min-width: 150px
+          padding: 8px 5px;
         }
 
         .par-row input,
         .hcp-row input,
         .score-input {
           width: 46px;
-          padding: 5px 3px
+          padding: 10px 4px;
+          min-height: 44px;
         }
 
         .ch-input {
-          width: 56px
+          width: 58px;
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 150px;
+        }
+
+        table {
+          min-width: 840px;
+        }
+      }
+
+      @media (max-width:1200px) {
+
+        th,
+        td {
+          padding: 8px 4px;
+        }
+
+        .par-row input,
+        .hcp-row input,
+        .score-input {
+          width: 44px;
+          padding: 10px 3px;
+          min-height: 44px;
+        }
+
+        .ch-input {
+          width: 56px;
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 140px;
+        }
+
+        table {
+          min-width: 820px;
+        }
+      }
+      @media (max-width:900px) {
+
+        th,
+        td {
+          padding: 8px 5px
+        }
+
+        .name-edit {
+          font-size: 16px;
+          /* Prevent iOS zoom */
+          padding: 10px 12px;
+          min-height: 44px
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 160px
+        }
+
+        .par-row input,
+        .hcp-row input,
+        .score-input {
+          width: 48px;
+          padding: 10px 4px;
+          min-height: 44px
+        }
+
+        .ch-input {
+          width: 60px
         }
 
         table {
@@ -348,32 +455,51 @@
       }
 
       @media (max-width:600px) {
+        header {
+          padding: 16px 12px 10px
+        }
+
         h1 {
-          font-size: 18px
+          font-size: 20px
         }
 
         .controls {
-          gap: 6px
+          gap: 10px
         }
 
         .btn {
-          padding: 7px 10px
+          padding: 12px 14px;
+          min-height: 48px;
+          /* Extra space on small screens */
+        }
+
+        .control {
+          min-height: 48px
+        }
+
+        .control input[type="text"] {
+          min-height: 48px;
+          padding: 12px 14px
         }
 
         th:first-child,
         td:first-child {
-          min-width: 140px
+          min-width: 140px;
+          padding-left: 12px
         }
 
         .par-row input,
         .hcp-row input,
         .score-input {
-          width: 40px;
-          padding: 4px 2px
+          width: 44px;
+          padding: 11px 3px;
+          min-height: 48px;
+          /* Larger on mobile */
         }
 
         .ch-input {
-          width: 50px
+          width: 56px;
+          min-height: 48px
         }
 
         table {
@@ -385,9 +511,9 @@
    Games launcher / sections
    ========================= */
       .gamesbar {
-        margin: 8px 12px 0;
+        margin: 12px 16px 0;
         display: flex;
-        gap: 8px;
+        gap: 12px;
         flex-wrap: wrap;
         align-items: center
       }
@@ -397,7 +523,13 @@
         border: 1px solid var(--line);
         background: #0f151b;
         border-radius: 16px;
-        padding: 8px 14px;
+        padding: 12px 18px;
+        min-height: 48px;
+        font-size: 15px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        -webkit-tap-highlight-color: rgba(104, 211, 145, 0.1);
       }
 
       .game-toggle.active {
@@ -407,8 +539,8 @@
 
       .game-section {
         display: none;
-        margin: 14px 12px 28px;
-        padding: 12px;
+        margin: 16px 16px 32px;
+        padding: 16px;
         border: 1px solid var(--line);
         border-radius: 12px;
         background: #0f151b
@@ -468,10 +600,11 @@
         overflow-x: auto;
         overflow-y: visible !important;
         -webkit-overflow-scrolling: touch;
-        touch-action: auto !important;
+        touch-action: pan-x pan-y;
         border: 1px solid var(--line);
         border-radius: 10px;
-        background: var(--panel)
+        background: var(--panel);
+        scroll-behavior: smooth
       }
 
       .vegas-table {
@@ -491,7 +624,15 @@
       .vegas-table thead th {
         position: sticky;
         top: 0;
-        background: #0f151b
+        background: #0f151b;
+        z-index: 3;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+      }
+
+      .vegas-table thead th:first-child {
+        z-index: 4;
+        background-color: var(--panel);
       }
 
       .vegas-table tfoot td {
@@ -501,20 +642,28 @@
 
       .vegas-table th:first-child,
       .vegas-table td:first-child {
-        width: 56px;
-        min-width: 56px;
-        padding-left: 8px;
-        padding-right: 8px
+        width: 48px;
+        min-width: 48px;
+        padding-left: 6px;
+        padding-right: 6px;
+        position: sticky;
+        left: 0;
+        background-color: var(--panel);
+        z-index: 2;
+        border-right: 1px solid var(--line);
+        /* iOS sticky fix */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
 
       @media (max-width:600px) {
 
         .vegas-table th:first-child,
         .vegas-table td:first-child {
-          width: 44px;
-          min-width: 44px;
-          padding-left: 6px;
-          padding-right: 6px
+          width: 40px;
+          min-width: 40px;
+          padding-left: 4px;
+          padding-right: 4px
         }
       }
 
@@ -548,7 +697,15 @@
       .banker-table thead th {
         position: sticky;
         top: 0;
-        background: #0f151b
+        background: #0f151b;
+        z-index: 3;
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
+      }
+
+      .banker-table thead th:first-child {
+        z-index: 4;
+        background-color: var(--panel);
       }
 
       .banker-table tfoot td {
@@ -558,20 +715,28 @@
 
       .banker-table th:first-child,
       .banker-table td:first-child {
-        width: 56px;
-        min-width: 56px;
-        padding-left: 8px;
-        padding-right: 8px
+        width: 48px;
+        min-width: 48px;
+        padding-left: 6px;
+        padding-right: 6px;
+        position: sticky;
+        left: 0;
+        background-color: var(--panel);
+        z-index: 2;
+        border-right: 1px solid var(--line);
+        /* iOS sticky fix */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
 
       @media (max-width:600px) {
 
         .banker-table th:first-child,
         .banker-table td:first-child {
-          width: 44px;
-          min-width: 44px;
-          padding-left: 6px;
-          padding-right: 6px
+          width: 40px;
+          min-width: 40px;
+          padding-left: 4px;
+          padding-right: 4px
         }
       }
 
@@ -585,7 +750,18 @@
 
       #junkTable th:first-child,
       #junkTable td:first-child {
-        width: 44px
+        width: 40px;
+        min-width: 40px;
+        padding-left: 4px;
+        padding-right: 4px;
+        position: sticky;
+        left: 0;
+        background-color: var(--panel);
+        z-index: 2;
+        border-right: 1px solid var(--line);
+        /* iOS sticky fix */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
 
       #junkTable th:not(:first-child),
@@ -619,12 +795,13 @@
         background: #0f151b;
         color: var(--ink, #e6e6e6);
         border-radius: 8px;
-        padding: 6px 10px;
-        font-size: 12px;
-        line-height: 1.1;
-        min-height: 36px;
+        padding: 10px 14px;
+        font-size: 14px;
+        line-height: 1.2;
+        min-height: 44px;
         display: inline-flex;
-        align-items: center
+        align-items: center;
+        -webkit-tap-highlight-color: rgba(104, 211, 145, 0.1)
       }
 
       .junk-dd[open]>summary {
@@ -648,13 +825,15 @@
         position: relative;
         display: flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
+        gap: 10px;
+        padding: 14px 16px;
         border-radius: 10px;
         cursor: pointer;
         border: 1px solid transparent;
         user-select: none;
-        color: var(--ink, #e6e6e6)
+        color: var(--ink, #e6e6e6);
+        min-height: 44px;
+        font-size: 15px
       }
 
       .junk-dd .menu label input {
@@ -686,14 +865,15 @@
 
       /* ---- Larger/touch targets ---- */
       .gamesbar .game-toggle {
-        min-height: 40px
+        min-height: 48px
       }
 
       input[type="number"],
       input[type="text"] {
-        padding: 6px 8px;
-        min-height: 34px;
-        font-size: 15px
+        padding: 10px 12px;
+        min-height: 44px;
+        font-size: 16px;
+        /* Prevents iOS zoom on focus */
       }
 
       /* ---- Responsive tightening ---- */
@@ -701,52 +881,74 @@
 
         .banker-table th,
         .banker-table td {
-          padding: 6px 8px
+          padding: 8px 10px
         }
 
         #junkTable tbody td,
         #junkTable tbody th,
         #vegasTable tbody td,
         #vegasTable tbody th {
-          padding-top: 4px;
-          padding-bottom: 4px
+          padding-top: 8px;
+          padding-bottom: 8px
         }
 
         .gamesbar {
-          gap: 8px;
+          gap: 10px;
           display: flex;
-          flex-wrap: wrap
+          flex-wrap: wrap;
+          margin: 12px 12px 0
         }
 
         .gamesbar .game-toggle {
-          flex: 1 1 auto
+          flex: 1 1 auto;
+          min-height: 48px
+        }
+
+        .game-section {
+          margin: 14px 12px 28px;
+          padding: 14px
         }
 
         h2 {
-          font-size: 18px;
-          margin: 8px 0
+          font-size: 19px;
+          margin: 10px 0
         }
 
         #junkTable th:not(:first-child),
         #junkTable td:not(:first-child) {
-          width: 70px
+          width: 76px
         }
 
         .junk-dd>summary {
-          padding: 4px 8px;
-          min-height: 32px
+          padding: 10px 12px;
+          min-height: 44px
         }
       }
 
       @media (max-width:420px) {
         .junk-dd>summary {
-          min-height: 40px;
-          padding: 8px 12px
+          min-height: 48px;
+          padding: 12px 14px;
+          font-size: 15px
         }
 
         input[type="number"],
         input[type="text"] {
-          min-height: 36px
+          min-height: 48px;
+          padding: 12px 14px;
+          font-size: 16px
+        }
+
+        .game-toggle {
+          padding: 14px 16px;
+          font-size: 16px
+        }
+
+        .btn,
+        .theme-toggle {
+          min-height: 48px;
+          padding: 14px 18px;
+          font-size: 16px
         }
       }
 
@@ -837,9 +1039,11 @@
         color: #1a1c1f !important
       }
 
+      :root[data-theme="light"] .hcp-row th,
       :root[data-theme="light"] .hcp-row td,
+      :root[data-theme="light"] .par-row th,
       :root[data-theme="light"] .par-row td {
-        background-color: #fafbfc !important;
+        background-color: #eceff3 !important; /* darker than #fafbfc */
         color: #1a1c1f !important
       }
 
@@ -875,6 +1079,7 @@
       }
     </style>
   </head>
+  <body>
 
     <header>
       <h1>Manito Golf Games v.1</h1>
@@ -891,10 +1096,11 @@
           <label for="csvInput">CSV</label>
           <input id="csvInput" type="file" accept=".csv" />
         </div>
-        <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
-        <button id="resetBtn" class="btn">Reset Scores</button>
-        <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
-        <button id="saveBtn" class="btn accent">Save to Browser</button>
+  <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
+  <button id="resetBtn" class="btn">Reset Scores</button>
+  <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
+  <button id="printBtn" class="btn" onclick="try{console.log('[golfGames] inline onclick'); if(window.printScorecard){window.printScorecard();} else {window.print();}}catch(e){console.error('[golfGames] inline onclick error', e);}">🖨️ Print</button>
+  <button id="saveBtn" class="btn accent">Save to Browser</button>
         <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
       </div>
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men’s HCP are fixed from the card.</p>
@@ -903,6 +1109,7 @@
       <h1>Golf Games</h1>
       <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
     </header>
+    <p class="small" id="parBadge" aria-live="polite"></p>
     <!-- SCORECARD -->
     <div class="wrap">
       <table id="scorecard" aria-describedby="saveStatus">
@@ -957,11 +1164,17 @@
           <br />
           <label class="radio">
             <input type="checkbox" id="skinsHalf" /> Half pops </label>
+          <br />
+          <label class="input-label">
+            Buy-in per player: $<input type="number" id="skinsBuyIn" min="0" step="0.01" value="10" inputmode="decimal" autocomplete="off"
+              style="width: 80px; display: inline-block; margin-left: 4px; -moz-appearance: textfield; appearance: textfield;" />
+          </label>
         </div>
         <div class="control-box">
           <div class="pill">Legend</div>
           <div class="small">Net = Gross − strokes (play off low CH). NDB cap applies.</div>
           <div class="small">★ marks the winner for that hole. If pot &gt; 1 from carryovers, winner receives that many skins.</div>
+          <div class="small">Pot = Buy-in × Active Players. Dollar winnings = (Skins won / Total skins) × Pot.</div>
         </div>
       </div>
       <div class="banker-wrap">
@@ -971,6 +1184,7 @@
               <th>Name</th>
               <th>Holes Skinned</th>
               <th>Total</th>
+              <th>Winnings</th>
             </tr>
           </thead>
           <tbody id="skinsBody"></tbody>
@@ -999,6 +1213,11 @@
           <br />
           <label class="radio">
             <input type="checkbox" id="optTripleEagle" checked /> Triple on Eagle (winner) </label>
+          <br />
+          <label class="radio" title="Dollar value per Vegas point">
+            $/point
+            <input type="number" id="vegasPointValue" min="0" step="0.25" value="1" inputmode="decimal" autocomplete="off" class="ch-input" style="width:96px; margin-left:8px" />
+          </label>
         </div>
       </div>
       <div class="vegas-wrap">
@@ -1010,6 +1229,7 @@
               <th>Team B</th>
               <th>Mult</th>
               <th>Pts (A)</th>
+              <th>Pts (B)</th>
             </tr>
           </thead>
           <tbody id="vegasBody"></tbody>
@@ -1022,68 +1242,41 @@
               <td id="vegasTotalB">—</td>
               <td></td>
               <td id="vegasPtsA">—</td>
+              <td id="vegasPtsB">—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Dollars</strong>
+              </td>
+              <td id="vegasDollarA">—</td>
+              <td id="vegasDollarB">—</td>
+              <td></td>
+              <td></td>
             </tr>
           </tfoot>
         </table>
       </div>
       <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
     </section>
-    <!-- BANKER GAME -->
+    <!-- BANKER GAME (stubbed: empty window) -->
     <section class="game-section" id="bankerSection" aria-hidden="true">
       <h2>Banker</h2>
-      <div class="banker-controls">
-        <div class="control-box">
-          <div class="pill">Point value per match</div>
-          <input id="bankerPointValue" type="number" min="1" step="1" value="1" class="ch-input" />
-          <div class="pill" style="margin-top:8px">Rotation</div>
-          <select id="bankerRotation">
-            <option value="rotate">Rotate each hole</option>
-            <option value="untilBeaten">Banker stays until beaten</option>
-          </select>
-        </div>
-        <div class="control-box">
-          <div class="pill">Options</div>
-          <label class="radio">
-            <input type="checkbox" id="bankerUseNet" checked /> Use Net (NDB) </label>
-          <br />
-          <label class="radio">
-            <input type="checkbox" id="bankerDoubleBirdie" checked /> Double on Birdie (winner) </label>
-          <br />
-          <label class="radio">
-            <input type="checkbox" id="bankerTripleEagle" checked /> Triple on Eagle (winner) </label>
-        </div>
-      </div>
-      <div class="banker-wrap">
-        <table class="banker-table" id="bankerTable">
-          <thead>
-            <tr>
-              <th>Hole</th>
-              <th>Banker</th>
-              <th>P1 Δ</th>
-              <th>P2 Δ</th>
-              <th>P3 Δ</th>
-              <th>P4 Δ</th>
-            </tr>
-          </thead>
-          <tbody id="bankerBody"></tbody>
-          <tfoot>
-            <tr>
-              <td>
-                <strong>Totals</strong>
-              </td>
-              <td></td>
-              <td id="bankerTotP1">—</td>
-              <td id="bankerTotP2">—</td>
-              <td id="bankerTotP3">—</td>
-              <td id="bankerTotP4">—</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <p class="small"> Banker plays a separate match against each other player per hole for the chosen point value (winner’s birdie/eagle can multiply). Rotation can be fixed or “until beaten”. </p>
+      <!-- Intentionally left blank -->
     </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     <script src="index.js" defer></script>
+    <!-- Inline bootstrap to verify scripts run and to wire a minimal listener as fallback -->
+    <script>
+      console.log('[golfGames] inline bootstrap script loaded');
+      (function(){
+        var btn = document.getElementById('printBtn');
+        if(btn){
+          btn.addEventListener('click', function(){
+            console.log('[golfGames] inline listener fired');
+          }, { once: false });
+        }
+      })();
+    </script>
     <!-- JUNK GAME -->
     <section class="game-section" id="junkSection" aria-hidden="true">
       <h2>Junk (Dots)</h2>
@@ -1108,6 +1301,15 @@
               <td id="junkTotP2">—</td>
               <td id="junkTotP3">—</td>
               <td id="junkTotP4">—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Net Totals</strong>
+              </td>
+              <td id="junkNetP1">—</td>
+              <td id="junkNetP2">—</td>
+              <td id="junkNetP3">—</td>
+              <td id="junkNetP4">—</td>
             </tr>
           </tfoot>
         </table>
