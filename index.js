@@ -232,6 +232,33 @@
     saveDebounced();
   }
 
+  // Theme toggle
+(function(){
+  const btn = document.getElementById('themeToggle');
+  if(!btn) return;
+
+  // Restore persisted theme
+  const saved = localStorage.getItem('theme');
+  if(saved === 'light'){
+    document.documentElement.setAttribute('data-theme','light');
+    btn.textContent = '🌙 Dark Mode';
+  }
+
+  btn.addEventListener('click', () => {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    if(isLight){
+      document.documentElement.removeAttribute('data-theme');
+      localStorage.removeItem('theme');
+      btn.textContent = '☀️ Light Mode';
+    }else{
+      document.documentElement.setAttribute('data-theme','light');
+      localStorage.setItem('theme','light');
+      btn.textContent = '🌙 Dark Mode';
+    }
+  });
+})();
+
+
   // ======================================================================
   // =============================== VEGAS ================================
   // ======================================================================

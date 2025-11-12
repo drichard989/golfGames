@@ -262,6 +262,190 @@ input[type="number"], input[type="text"] { padding: 6px 8px; min-height: 34px; f
         background-color: #0b0d10;
       }
     }
+
+
+    /* Theme toggle button */
+.theme-toggle{
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background .25s, color .25s, border-color .25s;
+}
+.theme-toggle:hover{ filter:brightness(1.08); }
+
+/* Light theme (dark remains default) */
+:root[data-theme="light"] {
+  --bg: #f4f6f8;
+  --panel: #ffffff;
+  --panel-2: #f8fafc;
+  --ink: #1a1c1f;
+  --muted: #5a5f66;
+  --accent: #0090e0;
+  --line: #d3d7dc;
+  --shadow: rgba(0,0,0,0.08);
+}
+
+/* Apply background/text in light mode */
+:root[data-theme="light"] body {
+  background: var(--bg);
+  color: var(--ink);
+}
+/* If you gave wrappers a dark background earlier, mirror to panel in light mode */
+:root[data-theme="light"] .wrap,
+:root[data-theme="light"] .vegas-wrap,
+:root[data-theme="light"] .banker-wrap,
+:root[data-theme="light"] .skins-wrap {
+  background: var(--panel);
+}
+
+
+/* Fix dark inputs/buttons in light mode */
+:root[data-theme="light"] input,
+:root[data-theme="light"] select,
+:root[data-theme="light"] textarea {
+  background-color: #ffffff !important;
+  color: #1a1c1f !important;
+  border: 1px solid #d0d4d9 !important;
+}
+
+:root[data-theme="light"] input:focus,
+:root[data-theme="light"] select:focus,
+:root[data-theme="light"] textarea:focus {
+  outline: none;
+  border-color: #0090e0 !important;
+  box-shadow: 0 0 0 2px rgba(0,144,224,0.2);
+}
+
+/* Buttons (e.g., Play Skins, Save, etc.) */
+:root[data-theme="light"] button,
+:root[data-theme="light"] .btn {
+  background-color: #f3f5f8 !important;
+  color: #1a1c1f !important;
+  border: 1px solid #cfd3d8 !important;
+}
+
+:root[data-theme="light"] button:hover,
+:root[data-theme="light"] .btn:hover {
+  background-color: #e7eaed !important;
+}
+
+/* Toggle and panel fixes */
+:root[data-theme="light"] .wrap,
+:root[data-theme="light"] .vegas-wrap,
+:root[data-theme="light"] .banker-wrap,
+
+
+
+/* --- Fix scorecard + game inputs for light mode --- */
+:root[data-theme="light"] table,
+:root[data-theme="light"] .scorecard-table {
+  background-color: #ffffff !important;
+  color: #1a1c1f !important;
+  border-color: #d0d4d9 !important;
+}
+
+/* Column headers (CH, hole numbers, totals) */
+:root[data-theme="light"] th {
+  background-color: #f1f3f6 !important;
+  color: #1a1c1f !important;
+  border-color: #d0d4d9 !important;
+}
+
+/* Player names column */
+:root[data-theme="light"] td:first-child {
+  background-color: #f7f8fa !important;
+  color: #1a1c1f !important;
+}
+
+/* Input fields inside the game grid */
+:root[data-theme="light"] input[type="number"],
+:root[data-theme="light"] input[type="text"] {
+  background-color: #ffffff !important;
+  color: #1a1c1f !important;
+  border: 1px solid #d0d4d9 !important;
+  box-shadow: none !important;
+}
+
+/* Hover/focus effects */
+:root[data-theme="light"] input[type="number"]:focus,
+:root[data-theme="light"] input[type="text"]:focus {
+  border-color: #0090e0 !important;
+  box-shadow: 0 0 0 2px rgba(0,144,224,0.15);
+}
+
+/* Totals row and bottom cells */
+:root[data-theme="light"] tfoot td,
+:root[data-theme="light"] .totals-row td {
+  background-color: #f1f3f6 !important;
+  color: #1a1c1f !important;
+}
+
+/* Optional: hole index / par / HCP rows */
+:root[data-theme="light"] .hcp-row td,
+:root[data-theme="light"] .par-row td {
+  background-color: #fafbfc !important;
+  color: #1a1c1f !important;
+}
+
+/* Buttons in game sections (Play Skins, etc.) */
+:root[data-theme="light"] .play-btn,
+:root[data-theme="light"] .btn-game {
+  background-color: #f3f5f8 !important;
+  color: #1a1c1f !important;
+  border: 1px solid #cfd3d8 !important;
+}
+:root[data-theme="light"] .play-btn:hover,
+:root[data-theme="light"] .btn-game:hover {
+  background-color: #e7eaed !important;
+}
+
+
+/* ==== Unify backgrounds for description rows + page edges ==== */
+
+/* Make the short description strips look like the panels */
+.note,
+.game-desc,
+.rules,
+.legend,
+.banker-controls .small {
+  background: var(--panel);          /* same tone as cards/panels */
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-top: 8px;
+}
+
+/* Control grids sit on panel (remove extra dark gutter) */
+.banker-controls,
+.vegas-controls {
+  background: var(--panel);
+}
+
+/* Ensure all game wrappers inherit the panel tone behind them */
+.wrap,
+.vegas-wrap,
+.banker-wrap,
+.skins-wrap {
+  background: var(--panel);
+}
+
+/* Keep the very outer page background consistent (no darker “ring”) */
+html, body {
+  background-color: var(--bg);       /* your dark theme base */
+}
+
+/* If any container is transparent, give it the panel tone so gaps don't look darker */
+.container,
+.section,
+.game-section {
+  background: var(--panel);
+}
+
+
   </style>
 </head>
 
@@ -295,7 +479,8 @@ input[type="number"], input[type="text"] { padding: 6px 8px; min-height: 34px; f
     </header>
     <header>
   <h1>Golf Games</h1>
-  <button id="themeToggle" class="theme-toggle">☀️ Light Mode</button>
+<button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
+
 </header>
 
 
