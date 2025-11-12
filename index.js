@@ -602,7 +602,7 @@
       rowEl.querySelectorAll("input.score-input").forEach(inp => { inp.value = ""; inp.classList.remove("invalid"); });
     }
 
-    recalcAll(); vegas_recalc(); saveState();
+    recalcAll(); AppManager.recalcGames(); saveState();
     announce("CSV imported.");
   }
   function downloadCSVTemplate() {
