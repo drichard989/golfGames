@@ -267,118 +267,12 @@ input[type="number"], input[type="text"] {
   .junk-dd > summary { min-height: 40px; padding: 8px 12px; }
   input[type="number"], input[type="text"] { min-height: 36px; }
 }
-
-/* Smooth horizontal scroll on all game tables */
-.vegas-wrap, .banker-wrap, .wrap {
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
-}
-
-/* Left-align the first column in all banker-style tables for readability on mobile */
-.banker-table th:first-child, 
-.banker-table td:first-child {
-  text-align: left;
-}
-/* === Mobile polish for Skins === */
-#skinsTable { 
-  table-layout: fixed;       /* predictable column widths */
-  width: 100%;
-}
-#skinsTable th, #skinsTable td { 
-  padding: 8px 10px; 
-}
-
-/* Name column: readable but not huge */
-#skinsTable th:first-child,
-#skinsTable td:first-child {
-  text-align: left;
-  min-width: 120px;          /* override banker-table default */
-  width: 1%;
-}
-
-/* Holes Skinned: left-align + wrap to kill empty space */
-#skinsTable td:nth-child(2) {
-  text-align: left;
-  white-space: normal;       /* allow wrapping */
-  word-break: break-word;
-  line-height: 1.25;
-}
-
-/* Total column: compact */
-#skinsTable td:nth-child(3),
-#skinsTable th:nth-child(3) {
-  width: 72px;
-}
-
-/* Small screens: tighter spacing */
-@media (max-width: 600px){
-  #skinsTable th, #skinsTable td { padding: 6px 8px; }
-  #skinsTable th:first-child, #skinsTable td:first-child { min-width: 110px; }
-}
-
-/* Very small phones */
-@media (max-width: 420px){
-  #skinsTable th, #skinsTable td { padding: 6px 6px; font-size: 14px; }
-  #skinsTable th:first-child, #skinsTable td:first-child { min-width: 100px; }
-}
-/* Improve global scrolling on mobile */
-html, body {
-  height: 100%;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-.wrap, .vegas-wrap, .banker-wrap, .skins-wrap {
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  scroll-snap-type: x mandatory;
-}
-
-/* Prevent sticky header overlap from causing dead scroll zones */
-thead, .player-row {
-  position: static !important;
-}
-#skinsTable {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: auto;
-}
-#skinsTable th, #skinsTable td {
-  padding: 6px 8px;
-  text-align: left;
-  vertical-align: top;
-  white-space: normal;
-  word-break: break-word;
-  line-height: 1.25;
-}
-#skinsTable th:first-child, #skinsTable td:first-child {
-  min-width: 110px;
-  width: 30%;
-}
-#skinsTable th:nth-child(2), #skinsTable td:nth-child(2) {
-  width: 50%;
-}
-#skinsTable th:nth-child(3), #skinsTable td:nth-child(3) {
-  width: 20%;
-  text-align: right;
-}
-@media (max-width: 480px) {
-  body { font-size: 15px; }
-  #skinsTable th, #skinsTable td { padding: 5px 6px; }
-  #skinsTable th:first-child, #skinsTable td:first-child { min-width: 90px; }
-}
-
 </style>
 
 </head>
   <body>
     <header>
-      <h1>Manito Golf Games v.0.1.1</h1>
+      <h1>Manito Golf Games</h1>
       <div class="controls">
         <div class="control">
           <label for="courseName">Course</label>
