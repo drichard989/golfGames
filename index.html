@@ -446,61 +446,6 @@ html, body {
 }
 
 
-/* Theme toggle button */
-.theme-toggle{
-  background: var(--panel);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background .25s, color .25s, border-color .25s;
-  -webkit-tap-highlight-color: transparent; /* iOS tap feedback off */
-  position: relative;
-  z-index: 1000;            /* sit above sticky headers/shadows */
-  pointer-events: auto;     /* make sure it’s clickable */
-}
-
-/* Light theme variables (dark remains default) */
-:root[data-theme="light"] {
-  --bg: #f4f6f8;
-  --panel: #ffffff;
-  --panel-2: #f8fafc;
-  --ink: #1a1c1f;
-  --muted: #5a5f66;
-  --accent: #0090e0;
-  --line: #d3d7dc;
-  --shadow: rgba(0,0,0,0.08);
-}
-
-/* Surfaces in light mode */
-:root[data-theme="light"] body { background: var(--bg); color: var(--ink); }
-:root[data-theme="light"] .wrap,
-:root[data-theme="light"] .vegas-wrap,
-:root[data-theme="light"] .banker-wrap,
-:root[data-theme="light"] .skins-wrap { background: var(--panel); }
-
-/* Inputs/buttons in light mode (so they don’t stay dark) */
-:root[data-theme="light"] input, 
-:root[data-theme="light"] select, 
-:root[data-theme="light"] textarea {
-  background-color: #ffffff !important;
-  color: #1a1c1f !important;
-  border: 1px solid #d0d4d9 !important;
-}
-:root[data-theme="light"] button, 
-:root[data-theme="light"] .btn {
-  background-color: #f3f5f8 !important;
-  color: #1a1c1f !important;
-  border: 1px solid #cfd3d8 !important;
-}
-
-/* Scorecard header/labels in light mode */
-:root[data-theme="light"] th { background: #f1f3f6 !important; color:#1a1c1f !important; }
-:root[data-theme="light"] td:first-child { background:#f7f8fa !important; color:#1a1c1f !important; }
-
-
   </style>
 </head>
 
