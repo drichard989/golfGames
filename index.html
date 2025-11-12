@@ -5,445 +5,401 @@
     <title>Manito Golf Games</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
-    <style>
-     :root{
-  --bg:#0b0d10;--panel:#11151a;--ink:#e8eef5;--muted:#a8b3bf;--accent:#68d391;--line:#1e242b;
-  --warn:#ffb454;--danger:#ff6b6b;--shadow:rgba(0,0,0,.35)
+    <style>/* =========================
+   Manito Golf Games — Refactored CSS
+   ========================= */
+
+/* ---- Theme tokens (dark default) ---- */
+:root{
+  --bg:#0b0d10;
+  --panel:#11151a;
+  --ink:#e8eef5;
+  --muted:#a8b3bf;
+  --accent:#68d391;
+  --line:#1e242b;
+  --warn:#ffb454;
+  --danger:#ff6b6b;
+  --shadow:rgba(0,0,0,.35);
 }
-*{box-sizing:border-box}
-html,body{height:100%}
+
+/* ---- Base / resets ---- */
+*{ box-sizing:border-box }
+
+html,body{ height:100% }
+
 body{
-  margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
-  background:linear-gradient(180deg,#0a0c10 0%,#0c1117 100%);color:var(--ink)
+  margin:0;
+  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+  background:linear-gradient(180deg,#0a0c10 0%,#0c1117 100%);
+  background-color:var(--bg);           /* fallback, prevents white flash */
+  color:var(--ink);
+  color-scheme:dark;
+  overscroll-behavior:none;
 }
 
-/* Header / controls */
-header{padding:16px 12px 8px;display:grid;gap:10px}
-h1{margin:0;font-size:clamp(18px,3.5vw,28px);letter-spacing:.2px}
-.controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.control{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;gap:8px;align-items:center}
-.control label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.control input[type="text"]{background:#0c1218;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 8px;min-width:120px}
-.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer}
-.btn:hover{filter:brightness(1.1)}
-.btn.accent{border-color:#224;background:#14202a}
-.meta{font-size:12px;color:var(--muted)}
+/* iOS/WebKit ensure dark behind safe-area */
+@supports (-webkit-touch-callout: none){
+  html,body{ background-color:var(--bg) }
+}
 
-/* ===== SCORECARD WRAPPER – H & V scroll behavior =====
-   Allow vertical scroll to bubble naturally on mobile while
-   keeping horizontal scroll for the table. */
+/* ---- Header / controls ---- */
+header{ padding:16px 12px 8px; display:grid; gap:10px }
+h1{ margin:0; font-size:clamp(18px,3.5vw,28px); letter-spacing:.2px }
+.controls{ display:flex; flex-wrap:wrap; gap:8px; align-items:center }
+.control{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:6px 10px;
+  display:flex; gap:8px; align-items:center
+}
+.control label{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em }
+.control input[type="text"]{
+  background:#0c1218; border:1px solid var(--line); color:var(--ink);
+  border-radius:8px; padding:6px 8px; min-width:120px
+}
+
+.btn{
+  border:1px solid var(--line);
+  background:var(--panel);
+  color:var(--ink);
+  padding:8px 12px;
+  border-radius:10px;
+  cursor:pointer
+}
+.btn:hover{ filter:brightness(1.1) }
+.btn.accent{ border-color:#224; background:#14202a }
+.meta{ font-size:12px; color:var(--muted) }
+
+/* ---- Theme toggle button ---- */
+.theme-toggle{
+  background:var(--panel); color:var(--ink);
+  border:1px solid var(--line); border-radius:10px;
+  padding:8px 12px; font-size:.9rem; cursor:pointer;
+  transition:background .25s,color .25s,border-color .25s
+}
+.theme-toggle:hover{ filter:brightness(1.08) }
+
+/* =========================
+   Scorecard (scrollable)
+   ========================= */
 .wrap{
   padding:8px 0 20px;
   overflow-x:auto;
-  overflow-y:visible !important;          /* was hidden; lets the page scroll vertically */
+  overflow-y:visible !important;           /* allow page to scroll vertically on mobile */
   -webkit-overflow-scrolling:touch;
-  touch-action:auto !important;           /* was pan-x; allow natural gestures */
+  touch-action:auto !important;            /* natural gestures */
   overscroll-behavior-x:contain;
-  position:relative
+  position:relative;
+  background:var(--panel);
 }
-.wrap::before,.wrap::after{content:"";position:sticky;top:0;width:18px;height:100%;pointer-events:none;z-index:6}
-.wrap::before{left:0;box-shadow:inset 12px 0 12px -12px var(--shadow)}
-.wrap::after{right:0;box-shadow:inset -12px 0 12px -12px var(--shadow)}
+.wrap::before,.wrap::after{
+  content:""; position:sticky; top:0; width:18px; height:100%;
+  pointer-events:none; z-index:6
+}
+.wrap::before{ left:0;  box-shadow:inset 12px 0 12px -12px var(--shadow) }
+.wrap::after{  right:0; box-shadow:inset -12px 0 12px -12px var(--shadow) }
 
-/* ===== TABLE (scorecard) ===== */
 table{
   width:max(100%,980px);
-  border-collapse:separate;border-spacing:0;
+  min-width:940px;
+  border-collapse:separate; border-spacing:0;
   background:var(--panel);
   border:1px solid var(--line);
-  border-radius:14px;overflow:hidden;
-  min-width:940px
+  border-radius:14px; overflow:hidden
 }
-thead th{position:sticky;top:0;background:#0f151b;z-index:3}
+thead th{ position:sticky; top:0; background:#0f151b; z-index:3 }
 th,td{
   border-bottom:1px solid var(--line);
-  text-align:center;font-variant-numeric:tabular-nums;
-  vertical-align:middle;padding:8px 6px;white-space:nowrap
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+  vertical-align:middle;
+  padding:8px 6px;
+  white-space:nowrap
 }
 th:first-child,td:first-child{
-  text-align:left;padding-left:12px;min-width:170px;
-  position:sticky;left:0;background-color:var(--panel);z-index:4;border-right:1px solid var(--line)
+  text-align:left; padding-left:12px; min-width:170px;
+  position:sticky; left:0; background-color:var(--panel);
+  z-index:4; border-right:1px solid var(--line)
 }
-thead th:first-child{z-index:5}
-tr:last-child td{border-bottom:none}
-.subtle{color:var(--muted);font-size:12px}
+thead th:first-child{ z-index:5 }
+tr:last-child td{ border-bottom:none }
+.subtle{ color:var(--muted); font-size:12px }
 
 .par-row input,.hcp-row input,.score-input,.ch-input{
-  width:54px;text-align:center;border-radius:8px;border:1px solid var(--line);
-  background:#0c1218;color:var(--ink);padding:6px 4px;
-  -moz-appearance:textfield;
+  width:54px; text-align:center; border-radius:8px; border:1px solid var(--line);
+  background:#0c1218; color:var(--ink); padding:6px 4px;
+  -moz-appearance:textfield
 }
 .par-row input::-webkit-outer-spin-button,.par-row input::-webkit-inner-spin-button,
 .hcp-row input::-webkit-outer-spin-button,.hcp-row input::-webkit-inner-spin-button,
 .score-input::-webkit-outer-spin-button,.score-input::-webkit-inner-spin-button,
-.ch-input::-webkit-outer-spin-button,.ch-input::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0 }
-.ch-input{width:64px}
-.score-input.invalid{border-color:var(--danger)}
-.total,.to-par,.split,.net{font-weight:600}
-.to-par[data-sign="+"]{color:var(--danger)} .to-par[data-sign="-"]{color:var(--accent)} .to-par[data-sign="0"]{color:var(--warn)}
-tfoot td{background:#0f151b;font-weight:600}
-.note{margin:8px 12px 14px;color:var(--muted);font-size:12px}
-.small{font-size:11px;color:var(--muted);margin:0 12px}
-.name-edit{background:transparent;border:none;color:var(--ink);font-weight:600;font-size:14px;width:100%;padding:6px 10px;display:block}
-.name-edit:focus{outline:1px dashed var(--accent);border-radius:6px}
+.ch-input::-webkit-outer-spin-button,.ch-input::-webkit-inner-spin-button{
+  -webkit-appearance:none; margin:0
+}
+.ch-input{ width:64px }
+.score-input.invalid{ border-color:var(--danger) }
+.total,.to-par,.split,.net{ font-weight:600 }
+.to-par[data-sign="+"]{ color:var(--danger) }
+.to-par[data-sign="-"]{ color:var(--accent) }
+.to-par[data-sign="0"]{ color:var(--warn) }
+tfoot td{ background:#0f151b; font-weight:600 }
+.note{ margin:8px 12px 14px; color:var(--muted); font-size:12px }
+.small{ font-size:11px; color:var(--muted); margin:0 12px }
+.name-edit{
+  background:transparent; border:none; color:var(--ink);
+  font-weight:600; font-size:14px; width:100%;
+  padding:6px 10px; display:block
+}
+.name-edit:focus{ outline:1px dashed var(--accent); border-radius:6px }
 
-/* Scorecard responsive tweaks (unchanged visuals) */
+/* ---- Scorecard responsive tweaks ---- */
 @media (max-width:900px){
-  th,td{padding:6px 4px}
-  .name-edit{font-size:13px;padding:6px 8px}
-  th:first-child,td:first-child{min-width:150px}
-  .par-row input,.hcp-row input,.score-input{width:46px;padding:5px 3px}
-  .ch-input{width:56px}
-  table{min-width:880px}
+  th,td{ padding:6px 4px }
+  .name-edit{ font-size:13px; padding:6px 8px }
+  th:first-child,td:first-child{ min-width:150px }
+  .par-row input,.hcp-row input,.score-input{ width:46px; padding:5px 3px }
+  .ch-input{ width:56px }
+  table{ min-width:880px }
 }
 @media (max-width:600px){
-  h1{font-size:18px}
-  .controls{gap:6px}
-  .btn{padding:7px 10px}
-  th:first-child,td:first-child{min-width:140px}
-  .par-row input,.hcp-row input,.score-input{width:40px;padding:4px 2px}
-  .ch-input{width:50px}
-  table{min-width:820px}
+  h1{ font-size:18px }
+  .controls{ gap:6px }
+  .btn{ padding:7px 10px }
+  th:first-child,td:first-child{ min-width:140px }
+  .par-row input,.hcp-row input,.score-input{ width:40px; padding:4px 2px }
+  .ch-input{ width:50px }
+  table{ min-width:820px }
 }
 
-/* ===== GAMES LAUNCHER ===== */
-.gamesbar{ margin:8px 12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center }
-.game-toggle{cursor:pointer;border:1px solid var(--line);background:#0f151b;border-radius:999px;padding:8px 12px}
-.game-toggle.active{background:#14202a;border-color:#224}
+/* =========================
+   Games launcher / sections
+   ========================= */
+.gamesbar{
+  margin:8px 12px 0;
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center
+}
+.game-toggle{
+  cursor:pointer; border:1px solid var(--line);
+  background:#0f151b; border-radius:16px; padding:8px 14px;
+}
+.game-toggle.active{ background:#14202a; border-color:#224 }
 
-/* ===== GAME SECTIONS (collapsible) ===== */
-.game-section{display:none;margin:14px 12px 28px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0f151b}
-.game-section.open{display:block}
-.game-section h2{margin:0 0 8px;font-size:18px}
+.game-section{
+  display:none; margin:14px 12px 28px; padding:12px;
+  border:1px solid var(--line); border-radius:12px; background:#0f151b
+}
+.game-section.open{ display:block }
+.game-section h2{ margin:0 0 8px; font-size:18px }
 
-/* ===== VEGAS ===== */
-.vegas-controls{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:10px}
-.team-box,.opts-box{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel)}
-.team-grid{display:grid;grid-template-columns:1fr auto auto;gap:8px 10px;align-items:center}
-.team-pill{font-size:12px;color:var(--muted)}
-.radio{display:inline-flex;gap:6px;align-items:center}
-.warn{color:var(--warn);font-size:12px;margin-top:6px}
+.pill{ font-size:12px; color:var(--muted) }
 
-/* ===== VEGAS WRAP – allow vertical bubbling, keep horizontal ===== */
+/* =========================
+   Skins (reuses banker table shell)
+   ========================= */
+.banker-controls,.vegas-controls{
+  display:grid; gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  margin-bottom:10px;
+  background:var(--panel);
+}
+.control-box,.team-box,.opts-box{
+  border:1px solid var(--line); border-radius:10px; padding:10px; background:var(--panel)
+}
+.radio{ display:inline-flex; gap:6px; align-items:center }
+.warn{ color:var(--warn); font-size:12px; margin-top:6px }
+
+/* =========================
+   Vegas
+   ========================= */
 .vegas-wrap{
-  overflow-x:auto;
-  overflow-y:visible !important;
-  -webkit-overflow-scrolling:touch;
-  touch-action:auto !important;           /* was pan-x */
+  overflow-x:auto; overflow-y:visible !important;
+  -webkit-overflow-scrolling:touch; touch-action:auto !important;
   border:1px solid var(--line);
-  border-radius:10px;background:var(--panel)
+  border-radius:10px; background:var(--panel)
 }
-.vegas-table{width:max(100%,720px);border-collapse:separate;border-spacing:0}
-.vegas-table th,.vegas-table td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:center;white-space:nowrap}
-.vegas-table thead th{position:sticky;top:0;background:#0f151b}
-.vegas-table tfoot td{background:#0f151b;font-weight:700}
-.vegas-table th:first-child,.vegas-table td:first-child{width:56px;min-width:56px;padding-left:8px;padding-right:8px}
-@media (max-width:600px){ .vegas-table th:first-child,.vegas-table td:first-child{width:44px;min-width:44px;padding-left:6px;padding-right:6px} }
+.vegas-table{ width:max(100%,720px); border-collapse:separate; border-spacing:0 }
+.vegas-table th,.vegas-table td{
+  border-bottom:1px solid var(--line); padding:8px 10px; text-align:center; white-space:nowrap
+}
+.vegas-table thead th{ position:sticky; top:0; background:#0f151b }
+.vegas-table tfoot td{ background:#0f151b; font-weight:700 }
+.vegas-table th:first-child,.vegas-table td:first-child{ width:56px; min-width:56px; padding-left:8px; padding-right:8px }
+@media (max-width:600px){
+  .vegas-table th:first-child,.vegas-table td:first-child{ width:44px; min-width:44px; padding-left:6px; padding-right:6px }
+}
 
-/* ===== BANKER ===== */
-.banker-controls{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:10px}
-.control-box{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel)}
-
-/* ===== BANKER WRAP – allow vertical bubbling, keep horizontal ===== */
+/* =========================
+   Banker
+   ========================= */
 .banker-wrap{
-  overflow-x:auto;
-  overflow-y:visible !important;
-  -webkit-overflow-scrolling:touch;
-  touch-action:auto !important;           /* was pan-x */
+  overflow-x:auto; overflow-y:visible !important;
+  -webkit-overflow-scrolling:touch; touch-action:auto !important;
   border:1px solid var(--line);
-  border-radius:10px;background:var(--panel)
+  border-radius:10px; background:var(--panel)
 }
-.banker-table{width:max(100%,820px);border-collapse:separate;border-spacing:0}
-.banker-table th,.banker-table td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:center;white-space:nowrap}
-.banker-table thead th{position:sticky;top:0;background:#0f151b}
-.banker-table tfoot td{background:#0f151b;font-weight:700}
-.banker-table th:first-child,.banker-table td:first-child{width:56px;min-width:56px;padding-left:8px;padding-right:8px}
-@media (max-width:600px){ .banker-table th:first-child,.banker-table td:first-child{width:44px;min-width:44px;padding-left:6px;padding-right:6px} }
-
-/* Pills */
-.pill{font-size:12px;color:var(--muted)}
-
-/* ===== JUNK (tweaks preserved) ===== */
-#junkTable { width: max-content; table-layout: fixed; }
-#junkTable th:first-child, #junkTable td:first-child { width: 44px; }
-#junkTable th:not(:first-child), #junkTable td:not(:first-child) { width: 76px; }
-.junk-cell { gap: 4px; }
-.junk-dot { display:inline-block; min-width: 18px; text-align:center; }
-@media (max-width: 768px) {
-  #junkTable th:not(:first-child), #junkTable td:not(:first-child) { width: 70px; }
-  .junk-dd > summary { padding: 4px 8px; min-height: 32px; }
+.banker-table{ width:max(100%,820px); border-collapse:separate; border-spacing:0 }
+.banker-table th,.banker-table td{
+  border-bottom:1px solid var(--line); padding:8px 10px; text-align:center; white-space:nowrap
+}
+.banker-table thead th{ position:sticky; top:0; background:#0f151b }
+.banker-table tfoot td{ background:#0f151b; font-weight:700 }
+.banker-table th:first-child,.banker-table td:first-child{
+  width:56px; min-width:56px; padding-left:8px; padding-right:8px
+}
+@media (max-width:600px){
+  .banker-table th:first-child,.banker-table td:first-child{
+    width:44px; min-width:44px; padding-left:6px; padding-right:6px
+  }
 }
 
-/* Junk achievements dropdown */
-.junk-cell{display:flex;gap:6px;align-items:center;justify-content:center}
-.junk-dd{display:inline-block;position:relative}
-.junk-dd>summary{list-style:none;cursor:pointer;border:1px solid var(--line, #333);background:#0f151b;color:var(--ink, #e6e6e6);border-radius:6px;padding:2px 6px;font-size:12px}
-.junk-dd[open]>summary{filter:brightness(1.1)}
-.junk-dd .menu{border:1px solid var(--line, #333);background:#0f151b;border-radius:8px;padding:6px 8px;display:grid;gap:6px;margin-top:6px;position:absolute;z-index:10}
-.junk-dd .menu label{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink, #e6e6e6)}
+/* =========================
+   Junk (Dots) — table + dropdown
+   ========================= */
+#junkTable{ width:max-content; table-layout:fixed }
+#junkTable th:first-child,#junkTable td:first-child{ width:44px }
+#junkTable th:not(:first-child),#junkTable td:not(:first-child){ width:76px }
+.junk-dot{ display:inline-block; min-width:18px; text-align:center }
 
-/* Mobile table density & tap targets (kept) */
-.banker-table th, .banker-table td { padding: 8px 10px; }
-#junkTable tbody td, #junkTable tbody th,
-#vegasTable tbody td, #vegasTable tbody th { padding-top: 6px; padding-bottom: 6px; }
-.junk-cell{ display:inline-flex; gap:3px; align-items:center; justify-content:center; }
+/* Unified junk cell + dropdown */
+.junk-cell{ display:inline-flex; gap:6px; align-items:center; justify-content:center }
 .junk-dd{ display:inline-block; position:relative }
 .junk-dd > summary{
   list-style:none; cursor:pointer;
-  border:1px solid var(--line, #333);
-  background:#0f151b; color:var(--ink, #e6e6e6);
+  border:1px solid var(--line,#333);
+  background:#0f151b; color:var(--ink,#e6e6e6);
   border-radius:8px; padding:6px 10px;
-  font-size:12px; line-height:1.1;
+  font-size:12px; line-height:1.1; min-height:36px;
+  display:inline-flex; align-items:center
 }
 .junk-dd[open] > summary{ filter:brightness(1.08) }
 .junk-dd .menu{
   position:absolute; z-index:10; margin-top:6px;
-  display:grid; gap:6px; padding:8px;
-  border:1px solid var(--line, #333); background:#0f151b; border-radius:10px;
-  min-width:160px;
+  display:grid; gap:6px; padding:8px; min-width:160px;
+  border:1px solid var(--line,#333); background:#0f151b; border-radius:10px
 }
 .junk-dd .menu label{
   position:relative; display:flex; align-items:center;
   gap:8px; padding:10px 12px; border-radius:10px; cursor:pointer;
-  border:1px solid transparent; user-select:none;
+  border:1px solid transparent; user-select:none; color:var(--ink,#e6e6e6)
 }
-.junk-dd .menu label input{ position:absolute; inset:0; opacity:0; pointer-events:none; }
-.junk-dd .menu label:has(input:checked){ background:#14202a; border-color:#224; }
-.junk-dd .menu label:has(input:checked)::after{ content:"✓"; margin-left:auto; font-weight:700; }
+.junk-dd .menu label input{ position:absolute; inset:0; opacity:0; pointer-events:none }
+.junk-dd .menu label:has(input:checked){ background:#14202a; border-color:#224 }
+.junk-dd .menu label:has(input:checked)::after{ content:"✓"; margin-left:auto; font-weight:700 }
 
-/* Larger toggles */
-.gamesbar .game-toggle { min-height: 40px; padding: 8px 14px; border-radius: 16px; }
-.junk-dd > summary { min-height: 36px; padding: 6px 10px; display: inline-flex; align-items: center; }
-input[type="number"], input[type="text"] { padding: 6px 8px; min-height: 34px; font-size: 15px; }
+/* ---- Density tweaks shared by small tables ---- */
+#junkTable tbody td,#junkTable tbody th,
+#vegasTable tbody td,#vegasTable tbody th{ padding-top:6px; padding-bottom:6px }
 
-/* Keep tables scrollable on small screens */
-.banker-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+/* ---- Larger/touch targets ---- */
+.gamesbar .game-toggle{ min-height:40px }
+input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-size:15px }
 
-/* Mobile-specific tightening */
-@media (max-width: 768px) {
-  .banker-table th, .banker-table td { padding: 6px 8px; }
-  #junkTable tbody td, #junkTable tbody th,
-  #vegasTable tbody td, #vegasTable tbody th { padding-top: 4px; padding-bottom: 4px; }
-  .gamesbar { gap: 8px; display: flex; flex-wrap: wrap; }
-  .gamesbar .game-toggle { flex: 1 1 auto; }
-  h2 { font-size: 18px; margin: 8px 0; }
+/* ---- Responsive tightening ---- */
+@media (max-width:768px){
+  .banker-table th,.banker-table td{ padding:6px 8px }
+  #junkTable tbody td,#junkTable tbody th,
+  #vegasTable tbody td,#vegasTable tbody th{ padding-top:4px; padding-bottom:4px }
+  .gamesbar{ gap:8px; display:flex; flex-wrap:wrap }
+  .gamesbar .game-toggle{ flex:1 1 auto }
+  h2{ font-size:18px; margin:8px 0 }
+  #junkTable th:not(:first-child),#junkTable td:not(:first-child){ width:70px }
+  .junk-dd > summary{ padding:4px 8px; min-height:32px }
 }
-/* Keep touch targets at least 36px on very small screens */
-@media (max-width: 420px) {
-  .junk-dd > summary { min-height: 40px; padding: 8px 12px; }
-  input[type="number"], input[type="text"] { min-height: 36px; }
-}
-
-
-
-
-    /* your existing CSS here */
-
-    /* --- eliminate white flash and keep full dark background --- */
-    html, body {
-      background-color: #0b0d10;          /* same as your --bg */
-      color-scheme: dark;                 /* helps Safari/WebKit */
-      overscroll-behavior: none;          /* prevents iOS pull-to-white bounce */
-    }
-
-    * {
-      background-color: transparent;      /* inherit the dark color unless specified */
-    }
-
-    .wrap,
-    .vegas-wrap,
-    .banker-wrap,
-    .skins-wrap {
-      background-color: #0b0d10;
-    }
-
-    @supports (-webkit-touch-callout: none) {
-      html, body {
-        background-color: #0b0d10;
-      }
-    }
-
-
-    /* Theme toggle button */
-.theme-toggle{
-  background: var(--panel);
-  color: var(--ink);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 12px;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background .25s, color .25s, border-color .25s;
-}
-.theme-toggle:hover{ filter:brightness(1.08); }
-
-/* Light theme (dark remains default) */
-:root[data-theme="light"] {
-  --bg: #f4f6f8;
-  --panel: #ffffff;
-  --panel-2: #f8fafc;
-  --ink: #1a1c1f;
-  --muted: #5a5f66;
-  --accent: #0090e0;
-  --line: #d3d7dc;
-  --shadow: rgba(0,0,0,0.08);
+@media (max-width:420px){
+  .junk-dd > summary{ min-height:40px; padding:8px 12px }
+  input[type="number"],input[type="text"]{ min-height:36px }
 }
 
-/* Apply background/text in light mode */
-:root[data-theme="light"] body {
-  background: var(--bg);
-  color: var(--ink);
+/* =========================
+   Light theme (opt-in)
+   ========================= */
+:root[data-theme="light"]{
+  --bg:#f4f6f8;
+  --panel:#ffffff;
+  --panel-2:#f8fafc;
+  --ink:#1a1c1f;
+  --muted:#5a5f66;
+  --accent:#0090e0;
+  --line:#d3d7dc;
+  --shadow:rgba(0,0,0,.08);
 }
-/* If you gave wrappers a dark background earlier, mirror to panel in light mode */
+:root[data-theme="light"] body{ background:var(--bg); color:var(--ink) }
+
+/* Panels/wrappers */
 :root[data-theme="light"] .wrap,
 :root[data-theme="light"] .vegas-wrap,
 :root[data-theme="light"] .banker-wrap,
-:root[data-theme="light"] .skins-wrap {
-  background: var(--panel);
-}
+:root[data-theme="light"] .skins-wrap,
+:root[data-theme="light"] .game-section,
+:root[data-theme="light"] .control,
+:root[data-theme="light"] .control-box,
+:root[data-theme="light"] .team-box,
+:root[data-theme="light"] .opts-box{ background:var(--panel); border-color:var(--line) }
 
-
-/* Fix dark inputs/buttons in light mode */
+/* Inputs */
 :root[data-theme="light"] input,
 :root[data-theme="light"] select,
-:root[data-theme="light"] textarea {
-  background-color: #ffffff !important;
-  color: #1a1c1f !important;
-  border: 1px solid #d0d4d9 !important;
+:root[data-theme="light"] textarea{
+  background-color:#fff !important; color:#1a1c1f !important; border:1px solid #d0d4d9 !important;
+  box-shadow:none !important
 }
-
 :root[data-theme="light"] input:focus,
 :root[data-theme="light"] select:focus,
-:root[data-theme="light"] textarea:focus {
-  outline: none;
-  border-color: #0090e0 !important;
-  box-shadow: 0 0 0 2px rgba(0,144,224,0.2);
+:root[data-theme="light"] textarea:focus{
+  outline:none; border-color:#0090e0 !important; box-shadow:0 0 0 2px rgba(0,144,224,.2)
 }
 
-/* Buttons (e.g., Play Skins, Save, etc.) */
+/* Buttons */
 :root[data-theme="light"] button,
-:root[data-theme="light"] .btn {
-  background-color: #f3f5f8 !important;
-  color: #1a1c1f !important;
-  border: 1px solid #cfd3d8 !important;
+:root[data-theme="light"] .btn{
+  background-color:#f3f5f8 !important; color:#1a1c1f !important; border:1px solid #cfd3d8 !important
 }
-
 :root[data-theme="light"] button:hover,
-:root[data-theme="light"] .btn:hover {
-  background-color: #e7eaed !important;
+:root[data-theme="light"] .btn:hover{ background-color:#e7eaed !important }
+
+/* Tables */
+:root[data-theme="light"] table{ background-color:#fff !important; color:#1a1c1f !important; border-color:#d0d4d9 !important }
+:root[data-theme="light"] th{
+  background-color:#f1f3f6 !important; color:#1a1c1f !important; border-color:#d0d4d9 !important
 }
-
-/* Toggle and panel fixes */
-:root[data-theme="light"] .wrap,
-:root[data-theme="light"] .vegas-wrap,
-:root[data-theme="light"] .banker-wrap,
-
-
-
-/* --- Fix scorecard + game inputs for light mode --- */
-:root[data-theme="light"] table,
-:root[data-theme="light"] .scorecard-table {
-  background-color: #ffffff !important;
-  color: #1a1c1f !important;
-  border-color: #d0d4d9 !important;
-}
-
-/* Column headers (CH, hole numbers, totals) */
-:root[data-theme="light"] th {
-  background-color: #f1f3f6 !important;
-  color: #1a1c1f !important;
-  border-color: #d0d4d9 !important;
-}
-
-/* Player names column */
-:root[data-theme="light"] td:first-child {
-  background-color: #f7f8fa !important;
-  color: #1a1c1f !important;
-}
-
-/* Input fields inside the game grid */
-:root[data-theme="light"] input[type="number"],
-:root[data-theme="light"] input[type="text"] {
-  background-color: #ffffff !important;
-  color: #1a1c1f !important;
-  border: 1px solid #d0d4d9 !important;
-  box-shadow: none !important;
-}
-
-/* Hover/focus effects */
-:root[data-theme="light"] input[type="number"]:focus,
-:root[data-theme="light"] input[type="text"]:focus {
-  border-color: #0090e0 !important;
-  box-shadow: 0 0 0 2px rgba(0,144,224,0.15);
-}
-
-/* Totals row and bottom cells */
-:root[data-theme="light"] tfoot td,
-:root[data-theme="light"] .totals-row td {
-  background-color: #f1f3f6 !important;
-  color: #1a1c1f !important;
-}
-
-/* Optional: hole index / par / HCP rows */
+:root[data-theme="light"] td:first-child{ background-color:#f7f8fa !important; color:#1a1c1f !important }
+:root[data-theme="light"] tfoot td{ background-color:#f1f3f6 !important; color:#1a1c1f !important }
 :root[data-theme="light"] .hcp-row td,
-:root[data-theme="light"] .par-row td {
-  background-color: #fafbfc !important;
+:root[data-theme="light"] .par-row td{ background-color:#fafbfc !important; color:#1a1c1f !important }
+
+
+/* =========================
+   Light Mode Fix — Junk dropdowns & dots
+   ========================= */
+:root[data-theme="light"] .junk-dd > summary {
+  background-color: #fff !important;
+  color: #1a1c1f !important;
+  border-color: #d0d4d9 !important;
+}
+
+:root[data-theme="light"] .junk-dd .menu {
+  background-color: #fff !important;
+  border-color: #d0d4d9 !important;
+}
+
+:root[data-theme="light"] .junk-dd .menu label {
   color: #1a1c1f !important;
 }
 
-/* Buttons in game sections (Play Skins, etc.) */
-:root[data-theme="light"] .play-btn,
-:root[data-theme="light"] .btn-game {
+:root[data-theme="light"] .junk-dd .menu label:has(input:checked) {
+  background-color: #eaf4ff !important;
+  border-color: #0090e0 !important;
+}
+
+/* Optional: lighten junk “Dots” pill buttons */
+:root[data-theme="light"] .junk-cell summary,
+:root[data-theme="light"] .junk-cell button {
   background-color: #f3f5f8 !important;
   color: #1a1c1f !important;
-  border: 1px solid #cfd3d8 !important;
-}
-:root[data-theme="light"] .play-btn:hover,
-:root[data-theme="light"] .btn-game:hover {
-  background-color: #e7eaed !important;
+  border-color: #d0d4d9 !important;
 }
 
-
-/* ==== Unify backgrounds for description rows + page edges ==== */
-
-/* Make the short description strips look like the panels */
-.note,
-.game-desc,
-.rules,
-.legend,
-.banker-controls .small {
-  background: var(--panel);          /* same tone as cards/panels */
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 8px 12px;
-  margin-top: 8px;
-}
-
-/* Control grids sit on panel (remove extra dark gutter) */
-.banker-controls,
-.vegas-controls {
-  background: var(--panel);
-}
-
-/* Ensure all game wrappers inherit the panel tone behind them */
-.wrap,
-.vegas-wrap,
-.banker-wrap,
-.skins-wrap {
-  background: var(--panel);
-}
-
-/* Keep the very outer page background consistent (no darker “ring”) */
-html, body {
-  background-color: var(--bg);       /* your dark theme base */
-}
-
-/* If any container is transparent, give it the panel tone so gaps don't look darker */
-.container,
-.section,
-.game-section {
-  background: var(--panel);
-}
 
 
   </style>
