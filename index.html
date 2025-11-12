@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Golf Scorecard — 4 Players</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
+    <style>
+      :root{
+        --bg:#0b0d10;--panel:#11151a;--ink:#e8eef5;--muted:#a8b3bf;--accent:#68d391;--line:#1e242b;
+        --warn:#ffb454;--danger:#ff6b6b;--shadow:rgba(0,0,0,.35)
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
+        background:linear-gradient(180deg,#0a0c10 0%,#0c1117 100%);color:var(--ink)
+      }
+
+      header{padding:16px 12px 8px;display:grid;gap:10px}
+      h1{margin:0;font-size:clamp(18px,3.5vw,28px);letter-spacing:.2px}
+      .controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+      .control{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;display:flex;gap:8px;align-items:center}
+      .control label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+      .control input[type="text"]{background:#0c1218;border:1px solid var(--line);color:var(--ink);border-radius:8px;padding:6px 8px;min-width:120px}
+      .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer}
+      .btn:hover{filter:brightness(1.1)}
+      .btn.accent{border-color:#224;background:#14202a}
+      .meta{font-size:12px;color:var(--muted)}
+
+      /* Scorecard scroll */
+      .wrap{padding:8px 0 20px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x pinch-zoom;overscroll-behavior-x:contain;position:relative}
+      .wrap::before,.wrap::after{content:"";position:sticky;top:0;width:18px;height:100%;pointer-events:none;z-index:6}
+      .wrap::before{left:0;box-shadow:inset 12px 0 12px -12px var(--shadow)}
+      .wrap::after{right:0;box-shadow:inset -12px 0 12px -12px var(--shadow)}
+
+      table{width:max(100%,980px);border-collapse:separate;border-spacing:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;min-width:940px}
+      thead th{position:sticky;top:0;background:#0f151b;z-index:3}
+      th,td{border-bottom:1px solid var(--line);text-align:center;font-variant-numeric:tabular-nums;vertical-align:middle;padding:8px 6px;white-space:nowrap}
+      th:first-child,td:first-child{ text-align:left;padding-left:12px;min-width:170px;position:sticky;left:0;background-color:var(--panel);z-index:4;border-right:1px solid var(--line)}
+      thead th:first-child{z-index:5}
+      tr:last-child td{border-bottom:none}
+      .subtle{color:var(--muted);font-size:12px}
+
+      .par-row input,.hcp-row input,.score-input,.ch-input{
+        width:54px;text-align:center;border-radius:8px;border:1px solid var(--line);background:#0c1218;color:var(--ink);padding:6px 4px;
+        -moz-appearance:textfield;
+      }
+      .par-row input::-webkit-outer-spin-button,.par-row input::-webkit-inner-spin-button,
+      .hcp-row input::-webkit-outer-spin-button,.hcp-row input::-webkit-inner-spin-button,
+      .score-input::-webkit-outer-spin-button,.score-input::-webkit-inner-spin-button,
+      .ch-input::-webkit-outer-spin-button,.ch-input::-webkit-inner-spin-button{ -webkit-appearance:none;margin:0 }
+      .ch-input{width:64px}
+      .score-input.invalid{border-color:var(--danger)}
+      .total,.to-par,.split,.net{font-weight:600}
+      .to-par[data-sign="+"]{color:var(--danger)} .to-par[data-sign="-"]{color:var(--accent)} .to-par[data-sign="0"]{color:var(--warn)}
+      tfoot td{background:#0f151b;font-weight:600}
+      .note{margin:8px 12px 14px;color:var(--muted);font-size:12px}
+      .small{font-size:11px;color:var(--muted);margin:0 12px}
+
+      .name-edit{background:transparent;border:none;color:var(--ink);font-weight:600;font-size:14px;width:100%;padding:6px 10px;display:block}
+      .name-edit:focus{outline:1px dashed var(--accent);border-radius:6px}
+
+      @media (max-width:900px){
+        th,td{padding:6px 4px}
+        .name-edit{font-size:13px;padding:6px 8px}
+        th:first-child,td:first-child{min-width:150px}
+        .par-row input,.hcp-row input,.score-input{width:46px;padding:5px 3px}
+        .ch-input{width:56px}
+        table{min-width:880px}
+      }
+      @media (max-width:600px){
+        h1{font-size:18px}
+        .controls{gap:6px}
+        .btn{padding:7px 10px}
+        th:first-child,td:first-child{min-width:140px}
+        .par-row input,.hcp-row input,.score-input{width:40px;padding:4px 2px}
+        .ch-input{width:50px}
+        table{min-width:820px}
+      }
+
+      /* Games launcher */
+      .gamesbar{ margin:8px 12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center }
+      .game-toggle{cursor:pointer;border:1px solid var(--line);background:#0f151b;border-radius:999px;padding:8px 12px}
+      .game-toggle.active{background:#14202a;border-color:#224}
+
+      /* Game sections (collapsible) */
+      .game-section{display:none;margin:14px 12px 28px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0f151b}
+      .game-section.open{display:block}
+      .game-section h2{margin:0 0 8px;font-size:18px}
+
+      /* Vegas */
+      .vegas-controls{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:10px}
+      .team-box,.opts-box{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel)}
+      .team-grid{display:grid;grid-template-columns:1fr auto auto;gap:8px 10px;align-items:center}
+      .team-pill{font-size:12px;color:var(--muted)}
+      .radio{display:inline-flex;gap:6px;align-items:center}
+      .warn{color:var(--warn);font-size:12px;margin-top:6px}
+      .vegas-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+      .vegas-table{width:max(100%,720px);border-collapse:separate;border-spacing:0}
+      .vegas-table th,.vegas-table td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:center;white-space:nowrap}
+      .vegas-table thead th{position:sticky;top:0;background:#0f151b}
+      .vegas-table tfoot td{background:#0f151b;font-weight:700}
+      /* Compact "Hole" column */
+      .vegas-table th:first-child,.vegas-table td:first-child{width:56px;min-width:56px;padding-left:8px;padding-right:8px}
+      @media (max-width:600px){ .vegas-table th:first-child,.vegas-table td:first-child{width:44px;min-width:44px;padding-left:6px;padding-right:6px} }
+
+      /* Banker */
+      .banker-controls{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));margin-bottom:10px}
+      .control-box{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel)}
+      .banker-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+      .banker-table{width:max(100%,820px);border-collapse:separate;border-spacing:0}
+      .banker-table th,.banker-table td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:center;white-space:nowrap}
+      .banker-table thead th{position:sticky;top:0;background:#0f151b}
+      .banker-table tfoot td{background:#0f151b;font-weight:700}
+      /* Compact "Hole" column */
+      .banker-table th:first-child,.banker-table td:first-child{width:56px;min-width:56px;padding-left:8px;padding-right:8px}
+      @media (max-width:600px){ .banker-table th:first-child,.banker-table td:first-child{width:44px;min-width:44px;padding-left:6px;padding-right:6px} }
+
+      .pill{font-size:12px;color:var(--muted)}
+    </style>
+  
+    <style>
+      /* compact banker/vegas */
+      #banker td, #banker th,
+      #vegas td, #vegas th {
+        padding: 2px 4px;
+        font-size: 13px;
+      }
+      #banker input[type="number"],
+      #banker input[type="text"],
+      #vegas input[type="number"],
+      #vegas input[type="text"] {
+        width: 3em;
+        padding: 2px;
+        font-size: 13px;
+      }
+      #banker select {
+        font-size: 13px;
+        padding: 2px 4px;
+        max-width: 6em;
+      }
+    </style>
+    
+</head>
+  <body>
+    <header>
+      <h1>Golf Scorecard (18 Holes · 4 Players)</h1>
+      <div class="controls">
+        <div class="control">
+          <label for="courseName">Course</label>
+          <input id="courseName" type="text" placeholder="Enter course name…" />
+        </div>
+        <div class="control">
+          <label for="teeName">Tee</label>
+          <input id="teeName" type="text" placeholder="Optional (e.g., Blue)" />
+        </div>
+        <div class="control">
+          <label for="csvInput">CSV</label>
+          <input id="csvInput" type="file" accept=".csv" />
+        </div>
+        <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
+        <button id="resetBtn" class="btn">Reset Scores</button>
+        <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
+        <button id="saveBtn" class="btn accent">Save to Browser</button>
+        <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
+      </div>
+      <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men’s HCP are fixed from the card.</p>
+    </header>
+
+    <!-- SCORECARD -->
+    <div class="wrap">
+      <table id="scorecard" aria-describedby="saveStatus">
+        <thead>
+          <tr id="holesHeader">
+            <th class="align-left">Player</th>
+            <th>CH</th>
+            <!-- JS fills Holes 1–18 + Out + In + Total + To Par + Net -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="par-row" id="parRow">
+            <td class="align-left"><strong>Par</strong> <span class="subtle">(from card)</span></td><td></td>
+          </tr>
+          <tr class="hcp-row" id="hcpRow">
+            <td class="align-left"><strong>HCP Index</strong> <span class="subtle">(from card)</span></td><td></td>
+          </tr>
+          <!-- Player rows inserted by JS -->
+        </tbody>
+        <tfoot>
+          <tr id="totalsRow">
+            <td class="align-left">Totals</td><td></td>
+            <!-- JS adds per-hole sums + Out/In/Total; placeholders align To Par / Net -->
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <!-- GAMES LAUNCHER -->
+    <div class="gamesbar">
+      <button id="toggleVegas"  class="game-toggle">🎲 Play Vegas</button>
+      <button id="toggleBanker" class="game-toggle">🏦 Play Banker</button>
+    </div>
+
+    <!-- VEGAS GAME -->
+    <section class="game-section" id="vegasSection" aria-hidden="true">
+      <h2>Vegas Game</h2>
+      <div class="vegas-controls">
+        <div class="team-box">
+          <div class="team-pill">Assign teams (exactly two per team)</div>
+          <div class="team-grid" id="vegasTeams"></div>
+          <div class="warn" id="vegasTeamWarning" hidden>Pick exactly two players on Team A and two on Team B.</div>
+        </div>
+        <div class="opts-box">
+          <div class="team-pill">Options</div>
+          <label class="radio"><input type="checkbox" id="optUseNet" /> Use Net (NDB)</label><br/>
+          <label class="radio"><input type="checkbox" id="optDoubleBirdie" checked /> Double on Birdie (winner)</label><br/>
+          <label class="radio"><input type="checkbox" id="optTripleEagle"  checked /> Triple on Eagle (winner)</label>
+        </div>
+      </div>
+
+      <div class="vegas-wrap">
+        <table class="vegas-table" id="vegasTable">
+          <thead><tr><th>Hole</th><th>Team A</th><th>Team B</th><th>Mult</th><th>Pts (A)</th></tr></thead>
+          <tbody id="vegasBody"></tbody>
+          <tfoot>
+            <tr><td><strong>Totals</strong></td><td id="vegasTotalA">—</td><td id="vegasTotalB">—</td><td></td><td id="vegasPtsA">—</td></tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points.</p>
+    </section>
+
+    <!-- BANKER GAME -->
+    <section class="game-section" id="bankerSection" aria-hidden="true">
+      <h2>Banker</h2>
+      <div class="banker-controls">
+        <div class="control-box">
+          <div class="pill">Point value per match</div>
+          <input id="bankerPointValue" type="number" min="1" step="1" value="1" class="ch-input" />
+          <div class="pill" style="margin-top:8px">Rotation</div>
+          <select id="bankerRotation">
+            <option value="rotate">Rotate each hole</option>
+            <option value="untilBeaten">Banker stays until beaten</option>
+          </select>
+        </div>
+        <div class="control-box">
+          <div class="pill">Options</div>
+          <label class="radio"><input type="checkbox" id="bankerUseNet" checked /> Use Net (NDB)</label><br/>
+          <label class="radio"><input type="checkbox" id="bankerDoubleBirdie" checked /> Double on Birdie (winner)</label><br/>
+          <label class="radio"><input type="checkbox" id="bankerTripleEagle" checked /> Triple on Eagle (winner)</label>
+        </div>
+      </div>
+
+      <div class="banker-wrap">
+        <table class="banker-table" id="bankerTable">
+          <thead>
+            <tr>
+              <th>Hole</th>
+              <th>Banker</th>
+              <th>P1 Δ</th>
+              <th>P2 Δ</th>
+              <th>P3 Δ</th>
+              <th>P4 Δ</th>
+            </tr>
+          </thead>
+          <tbody id="bankerBody"></tbody>
+          <tfoot>
+            <tr>
+              <td><strong>Totals</strong></td>
+              <td></td>
+              <td id="bankerTotP1">—</td>
+              <td id="bankerTotP2">—</td>
+              <td id="bankerTotP3">—</td>
+              <td id="bankerTotP4">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="small">
+        Banker plays a separate match against each other player per hole for the chosen point value (winner’s birdie/eagle can multiply). Rotation can be fixed or “until beaten”.
+      </p>
+    </section>
+
+    <p class="note">
+      Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6).
+    </p>
+
+    <script src="js/index.js" defer></script>
+  </body>
+</html>
