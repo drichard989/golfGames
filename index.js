@@ -63,7 +63,6 @@
   const AppManager = {
     recalcGames(){
       try{ vegas_recalc(); }catch(e){ console.warn('vegas_recalc failed', e); }
-      try{ banker_recalc?.(); }catch(e){ console.warn('banker_recalc failed', e); }
       try{ updateSkins?.(); }catch(e){ /* skins may not be open yet */ }
       try{ updateJunk?.(); }catch(e){ /* junk may not be open yet */ }
       try{ window._vegasUpdateDollars?.(); }catch{}
@@ -86,11 +85,7 @@
   optUseNet:"#optUseNet", optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
   vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB",
 
-    // Banker
-    bankerPointValue:"#bankerPointValue", bankerRotation:"#bankerRotation",
-    bankerUseNet:"#bankerUseNet", bankerDoubleBirdie:"#bankerDoubleBirdie", bankerTripleEagle:"#bankerTripleEagle",
-    bankerBody:"#bankerBody",
-    bankerTotP1:"#bankerTotP1", bankerTotP2:"#bankerTotP2", bankerTotP3:"#bankerTotP3", bankerTotP4:"#bankerTotP4",
+    // Banker (stub only)
 
     
     // Skins
@@ -276,7 +271,7 @@
       courseName:$(ids.courseName)?.value||"", teeName:$(ids.teeName)?.value||"",
       players:$$(".player-row").map(row=>({ name:$(".name-edit",row).value||"", ch:$(".ch-input",row).value||"", scores:$$("input.score-input",row).map(i=>i.value) })),
       vegas:{ teams:vegas_getTeamAssignments(), opts:vegas_getOptions(), open: $(ids.vegasSection).classList.contains("open") },
-      banker:{ opts:banker_getOptions(), open: $(ids.bankerSection).classList.contains("open") },
+      banker:{ open: $(ids.bankerSection).classList.contains("open") },
       skins:{ buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10, open: $(ids.skinsSection)?.classList.contains("open") },
       savedAt:Date.now(),
     };
@@ -297,7 +292,7 @@
       if(s.vegas?.opts)  vegas_setOptions(s.vegas.opts);
       if(s.vegas?.open)  games_open("vegas");
 
-      banker_renderTable();
+      
 
       if(s.banker?.open) games_open("banker");
 
@@ -307,7 +302,7 @@
       }
       if(s.skins?.open) games_open("skins");
 
-      vegas_recalc(); banker_recalc();
+      vegas_recalc();
       announce(`Restored saved card (${new Date(s.savedAt||Date.now()).toLocaleString()}).`);
     }catch{}
   }
@@ -316,7 +311,7 @@
   function clearAll(){
     $(ids.courseName).value=""; $(ids.teeName).value="";
     $$(".player-row").forEach(r=>{ $(".name-edit",r).value=""; $(".ch-input",r).value=""; $$("input.score-input",r).forEach(i=>{i.value="";i.classList.remove("invalid");}); });
-    recalcAll(); vegas_renderTeamControls(); vegas_recalc(); banker_renderTable(); banker_recalc(); announce("All fields cleared.");
+    recalcAll(); vegas_renderTeamControls(); vegas_recalc(); announce("All fields cleared.");
   }
   function announce(t){ const el=$(ids.saveStatus); el.textContent=t; el.style.opacity="1"; setTimeout(()=>{el.style.opacity="0.75";},1200); }
 
@@ -528,127 +523,10 @@
   }
 
   // ======================================================================
-  // =============================== BANKER ===============================
+  // =============================== BANKER (removed/stubbed) ===============================
   // ======================================================================
   // Lightweight module to separate Banker compute from render
-  const Banker = {
-    /**
-     * Compute per-hole and total Banker results.
-     * @param {{pointValue:number, rotation:string, useNet:boolean, doubleBirdie:boolean, tripleEagle:boolean}} opts
-     * @param {string[]} names - player names
-     * @returns {{perHole:object[], totals:number[]}}
-     */
-    compute(opts, names){
-      const perHole=[];
-      const totals=[0,0,0,0];
-      let banker = 0;
-
-      for(let h=0;h<HOLES;h++){
-        const deltas=[0,0,0,0];
-
-        for(let p=0;p<PLAYERS;p++){
-          if(p===banker) continue;
-          const sb = this._score(banker,h,opts.useNet);
-          const so = this._score(p,h,opts.useNet);
-          if(!sb || !so){ deltas[p] = 0; continue; }
-          if(sb===so){ deltas[p]=0; continue; }
-          const winner = (so<sb) ? p : banker;
-          const mult   = this._matchMultiplier(winner,h,opts);
-          const value  = opts.pointValue * mult;
-          if(winner===p){ deltas[p] += value; deltas[banker] -= value; }
-          else { deltas[p] -= value; deltas[banker] += value; }
-        }
-
-        for(let p=0;p<PLAYERS;p++){
-          totals[p] += deltas[p];
-        }
-
-        perHole.push({banker, bankerName:names[banker], deltas:[...deltas]});
-        banker = this._nextBankerAfterHole(banker,h,opts);
-      }
-
-      return {perHole, totals};
-    },
-    /**
-     * Render Banker results into the DOM.
-     */
-    render(data){
-      for(let h=0;h<HOLES;h++){
-        const hole = data.perHole[h];
-        $(`[data-banker-name="${h}"]`).textContent = hole.bankerName;
-        for(let p=0;p<PLAYERS;p++){
-          const cell = $(`[data-banker-p="${h}-${p}"]`);
-          const d = hole.deltas[p];
-          cell.textContent = d===0 ? "—" : (d>0? `+${d}` : `${d}`);
-        }
-      }
-
-      $(ids.bankerTotP1).textContent = data.totals[0]===0 ? "0" : (data.totals[0]>0?`+${data.totals[0]}`:`${data.totals[0]}`);
-      $(ids.bankerTotP2).textContent = data.totals[1]===0 ? "0" : (data.totals[1]>0?`+${data.totals[1]}`:`${data.totals[1]}`);
-      $(ids.bankerTotP3).textContent = data.totals[2]===0 ? "0" : (data.totals[2]>0?`+${data.totals[2]}`:`${data.totals[2]}`);
-      $(ids.bankerTotP4).textContent = data.totals[3]===0 ? "0" : (data.totals[3]>0?`+${data.totals[3]}`:`${data.totals[3]}`);
-    },
-    // Internal helpers
-    _score(playerIdx, holeIdx, useNet){
-      return useNet ? getNetNDB(playerIdx,holeIdx) : getGross(playerIdx,holeIdx);
-    },
-    _matchMultiplier(winnerIdx, holeIdx, opts){
-      const s = this._score(winnerIdx, holeIdx, opts.useNet);
-      if(!s) return 1;
-      const toPar = s - PARS[holeIdx];
-      let m = 1;
-      if(opts.tripleEagle && toPar <= -2) m = Math.max(m,3);
-      if(opts.doubleBirdie && toPar <= -1) m = Math.max(m,2);
-      return m;
-    },
-    _nextBankerAfterHole(currentBanker, holeIdx, opts){
-      if(opts.rotation==="rotate") return (holeIdx+1) % PLAYERS;
-      const b=currentBanker;
-      let bestOpponent=null, bestScore=Infinity;
-      for(let p=0;p<PLAYERS;p++){
-        if(p===b) continue;
-        const s=this._score(p,holeIdx,opts.useNet) || Infinity;
-        if(s<bestScore){ bestScore=s; bestOpponent=p; }
-      }
-      const sb = this._score(b,holeIdx,opts.useNet) || Infinity;
-      if(bestOpponent!==null && bestScore < sb) return bestOpponent;
-      return b;
-    }
-  };
-
-  function banker_renderTable(){
-    const body=$(ids.bankerBody); body.innerHTML="";
-    for(let h=0;h<HOLES;h++){
-      const tr=document.createElement("tr");
-      tr.innerHTML = `<td>${h+1}</td><td data-banker-name="${h}">—</td>
-        <td data-banker-p="${h}-0">—</td><td data-banker-p="${h}-1">—</td>
-        <td data-banker-p="${h}-2">—</td><td data-banker-p="${h}-3">—</td>`;
-      body.appendChild(tr);
-    }
-  }
-  function banker_getOptions(){
-    return {
-      pointValue: Math.max(1, Number($(ids.bankerPointValue).value)||1),
-      rotation: $(ids.bankerRotation).value, // "rotate" | "untilBeaten"
-      useNet: $(ids.bankerUseNet).checked,
-      doubleBirdie: $(ids.bankerDoubleBirdie).checked,
-      tripleEagle: $(ids.bankerTripleEagle).checked,
-    };
-  }
-  function banker_setOptions(o){
-    if('pointValue' in o) $(ids.bankerPointValue).value = o.pointValue;
-    if('rotation' in o)   $(ids.bankerRotation).value   = o.rotation;
-    if('useNet' in o)     $(ids.bankerUseNet).checked   = !!o.useNet;
-    if('doubleBirdie' in o) $(ids.bankerDoubleBirdie).checked = !!o.doubleBirdie;
-    if('tripleEagle' in o)  $(ids.bankerTripleEagle).checked  = !!o.tripleEagle;
-  }
-
-  function banker_recalc(){
-    const names=$$(".player-row").map((r,i)=>$(".name-edit",r).value||`Player ${i+1}`);
-    const opts=banker_getOptions();
-    const data = Banker.compute(opts, names);
-    Banker.render(data);
-  }
+  // All Banker logic removed; section remains as empty stub.
 
   // ======================================================================
   // =============================== CSV I/O ==============================
@@ -718,7 +596,7 @@
       rowEl.querySelectorAll("input.score-input").forEach(inp => { inp.value = ""; inp.classList.remove("invalid"); });
     }
 
-    recalcAll(); vegas_recalc(); banker_recalc(); saveState();
+    recalcAll(); vegas_recalc(); saveState();
     announce("CSV imported.");
   }
   function downloadCSVTemplate() {
@@ -772,13 +650,7 @@
   $(ids.optTripleEagle).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.vegasPointValue)?.addEventListener("input", ()=>{ AppManager.recalcGames(); saveDebounced(); });
 
-    // Banker UI + wiring
-    banker_renderTable();
-    $(ids.bankerPointValue).addEventListener("input", ()=>{ banker_recalc(); saveDebounced(); });
-    $(ids.bankerRotation).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
-    $(ids.bankerUseNet).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
-    $(ids.bankerDoubleBirdie).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
-    $(ids.bankerTripleEagle).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
+    // Banker: no UI wiring (stub only)
 
     // CSV upload & template
     const csvInput = $(ids.csvInput);
@@ -789,7 +661,7 @@
     });
     $(ids.dlTemplateBtn).addEventListener("click", downloadCSVTemplate);
 
-    recalcAll(); vegas_recalc(); banker_recalc(); loadState();
+    recalcAll(); vegas_recalc(); loadState();
   }
 
   function vegas_renderTable(){ const body=$(ids.vegasTableBody); body.innerHTML=""; for(let h=0;h<HOLES;h++){ const tr=document.createElement("tr"); tr.innerHTML=`<td>${h+1}</td><td data-vegas-a="${h}">—</td><td data-vegas-b="${h}">—</td><td data-vegas-m="${h}">—</td><td data-vegas-p="${h}">—</td>`; body.appendChild(tr);} }
@@ -1560,7 +1432,7 @@ function printScorecard() {
 
         <div class="games">
           ${getVegasHtml()}
-          ${getBankerHtml()}
+          
           ${getSkinsHtml()}
           ${getJunkHtml()}
         </div>
@@ -1625,33 +1497,7 @@ function getVegasHtml() {
   `;
 }
 
-function getBankerHtml() {
-  const bankerSection = document.getElementById('bankerSection');
-  if (!bankerSection?.classList.contains('open')) return '';
-  
-  const pointValue = document.getElementById('bankerPointValue')?.value || '1';
-  const rotation = document.getElementById('bankerRotation')?.value || 'rotate';
-  const players = Array.from(document.querySelectorAll('.player-row')).map(r => r.querySelector('.name-edit')?.value || 'Player');
-  
-  const tots = [
-    document.getElementById('bankerTotP1')?.textContent || '—',
-    document.getElementById('bankerTotP2')?.textContent || '—',
-    document.getElementById('bankerTotP3')?.textContent || '—',
-    document.getElementById('bankerTotP4')?.textContent || '—',
-  ];
-
-  return `
-    <div class="game-box">
-      <h3>Banker Game</h3>
-      <table class="game-table">
-        <tr><td><strong>Point Value:</strong></td><td>$${pointValue}</td></tr>
-        <tr><td><strong>Rotation:</strong></td><td>${rotation === 'rotate' ? 'Rotate each hole' : 'Until beaten'}</td></tr>
-        <tr><td colspan="2"><strong>Totals:</strong></td></tr>
-        ${tots.map((t, i) => `<tr><td>${players[i]}</td><td>${t}</td></tr>`).join('')}
-      </table>
-    </div>
-  `;
-}
+// Banker print block removed (game stubbed)
 
 function getSkinsHtml() {
   const skinsSection = document.getElementById('skinsSection');
@@ -1805,37 +1651,7 @@ function getJunkHtml() {
       </div>`;
     }
 
-    // Banker
-    const bankerSection = document.getElementById('bankerSection');
-    if(bankerSection?.classList.contains('open')){
-      const pointValue = document.getElementById('bankerPointValue')?.value || '1';
-      const rotation = document.getElementById('bankerRotation')?.value || 'rotate';
-      const bankerTotP1 = document.getElementById('bankerTotP1')?.textContent || '—';
-      const bankerTotP2 = document.getElementById('bankerTotP2')?.textContent || '—';
-      const bankerTotP3 = document.getElementById('bankerTotP3')?.textContent || '—';
-      const bankerTotP4 = document.getElementById('bankerTotP4')?.textContent || '—';
-
-      html += `
-      <div class="print-game-box">
-        <h3>Banker Game</h3>
-        <p><strong>Point Value:</strong> $${pointValue}</p>
-        <p><strong>Rotation:</strong> ${rotation === 'rotate' ? 'Rotate each hole' : 'Until beaten'}</p>
-        <table class="print-table" style="font-size: 10px; margin-top: 10px;">
-          <tr>
-            <td>${players[0]?.name || 'P1'}</td><td>${bankerTotP1}</td>
-          </tr>
-          <tr>
-            <td>${players[1]?.name || 'P2'}</td><td>${bankerTotP2}</td>
-          </tr>
-          <tr>
-            <td>${players[2]?.name || 'P3'}</td><td>${bankerTotP3}</td>
-          </tr>
-          <tr>
-            <td>${players[3]?.name || 'P4'}</td><td>${bankerTotP4}</td>
-          </tr>
-        </table>
-      </div>`;
-    }
+    // Banker: removed from print (stub only)
 
     // Skins
     const skinsSection = document.getElementById('skinsSection');

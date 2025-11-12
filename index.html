@@ -1124,59 +1124,10 @@
       </div>
       <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
     </section>
-    <!-- BANKER GAME -->
+    <!-- BANKER GAME (stubbed: empty window) -->
     <section class="game-section" id="bankerSection" aria-hidden="true">
       <h2>Banker</h2>
-      <div class="banker-controls">
-        <div class="control-box">
-          <div class="pill">Point value per match</div>
-          <input id="bankerPointValue" type="number" min="1" step="1" value="1" class="ch-input" />
-          <div class="pill" style="margin-top:8px">Rotation</div>
-          <select id="bankerRotation">
-            <option value="rotate">Rotate each hole</option>
-            <option value="untilBeaten">Banker stays until beaten</option>
-          </select>
-        </div>
-        <div class="control-box">
-          <div class="pill">Options</div>
-          <label class="radio">
-            <input type="checkbox" id="bankerUseNet" checked /> Use Net (NDB) </label>
-          <br />
-          <label class="radio">
-            <input type="checkbox" id="bankerDoubleBirdie" checked /> Double on Birdie (winner) </label>
-          <br />
-          <label class="radio">
-            <input type="checkbox" id="bankerTripleEagle" checked /> Triple on Eagle (winner) </label>
-        </div>
-      </div>
-      <div class="banker-wrap">
-        <table class="banker-table" id="bankerTable">
-          <thead>
-            <tr>
-              <th>Hole</th>
-              <th>Banker</th>
-              <th>P1 Δ</th>
-              <th>P2 Δ</th>
-              <th>P3 Δ</th>
-              <th>P4 Δ</th>
-            </tr>
-          </thead>
-          <tbody id="bankerBody"></tbody>
-          <tfoot>
-            <tr>
-              <td>
-                <strong>Totals</strong>
-              </td>
-              <td></td>
-              <td id="bankerTotP1">—</td>
-              <td id="bankerTotP2">—</td>
-              <td id="bankerTotP3">—</td>
-              <td id="bankerTotP4">—</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <p class="small"> Banker plays a separate match against each other player per hole for the chosen point value (winner’s birdie/eagle can multiply). Rotation can be fixed or “until beaten”. </p>
+      <!-- Intentionally left blank -->
     </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     <script src="index.js" defer></script>
