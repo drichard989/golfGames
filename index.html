@@ -1101,12 +1101,12 @@
   <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
   <button id="printBtn" class="btn" onclick="try{console.log('[golfGames] inline onclick'); if(window.printScorecard){window.printScorecard();} else {window.print();}}catch(e){console.error('[golfGames] inline onclick error', e);}">🖨️ Print</button>
   <button id="saveBtn" class="btn accent">Save to Browser</button>
+  <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
         <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
       </div>
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men’s HCP are fixed from the card.</p>
     </header>
     <header>
-      <h1>Golf Games</h1>
       <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
     </header>
     <p class="small" id="parBadge" aria-live="polite"></p>
