@@ -382,6 +382,20 @@
   });
 })();
 
+// Force refresh button for PWA
+(function(){
+  const btn = document.getElementById('forceRefresh');
+  if(!btn) return;
+  btn.addEventListener('click', () => {
+    // Clear cache and force hard reload
+    if('caches' in window) {
+      caches.keys().then(names => {
+        names.forEach(name => caches.delete(name));
+      });
+    }
+    window.location.reload(true);
+  });
+})();
 
   // ======================================================================
   // =============================== VEGAS ================================
