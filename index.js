@@ -113,12 +113,12 @@
       const tdh=document.createElement("td"), ih=document.createElement("input"); ih.type="number"; ih.value=HCPMEN[h-1]; ih.readOnly=true; ih.tabIndex=-1; tdh.appendChild(ih); hcpRow.appendChild(tdh);
     }
     // Append Out / In / Total for course par, then placeholders for To Par / Net
-    // Per request: In = front 9, Out = back 9
+    // Standard golf: Out = front 9, In = back 9
     const parFront = PARS.slice(0,9).reduce((a,b)=>a+b,0);
     const parBack  = PARS.slice(9,18).reduce((a,b)=>a+b,0);
     const parTot = parFront + parBack;
-    const outTd=document.createElement("td"); outTd.textContent=String(parBack);
-    const inTd =document.createElement("td"); inTd.textContent =String(parFront);
+    const outTd=document.createElement("td"); outTd.textContent=String(parFront);
+    const inTd =document.createElement("td"); inTd.textContent =String(parBack);
     const totTd=document.createElement("td"); totTd.textContent=String(parTot);
     parRow.append(outTd,inTd,totTd,document.createElement("td"),document.createElement("td"));
 
@@ -176,7 +176,7 @@
     const parFront = PARS.slice(0,9).reduce((a,b)=>a+b,0);
     const parBack  = PARS.slice(9,18).reduce((a,b)=>a+b,0);
     const parTot = parFront + parBack;
-    el.textContent = `Par — Out ${parBack} • In ${parFront} • Total ${parTot}`;
+    el.textContent = `Par — Out ${parFront} • In ${parBack} • Total ${parTot}`;
   }
 
   // ========== Handicap & Scoring Logic ==========
@@ -230,8 +230,8 @@
 
   function recalcRow(rowEl){
     const s=getPlayerHoleValues(rowEl);
-    // Per request: In = front 9, Out = back 9
-    const inn=sum(s.slice(0,9)), out=sum(s.slice(9,18)), total=out+inn;
+    // Standard golf: Out = front 9, In = back 9
+    const out=sum(s.slice(0,9)), inn=sum(s.slice(9,18)), total=out+inn;
     const splits = rowEl.querySelectorAll("td.split");
     if(splits[0]) splits[0].textContent = out ? String(out) : "—";
     if(splits[1]) splits[1].textContent = inn ? String(inn) : "—";

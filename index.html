@@ -263,7 +263,9 @@
       .score-input::-webkit-outer-spin-button,
       .score-input::-webkit-inner-spin-button,
       .ch-input::-webkit-outer-spin-button,
-      .ch-input::-webkit-inner-spin-button {
+      .ch-input::-webkit-inner-spin-button,
+      #skinsBuyIn::-webkit-outer-spin-button,
+      #skinsBuyIn::-webkit-inner-spin-button {
         -webkit-appearance: none;
         margin: 0
       }
@@ -1035,7 +1037,7 @@
           <br />
           <label class="input-label">
             Buy-in per player: $<input type="number" id="skinsBuyIn" min="0" step="0.01" value="10" 
-              style="width: 80px; display: inline-block; margin-left: 4px;" />
+              style="width: 80px; display: inline-block; margin-left: 4px; -moz-appearance: textfield; appearance: textfield;" />
           </label>
         </div>
         <div class="control-box">
