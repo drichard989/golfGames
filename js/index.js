@@ -1,529 +1,563 @@
-// index.js — Scorecard + Vegas + UPDATED Banker rules (preserve hardcoded PAR/HCP) 
-document.addEventListener('DOMContentLoaded', () => {
-  const HOLES = 18;
-  const players = [
-    { id: 0, name: 'Player A', ch: 0 },
-    { id: 1, name: 'Player B', ch: 0 },
-    { id: 2, name: 'Player C', ch: 0 },
-    { id: 3, name: 'Player D', ch: 0 },
-  ];
+/* Golf Scorecard — 4 players / 18 holes + Vegas & Banker (toggleable)
+   - Course Handicap input per player (supports negatives)
+   - Net totals with NDB; strokes allocated off the lowest CH (play-off-low)
+   - Vegas: teams, multipliers, and opponent-digit flip on birdie+
+   - Banker: points-per-match, rotate or until-beaten, multipliers
+   - CSV upload (player, ch, h1..h18) + client-side template download
+*/
 
-  // Your hardcoded card values — edit these to match your course
+(() => {
+  const HOLES = 18;
+  const PLAYERS = 4;
+  const LEADING_FIXED_COLS = 2; // Player + CH
+
+  // ----- Fixed values from your card -----
   const PARS   = [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4];
   const HCPMEN = [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8];
 
-  const el = (sel) => document.querySelector(sel);
-  const els = (sel) => Array.from(document.querySelectorAll(sel));
-  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  // ---------- DOM helpers ----------
+  const $  = (s, el=document) => el.querySelector(s);
+  const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+  const sum = a => a.reduce((x,y)=>x+(Number(y)||0),0);
+  const clampInt = (v, min, max) => Math.max(min, Math.min(max, Number.isFinite(+v) ? Math.trunc(+v) : min));
 
-  // ======= Build Scorecard (preserve existing PAR/HCP if present) =======
-  const holesHeader = el('#holesHeader');
-  for (let i=1; i<=HOLES; i++) { const th = document.createElement('th'); th.textContent = i; holesHeader.appendChild(th); }
-  ['Out','In','Total','To Par','Net'].forEach(lbl => { const th = document.createElement('th'); th.textContent = lbl; holesHeader.appendChild(th); });
+  const ids = {
+    holesHeader:"#holesHeader",parRow:"#parRow",hcpRow:"#hcpRow",totalsRow:"#totalsRow",
+    table:"#scorecard",courseName:"#courseName",teeName:"#teeName",
+    resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
-  const parRow = el('#parRow');
-  const hcpRow = el('#hcpRow');
+    // Games toggles
+    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection",
 
-  function ensureRow(row, values, min, max){
-    const existingInputs = row.querySelectorAll('input');
-    if (existingInputs.length >= HOLES) {
-      // do not overwrite the user's hardcoded values
-      // just make sure there are trailing alignment cells
-      while (row.children.length < HOLES + 2 + 5) row.appendChild(document.createElement('td'));
-      return;
+    // Vegas
+    vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
+    vegasTableBody:"#vegasBody", vegasTotalA:"#vegasTotalA", vegasTotalB:"#vegasTotalB", vegasPtsA:"#vegasPtsA",
+    optUseNet:"#optUseNet", optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
+
+    // Banker
+    bankerPointValue:"#bankerPointValue", bankerRotation:"#bankerRotation",
+    bankerUseNet:"#bankerUseNet", bankerDoubleBirdie:"#bankerDoubleBirdie", bankerTripleEagle:"#bankerTripleEagle",
+    bankerBody:"#bankerBody",
+    bankerTotP1:"#bankerTotP1", bankerTotP2:"#bankerTotP2", bankerTotP3:"#bankerTotP3", bankerTotP4:"#bankerTotP4",
+
+    // CSV
+    csvInput:"#csvInput", dlTemplateBtn:"#dlTemplateBtn",
+  };
+
+  // ---------- Header ----------
+  function buildHeader(){
+    const header=$(ids.holesHeader);
+    for(let h=1;h<=HOLES;h++){ const th=document.createElement("th"); th.textContent=h; header.appendChild(th); }
+    ["Out","In","Total","To Par","Net"].forEach(label=>{ const th=document.createElement("th"); th.textContent=label; header.appendChild(th); });
+  }
+
+  // ---------- Par & HCP rows (locked) ----------
+  function buildParAndHcpRows(){
+    const parRow=$(ids.parRow), hcpRow=$(ids.hcpRow);
+    for(let h=1;h<=HOLES;h++){
+      const tdp=document.createElement("td"), ip=document.createElement("input"); ip.type="number"; ip.value=PARS[h-1]; ip.readOnly=true; ip.tabIndex=-1; tdp.appendChild(ip); parRow.appendChild(tdp);
+      const tdh=document.createElement("td"), ih=document.createElement("input"); ih.type="number"; ih.value=HCPMEN[h-1]; ih.readOnly=true; ih.tabIndex=-1; tdh.appendChild(ih); hcpRow.appendChild(tdh);
     }
-    // clear any existing cells beyond the first two
-    while (row.children.length > 2) row.removeChild(row.lastElementChild);
-    // build inputs from provided values
-    for (let i=0;i<HOLES;i++){
-      const td = document.createElement('td');
-      const inp = document.createElement('input');
-      inp.type='number'; inp.min=String(min); inp.max=String(max); inp.value = values[i];
-      td.appendChild(inp); row.appendChild(td);
-    }
-    for (let i=0;i<5;i++){ row.appendChild(document.createElement('td')); }
+    for(let i=0;i<5;i++){ parRow.appendChild(document.createElement("td")); hcpRow.appendChild(document.createElement("td")); }
   }
 
-  ensureRow(parRow, PARS, 3, 6);
-  ensureRow(hcpRow, HCPMEN, 1, 18);
+  // ---------- Player rows ----------
+  function buildPlayerRows(){
+    const tbody=$(ids.table).tBodies[0];
+    for(let p=0;p<PLAYERS;p++){
+      const tr=document.createElement("tr"); tr.className="player-row"; tr.dataset.player=String(p);
 
-  const tbody = document.querySelector('#scorecard tbody');
-  function buildPlayerRow(p){
-    const tr = document.createElement('tr'); tr.dataset.pid = p.id;
-    const nameTd = document.createElement('td');
-    const nameInput = document.createElement('input'); nameInput.className='name-edit'; nameInput.value=p.name;
-    nameInput.addEventListener('input', () => { p.name = nameInput.value; refreshVegasTeams(); refreshBankerControls(); recalcAll(); });
-    nameTd.appendChild(nameInput); tr.appendChild(nameTd);
+      const nameTd=document.createElement("td");
+      const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.className="name-edit"; nameInput.placeholder=`Player ${p+1}`;
+      nameInput.addEventListener("input",()=>{ vegas_renderTeamControls(); saveDebounced(); });
+      nameTd.appendChild(nameInput); tr.appendChild(nameTd);
 
-    const chTd = document.createElement('td');
-    const chInput = document.createElement('input'); chInput.className='ch-input'; chInput.type='number'; chInput.value=p.ch;
-    chInput.addEventListener('input', () => { p.ch = Number(chInput.value||0); recalcAll(); });
-    chTd.appendChild(chInput); tr.appendChild(chTd);
+      const chTd=document.createElement("td");
+      const chInput=document.createElement("input"); chInput.type="number"; chInput.className="ch-input"; chInput.placeholder="0"; chInput.min="-20"; chInput.max="54"; chInput.step="1";
+      chInput.addEventListener("input",()=>{ if(chInput.value!=="") chInput.value=clampInt(chInput.value,-50,60); recalcAll(); vegas_recalc(); banker_recalc(); saveDebounced(); });
+      chTd.appendChild(chInput); tr.appendChild(chTd);
 
-    for (let h=1;h<=HOLES;h++){
-      const td = document.createElement('td');
-      const s = document.createElement('input'); s.type='number'; s.className='score-input'; s.min='1';
-      s.dataset.pid = String(p.id);
-      s.dataset.hole = String(h);
-      s.addEventListener('input', () => recalcAll());
-      s.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const pid = Number(e.target.dataset.pid);
-          const hole = Number(e.target.dataset.hole);
-          let nextPid = pid + 1;
-          let nextHole = hole;
-          if (nextPid >= players.length) { nextPid = 0; nextHole = hole + 1; }
-          if (nextHole > HOLES) return;
-          const next = document.querySelector(`#scorecard tbody tr[data-pid="${nextPid}"] .score-input[data-hole="${nextHole}"]`);
-          if (next) { next.focus(); next.select?.(); }
-        }
-      });
-      td.appendChild(s); tr.appendChild(td);
-    }
-    for (let i=0;i<5;i++){ const td=document.createElement('td'); td.className = ['split','split','total','to-par','net'][i]; tr.appendChild(td); }
-    tbody.appendChild(tr);
-  }
-  [0,1,2,3].forEach(i => buildPlayerRow(players[i]));
-
-  const totalsRow = el('#totalsRow');
-  for (let i=1;i<=HOLES;i++){ totalsRow.appendChild(document.createElement('td')); }
-  for (let i=0;i<3;i++){ totalsRow.appendChild(document.createElement('td')); }
-
-  // ======= Score helpers =======
-  function getPar(h){ const inp = parRow.querySelectorAll('input')[h-1]; return Number(inp?.value || PARS[h-1] || 4); }
-  function getHcpIndex(h){ const inp = hcpRow.querySelectorAll('input')[h-1]; return Number(inp?.value || HCPMEN[h-1] || h); }
-
-  function getScoresForHole(h){
-    const out = new Map();
-    els('#scorecard tbody tr').filter(tr=>tr.dataset.pid!==undefined).forEach(tr => {
-      const pid = Number(tr.dataset.pid);
-      const inputs = tr.querySelectorAll('.score-input');
-      out.set(pid, Number(inputs[h-1].value || NaN));
-    });
-    return out;
-  }
-
-  function computeNetForHole(h, useNet){
-    const par = getPar(h);
-    const chs = players.map(p => p.ch);
-    const low = Math.min(...chs);
-    const adj = players.map(p => Math.max(0, p.ch - low));
-    const holeIndex = getHcpIndex(h);
-    const strokes = players.map((p, i) => {
-      const s = adj[i];
-      if (!useNet) return 0;
-      const full = Math.floor(s / 18);
-      const rem = s % 18;
-      return full + (holeIndex <= rem ? 1 : 0);
-    });
-
-    const gross = getScoresForHole(h);
-    const net = new Map();
-    players.forEach((p, i) => {
-      const g = gross.get(p.id);
-      if (Number.isNaN(g)) { net.set(p.id, NaN); return; }
-      if (!useNet) { net.set(p.id, g); return; }
-      const strokesRecv = strokes[i];
-      const cap = par + 2 + strokesRecv;
-      net.set(p.id, Math.min(g, cap) - strokesRecv);
-    });
-    return net;
-  }
-
-  function sumRange(pid, from, to){
-    let s=0, n=0;
-    for(let h=from; h<=to; h++){
-      const v = Number(els(`#scorecard tbody tr[data-pid="${pid}"] .score-input`)[h-1].value || NaN);
-      if(!Number.isNaN(v)){ s+=v; n++; }
-    }
-    return {sum:s, count:n};
-  }
-
-  function recalcScorecard(){
-    players.forEach(p => {
-      const tr = el(`#scorecard tbody tr[data-pid="${p.id}"]`);
-      const toParEl = tr.querySelector('.to-par');
-      const totalEl = tr.querySelector('.total');
-      const netEl = tr.querySelector('.net');
-      const outEl = tr.querySelectorAll('.split')[0];
-      const inEl  = tr.querySelectorAll('.split')[1];
-
-      const out = sumRange(p.id,1,9).sum;
-      const inn = sumRange(p.id,10,18).sum;
-      const tot = out + inn;
-      outEl.textContent = Number.isFinite(out) && out>0 ? out : '—';
-      inEl.textContent  = Number.isFinite(inn) && inn>0 ? inn : '—';
-      totalEl.textContent = Number.isFinite(tot) && tot>0 ? tot : '—';
-
-      let toPar = 0, got=0;
       for(let h=1;h<=HOLES;h++){
-        const g = Number(els(`#scorecard tbody tr[data-pid="${p.id}"] .score-input`)[h-1].value || NaN);
-        const par = getPar(h);
-        if(!Number.isNaN(g)){ toPar += (g - par); got++; }
+        const td=document.createElement("td"), inp=document.createElement("input");
+        inp.type="number"; inp.inputMode="numeric"; inp.min="1"; inp.max="20"; inp.className="score-input"; inp.dataset.player=String(p); inp.dataset.hole=String(h); inp.placeholder="—";
+        inp.addEventListener("input",()=>{ if(inp.value!==""){const v=clampInt(inp.value,1,20); if(String(v)!==inp.value) inp.classList.add("invalid"); else inp.classList.remove("invalid"); inp.value=v;} else {inp.classList.remove("invalid");}
+          recalcRow(tr); recalcTotalsRow(); vegas_recalc(); banker_recalc(); saveDebounced(); });
+        td.appendChild(inp); tr.appendChild(td);
       }
-      toParEl.textContent = got? (toPar>0?`+${toPar}`:toPar===0?'E':`${toPar}`) : '—';
-      toParEl.dataset.sign = got? (toPar>0?'+':toPar<0?'-':'0') : '';
 
-      const useNet = el('#bankerUseNet')?.checked || el('#optUseNet')?.checked;
-      let netSum = 0, have=0;
-      for(let h=1;h<=HOLES;h++){
-        const map = computeNetForHole(h, !!useNet);
-        const v = map.get(p.id);
-        if(!Number.isNaN(v)){ netSum += v; have++; }
+      const outTd=document.createElement("td"); outTd.className="split";
+      const inTd=document.createElement("td"); inTd.className="split";
+      const totalTd=document.createElement("td"); totalTd.className="total";
+      const toParTd=document.createElement("td"); toParTd.className="to-par";
+      const netTd=document.createElement("td"); netTd.className="net";
+      tr.append(outTd,inTd,totalTd,toParTd,netTd);
+
+      tbody.appendChild(tr);
+    }
+  }
+
+  // ---------- Totals row ----------
+  function buildTotalsRow(){
+    const totalsRow=$(ids.totalsRow);
+    for(let h=1;h<=HOLES;h++){
+      const td=document.createElement("td"); td.className="subtle"; td.dataset.holeTotal=String(h); td.textContent="—"; totalsRow.appendChild(td);
+    }
+    const out=document.createElement("td"), inn=document.createElement("td"), total=document.createElement("td"), blank1=document.createElement("td"), blank2=document.createElement("td");
+    out.className="subtle"; inn.className="subtle"; total.className="subtle"; totalsRow.append(out,inn,total,blank1,blank2);
+  }
+
+  // ---------- Handicap math (shared) ----------
+  function adjustedCHs(){
+    const chs=$$(".player-row").map(r=>{ const v=Number($(".ch-input",r)?.value); return Number.isFinite(v)?v:0; });
+    const minCH=Math.min(...chs);
+    return chs.map(ch=>ch-minCH); // play off low
+  }
+  function strokesOnHole(adjCH, i){
+    if(adjCH<=0) return 0;
+    const base=Math.floor(adjCH/18), rem=adjCH%18, holeHcp=HCPMEN[i];
+    return base+(holeHcp<=rem?1:0);
+  }
+  function getGross(playerIdx, holeIdx){
+    return Number($(`input.score-input[data-player="${playerIdx}"][data-hole="${holeIdx+1}"]`)?.value)||0;
+  }
+  function getNetNDB(playerIdx, holeIdx){
+    const adjCH=adjustedCHs()[playerIdx], gross=getGross(playerIdx,holeIdx);
+    if(!gross) return 0;
+    const sr=strokesOnHole(adjCH,holeIdx), ndb=PARS[holeIdx]+2+sr, adjGross=Math.min(gross,ndb);
+    return adjGross - sr;
+  }
+
+  // ---------- Row calc ----------
+  function getPlayerHoleValues(rowEl){ return $$("input.score-input",rowEl).map(i=>Number(i.value)||0); }
+
+  function recalcRow(rowEl){
+    const s=getPlayerHoleValues(rowEl), out=sum(s.slice(0,9)), inn=sum(s.slice(9,18)), total=out+inn;
+    $(".split:nth-of-type(1)",rowEl)?.replaceChildren(document.createTextNode(out||"—"));
+    $(".split:nth-of-type(2)",rowEl)?.replaceChildren(document.createTextNode(inn||"—"));
+    $(".total",rowEl)?.replaceChildren(document.createTextNode(total||"—"));
+
+    const parTotal=sum(PARS), delta=total&&parTotal? total-parTotal : 0, el=$(".to-par",rowEl);
+    if(!total){ el.textContent="—"; el.dataset.sign=""; } else { const sign=delta===0?"0":delta>0?"+":"-"; el.dataset.sign=sign; el.textContent=(delta>0?"+":"")+delta; }
+
+    // Net total
+    const pIdx=Number(rowEl.dataset.player);
+    let netTotal=0;
+    for(let h=0;h<HOLES;h++){
+      const gross=s[h]||0; if(!gross) continue;
+      const sr=strokesOnHole(adjustedCHs()[pIdx],h), ndb=PARS[h]+2+sr, adjGross=Math.min(gross,ndb);
+      netTotal += adjGross - sr;
+    }
+    $(".net",rowEl).textContent=netTotal?String(netTotal):"—";
+  }
+
+  function recalcTotalsRow(){
+    for(let h=1;h<=HOLES;h++){
+      const ph=$$(`input.score-input[data-hole="${h}"]`).map(i=>Number(i.value)||0), t=sum(ph);
+      $(`[data-hole-total="${h}"]`).textContent = t? String(t) : "—";
+    }
+    const tds=$(ids.totalsRow).querySelectorAll("td"), base=LEADING_FIXED_COLS+HOLES;
+    const OUT=$$(".player-row").map(r=>Number($(".split:nth-of-type(1)",r)?.textContent)||0).reduce((a,b)=>a+b,0);
+    const INN=$$(".player-row").map(r=>Number($(".split:nth-of-type(2)",r)?.textContent)||0).reduce((a,b)=>a+b,0);
+    const TOT=$$(".player-row").map(r=>Number($(".total",r)?.textContent)||0).reduce((a,b)=>a+b,0);
+    tds[base+0].textContent=OUT||"—"; tds[base+1].textContent=INN||"—"; tds[base+2].textContent=TOT||"—";
+  }
+  function recalcAll(){ $$(".player-row").forEach(recalcRow); recalcTotalsRow(); }
+
+  // ---------- Persistence ----------
+  const STORAGE_KEY="golf_scorecard_v5";
+  function saveState(){
+    const state={
+      courseName:$(ids.courseName)?.value||"", teeName:$(ids.teeName)?.value||"",
+      players:$$(".player-row").map(row=>({ name:$(".name-edit",row).value||"", ch:$(".ch-input",row).value||"", scores:$$("input.score-input",row).map(i=>i.value) })),
+      vegas:{ teams:vegas_getTeamAssignments(), opts:vegas_getOptions(), open: $(ids.vegasSection).classList.contains("open") },
+      banker:{ opts:banker_getOptions(), open: $(ids.bankerSection).classList.contains("open") },
+      savedAt:Date.now(),
+    };
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); announce("Saved.");
+  }
+  let saveTimer=null; function saveDebounced(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveState,300); }
+  function loadState(){
+    const raw=localStorage.getItem(STORAGE_KEY); if(!raw) return;
+    try{
+      const s=JSON.parse(raw);
+      $(ids.courseName).value=s.courseName||""; $(ids.teeName).value=s.teeName||"";
+      const rows=$$(".player-row");
+      s.players?.forEach((p,i)=>{ const r=rows[i]; if(!r) return; $(".name-edit",r).value=p.name||""; $(".ch-input",r).value=p.ch??""; const ins=$$("input.score-input",r); p.scores?.forEach((v,j)=>{ if(ins[j]) ins[j].value=v; }); });
+      recalcAll();
+
+      vegas_renderTeamControls();
+      if(s.vegas?.teams) vegas_setTeamAssignments(s.vegas.teams);
+      if(s.vegas?.opts)  vegas_setOptions(s.vegas.opts);
+      if(s.vegas?.open)  games_open("vegas");
+
+      banker_renderTable();
+      if(s.banker?.opts) banker_setOptions(s.banker.opts);
+      if(s.banker?.open) games_open("banker");
+
+      vegas_recalc(); banker_recalc();
+      announce(`Restored saved card (${new Date(s.savedAt||Date.now()).toLocaleString()}).`);
+    }catch{}
+  }
+
+  function clearScoresOnly(){ $$("input.score-input").forEach(i=>{i.value="";i.classList.remove("invalid");}); recalcAll(); vegas_recalc(); banker_recalc(); announce("Scores cleared."); }
+  function clearAll(){
+    $(ids.courseName).value=""; $(ids.teeName).value="";
+    $$(".player-row").forEach(r=>{ $(".name-edit",r).value=""; $(".ch-input",r).value=""; $$("input.score-input",r).forEach(i=>{i.value="";i.classList.remove("invalid");}); });
+    recalcAll(); vegas_renderTeamControls(); vegas_recalc(); banker_renderTable(); banker_recalc(); announce("All fields cleared.");
+  }
+  function announce(t){ const el=$(ids.saveStatus); el.textContent=t; el.style.opacity="1"; setTimeout(()=>{el.style.opacity="0.75";},1200); }
+
+  // ======================================================================
+  // =============================== GAMES UI ==============================
+  // ======================================================================
+  function games_open(which){
+    if(which==="vegas"){ $(ids.vegasSection).classList.add("open"); $(ids.vegasSection).setAttribute("aria-hidden","false"); $(ids.toggleVegas).classList.add("active"); }
+    if(which==="banker"){ $(ids.bankerSection).classList.add("open"); $(ids.bankerSection).setAttribute("aria-hidden","false"); $(ids.toggleBanker).classList.add("active"); }
+  }
+  function games_close(which){
+    if(which==="vegas"){ $(ids.vegasSection).classList.remove("open"); $(ids.vegasSection).setAttribute("aria-hidden","true"); $(ids.toggleVegas).classList.remove("active"); }
+    if(which==="banker"){ $(ids.bankerSection).classList.remove("open"); $(ids.bankerSection).setAttribute("aria-hidden","true"); $(ids.toggleBanker).classList.remove("active"); }
+  }
+  function games_toggle(which){
+    const open = (which==="vegas"? $(ids.vegasSection) : $(ids.bankerSection)).classList.contains("open");
+    open? games_close(which) : games_open(which);
+    saveDebounced();
+  }
+
+  // ======================================================================
+  // =============================== VEGAS ================================
+  // ======================================================================
+  function vegas_renderTeamControls(){
+    const box=$(ids.vegasTeams); box.innerHTML="";
+    const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+    for(let i=0;i<PLAYERS;i++){
+      const row=document.createElement("div"); row.style.display="contents";
+      const label=document.createElement("div"); label.textContent=names[i];
+      const aWrap=document.createElement("label"); aWrap.className="radio";
+      const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+      aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
+      const bWrap=document.createElement("label"); bWrap.className="radio";
+      const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+      bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
+      row.append(label,aWrap,bWrap); box.appendChild(row);
+    }
+    $(`input[name="vegasTeam_0"][value="A"]`).checked ||= true;
+    $(`input[name="vegasTeam_1"][value="A"]`).checked ||= true;
+    $(`input[name="vegasTeam_2"][value="B"]`).checked ||= true;
+    $(`input[name="vegasTeam_3"][value="B"]`).checked ||= true;
+  }
+  function vegas_getTeamAssignments(){
+    const teams={A:[],B:[]}; for(let i=0;i<PLAYERS;i++){ const a=$(`input[name="vegasTeam_${i}"][value="A"]`)?.checked; (a?teams.A:teams.B).push(i); } return teams;
+  }
+  function vegas_setTeamAssignments(t){
+    for(let i=0;i<PLAYERS;i++){ const a=$(`input[name="vegasTeam_${i}"][value="A"]`), b=$(`input[name="vegasTeam_${i}"][value="B"]`); if(!a||!b) continue; a.checked=false; b.checked=false; }
+    t.A?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="A"]`); if(r) r.checked=true; });
+    t.B?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="B"]`); if(r) r.checked=true; });
+  }
+  function vegas_getOptions(){ return { useNet:$(ids.optUseNet)?.checked||false, doubleBirdie:$(ids.optDoubleBirdie)?.checked||false, tripleEagle:$(ids.optTripleEagle)?.checked||false }; }
+  function vegas_setOptions(o){ if('useNet'in o) $(ids.optUseNet).checked=!!o.useNet; if('doubleBirdie'in o) $(ids.optDoubleBirdie).checked=!!o.doubleBirdie; if('tripleEagle'in o) $(ids.optTripleEagle).checked=!!o.tripleEagle; }
+
+  // Core helpers
+  function vegas_teamPair(players, holeIdx, useNet) {
+    const vals = players.map(p => useNet ? getNetNDB(p, holeIdx) : getGross(p, holeIdx))
+      .filter(v => Number.isFinite(v) && v > 0);
+    if (vals.length < 2) return null;
+    vals.sort((a,b)=>a-b);
+    return [vals[0], vals[1]]; // lo, hi
+  }
+  function vegas_pairToString(pair){ return `${pair[0]}${pair[1]}`; }
+  function vegas_teamHasBirdieOrEagle(players,h,useNet){
+    const best=Math.min(...players.map(p=>(useNet?getNetNDB(p,h):getGross(p,h))||Infinity));
+    if(!Number.isFinite(best)) return {birdie:false,eagle:false};
+    const toPar=best-PARS[h]; return {birdie:toPar<=-1, eagle:toPar<=-2};
+  }
+  function vegas_multiplierForWinner(winnerPlayers,h,useNet,opts){
+    const {birdie,eagle}=vegas_teamHasBirdieOrEagle(winnerPlayers,h,useNet); let m=1;
+    if(opts.tripleEagle && eagle) m=Math.max(m,3);
+    if(opts.doubleBirdie && birdie) m=Math.max(m,2);
+    return m;
+  }
+
+  function vegas_recalc(){
+    const teams=vegas_getTeamAssignments(), warn=$(ids.vegasTeamWarning), opts=vegas_getOptions();
+    if(!(teams.A.length===2 && teams.B.length===2)){
+      warn.hidden=false; for(let h=0;h<HOLES;h++){ $(`[data-vegas-a="${h}"]`).textContent="—"; $(`[data-vegas-b="${h}"]`).textContent="—"; $(`[data-vegas-m="${h}"]`).textContent="—"; $(`[data-vegas-p="${h}"]`).textContent="—"; }
+      $(ids.vegasTotalA).textContent="—"; $(ids.vegasTotalB).textContent="—"; $(ids.vegasPtsA).textContent="—"; return;
+    }
+    warn.hidden=true;
+
+    let ptsA=0;
+    for(let h=0;h<HOLES;h++){
+      // Base lo–hi pairs
+      const pairA = vegas_teamPair(teams.A,h,opts.useNet);
+      const pairB = vegas_teamPair(teams.B,h,opts.useNet);
+      if(!pairA || !pairB){
+        $(`[data-vegas-a="${h}"]`).textContent="—";
+        $(`[data-vegas-b="${h}"]`).textContent="—";
+        $(`[data-vegas-m="${h}"]`).textContent="—";
+        $(`[data-vegas-p="${h}"]`).textContent="—";
+        continue;
       }
-      netEl.textContent = have? netSum : '—';
+      // Birdie/eagle checks
+      const aBE = vegas_teamHasBirdieOrEagle(teams.A,h,opts.useNet);
+      const bBE = vegas_teamHasBirdieOrEagle(teams.B,h,opts.useNet);
+
+      // Opponent digit flips if a team has birdie+
+      const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
+      const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
+
+      const vaStr=vegas_pairToString(effA), vbStr=vegas_pairToString(effB);
+      const va=Number(vaStr), vb=Number(vbStr);
+
+      let winner='A', diff=vb-va;
+      if(diff<0){ winner='B'; diff=-diff; }
+      const mult=vegas_multiplierForWinner(teams[winner],h,opts.useNet,opts);
+      const holePtsA = winner==='A' ? diff*mult : -diff*mult;
+
+      $(`[data-vegas-a="${h}"]`).textContent=vaStr;
+      $(`[data-vegas-b="${h}"]`).textContent=vbStr;
+      $(`[data-vegas-m="${h}"]`).textContent=mult||"—";
+      $(`[data-vegas-p="${h}"]`).textContent=holePtsA? (holePtsA>0?`+${holePtsA}`:`${holePtsA}`) : "—";
+
+      ptsA += holePtsA;
+    }
+    $(ids.vegasPtsA).textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
+
+    // Gross transparency numbers
+    const teamSum = team => { let s=0; for(let h=0;h<HOLES;h++){ team.forEach(p=>{ s+=getGross(p,h)||0; }); } return s; };
+    $(ids.vegasTotalA).textContent=teamSum(teams.A)||"—";
+    $(ids.vegasTotalB).textContent=teamSum(teams.B)||"—";
+  }
+
+  // ======================================================================
+  // =============================== BANKER ===============================
+  // ======================================================================
+  function banker_renderTable(){
+    const body=$(ids.bankerBody); body.innerHTML="";
+    for(let h=0;h<HOLES;h++){
+      const tr=document.createElement("tr");
+      tr.innerHTML = `<td>${h+1}</td><td data-banker-name="${h}">—</td>
+        <td data-banker-p="${h}-0">—</td><td data-banker-p="${h}-1">—</td>
+        <td data-banker-p="${h}-2">—</td><td data-banker-p="${h}-3">—</td>`;
+      body.appendChild(tr);
+    }
+  }
+  function banker_getOptions(){
+    return {
+      pointValue: Math.max(1, Number($(ids.bankerPointValue).value)||1),
+      rotation: $(ids.bankerRotation).value, // "rotate" | "untilBeaten"
+      useNet: $(ids.bankerUseNet).checked,
+      doubleBirdie: $(ids.bankerDoubleBirdie).checked,
+      tripleEagle: $(ids.bankerTripleEagle).checked,
+    };
+  }
+  function banker_setOptions(o){
+    if('pointValue' in o) $(ids.bankerPointValue).value = o.pointValue;
+    if('rotation' in o)   $(ids.bankerRotation).value   = o.rotation;
+    if('useNet' in o)     $(ids.bankerUseNet).checked   = !!o.useNet;
+    if('doubleBirdie' in o) $(ids.bankerDoubleBirdie).checked = !!o.doubleBirdie;
+    if('tripleEagle' in o)  $(ids.bankerTripleEagle).checked  = !!o.tripleEagle;
+  }
+
+  // Banker business helpers
+  function banker_score(playerIdx, holeIdx, useNet){
+    return useNet ? getNetNDB(playerIdx,holeIdx) : getGross(playerIdx,holeIdx);
+  }
+  function banker_matchMultiplier(winnerIdx, holeIdx, opts){
+    const s = banker_score(winnerIdx, holeIdx, opts.useNet);
+    if(!s) return 1;
+    const toPar = s - PARS[holeIdx];
+    let m = 1;
+    if(opts.tripleEagle && toPar <= -2) m = Math.max(m,3);
+    if(opts.doubleBirdie && toPar <= -1) m = Math.max(m,2);
+    return m;
+  }
+  function banker_nextBankerAfterHole(currentBanker, holeIdx, opts){
+    if(opts.rotation==="rotate") return (holeIdx+1) % PLAYERS;
+    const b=currentBanker;
+    let bestOpponent=null, bestScore=Infinity;
+    for(let p=0;p<PLAYERS;p++){
+      if(p===b) continue;
+      const s=banker_score(p,holeIdx,opts.useNet) || Infinity;
+      if(s<bestScore){ bestScore=s; bestOpponent=p; }
+    }
+    const sb = banker_score(b,holeIdx,opts.useNet) || Infinity;
+    if(bestOpponent!==null && bestScore < sb) return bestOpponent;
+    return b;
+  }
+
+  function banker_recalc(){
+    const names=$$(".player-row").map((r,i)=>$(".name-edit",r).value||`Player ${i+1}`);
+    const opts=banker_getOptions();
+    const totals=[0,0,0,0];
+
+    let banker = 0; // start P1 on hole 1
+    for(let h=0;h<HOLES;h++){
+      $(`[data-banker-name="${h}"]`).textContent = names[banker];
+      const deltas=[0,0,0,0];
+
+      for(let p=0;p<PLAYERS;p++){
+        if(p===banker) continue;
+        const sb = banker_score(banker,h,opts.useNet);
+        const so = banker_score(p,h,opts.useNet);
+        if(!sb || !so){ deltas[p] = 0; continue; }
+        if(sb===so){ deltas[p]=0; continue; }
+        const winner = (so<sb) ? p : banker;
+        const mult   = banker_matchMultiplier(winner,h,opts);
+        const value  = opts.pointValue * mult;
+        if(winner===p){ deltas[p] += value; deltas[banker] -= value; }
+        else { deltas[p] -= value; deltas[banker] += value; }
+      }
+
+      for(let p=0;p<PLAYERS;p++){
+        const cell = $(`[data-banker-p="${h}-${p}"]`);
+        const d = deltas[p];
+        cell.textContent = d===0 ? "—" : (d>0? `+${d}` : `${d}`);
+        totals[p] += d;
+      }
+
+      banker = banker_nextBankerAfterHole(banker,h,opts);
+    }
+
+    $(ids.bankerTotP1).textContent = totals[0]===0 ? "0" : (totals[0]>0?`+${totals[0]}`:`${totals[0]}`);
+    $(ids.bankerTotP2).textContent = totals[1]===0 ? "0" : (totals[1]>0?`+${totals[1]}`:`${totals[1]}`);
+    $(ids.bankerTotP3).textContent = totals[2]===0 ? "0" : (totals[2]>0?`+${totals[2]}`:`${totals[2]}`);
+    $(ids.bankerTotP4).textContent = totals[3]===0 ? "0" : (totals[3]>0?`+${totals[3]}`:`${totals[3]}`);
+  }
+
+  // ======================================================================
+  // =============================== CSV I/O ==============================
+  // ======================================================================
+  function parseCSV(text) {
+    const rows = [];
+    let row = [], field = "", inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (inQuotes) {
+        if (c === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+        } else field += c;
+      } else {
+        if (c === '"') inQuotes = true;
+        else if (c === ',') { row.push(field.trim()); field = ""; }
+        else if (c === '\n' || c === '\r') {
+          if (field.length || row.length) { row.push(field.trim()); rows.push(row); row = []; field = ""; }
+          if (c === '\r' && text[i + 1] === '\n') i++;
+        } else field += c;
+      }
+    }
+    if (field.length || row.length) { row.push(field.trim()); rows.push(row); }
+    return rows.filter(r => r.length && r.some(x => x !== ""));
+  }
+  function normalizeHeader(h) { return (h || "").toLowerCase().replace(/\s+/g, ""); }
+  function rowToPlayerObj(headerMap, row) {
+    const get = (name) => { const idx = headerMap[name]; if (idx == null) return undefined; return row[idx]; };
+    const obj = { player: get("player") || "", ch: get("ch") != null && get("ch") !== "" ? Number(get("ch")) : "", holes: [] };
+    for (let i = 1; i <= 18; i++) {
+      const key = `h${i}`; const val = get(key);
+      obj.holes.push(val != null && val !== "" ? Number(val) : "");
+    }
+    return obj;
+  }
+  async function handleCSVFile(file) {
+    const text = await file.text();
+    const data = parseCSV(text);
+    if (!data.length) { alert("CSV appears empty."); return; }
+
+    const header = data[0].map(normalizeHeader);
+    const hmap = {}; header.forEach((h,i)=>{ hmap[h]=i; });
+
+    const required = ["player","ch", ...Array.from({length:18},(_,i)=>`h${i+1}`)];
+    const missing = required.filter(k => !(k in hmap));
+    if (missing.length) { alert("CSV is missing columns: " + missing.join(", ")); return; }
+
+    const rows = data.slice(1).filter(r => r.some(x => x && x !== "")).slice(0, 4);
+    if (!rows.length) { alert("No data rows found under the header."); return; }
+
+    const playerRows = document.querySelectorAll(".player-row");
+    rows.forEach((r, idx) => {
+      const obj = rowToPlayerObj(hmap, r);
+      const rowEl = playerRows[idx]; if (!rowEl) return;
+      const nameInput = rowEl.querySelector(".name-edit"); nameInput.value = obj.player || `Player ${idx+1}`;
+      const chInput = rowEl.querySelector(".ch-input"); chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
+      const inputs = rowEl.querySelectorAll("input.score-input");
+      for (let i = 0; i < 18; i++) { const v = obj.holes[i];
+        inputs[i].value = (v === "" || isNaN(v)) ? "" : String(Math.max(1, Math.min(20, Math.trunc(v))));
+        inputs[i].classList.remove("invalid");
+      }
     });
-
-    const totals = el('#totalsRow').querySelectorAll('td');
-    for(let h=1; h<=HOLES; h++){
-      let sum=0, have=0;
-      players.forEach(p => {
-        const v = Number(els(`#scorecard tbody tr[data-pid="${p.id}"] .score-input`)[h-1].value || NaN);
-        if(!Number.isNaN(v)){ sum+=v; have++; }
-      });
-      totals[h+1].textContent = have? sum : '—';
-    }
-  }
-
-  // ======= VEGAS (unchanged from earlier merged version) =======
-  const vegasTeamsEl = el('#vegasTeams');
-  const vegasBody = el('#vegasBody');
-  const optUseNet = el('#optUseNet');
-  const optDoubleBirdie = el('#optDoubleBirdie');
-  const optTripleEagle  = el('#optTripleEagle');
-  const vegasTeamWarning = el('#vegasTeamWarning');
-
-  const teamOf = new Array(4).fill('A'); // 'A' or 'B'
-  function refreshVegasTeams(){
-    if(!vegasTeamsEl) return;
-    vegasTeamsEl.innerHTML='';
-    players.forEach((p,i)=>{
-      const row = document.createElement('div'); row.className='team-row'; row.style.display='contents';
-      const name = document.createElement('div'); name.textContent = p.name; row.appendChild(name);
-      const a = document.createElement('label'); a.className='radio';
-      const ra = document.createElement('input'); ra.type='radio'; ra.name=`team_${i}`; ra.checked = teamOf[i]==='A';
-      ra.addEventListener('change', ()=>{ teamOf[i]='A'; recalcVegas(); });
-      a.appendChild(ra); a.appendChild(document.createTextNode('Team A')); row.appendChild(a);
-      const b = document.createElement('label'); b.className='radio';
-      const rb = document.createElement('input'); rb.type='radio'; rb.name=`team_${i}`; rb.checked = teamOf[i]==='B';
-      rb.addEventListener('change', ()=>{ teamOf[i]='B'; recalcVegas(); });
-      b.appendChild(rb); b.appendChild(document.createTextNode('Team B')); row.appendChild(b);
-      vegasTeamsEl.appendChild(row);
-    });
-  }
-  function buildVegasTable(){
-    if(!vegasBody) return;
-    vegasBody.innerHTML='';
-    for(let h=1; h<=HOLES; h++){
-      const tr = document.createElement('tr'); tr.dataset.hole=h;
-      tr.innerHTML = `<td>${h}</td><td>—</td><td>—</td><td>—</td><td>—</td>`;
-      vegasBody.appendChild(tr);
-    }
-  }
-  refreshVegasTeams(); buildVegasTable();
-
-  function twoDigit(a,b){ const [x,y]=[a,b].sort((m,n)=>m-n); return Number(String(x)+String(y)); }
-  function isBirdieOrBetter(score, par){ return score <= par-1; }
-  function isEagleOrBetter(score, par){ return score <= par-2; }
-
-  function recalcVegas(){
-    if(!vegasBody) return;
-    const cntA = teamOf.filter(t=>t==='A').length;
-    const cntB = 4 - cntA;
-    const valid = cntA===2 && cntB===2;
-    vegasTeamWarning.hidden = !!valid;
-
-    let totalA=0, totalB=0, ptsA=0;
-    for(let h=1; h<=HOLES; h++){
-      const tr = vegasBody.querySelector(`tr[data-hole="${h}"]`);
-      const map = computeNetForHole(h, optUseNet && optUseNet.checked);
-      const par = getPar(h);
-
-      const A = [], B = [];
-      players.forEach((p,i)=>{
-        const v = map.get(p.id);
-        if(Number.isNaN(v)) return;
-        (teamOf[i]==='A'?A:B).push(v);
-      });
-      let numA='—', numB='—', mult='—', pts='—';
-      if (valid && A.length===2 && B.length===2){
-        const aNum0 = twoDigit(A[0],A[1]);
-        const bNum0 = twoDigit(B[0],B[1]);
-        const aBird = A.some(s=>isBirdieOrBetter(s,par));
-        const aEagle= A.some(s=>isEagleOrBetter(s,par));
-        const bBird = B.some(s=>isBirdieOrBetter(s,par));
-        const bEagle= B.some(s=>isEagleOrBetter(s,par));
-        let aNum = aNum0, bNum = bNum0;
-        if (aBird || aEagle){ const digits = String(bNum0).split(''); bNum = Number(digits.reverse().join('')); }
-        if (bBird || bEagle){ const digits = String(aNum0).split(''); aNum = Number(digits.reverse().join('')); }
-        let winnerIsA = aNum > bNum;
-        let m = 1;
-        if (winnerIsA && aEagle && optTripleEagle.checked) m = 3;
-        else if (winnerIsA && aBird && optDoubleBirdie.checked) m = 2;
-        if (!winnerIsA && bEagle && optTripleEagle.checked) m = 3;
-        else if (!winnerIsA && bBird && optDoubleBirdie.checked) m = 2;
-        const hi = Math.max(aNum, bNum), lo = Math.min(aNum, bNum);
-        const diff = (hi - lo) * m;
-        pts = winnerIsA ? `+${diff}` : `-${diff}`;
-        ptsA += winnerIsA ? diff : -diff;
-        numA = aNum; numB = bNum; mult = `×${m}`;
-        totalA += aNum; totalB += bNum;
-      }
-      tr.children[1].textContent = numA;
-      tr.children[2].textContent = numB;
-      tr.children[3].textContent = mult;
-      tr.children[4].textContent = pts;
-    }
-    el('#vegasTotalA').textContent = totalA || '—';
-    el('#vegasTotalB').textContent = totalB || '—';
-    el('#vegasPtsA').textContent   = ptsA ? (ptsA>0?`+${ptsA}`:`${ptsA}`) : '—';
-  }
-
-  // ======= UPDATED BANKER =======
-  const bankerBody = el('#bankerBody');
-  const bankerMinBet = el('#bankerMinBet');
-  const bankerMaxBet = el('#bankerMaxBet');
-  const bankerUseNet = el('#bankerUseNet');
-  const initialBankerSel = el('#initialBanker');
-  const randomizeBankerBtn = el('#randomizeBanker');
-
-  function refreshBankerControls(){
-    if(!initialBankerSel) return;
-    initialBankerSel.innerHTML = '';
-    players.forEach(p => {
-      const opt = document.createElement('option');
-      opt.value = p.id; opt.textContent = p.name;
-      initialBankerSel.appendChild(opt);
-    });
-  }
-  refreshBankerControls();
-
-  function buildBankerTable(){
-    if(!bankerBody) return;
-    bankerBody.innerHTML='';
-    for(let h=1; h<=HOLES; h++){
-      const tr = document.createElement('tr'); tr.dataset.hole = h;
-      const cells = [
-        `<td>${h}</td>`,
-        `<td class="muted">—</td>`
-      ];
-      for(let i=0;i<players.length;i++){ cells.push(`<td class="compact"><input type="number" step="1" class="ch-input"/></td>`); }
-      for(let i=0;i<players.length;i++){ cells.push(`<td class="compact"><input type="number" min="1" max="4" value="${i+1}" class="ch-input"/></td>`); }
-      for(let i=0;i<players.length;i++){ cells.push(`<td class="compact">—</td>`); }
-      tr.innerHTML = cells.join('');
-      bankerBody.appendChild(tr);
-    }
-  }
-  buildBankerTable();
-
-  function enforceBetBounds(input){
-    const min = Number(bankerMinBet?.value||1);
-    const max = Math.max(min, Number(bankerMaxBet?.value||min));
-    input.value = input.value ? clamp(Number(input.value), min, max) : '';
-    input.min = String(min); input.max = String(max);
-  }
-
-  function getHoleFinishOrder(h){
-    const tr = el(`#bankerBody tr[data-hole="${h}"]`);
-    const inputs = Array.from(tr.querySelectorAll('input'));
-    const orderInputs = inputs.slice(4, 8);
-    return orderInputs.map(inp => Number(inp.value||999));
-  }
-
-  function getHoleBets(h){
-    const tr = el(`#bankerBody tr[data-hole="${h}"]`);
-    const inputs = Array.from(tr.querySelectorAll('input'));
-    const betInputs = inputs.slice(0, 4);
-    return betInputs.map(inp => Number(inp.value||NaN));
-  }
-
-  function setBankerNameForHole(h, name){
-    const tr = el(`#bankerBody tr[data-hole="${h}"]`);
-    const td = tr.children[1];
-    td.textContent = name;
-  }
-
-  function recalcBanker(){
-    if(!bankerBody) return;
-    els('#bankerBody input[type="number"]').forEach(enforceBetBounds);
-
-    const useNet = bankerUseNet && bankerUseNet.checked;
-    const bankerByHole = new Array(HOLES+1);
-    bankerByHole[1] = Number(initialBankerSel?.value||0);
-    const delta = Array.from({length:HOLES}, ()=>[0,0,0,0]);
-
-    for(let h=1; h<=HOLES; h++){
-      const bankerId = bankerByHole[h];
-      setBankerNameForHole(h, players[bankerId]?.name ?? '—');
-
-      const map = computeNetForHole(h, useNet);
-      const scores = players.map(p => map.get(p.id));
-
-      const tr = el(`#bankerBody tr[data-hole="${h}"]`);
-      const inputs = Array.from(tr.querySelectorAll('input'));
-      const betInputs = inputs.slice(0,4);
-      betInputs.forEach((inp, idx) => {
-        if(idx === bankerId){ inp.value=''; inp.disabled=true; }
-        else { inp.disabled=false; enforceBetBounds(inp); }
-      });
-
-      if (!Number.isNaN(scores[bankerId])) {
-        for(let pid=0; pid<players.length; pid++){
-          if(pid===bankerId) continue;
-          const b = Number(betInputs[pid].value||NaN);
-          const sOpp = scores[pid], sBank = scores[bankerId];
-          if(Number.isNaN(sOpp) || Number.isNaN(b)) continue;
-          if(sOpp === sBank){
-          } else if(sOpp < sBank){
-            delta[h-1][pid] += b;
-            delta[h-1][bankerId] -= b;
-          } else {
-            delta[h-1][pid] -= b;
-            delta[h-1][bankerId] += b;
-          }
-        }
-      }
-
-      if (h < HOLES){
-        const validScores = scores.filter(v=>!Number.isNaN(v));
-        if (validScores.length>0){
-          const minScore = Math.min(...validScores);
-          const tied = players.map((p,i)=> ({i, s: scores[i]})).filter(o=>o.s===minScore).map(o=>o.i);
-          let nextId;
-          if (tied.length===1){ nextId = tied[0]; }
-          else {
-            const ord = getHoleFinishOrder(h);
-            nextId = tied.reduce((best, i) => ord[i] < ord[best] ? i : best, tied[0]);
-          }
-          bankerByHole[h+1] = nextId;
-        } else {
-          bankerByHole[h+1] = bankerByHole[h];
-        }
-      }
+    for (let i = rows.length; i < 4; i++) {
+      const rowEl = playerRows[i]; if (!rowEl) continue;
+      rowEl.querySelector(".name-edit").value = "";
+      rowEl.querySelector(".ch-input").value = "";
+      rowEl.querySelectorAll("input.score-input").forEach(inp => { inp.value = ""; inp.classList.remove("invalid"); });
     }
 
-    const totals = [0,0,0,0];
-    for(let h=1; h<=HOLES; h++){
-      const tr = el(`#bankerBody tr[data-hole="${h}"]`);
-      const deltaCells = Array.from(tr.children).slice(-4);
-      for(let i=0;i<4;i++){
-        const v = delta[h-1][i];
-        totals[i] += v;
-        deltaCells[i].textContent = v===0 ? '—' : (v>0?`+$${v}`:`-$${Math.abs(v)}`);
-        deltaCells[i].className = 'compact ' + (v>0?'delta-pos':v<0?'delta-neg':'muted');
-      }
-    }
-    el('#bankerTotP1').textContent = formatMoney(totals[0]);
-    el('#bankerTotP2').textContent = formatMoney(totals[1]);
-    el('#bankerTotP3').textContent = formatMoney(totals[2]);
-    el('#bankerTotP4').textContent = formatMoney(totals[3]);
+    recalcAll(); vegas_recalc(); banker_recalc(); saveState();
+    announce("CSV imported.");
   }
-
-  
-  // ======= CSV Import / Export =======
-  function importCsvText(text){
-    // Expect headers: player,ch,h1..h18
-    const lines = text.trim().split(/\r?\n/).filter(Boolean);
-    if (lines.length < 2) return;
-    const headers = lines[0].split(',').map(h=>h.trim().toLowerCase());
-    const idxPlayer = headers.indexOf('player');
-    const idxCh = headers.indexOf('ch');
-    const idxH = Array.from({length:18}, (_,i)=> headers.indexOf(`h${i+1}`));
-    if (idxPlayer === -1 || idxCh === -1 || idxH.some(i=>i===-1)) {
-      alert('CSV format should be: player,ch,h1,h2,...,h18');
-      return;
-    }
-    const rows = lines.slice(1).map(l => l.split(',').map(x=>x.trim()));
-    rows.slice(0,4).forEach((cols, r) => {
-      const tr = document.querySelector(`#scorecard tbody tr[data-pid="${r}"]`);
-      if (!tr) return;
-      // name
-      const nameInput = tr.querySelector('.name-edit');
-      if (nameInput) { nameInput.value = cols[idxPlayer] || nameInput.value; }
-      // CH
-      const chInput = tr.querySelector('.ch-input');
-      if (chInput) { chInput.value = cols[idxCh] || chInput.value; }
-      // scores
-      const scoreInputs = tr.querySelectorAll('.score-input');
-      for (let h=0; h<18; h++){
-        const val = cols[idxH[h]];
-        if (val !== undefined && val !== '') scoreInputs[h].value = val;
-      }
-    });
-    recalcAll();
-  }
-
-  function downloadTemplate(){
-    const headers = ['player','ch', ...Array.from({length:18}, (_,i)=>`h${i+1}`)];
-    const body = Array.from({length:4}, (_,r)=>{
-      const name = `Player ${r+1}`;
-      const ch = r===0?0:'';
-      const holes = Array.from({length:18}, ()=>'');
-      return [name, ch, ...holes];
-    });
-    const csv = [headers.join(','), ...body.map(r=>r.join(','))].join('\n');
-    const blob = new Blob([csv], {type:'text/csv'});
-    const a = document.createElement('a');
+  function downloadCSVTemplate() {
+    const headers = ["player","ch", ...Array.from({length:18},(_,i)=>`h${i+1}`)];
+    const rows = [
+      ["Daniel",-1,4,3,4,3,2,4,4,2,4, 4,3,2,5,4,4,3,2,4],
+      ["Rob",2,   5,4,5,4,3,5,4,3,5, 5,4,3,5,6,5,4,3,5],
+      ["John",4,  4,5,6,5,4,6,5,4,5, 4,5,4,6,7,5,5,4,5],
+      ["Alex",7,  3,4,4,5,3,5,4,3,4, 3,4,3,4,5,4,4,3,4],
+    ];
+    let csv = headers.join(",") + "\n" + rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], {type:"text/csv"});
+    const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = 'scorecard_template.csv';
-    a.click();
-    URL.revokeObjectURL(a.href);
-  }
-function formatMoney(v){
-    if(v===0) return '—';
-    const sign = v>0 ? '+' : '-';
-    return `${sign}$${Math.abs(v)}`;
+    a.download = "scorecard_template.csv";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
 
-  // ======= Events =======
-  el('#toggleVegas')?.addEventListener('click', () => {
-    const sec = el('#vegasSection');
-    sec.classList.toggle('open');
-    el('#toggleVegas').classList.toggle('active');
-  });
-  el('#toggleBanker')?.addEventListener('click', () => {
-    const sec = el('#bankerSection');
-    sec.classList.toggle('open');
-    el('#toggleBanker').classList.toggle('active');
-  });
+  // ======================================================================
+  // ============================= INIT / WIRING ==========================
+  // ======================================================================
+  function init(){
+    buildHeader(); buildParAndHcpRows(); buildPlayerRows(); buildTotalsRow();
 
-  [optUseNet, optDoubleBirdie, optTripleEagle].forEach(inp => inp?.addEventListener('change', recalcAll));
-  [el('#bankerMinBet'), el('#bankerMaxBet'), el('#bankerUseNet'), el('#initialBanker')].forEach(inp => {
-    inp?.addEventListener('input', recalcAll);
-    inp?.addEventListener('change', recalcAll);
-  });
-  el('#randomizeBanker')?.addEventListener('click', () => {
-    const idx = Math.floor(Math.random()*players.length);
-    const sel = el('#initialBanker');
-    if (sel) sel.value = String(idx);
-    recalcAll();
-  });
-  el('#resetBtn')?.addEventListener('click', () => {
-    els('.score-input').forEach(i => i.value = '');
-    els('#bankerBody input').forEach(i => { if(!i.disabled) i.value=''; });
-    els('.ch-input').forEach((i, idx) => { if(idx<4) i.value = '0'; });
-    recalcAll();
-  });
+    $(ids.resetBtn).addEventListener("click", clearScoresOnly);
+    $(ids.clearAllBtn).addEventListener("click", clearAll);
+    $(ids.saveBtn).addEventListener("click", saveState);
+    $(ids.courseName).addEventListener("input", saveDebounced);
+    $(ids.teeName).addEventListener("input", saveDebounced);
 
-  function recalcAll(){
-    recalcScorecard();
-    recalcVegas();
-    recalcBanker();
+    // Games: open/close
+    $(ids.toggleVegas).addEventListener("click", ()=>games_toggle("vegas"));
+    $(ids.toggleBanker).addEventListener("click", ()=>games_toggle("banker"));
+
+    // Vegas UI + wiring
+    vegas_renderTeamControls();
+    vegas_renderTable();
+    $(ids.optUseNet).addEventListener("change", ()=>{ vegas_recalc(); saveDebounced(); });
+    $(ids.optDoubleBirdie).addEventListener("change", ()=>{ vegas_recalc(); saveDebounced(); });
+    $(ids.optTripleEagle).addEventListener("change", ()=>{ vegas_recalc(); saveDebounced(); });
+
+    // Banker UI + wiring
+    banker_renderTable();
+    $(ids.bankerPointValue).addEventListener("input", ()=>{ banker_recalc(); saveDebounced(); });
+    $(ids.bankerRotation).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
+    $(ids.bankerUseNet).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
+    $(ids.bankerDoubleBirdie).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
+    $(ids.bankerTripleEagle).addEventListener("change", ()=>{ banker_recalc(); saveDebounced(); });
+
+    // CSV upload & template
+    const csvInput = $(ids.csvInput);
+    if (csvInput) csvInput.addEventListener("change", (e) => {
+      const f = e.target.files && e.target.files[0];
+      if (f) handleCSVFile(f);
+      e.target.value = ""; // allow re-upload same file
+    });
+    $(ids.dlTemplateBtn).addEventListener("click", downloadCSVTemplate);
+
+    recalcAll(); vegas_recalc(); banker_recalc(); loadState();
   }
 
+  function vegas_renderTable(){ const body=$(ids.vegasTableBody); body.innerHTML=""; for(let h=0;h<HOLES;h++){ const tr=document.createElement("tr"); tr.innerHTML=`<td>${h+1}</td><td data-vegas-a="${h}">—</td><td data-vegas-b="${h}">—</td><td data-vegas-m="${h}">—</td><td data-vegas-p="${h}">—</td>`; body.appendChild(tr);} }
 
-  // CSV UI events
-  const csvInput = document.querySelector('#csvInput');
-  const dlTemplateBtn = document.querySelector('#dlTemplateBtn');
-  csvInput?.addEventListener('change', (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => importCsvText(String(reader.result||''));
-    reader.readAsText(file);
-  });
-  dlTemplateBtn?.addEventListener('click', downloadTemplate);
-
-  recalcAll();
-});
+  document.addEventListener("DOMContentLoaded", init);
+})();
