@@ -386,14 +386,20 @@
 (function(){
   const btn = document.getElementById('forceRefresh');
   if(!btn) return;
-  btn.addEventListener('click', () => {
-    // Clear cache and force hard reload
+  btn.addEventListener('click', async () => {
+    // Clear all caches
     if('caches' in window) {
-      caches.keys().then(names => {
-        names.forEach(name => caches.delete(name));
-      });
+      const names = await caches.keys();
+      await Promise.all(names.map(name => caches.delete(name)));
     }
-    window.location.reload(true);
+    // Clear service worker cache if available
+    if('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.controller.postMessage({type: 'CLEAR_CACHE'});
+    }
+    // Force reload with cache bypass using unique URL parameter
+    const url = new URL(window.location.href);
+    url.searchParams.set('nocache', Date.now());
+    window.location.href = url.toString();
   });
 })();
 
