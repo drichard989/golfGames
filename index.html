@@ -5,411 +5,877 @@
     <title>Manito Golf Games</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
-    <style>/* =========================
+    <style>
+      /* =========================
    Manito Golf Games — Refactored CSS
    ========================= */
+      /* ---- Theme tokens (dark default) ---- */
+      :root {
+        --bg: #0b0d10;
+        --panel: #11151a;
+        --ink: #e8eef5;
+        --muted: #a8b3bf;
+        --accent: #68d391;
+        --line: #1e242b;
+        --warn: #ffb454;
+        --danger: #ff6b6b;
+        --shadow: rgba(0, 0, 0, .35);
+      }
 
-/* ---- Theme tokens (dark default) ---- */
-:root{
-  --bg:#0b0d10;
-  --panel:#11151a;
-  --ink:#e8eef5;
-  --muted:#a8b3bf;
-  --accent:#68d391;
-  --line:#1e242b;
-  --warn:#ffb454;
-  --danger:#ff6b6b;
-  --shadow:rgba(0,0,0,.35);
-}
+      /* ---- Base / resets ---- */
+      * {
+        box-sizing: border-box
+      }
 
-/* ---- Base / resets ---- */
-*{ box-sizing:border-box }
+      html,
+      body {
+        height: 100%
+      }
 
-html,body{ height:100% }
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        background: linear-gradient(180deg, #0a0c10 0%, #0c1117 100%);
+        background-color: var(--bg);
+        /* fallback, prevents white flash */
+        color: var(--ink);
+        color-scheme: dark;
+        overscroll-behavior: none;
+      }
 
-body{
-  margin:0;
-  font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";
-  background:linear-gradient(180deg,#0a0c10 0%,#0c1117 100%);
-  background-color:var(--bg);           /* fallback, prevents white flash */
-  color:var(--ink);
-  color-scheme:dark;
-  overscroll-behavior:none;
-}
+      /* iOS/WebKit ensure dark behind safe-area */
+      @supports (-webkit-touch-callout: none) {
 
-/* iOS/WebKit ensure dark behind safe-area */
-@supports (-webkit-touch-callout: none){
-  html,body{ background-color:var(--bg) }
-}
+        html,
+        body {
+          background-color: var(--bg)
+        }
+      }
 
-/* ---- Header / controls ---- */
-header{ padding:16px 12px 8px; display:grid; gap:10px }
-h1{ margin:0; font-size:clamp(18px,3.5vw,28px); letter-spacing:.2px }
-.controls{ display:flex; flex-wrap:wrap; gap:8px; align-items:center }
-.control{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:6px 10px;
-  display:flex; gap:8px; align-items:center
-}
-.control label{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em }
-.control input[type="text"]{
-  background:#0c1218; border:1px solid var(--line); color:var(--ink);
-  border-radius:8px; padding:6px 8px; min-width:120px
-}
+      /* ---- Header / controls ---- */
+      header {
+        padding: 16px 12px 8px;
+        display: grid;
+        gap: 10px
+      }
 
-.btn{
-  border:1px solid var(--line);
-  background:var(--panel);
-  color:var(--ink);
-  padding:8px 12px;
-  border-radius:10px;
-  cursor:pointer
-}
-.btn:hover{ filter:brightness(1.1) }
-.btn.accent{ border-color:#224; background:#14202a }
-.meta{ font-size:12px; color:var(--muted) }
+      h1 {
+        margin: 0;
+        font-size: clamp(18px, 3.5vw, 28px);
+        letter-spacing: .2px
+      }
 
-/* ---- Theme toggle button ---- */
-.theme-toggle{
-  background:var(--panel); color:var(--ink);
-  border:1px solid var(--line); border-radius:10px;
-  padding:8px 12px; font-size:.9rem; cursor:pointer;
-  transition:background .25s,color .25s,border-color .25s
-}
-.theme-toggle:hover{ filter:brightness(1.08) }
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center
+      }
 
-/* =========================
+      .control {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 6px 10px;
+        display: flex;
+        gap: 8px;
+        align-items: center
+      }
+
+      .control label {
+        font-size: 12px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .08em
+      }
+
+      .control input[type="text"] {
+        background: #0c1218;
+        border: 1px solid var(--line);
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 6px 8px;
+        min-width: 120px
+      }
+
+      .btn {
+        border: 1px solid var(--line);
+        background: var(--panel);
+        color: var(--ink);
+        padding: 8px 12px;
+        border-radius: 10px;
+        cursor: pointer
+      }
+
+      .btn:hover {
+        filter: brightness(1.1)
+      }
+
+      .btn.accent {
+        border-color: #224;
+        background: #14202a
+      }
+
+      .meta {
+        font-size: 12px;
+        color: var(--muted)
+      }
+
+      /* ---- Theme toggle button ---- */
+      .theme-toggle {
+        background: var(--panel);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 8px 12px;
+        font-size: .9rem;
+        cursor: pointer;
+        transition: background .25s, color .25s, border-color .25s
+      }
+
+      .theme-toggle:hover {
+        filter: brightness(1.08)
+      }
+
+      /* =========================
    Scorecard (scrollable)
    ========================= */
-.wrap{
-  padding:8px 0 20px;
-  overflow-x:auto;
-  overflow-y:visible !important;           /* allow page to scroll vertically on mobile */
-  -webkit-overflow-scrolling:touch;
-  touch-action:auto !important;            /* natural gestures */
-  overscroll-behavior-x:contain;
-  position:relative;
-  background:var(--panel);
-}
-.wrap::before,.wrap::after{
-  content:""; position:sticky; top:0; width:18px; height:100%;
-  pointer-events:none; z-index:6
-}
-.wrap::before{ left:0;  box-shadow:inset 12px 0 12px -12px var(--shadow) }
-.wrap::after{  right:0; box-shadow:inset -12px 0 12px -12px var(--shadow) }
+      .wrap {
+        padding: 8px 0 20px;
+        overflow-x: auto;
+        overflow-y: visible !important;
+        /* allow page to scroll vertically on mobile */
+        -webkit-overflow-scrolling: touch;
+        touch-action: auto !important;
+        /* natural gestures */
+        overscroll-behavior-x: contain;
+        position: relative;
+        background: var(--panel);
+      }
 
-table{
-  width:max(100%,980px);
-  min-width:940px;
-  border-collapse:separate; border-spacing:0;
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:14px; overflow:hidden
-}
-thead th{ position:sticky; top:0; background:#0f151b; z-index:3 }
-th,td{
-  border-bottom:1px solid var(--line);
-  text-align:center;
-  font-variant-numeric:tabular-nums;
-  vertical-align:middle;
-  padding:8px 6px;
-  white-space:nowrap
-}
-th:first-child,td:first-child{
-  text-align:left; padding-left:12px; min-width:170px;
-  position:sticky; left:0; background-color:var(--panel);
-  z-index:4; border-right:1px solid var(--line)
-}
-thead th:first-child{ z-index:5 }
-tr:last-child td{ border-bottom:none }
-.subtle{ color:var(--muted); font-size:12px }
+      .wrap::before,
+      .wrap::after {
+        content: "";
+        position: sticky;
+        top: 0;
+        width: 18px;
+        height: 100%;
+        pointer-events: none;
+        z-index: 6
+      }
 
-.par-row input,.hcp-row input,.score-input,.ch-input{
-  width:54px; text-align:center; border-radius:8px; border:1px solid var(--line);
-  background:#0c1218; color:var(--ink); padding:6px 4px;
-  -moz-appearance:textfield
-}
-.par-row input::-webkit-outer-spin-button,.par-row input::-webkit-inner-spin-button,
-.hcp-row input::-webkit-outer-spin-button,.hcp-row input::-webkit-inner-spin-button,
-.score-input::-webkit-outer-spin-button,.score-input::-webkit-inner-spin-button,
-.ch-input::-webkit-outer-spin-button,.ch-input::-webkit-inner-spin-button{
-  -webkit-appearance:none; margin:0
-}
-.ch-input{ width:64px }
-.score-input.invalid{ border-color:var(--danger) }
-.total,.to-par,.split,.net{ font-weight:600 }
-.to-par[data-sign="+"]{ color:var(--danger) }
-.to-par[data-sign="-"]{ color:var(--accent) }
-.to-par[data-sign="0"]{ color:var(--warn) }
-tfoot td{ background:#0f151b; font-weight:600 }
-.note{ margin:8px 12px 14px; color:var(--muted); font-size:12px }
-.small{ font-size:11px; color:var(--muted); margin:0 12px }
-.name-edit{
-  background:transparent; border:none; color:var(--ink);
-  font-weight:600; font-size:14px; width:100%;
-  padding:6px 10px; display:block
-}
-.name-edit:focus{ outline:1px dashed var(--accent); border-radius:6px }
+      .wrap::before {
+        left: 0;
+        box-shadow: inset 12px 0 12px -12px var(--shadow)
+      }
 
-/* ---- Scorecard responsive tweaks ---- */
-@media (max-width:900px){
-  th,td{ padding:6px 4px }
-  .name-edit{ font-size:13px; padding:6px 8px }
-  th:first-child,td:first-child{ min-width:150px }
-  .par-row input,.hcp-row input,.score-input{ width:46px; padding:5px 3px }
-  .ch-input{ width:56px }
-  table{ min-width:880px }
-}
-@media (max-width:600px){
-  h1{ font-size:18px }
-  .controls{ gap:6px }
-  .btn{ padding:7px 10px }
-  th:first-child,td:first-child{ min-width:140px }
-  .par-row input,.hcp-row input,.score-input{ width:40px; padding:4px 2px }
-  .ch-input{ width:50px }
-  table{ min-width:820px }
-}
+      .wrap::after {
+        right: 0;
+        box-shadow: inset -12px 0 12px -12px var(--shadow)
+      }
 
-/* =========================
+      table {
+        width: max(100%, 980px);
+        min-width: 940px;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden
+      }
+
+      thead th {
+        position: sticky;
+        top: 0;
+        background: #0f151b;
+        z-index: 3
+      }
+
+      th,
+      td {
+        border-bottom: 1px solid var(--line);
+        text-align: center;
+        font-variant-numeric: tabular-nums;
+        vertical-align: middle;
+        padding: 8px 6px;
+        white-space: nowrap
+      }
+
+      th:first-child,
+      td:first-child {
+        text-align: left;
+        padding-left: 12px;
+        min-width: 170px;
+        position: sticky;
+        left: 0;
+        background-color: var(--panel);
+        z-index: 4;
+        border-right: 1px solid var(--line)
+      }
+
+      thead th:first-child {
+        z-index: 5
+      }
+
+      tr:last-child td {
+        border-bottom: none
+      }
+
+      .subtle {
+        color: var(--muted);
+        font-size: 12px
+      }
+
+      .par-row input,
+      .hcp-row input,
+      .score-input,
+      .ch-input {
+        width: 54px;
+        text-align: center;
+        border-radius: 8px;
+        border: 1px solid var(--line);
+        background: #0c1218;
+        color: var(--ink);
+        padding: 6px 4px;
+        -moz-appearance: textfield
+      }
+
+      .par-row input::-webkit-outer-spin-button,
+      .par-row input::-webkit-inner-spin-button,
+      .hcp-row input::-webkit-outer-spin-button,
+      .hcp-row input::-webkit-inner-spin-button,
+      .score-input::-webkit-outer-spin-button,
+      .score-input::-webkit-inner-spin-button,
+      .ch-input::-webkit-outer-spin-button,
+      .ch-input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0
+      }
+
+      .ch-input {
+        width: 64px
+      }
+
+      .score-input.invalid {
+        border-color: var(--danger)
+      }
+
+      .total,
+      .to-par,
+      .split,
+      .net {
+        font-weight: 600
+      }
+
+      .to-par[data-sign="+"] {
+        color: var(--danger)
+      }
+
+      .to-par[data-sign="-"] {
+        color: var(--accent)
+      }
+
+      .to-par[data-sign="0"] {
+        color: var(--warn)
+      }
+
+      tfoot td {
+        background: #0f151b;
+        font-weight: 600
+      }
+
+      .note {
+        margin: 8px 12px 14px;
+        color: var(--muted);
+        font-size: 12px
+      }
+
+      .small {
+        font-size: 11px;
+        color: var(--muted);
+        margin: 0 12px
+      }
+
+      .name-edit {
+        background: transparent;
+        border: none;
+        color: var(--ink);
+        font-weight: 600;
+        font-size: 14px;
+        width: 100%;
+        padding: 6px 10px;
+        display: block
+      }
+
+      .name-edit:focus {
+        outline: 1px dashed var(--accent);
+        border-radius: 6px
+      }
+
+      /* ---- Scorecard responsive tweaks ---- */
+      @media (max-width:900px) {
+
+        th,
+        td {
+          padding: 6px 4px
+        }
+
+        .name-edit {
+          font-size: 13px;
+          padding: 6px 8px
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 150px
+        }
+
+        .par-row input,
+        .hcp-row input,
+        .score-input {
+          width: 46px;
+          padding: 5px 3px
+        }
+
+        .ch-input {
+          width: 56px
+        }
+
+        table {
+          min-width: 880px
+        }
+      }
+
+      @media (max-width:600px) {
+        h1 {
+          font-size: 18px
+        }
+
+        .controls {
+          gap: 6px
+        }
+
+        .btn {
+          padding: 7px 10px
+        }
+
+        th:first-child,
+        td:first-child {
+          min-width: 140px
+        }
+
+        .par-row input,
+        .hcp-row input,
+        .score-input {
+          width: 40px;
+          padding: 4px 2px
+        }
+
+        .ch-input {
+          width: 50px
+        }
+
+        table {
+          min-width: 820px
+        }
+      }
+
+      /* =========================
    Games launcher / sections
    ========================= */
-.gamesbar{
-  margin:8px 12px 0;
-  display:flex; gap:8px; flex-wrap:wrap; align-items:center
-}
-.game-toggle{
-  cursor:pointer; border:1px solid var(--line);
-  background:#0f151b; border-radius:16px; padding:8px 14px;
-}
-.game-toggle.active{ background:#14202a; border-color:#224 }
+      .gamesbar {
+        margin: 8px 12px 0;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center
+      }
 
-.game-section{
-  display:none; margin:14px 12px 28px; padding:12px;
-  border:1px solid var(--line); border-radius:12px; background:#0f151b
-}
-.game-section.open{ display:block }
-.game-section h2{ margin:0 0 8px; font-size:18px }
+      .game-toggle {
+        cursor: pointer;
+        border: 1px solid var(--line);
+        background: #0f151b;
+        border-radius: 16px;
+        padding: 8px 14px;
+      }
 
-.pill{ font-size:12px; color:var(--muted) }
+      .game-toggle.active {
+        background: #14202a;
+        border-color: #224
+      }
 
-/* =========================
+      .game-section {
+        display: none;
+        margin: 14px 12px 28px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: #0f151b
+      }
+
+      .game-section.open {
+        display: block
+      }
+
+      .game-section h2 {
+        margin: 0 0 8px;
+        font-size: 18px
+      }
+
+      .pill {
+        font-size: 12px;
+        color: var(--muted)
+      }
+
+      /* =========================
    Skins (reuses banker table shell)
    ========================= */
-.banker-controls,.vegas-controls{
-  display:grid; gap:10px;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  margin-bottom:10px;
-  background:var(--panel);
-}
-.control-box,.team-box,.opts-box{
-  border:1px solid var(--line); border-radius:10px; padding:10px; background:var(--panel)
-}
-.radio{ display:inline-flex; gap:6px; align-items:center }
-.warn{ color:var(--warn); font-size:12px; margin-top:6px }
+      .banker-controls,
+      .vegas-controls {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        margin-bottom: 10px;
+        background: var(--panel);
+      }
 
-/* =========================
+      .control-box,
+      .team-box,
+      .opts-box {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        background: var(--panel)
+      }
+
+      .radio {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center
+      }
+
+      .warn {
+        color: var(--warn);
+        font-size: 12px;
+        margin-top: 6px
+      }
+
+      /* =========================
    Vegas
    ========================= */
-.vegas-wrap{
-  overflow-x:auto; overflow-y:visible !important;
-  -webkit-overflow-scrolling:touch; touch-action:auto !important;
-  border:1px solid var(--line);
-  border-radius:10px; background:var(--panel)
-}
-.vegas-table{ width:max(100%,720px); border-collapse:separate; border-spacing:0 }
-.vegas-table th,.vegas-table td{
-  border-bottom:1px solid var(--line); padding:8px 10px; text-align:center; white-space:nowrap
-}
-.vegas-table thead th{ position:sticky; top:0; background:#0f151b }
-.vegas-table tfoot td{ background:#0f151b; font-weight:700 }
-.vegas-table th:first-child,.vegas-table td:first-child{ width:56px; min-width:56px; padding-left:8px; padding-right:8px }
-@media (max-width:600px){
-  .vegas-table th:first-child,.vegas-table td:first-child{ width:44px; min-width:44px; padding-left:6px; padding-right:6px }
-}
+      .vegas-wrap {
+        overflow-x: auto;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch;
+        touch-action: auto !important;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel)
+      }
 
-/* =========================
+      .vegas-table {
+        width: max(100%, 720px);
+        border-collapse: separate;
+        border-spacing: 0
+      }
+
+      .vegas-table th,
+      .vegas-table td {
+        border-bottom: 1px solid var(--line);
+        padding: 8px 10px;
+        text-align: center;
+        white-space: nowrap
+      }
+
+      .vegas-table thead th {
+        position: sticky;
+        top: 0;
+        background: #0f151b
+      }
+
+      .vegas-table tfoot td {
+        background: #0f151b;
+        font-weight: 700
+      }
+
+      .vegas-table th:first-child,
+      .vegas-table td:first-child {
+        width: 56px;
+        min-width: 56px;
+        padding-left: 8px;
+        padding-right: 8px
+      }
+
+      @media (max-width:600px) {
+
+        .vegas-table th:first-child,
+        .vegas-table td:first-child {
+          width: 44px;
+          min-width: 44px;
+          padding-left: 6px;
+          padding-right: 6px
+        }
+      }
+
+      /* =========================
    Banker
    ========================= */
-.banker-wrap{
-  overflow-x:auto; overflow-y:visible !important;
-  -webkit-overflow-scrolling:touch; touch-action:auto !important;
-  border:1px solid var(--line);
-  border-radius:10px; background:var(--panel)
-}
-.banker-table{ width:max(100%,820px); border-collapse:separate; border-spacing:0 }
-.banker-table th,.banker-table td{
-  border-bottom:1px solid var(--line); padding:8px 10px; text-align:center; white-space:nowrap
-}
-.banker-table thead th{ position:sticky; top:0; background:#0f151b }
-.banker-table tfoot td{ background:#0f151b; font-weight:700 }
-.banker-table th:first-child,.banker-table td:first-child{
-  width:56px; min-width:56px; padding-left:8px; padding-right:8px
-}
-@media (max-width:600px){
-  .banker-table th:first-child,.banker-table td:first-child{
-    width:44px; min-width:44px; padding-left:6px; padding-right:6px
-  }
-}
+      .banker-wrap {
+        overflow-x: auto;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch;
+        touch-action: auto !important;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel)
+      }
 
-/* =========================
+      .banker-table {
+        width: max(100%, 820px);
+        border-collapse: separate;
+        border-spacing: 0
+      }
+
+      .banker-table th,
+      .banker-table td {
+        border-bottom: 1px solid var(--line);
+        padding: 8px 10px;
+        text-align: center;
+        white-space: nowrap
+      }
+
+      .banker-table thead th {
+        position: sticky;
+        top: 0;
+        background: #0f151b
+      }
+
+      .banker-table tfoot td {
+        background: #0f151b;
+        font-weight: 700
+      }
+
+      .banker-table th:first-child,
+      .banker-table td:first-child {
+        width: 56px;
+        min-width: 56px;
+        padding-left: 8px;
+        padding-right: 8px
+      }
+
+      @media (max-width:600px) {
+
+        .banker-table th:first-child,
+        .banker-table td:first-child {
+          width: 44px;
+          min-width: 44px;
+          padding-left: 6px;
+          padding-right: 6px
+        }
+      }
+
+      /* =========================
    Junk (Dots) — table + dropdown
    ========================= */
-#junkTable{ width:max-content; table-layout:fixed }
-#junkTable th:first-child,#junkTable td:first-child{ width:44px }
-#junkTable th:not(:first-child),#junkTable td:not(:first-child){ width:76px }
-.junk-dot{ display:inline-block; min-width:18px; text-align:center }
+      #junkTable {
+        width: max-content;
+        table-layout: fixed
+      }
 
-/* Unified junk cell + dropdown */
-.junk-cell{ display:inline-flex; gap:6px; align-items:center; justify-content:center }
-.junk-dd{ display:inline-block; position:relative }
-.junk-dd > summary{
-  list-style:none; cursor:pointer;
-  border:1px solid var(--line,#333);
-  background:#0f151b; color:var(--ink,#e6e6e6);
-  border-radius:8px; padding:6px 10px;
-  font-size:12px; line-height:1.1; min-height:36px;
-  display:inline-flex; align-items:center
-}
-.junk-dd[open] > summary{ filter:brightness(1.08) }
-.junk-dd .menu{
-  position:absolute; z-index:10; margin-top:6px;
-  display:grid; gap:6px; padding:8px; min-width:160px;
-  border:1px solid var(--line,#333); background:#0f151b; border-radius:10px
-}
-.junk-dd .menu label{
-  position:relative; display:flex; align-items:center;
-  gap:8px; padding:10px 12px; border-radius:10px; cursor:pointer;
-  border:1px solid transparent; user-select:none; color:var(--ink,#e6e6e6)
-}
-.junk-dd .menu label input{ position:absolute; inset:0; opacity:0; pointer-events:none }
-.junk-dd .menu label:has(input:checked){ background:#14202a; border-color:#224 }
-.junk-dd .menu label:has(input:checked)::after{ content:"✓"; margin-left:auto; font-weight:700 }
+      #junkTable th:first-child,
+      #junkTable td:first-child {
+        width: 44px
+      }
 
-/* ---- Density tweaks shared by small tables ---- */
-#junkTable tbody td,#junkTable tbody th,
-#vegasTable tbody td,#vegasTable tbody th{ padding-top:6px; padding-bottom:6px }
+      #junkTable th:not(:first-child),
+      #junkTable td:not(:first-child) {
+        width: 76px
+      }
 
-/* ---- Larger/touch targets ---- */
-.gamesbar .game-toggle{ min-height:40px }
-input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-size:15px }
+      .junk-dot {
+        display: inline-block;
+        min-width: 18px;
+        text-align: center
+      }
 
-/* ---- Responsive tightening ---- */
-@media (max-width:768px){
-  .banker-table th,.banker-table td{ padding:6px 8px }
-  #junkTable tbody td,#junkTable tbody th,
-  #vegasTable tbody td,#vegasTable tbody th{ padding-top:4px; padding-bottom:4px }
-  .gamesbar{ gap:8px; display:flex; flex-wrap:wrap }
-  .gamesbar .game-toggle{ flex:1 1 auto }
-  h2{ font-size:18px; margin:8px 0 }
-  #junkTable th:not(:first-child),#junkTable td:not(:first-child){ width:70px }
-  .junk-dd > summary{ padding:4px 8px; min-height:32px }
-}
-@media (max-width:420px){
-  .junk-dd > summary{ min-height:40px; padding:8px 12px }
-  input[type="number"],input[type="text"]{ min-height:36px }
-}
+      /* Unified junk cell + dropdown */
+      .junk-cell {
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center
+      }
 
-/* =========================
+      .junk-dd {
+        display: inline-block;
+        position: relative
+      }
+
+      .junk-dd>summary {
+        list-style: none;
+        cursor: pointer;
+        border: 1px solid var(--line, #333);
+        background: #0f151b;
+        color: var(--ink, #e6e6e6);
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        line-height: 1.1;
+        min-height: 36px;
+        display: inline-flex;
+        align-items: center
+      }
+
+      .junk-dd[open]>summary {
+        filter: brightness(1.08)
+      }
+
+      .junk-dd .menu {
+        position: absolute;
+        z-index: 10;
+        margin-top: 6px;
+        display: grid;
+        gap: 6px;
+        padding: 8px;
+        min-width: 160px;
+        border: 1px solid var(--line, #333);
+        background: #0f151b;
+        border-radius: 10px
+      }
+
+      .junk-dd .menu label {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        user-select: none;
+        color: var(--ink, #e6e6e6)
+      }
+
+      .junk-dd .menu label input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        pointer-events: none
+      }
+
+      .junk-dd .menu label:has(input:checked) {
+        background: #14202a;
+        border-color: #224
+      }
+
+      .junk-dd .menu label:has(input:checked)::after {
+        content: "✓";
+        margin-left: auto;
+        font-weight: 700
+      }
+
+      /* ---- Density tweaks shared by small tables ---- */
+      #junkTable tbody td,
+      #junkTable tbody th,
+      #vegasTable tbody td,
+      #vegasTable tbody th {
+        padding-top: 6px;
+        padding-bottom: 6px
+      }
+
+      /* ---- Larger/touch targets ---- */
+      .gamesbar .game-toggle {
+        min-height: 40px
+      }
+
+      input[type="number"],
+      input[type="text"] {
+        padding: 6px 8px;
+        min-height: 34px;
+        font-size: 15px
+      }
+
+      /* ---- Responsive tightening ---- */
+      @media (max-width:768px) {
+
+        .banker-table th,
+        .banker-table td {
+          padding: 6px 8px
+        }
+
+        #junkTable tbody td,
+        #junkTable tbody th,
+        #vegasTable tbody td,
+        #vegasTable tbody th {
+          padding-top: 4px;
+          padding-bottom: 4px
+        }
+
+        .gamesbar {
+          gap: 8px;
+          display: flex;
+          flex-wrap: wrap
+        }
+
+        .gamesbar .game-toggle {
+          flex: 1 1 auto
+        }
+
+        h2 {
+          font-size: 18px;
+          margin: 8px 0
+        }
+
+        #junkTable th:not(:first-child),
+        #junkTable td:not(:first-child) {
+          width: 70px
+        }
+
+        .junk-dd>summary {
+          padding: 4px 8px;
+          min-height: 32px
+        }
+      }
+
+      @media (max-width:420px) {
+        .junk-dd>summary {
+          min-height: 40px;
+          padding: 8px 12px
+        }
+
+        input[type="number"],
+        input[type="text"] {
+          min-height: 36px
+        }
+      }
+
+      /* =========================
    Light theme (opt-in)
    ========================= */
-:root[data-theme="light"]{
-  --bg:#f4f6f8;
-  --panel:#ffffff;
-  --panel-2:#f8fafc;
-  --ink:#1a1c1f;
-  --muted:#5a5f66;
-  --accent:#0090e0;
-  --line:#d3d7dc;
-  --shadow:rgba(0,0,0,.08);
-}
-:root[data-theme="light"] body{ background:var(--bg); color:var(--ink) }
+      :root[data-theme="light"] {
+        --bg: #f4f6f8;
+        --panel: #ffffff;
+        --panel-2: #f8fafc;
+        --ink: #1a1c1f;
+        --muted: #5a5f66;
+        --accent: #0090e0;
+        --line: #d3d7dc;
+        --shadow: rgba(0, 0, 0, .08);
+      }
 
-/* Panels/wrappers */
-:root[data-theme="light"] .wrap,
-:root[data-theme="light"] .vegas-wrap,
-:root[data-theme="light"] .banker-wrap,
-:root[data-theme="light"] .skins-wrap,
-:root[data-theme="light"] .game-section,
-:root[data-theme="light"] .control,
-:root[data-theme="light"] .control-box,
-:root[data-theme="light"] .team-box,
-:root[data-theme="light"] .opts-box{ background:var(--panel); border-color:var(--line) }
+      :root[data-theme="light"] body {
+        background: var(--bg);
+        color: var(--ink)
+      }
 
-/* Inputs */
-:root[data-theme="light"] input,
-:root[data-theme="light"] select,
-:root[data-theme="light"] textarea{
-  background-color:#fff !important; color:#1a1c1f !important; border:1px solid #d0d4d9 !important;
-  box-shadow:none !important
-}
-:root[data-theme="light"] input:focus,
-:root[data-theme="light"] select:focus,
-:root[data-theme="light"] textarea:focus{
-  outline:none; border-color:#0090e0 !important; box-shadow:0 0 0 2px rgba(0,144,224,.2)
-}
+      /* Panels/wrappers */
+      :root[data-theme="light"] .wrap,
+      :root[data-theme="light"] .vegas-wrap,
+      :root[data-theme="light"] .banker-wrap,
+      :root[data-theme="light"] .skins-wrap,
+      :root[data-theme="light"] .game-section,
+      :root[data-theme="light"] .control,
+      :root[data-theme="light"] .control-box,
+      :root[data-theme="light"] .team-box,
+      :root[data-theme="light"] .opts-box {
+        background: var(--panel);
+        border-color: var(--line)
+      }
 
-/* Buttons */
-:root[data-theme="light"] button,
-:root[data-theme="light"] .btn{
-  background-color:#f3f5f8 !important; color:#1a1c1f !important; border:1px solid #cfd3d8 !important
-}
-:root[data-theme="light"] button:hover,
-:root[data-theme="light"] .btn:hover{ background-color:#e7eaed !important }
+      /* Inputs */
+      :root[data-theme="light"] input,
+      :root[data-theme="light"] select,
+      :root[data-theme="light"] textarea {
+        background-color: #fff !important;
+        color: #1a1c1f !important;
+        border: 1px solid #d0d4d9 !important;
+        box-shadow: none !important
+      }
 
-/* Tables */
-:root[data-theme="light"] table{ background-color:#fff !important; color:#1a1c1f !important; border-color:#d0d4d9 !important }
-:root[data-theme="light"] th{
-  background-color:#f1f3f6 !important; color:#1a1c1f !important; border-color:#d0d4d9 !important
-}
-:root[data-theme="light"] td:first-child{ background-color:#f7f8fa !important; color:#1a1c1f !important }
-:root[data-theme="light"] tfoot td{ background-color:#f1f3f6 !important; color:#1a1c1f !important }
-:root[data-theme="light"] .hcp-row td,
-:root[data-theme="light"] .par-row td{ background-color:#fafbfc !important; color:#1a1c1f !important }
+      :root[data-theme="light"] input:focus,
+      :root[data-theme="light"] select:focus,
+      :root[data-theme="light"] textarea:focus {
+        outline: none;
+        border-color: #0090e0 !important;
+        box-shadow: 0 0 0 2px rgba(0, 144, 224, .2)
+      }
 
+      /* Buttons */
+      :root[data-theme="light"] button,
+      :root[data-theme="light"] .btn {
+        background-color: #f3f5f8 !important;
+        color: #1a1c1f !important;
+        border: 1px solid #cfd3d8 !important
+      }
 
-/* =========================
+      :root[data-theme="light"] button:hover,
+      :root[data-theme="light"] .btn:hover {
+        background-color: #e7eaed !important
+      }
+
+      /* Tables */
+      :root[data-theme="light"] table {
+        background-color: #fff !important;
+        color: #1a1c1f !important;
+        border-color: #d0d4d9 !important
+      }
+
+      :root[data-theme="light"] th {
+        background-color: #f1f3f6 !important;
+        color: #1a1c1f !important;
+        border-color: #d0d4d9 !important
+      }
+
+      :root[data-theme="light"] td:first-child {
+        background-color: #f7f8fa !important;
+        color: #1a1c1f !important
+      }
+
+      :root[data-theme="light"] tfoot td {
+        background-color: #f1f3f6 !important;
+        color: #1a1c1f !important
+      }
+
+      :root[data-theme="light"] .hcp-row td,
+      :root[data-theme="light"] .par-row td {
+        background-color: #fafbfc !important;
+        color: #1a1c1f !important
+      }
+
+      /* =========================
    Light Mode Fix — Junk dropdowns & dots
    ========================= */
-:root[data-theme="light"] .junk-dd > summary {
-  background-color: #fff !important;
-  color: #1a1c1f !important;
-  border-color: #d0d4d9 !important;
-}
+      :root[data-theme="light"] .junk-dd>summary {
+        background-color: #fff !important;
+        color: #1a1c1f !important;
+        border-color: #d0d4d9 !important;
+      }
 
-:root[data-theme="light"] .junk-dd .menu {
-  background-color: #fff !important;
-  border-color: #d0d4d9 !important;
-}
+      :root[data-theme="light"] .junk-dd .menu {
+        background-color: #fff !important;
+        border-color: #d0d4d9 !important;
+      }
 
-:root[data-theme="light"] .junk-dd .menu label {
-  color: #1a1c1f !important;
-}
+      :root[data-theme="light"] .junk-dd .menu label {
+        color: #1a1c1f !important;
+      }
 
-:root[data-theme="light"] .junk-dd .menu label:has(input:checked) {
-  background-color: #eaf4ff !important;
-  border-color: #0090e0 !important;
-}
+      :root[data-theme="light"] .junk-dd .menu label:has(input:checked) {
+        background-color: #eaf4ff !important;
+        border-color: #0090e0 !important;
+      }
 
-/* Optional: lighten junk “Dots” pill buttons */
-:root[data-theme="light"] .junk-cell summary,
-:root[data-theme="light"] .junk-cell button {
-  background-color: #f3f5f8 !important;
-  color: #1a1c1f !important;
-  border-color: #d0d4d9 !important;
-}
-
-
-
-  </style>
-</head>
-
-
-</style>
-
-</head>
-  <body>
+      /* Optional: lighten junk “Dots” pill buttons */
+      :root[data-theme="light"] .junk-cell summary,
+      :root[data-theme="light"] .junk-cell button {
+        background-color: #f3f5f8 !important;
+        color: #1a1c1f !important;
+        border-color: #d0d4d9 !important;
+      }
+    </style>
+  </head>
+  </style>undefined</head>undefined<body>
     <header>
       <h1>Manito Golf Games v.1</h1>
       <div class="controls">
@@ -434,12 +900,9 @@ input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men’s HCP are fixed from the card.</p>
     </header>
     <header>
-  <h1>Golf Games</h1>
-<button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
-
-</header>
-
-
+      <h1>Golf Games</h1>
+      <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
+    </header>
     <!-- SCORECARD -->
     <div class="wrap">
       <table id="scorecard" aria-describedby="saveStatus">
@@ -452,40 +915,48 @@ input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-
         </thead>
         <tbody>
           <tr class="par-row" id="parRow">
-            <td class="align-left"><strong>Par</strong> <span class="subtle">(from card)</span></td><td></td>
+            <td class="align-left">
+              <strong>Par</strong>
+              <span class="subtle">(from card)</span>
+            </td>
+            <td></td>
           </tr>
           <tr class="hcp-row" id="hcpRow">
-            <td class="align-left"><strong>HCP Index</strong> <span class="subtle">(from card)</span></td><td></td>
+            <td class="align-left">
+              <strong>HCP Index</strong>
+              <span class="subtle">(from card)</span>
+            </td>
+            <td></td>
           </tr>
           <!-- Player rows inserted by JS -->
         </tbody>
         <tfoot>
           <tr id="totalsRow">
-            <td class="align-left">Totals</td><td></td>
+            <td class="align-left">Totals</td>
+            <td></td>
             <!-- JS adds per-hole sums + Out/In/Total; placeholders align To Par / Net -->
           </tr>
         </tfoot>
       </table>
     </div>
-
     <!-- GAMES LAUNCHER -->
     <div class="gamesbar">
-  <button id="toggleJunk" class="game-toggle">🧩 Play Junk</button>
-
+      <button id="toggleJunk" class="game-toggle">🧩 Play Junk</button>
       <button id="toggleSkins" class="game-toggle">💎 Play Skins</button>
-      <button id="toggleVegas"  class="game-toggle">🎲 Play Vegas</button>
+      <button id="toggleVegas" class="game-toggle">🎲 Play Vegas</button>
       <button id="toggleBanker" class="game-toggle">🏦 Play Banker</button>
     </div>
-
-    
     <!-- SKINS GAME -->
     <section class="game-section" id="skinsSection" aria-hidden="true">
       <h2>Skins</h2>
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Options</div>
-          <label class="radio"><input type="checkbox" id="skinsCarry" checked /> Carry over on ties</label><br/>
-          <label class="radio"><input type="checkbox" id="skinsHalf" /> Half pops</label>
+          <label class="radio">
+            <input type="checkbox" id="skinsCarry" checked /> Carry over on ties </label>
+          <br />
+          <label class="radio">
+            <input type="checkbox" id="skinsHalf" /> Half pops </label>
         </div>
         <div class="control-box">
           <div class="pill">Legend</div>
@@ -493,19 +964,23 @@ input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-
           <div class="small">★ marks the winner for that hole. If pot &gt; 1 from carryovers, winner receives that many skins.</div>
         </div>
       </div>
-
       <div class="banker-wrap">
         <table class="banker-table" id="skinsTable">
-          <thead><tr><th>Name</th><th>Holes Skinned</th><th>Total</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Holes Skinned</th>
+              <th>Total</th>
+            </tr>
+          </thead>
           <tbody id="skinsBody"></tbody>
         </table>
       </div>
-
       <p class="small" id="skinsSummary">
         <!-- Player hole summaries will render here -->
       </p>
     </section>
-<!-- VEGAS GAME -->
+    <!-- VEGAS GAME -->
     <section class="game-section" id="vegasSection" aria-hidden="true">
       <h2>Vegas Game</h2>
       <div class="vegas-controls">
@@ -516,24 +991,43 @@ input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-
         </div>
         <div class="opts-box">
           <div class="team-pill">Options</div>
-          <label class="radio"><input type="checkbox" id="optUseNet" /> Use Net (NDB)</label><br/>
-          <label class="radio"><input type="checkbox" id="optDoubleBirdie" checked /> Double on Birdie (winner)</label><br/>
-          <label class="radio"><input type="checkbox" id="optTripleEagle"  checked /> Triple on Eagle (winner)</label>
+          <label class="radio">
+            <input type="checkbox" id="optUseNet" /> Use Net (NDB) </label>
+          <br />
+          <label class="radio">
+            <input type="checkbox" id="optDoubleBirdie" checked /> Double on Birdie (winner) </label>
+          <br />
+          <label class="radio">
+            <input type="checkbox" id="optTripleEagle" checked /> Triple on Eagle (winner) </label>
         </div>
       </div>
-
       <div class="vegas-wrap">
         <table class="vegas-table" id="vegasTable">
-          <thead><tr><th>Hole</th><th>Team A</th><th>Team B</th><th>Mult</th><th>Pts (A)</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Hole</th>
+              <th>Team A</th>
+              <th>Team B</th>
+              <th>Mult</th>
+              <th>Pts (A)</th>
+            </tr>
+          </thead>
           <tbody id="vegasBody"></tbody>
           <tfoot>
-            <tr><td><strong>Totals</strong></td><td id="vegasTotalA">—</td><td id="vegasTotalB">—</td><td></td><td id="vegasPtsA">—</td></tr>
+            <tr>
+              <td>
+                <strong>Totals</strong>
+              </td>
+              <td id="vegasTotalA">—</td>
+              <td id="vegasTotalB">—</td>
+              <td></td>
+              <td id="vegasPtsA">—</td>
+            </tr>
           </tfoot>
         </table>
       </div>
-      <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points.</p>
+      <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
     </section>
-
     <!-- BANKER GAME -->
     <section class="game-section" id="bankerSection" aria-hidden="true">
       <h2>Banker</h2>
@@ -549,12 +1043,16 @@ input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-
         </div>
         <div class="control-box">
           <div class="pill">Options</div>
-          <label class="radio"><input type="checkbox" id="bankerUseNet" checked /> Use Net (NDB)</label><br/>
-          <label class="radio"><input type="checkbox" id="bankerDoubleBirdie" checked /> Double on Birdie (winner)</label><br/>
-          <label class="radio"><input type="checkbox" id="bankerTripleEagle" checked /> Triple on Eagle (winner)</label>
+          <label class="radio">
+            <input type="checkbox" id="bankerUseNet" checked /> Use Net (NDB) </label>
+          <br />
+          <label class="radio">
+            <input type="checkbox" id="bankerDoubleBirdie" checked /> Double on Birdie (winner) </label>
+          <br />
+          <label class="radio">
+            <input type="checkbox" id="bankerTripleEagle" checked /> Triple on Eagle (winner) </label>
         </div>
       </div>
-
       <div class="banker-wrap">
         <table class="banker-table" id="bankerTable">
           <thead>
@@ -570,7 +1068,9 @@ input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-
           <tbody id="bankerBody"></tbody>
           <tfoot>
             <tr>
-              <td><strong>Totals</strong></td>
+              <td>
+                <strong>Totals</strong>
+              </td>
               <td></td>
               <td id="bankerTotP1">—</td>
               <td id="bankerTotP2">—</td>
@@ -580,47 +1080,39 @@ input[type="number"],input[type="text"]{ padding:6px 8px; min-height:34px; font-
           </tfoot>
         </table>
       </div>
-      <p class="small">
-        Banker plays a separate match against each other player per hole for the chosen point value (winner’s birdie/eagle can multiply). Rotation can be fixed or “until beaten”.
-      </p>
+      <p class="small"> Banker plays a separate match against each other player per hole for the chosen point value (winner’s birdie/eagle can multiply). Rotation can be fixed or “until beaten”. </p>
     </section>
-
-    <p class="note">
-      Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6).
-    </p>
-
+    <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     <script src="index.js" defer></script>
-  
-<!-- JUNK GAME -->
-<section class="game-section" id="junkSection" aria-hidden="true">
-  <h2>Junk (Dots)</h2>
-
-  <div class="banker-wrap">
-    <table class="banker-table" id="junkTable">
-      <thead>
-        <tr>
-          <th>Hole</th>
-          <th id="junkP1">P1</th>
-          <th id="junkP2">P2</th>
-          <th id="junkP3">P3</th>
-          <th id="junkP4">P4</th>
-        </tr>
-      </thead>
-      <tbody id="junkBody"></tbody>
-      <tfoot>
-        <tr>
-          <td><strong>Totals</strong></td>
-          <td id="junkTotP1">—</td>
-          <td id="junkTotP2">—</td>
-          <td id="junkTotP3">—</td>
-          <td id="junkTotP4">—</td>
-        </tr>
-      </tfoot>
-    </table>
-  </div>
-
-  <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Computed from the scorecard.</p>
-</section>
-
-</body>
+    <!-- JUNK GAME -->
+    <section class="game-section" id="junkSection" aria-hidden="true">
+      <h2>Junk (Dots)</h2>
+      <div class="banker-wrap">
+        <table class="banker-table" id="junkTable">
+          <thead>
+            <tr>
+              <th>Hole</th>
+              <th id="junkP1">P1</th>
+              <th id="junkP2">P2</th>
+              <th id="junkP3">P3</th>
+              <th id="junkP4">P4</th>
+            </tr>
+          </thead>
+          <tbody id="junkBody"></tbody>
+          <tfoot>
+            <tr>
+              <td>
+                <strong>Totals</strong>
+              </td>
+              <td id="junkTotP1">—</td>
+              <td id="junkTotP2">—</td>
+              <td id="junkTotP3">—</td>
+              <td id="junkTotP4">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Computed from the scorecard.</p>
+    </section>undefined
+  </body>undefined
 </html>
