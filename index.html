@@ -267,6 +267,21 @@ input[type="number"], input[type="text"] {
   .junk-dd > summary { min-height: 40px; padding: 8px 12px; }
   input[type="number"], input[type="text"] { min-height: 36px; }
 }
+
+/* Smooth horizontal scroll on all game tables */
+.vegas-wrap, .banker-wrap, .wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
+}
+
+/* Left-align the first column in all banker-style tables for readability on mobile */
+.banker-table th:first-child, 
+.banker-table td:first-child {
+  text-align: left;
+}
+
 </style>
 
 </head>
