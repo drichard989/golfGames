@@ -176,6 +176,21 @@
         const el = document.getElementById(`junkTotP${p+1}`);
         if(el) el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
       }
+      
+      // Update net totals (difference from lowest - winners positive, losers negative)
+      const minDots = Math.min(...totals);
+      for(let p=0; p<playerCount; p++){
+        const el = document.getElementById(`junkNetP${p+1}`);
+        if(!el) continue;
+        const netPos = totals[p] - minDots;
+        if(netPos === 0) {
+          el.textContent = '0';
+        } else if(netPos > 0) {
+          el.textContent = `+${netPos}`;
+        } else {
+          el.textContent = netPos;
+        }
+      }
     }
   };
 
@@ -389,7 +404,7 @@
       if(el) el.textContent = totals[i];
     }
 
-    // Calculate net totals (difference from lowest - who owes/receives money)
+    // Calculate net totals (difference from lowest - winners positive, losers negative)
     const minDots = Math.min(...totals);
     for(let i=0; i<players; i++){
       const el = document.getElementById(`junkNetP${i+1}`);
@@ -397,8 +412,10 @@
       const netPos = totals[i] - minDots;
       if(netPos === 0) {
         el.textContent = '0';
-      } else {
+      } else if(netPos > 0) {
         el.textContent = `+${netPos}`;
+      } else {
+        el.textContent = netPos;
       }
     }
   }
