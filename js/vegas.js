@@ -140,6 +140,11 @@ const Vegas = {
         const playerWithGhost = Math.floor(h / 6) % 3;
         const otherPlayers = [0,1,2].filter(p => p !== playerWithGhost);
         
+        // Debug logging for rotation
+        if(h === 0 || h === 6 || h === 12){
+          console.log(`[Vegas 3P] Hole ${h+1}: Player ${playerWithGhost} has ghost, others: ${otherPlayers.join(',')}`);
+        }
+        
         const teamsThisHole = {
           A: [playerWithGhost, ghostPos],
           B: otherPlayers
@@ -306,6 +311,11 @@ const Vegas = {
       if(data.rotation && hole.ghostPartner !== undefined){
         const partnerName = names[hole.ghostPartner] || `P${hole.ghostPartner+1}`;
         vaStr = `${hole.vaStr} (${partnerName}+👻)`;
+        
+        // Debug logging
+        if(h === 0 || h === 6 || h === 12){
+          console.log(`[Vegas Render] Hole ${h+1}: ghostPartner=${hole.ghostPartner}, name=${partnerName}`);
+        }
       }
       
       const a = $(`[data-vegas-a="${h}"]`);
