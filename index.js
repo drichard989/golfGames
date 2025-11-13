@@ -301,6 +301,42 @@
   // =============================================================================
   
   /**
+   * Sync the fixed player names overlay with the main scorecard table
+   */
+  function syncPlayerNamesOverlay() {
+    const playerNamesBody = document.getElementById('playerNamesBody');
+    if (!playerNamesBody) return;
+    
+    // Clear existing
+    playerNamesBody.innerHTML = '';
+    
+    // Add Par row
+    const parRow = document.createElement('tr');
+    const parTd = document.createElement('td');
+    parTd.innerHTML = '<strong>Par</strong> <span class="subtle">(from card)</span>';
+    parRow.appendChild(parTd);
+    playerNamesBody.appendChild(parRow);
+    
+    // Add HCP row
+    const hcpRow = document.createElement('tr');
+    const hcpTd = document.createElement('td');
+    hcpTd.innerHTML = '<strong>HCP Index</strong> <span class="subtle">(from card)</span>';
+    hcpRow.appendChild(hcpTd);
+    playerNamesBody.appendChild(hcpRow);
+    
+    // Add player rows - sync with actual player inputs
+    const playerRows = document.querySelectorAll('.player-row');
+    playerRows.forEach((row, idx) => {
+      const nameInput = row.querySelector('.name-edit');
+      const overlayRow = document.createElement('tr');
+      const overlayTd = document.createElement('td');
+      overlayTd.textContent = nameInput?.value || `Player ${idx + 1}`;
+      overlayRow.appendChild(overlayTd);
+      playerNamesBody.appendChild(overlayRow);
+    });
+  }
+  
+  /**
    * Build interactive player rows with name, handicap, and score inputs
    * Includes auto-advance functionality and real-time calculation
    */
@@ -311,7 +347,7 @@
 
       const nameTd=document.createElement("td");
       const nameInput=document.createElement("input"); nameInput.type="text"; nameInput.className="name-edit"; nameInput.placeholder=`Player ${p+1}`; nameInput.autocomplete="off";
-      nameInput.addEventListener("input",()=>{ vegas_renderTeamControls(); saveDebounced(); });
+      nameInput.addEventListener("input",()=>{ syncPlayerNamesOverlay(); vegas_renderTeamControls(); saveDebounced(); });
       nameTd.appendChild(nameInput); tr.appendChild(nameTd);
 
       const chTd=document.createElement("td");
@@ -632,6 +668,7 @@
         });
       });
       recalcAll();
+      syncPlayerNamesOverlay();
 
       // Restore game states
       vegas_renderTeamControls();
@@ -1447,9 +1484,11 @@
     
     // Recalculate everything immediately and again after DOM update
     recalculateEverything();
+    syncPlayerNamesOverlay();
     setTimeout(() => {
       recalculateEverything();
       updatePlayerCountDisplay();
+      syncPlayerNamesOverlay();
     }, 100);
     
     saveDebounced();
@@ -1495,9 +1534,11 @@
       
       // Recalculate everything immediately and again after DOM update
       recalculateEverything();
+      syncPlayerNamesOverlay();
       setTimeout(() => {
         recalculateEverything();
         updatePlayerCountDisplay();
+        syncPlayerNamesOverlay();
       }, 100);
       
       saveDebounced();
@@ -1542,6 +1583,7 @@
   function init(){
     console.log('[golfGames] init start');
     buildHeader(); buildParAndHcpRows(); buildPlayerRows(); buildTotalsRow(); updateParBadge();
+    syncPlayerNamesOverlay();
 
   $(ids.resetBtn).addEventListener("click", () => { console.log('[golfGames] Reset clicked'); clearScoresOnly(); });
   $(ids.clearAllBtn).addEventListener("click", () => { console.log('[golfGames] Clear all clicked'); clearAll(); });
