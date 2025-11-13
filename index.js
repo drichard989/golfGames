@@ -1023,12 +1023,6 @@
 })();
 
   // =============================================================================
-  // VEGAS GAME MODE - Moved to js/vegas.js
-  // =============================================================================
-  // Vegas game now in separate file for better modularity
-  // See js/vegas.js for implementation
-
-  // =============================================================================
   // CSV IMPORT/EXPORT
   // =============================================================================
   // Import scorecard data from CSV files
@@ -1470,4 +1464,10 @@
 // =============================================================================
 // Junk game now in separate file for better modularity
 // See js/junk.js for implementation
+
+  // =============================================================================
+  // VEGAS GAME MODE - Moved to js/vegas.js
+  // =============================================================================
+  // Vegas game now in separate file for better modularity
+  // See js/vegas.js for implementation
 
