@@ -2,91 +2,55 @@
    GOLF SCORECARD APPLICATION
    ============================================================================
    
-   A Progressive Web App (PWA) for tracking golf scores with multiple side games.
-   Supports 1-99 players with flexible course selection and comprehensive scoring.
-   
-   FEATURES:
-   • Dynamic scorecard with auto-advance input
-   • Course handicap support (including negative handicaps)
-   • Net scoring with Net Double Bogey (NDB) cap
-   • "Play off low" handicap system for fair competition
-   • Multiple simultaneous side games (Vegas, Skins, Junk, Banker)
-   • CSV import/export for easy score entry
-   • Offline support with service worker caching
-   • Dark/light theme toggle
-   • Responsive design for mobile/tablet/desktop
+   Dynamic scorecard supporting 1-99 players with multiple side games:
+   - Course Handicap input per player (supports negative handicaps)
+   - Net scoring with NDB cap; strokes allocated via "play-off-low" system
+   - Vegas: team game with multipliers and birdie/eagle bonuses
+   - Banker: points-per-match with rotation or until-beaten modes
+   - Skins: net/gross options with carry-over and half-pops
+   - Junk (Dots): points for eagles/birdies/pars with optional NET scoring
+   - CSV import/export for easy score entry
+   - PWA with offline support and auto-updates
    
    ============================================================================
-   ARCHITECTURE
+   MODULE ORGANIZATION
    ============================================================================
    
-   CORE (index.js) - 1,474 lines
-   ├─ Config         - Course database, constants, active course state
-   ├─ Utils          - DOM helpers ($, $$), math utilities (sum, clamp)
-   ├─ AppManager     - Coordinates recalculations across all game modes
-   ├─ Storage        - localStorage save/load with versioning (v5)
-   ├─ Scorecard      - Table building, calculations, player/course management
-   │  ├─ build       - Header, par/HCP rows, player rows, totals row
-   │  ├─ calc        - Adjusted handicaps, stroke allocation, NDB capping
-   │  ├─ player      - Add/remove players, overlay sync, count display
-   │  └─ course      - Course switching, par/HCP updates, badge display
-   ├─ Games UI       - Toggle sections (open/close/toggle)
-   ├─ CSV            - Import/export scorecard data
-   └─ Init           - Event wiring, state restoration
+   This file is organized into clear modules (object namespaces):
    
-   GAME MODULES (external .js files)
-   🔗 js/vegas.js         (568 lines) - Vegas team game
-      • 2v2 teams or 3-player rotation with ghost
-      • Scores combined into 2-digit numbers (low wins)
-      • Multipliers for birdies/eagles (2x, 3x)
-      • Digit flipping on opponent birdie+
-      • NET scoring support with NDB cap
-      • Dollar calculations based on point value
-      Exposed: window.Vegas {compute, render, renderTeamControls, recalc, renderTable,
-               getTeamAssignments, setTeamAssignments, getOptions, setOptions}
-   
-   🔗 js/skins.js         (377 lines) - Skins competition
-      • Lowest net score wins each hole
-      • Carry-over on ties (pot accumulates)
-      • Half-pops mode (0.5 stroke increments)
-      • Buy-in and payout calculations
-      • Dynamic player support (1-99)
-      Exposed: window.Skins {init, refreshForPlayerChange, update, compute, render}
-   
-   🔗 js/junk.js          (487 lines) - Junk (Dots) game
-      • Eagle: 4 dots, Birdie: 2 dots, Par: 1 dot
-      • NET scoring option with NDB cap
-      • Achievements system (Hogan, Sandy, Sadaam, Pulley, Triple)
-      • Weighted bonus points for achievements
-      Exposed: window.Junk {init, initAchievements, refreshForPlayerChange, update}
-   
-   🔗 js/banker.js        (38 lines) - Banker game [STUB]
-      • Points-per-match with rotation or until-beaten modes
-      • To be implemented
-      Exposed: window.Banker {init}
-   
-   🔗 js/banker-vegas.js  (37 lines) - Banker-Vegas combination [STUB]
-      • Combines Banker and Vegas mechanics
-      • To be implemented
-      Exposed: window.BankerVegas {init}
+   📦 Config         - Course database, constants, active course state
+   📦 Utils          - DOM helpers ($, $$), math utilities (sum, clamp)
+   📦 Storage        - localStorage save/load with versioning
+   📦 Scorecard      - Table building, calculations, player/course management
+      ├─ build       - buildHeader, buildParAndHcpRows, buildPlayerRows, buildTotalsRow
+      ├─ calc        - adjustedCHs, strokesOnHole, recalcRow, recalcAll
+      ├─ player      - syncOverlay, updateCountDisplay
+      └─ course      - switch, updateParAndHcpRows, updateParBadge
+   📦 Games          - Side game orchestration and state management
+   📦 Vegas          - Vegas game module (compute + render)
+   📦 App            - Main initialization and event wiring
    
    ============================================================================
-   FILE STRUCTURE
+   EXTERNAL MODULES
    ============================================================================
    
-   /
-   ├── index.html          - Main HTML structure, styles, game sections
-   ├── index.js            - Core scorecard logic (this file)
-   ├── sw.js               - Service worker for PWA caching (v1.3.7)
-   ├── manifest.json       - PWA manifest
-   ├── js/
-   │   ├── vegas.js        - Vegas game module
-   │   ├── skins.js        - Skins game module
-   │   ├── junk.js         - Junk game module
-   │   ├── banker.js       - Banker game stub
-   │   └── banker-vegas.js - Banker-Vegas stub
-   ├── images/             - Icons and assets
-   └── stylesheet/         - CSS files
+   🔗 js/banker.js        - Banker game module (standalone file, stub)
+                            Exposed as: window.Banker
+                            Methods: init, update (to be implemented)
+   
+   🔗 js/banker-vegas.js  - Banker-Vegas combination game (standalone file, stub)
+                            Exposed as: window.BankerVegas
+                            Methods: init, update (to be implemented)
+   
+   🔗 js/skins.js         - Skins game module (standalone file)
+                            Exposed as: window.Skins
+                            Methods: init, refreshForPlayerChange, update, compute, render
+                            Supports carry-over, half-pops, and buy-in calculations
+   
+   🔗 js/junk.js          - Junk/Dots game module (standalone file)
+                            Exposed as: window.Junk
+                            Methods: init, initAchievements, refreshForPlayerChange, update
+                            Supports NET scoring and achievement tracking
    
    ============================================================================
 */
@@ -208,9 +172,58 @@
   const clampInt = Utils.clampInt;
 
   // =============================================================================
+  // SHARED GAME HELPERS
+  // =============================================================================
+  
+  /**
+   * Get par value for a specific hole
+   * @param {number} hole - Hole number (1-based index)
+   * @returns {number} Par value or NaN if not found
+   */
+  function getParForHole(hole){
+    let el = document.querySelector(`#parRow input[data-hole="${hole}"]`);
+    if(!el){
+      const inputs = document.querySelectorAll('#parRow input');
+      el = inputs[hole-1];
+    }
+    const v = el ? parseInt(el.value, 10) : NaN;
+    return Number.isFinite(v) ? v : NaN;
+  }
+
+  /**
+   * Get score for a player on a specific hole
+   * @param {number} playerIdx - Player index (0-based)
+   * @param {number} hole - Hole number (1-based)
+   * @returns {number} Score value or NaN if not found
+   */
+  function getScoreForPlayer(playerIdx, hole){
+    let el = document.querySelector(`.score-input[data-player="${playerIdx}"][data-hole="${hole}"]`);
+    if(!el){
+      const row = document.querySelector(`tr[data-player="${playerIdx}"]`) || document.querySelectorAll('tbody tr')[2 + playerIdx];
+      if(row){
+        const inputs = row.querySelectorAll('.score-input');
+        el = inputs[hole-1];
+      }
+    }
+    const v = el ? parseInt(el.value, 10) : NaN;
+    return Number.isFinite(v) ? v : NaN;
+  }
+
+  /**
+   * Get player names from name inputs
+   * @returns {string[]} Array of 4 player names (or default "Player N")
+   */
+  function getPlayerNames(){
+    const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
+    return [0,1,2,3].map((i)=>{
+      const v = nameInputs[i]?.value?.trim();
+      return v || `Player ${i+1}`;
+    });
+  }
+
+  // =============================================================================
   // APP MANAGER - Central coordination for game recalculations
   // =============================================================================
-
   
   /**
    * Central manager to coordinate recalculations across all game modes
@@ -218,9 +231,10 @@
    */
   const AppManager = {
     recalcGames(){
-      try{ window.Vegas?.recalc(); }catch(e){ console.warn('vegas_recalc failed', e); }
+      try{ vegas_recalc(); }catch(e){ console.warn('vegas_recalc failed', e); }
       try{ window.Skins?.update(); }catch(e){ /* skins may not be open yet */ }
       try{ window.Junk?.update(); }catch(e){ /* junk may not be open yet */ }
+      try{ window._vegasUpdateDollars?.(); }catch{}
     }
   };
   try{ window.AppManager = AppManager; }catch{}
@@ -320,9 +334,9 @@
        * Includes auto-advance functionality and real-time calculation
        * 
        * IMPORTANT: Event listeners trigger recalculations:
-       * - nameInput: syncPlayerNamesOverlay, renderTeamControls, recalcGames, saveDebounced
-       * - chInput: recalcAll, recalcGames, saveDebounced
-       * - scoreInput: recalcRow, recalcTotalsRow, recalcGames, saveDebounced
+       * - nameInput: syncPlayerNamesOverlay, vegas_renderTeamControls, saveDebounced
+       * - chInput: recalcAll, AppManager.recalcGames, saveDebounced
+       * - scoreInput: recalcRow, recalcTotalsRow, AppManager.recalcGames, saveDebounced
        */
       playerRows(){
         const tbody=$(ids.table).tBodies[0];
@@ -340,8 +354,7 @@
           nameInput.autocomplete="off";
           nameInput.addEventListener("input",()=>{ 
             Scorecard.player.syncOverlay(); 
-            window.Vegas?.renderTeamControls(); 
-            AppManager.recalcGames(); 
+            vegas_renderTeamControls(); 
             Storage.saveDebounced(); 
           });
           nameTd.appendChild(nameInput); 
@@ -794,8 +807,8 @@
           scores: $$("input.score-input", row).map(i => i.value)
         })),
         vegas: { 
-          teams: window.Vegas?.getTeamAssignments(), 
-          opts: window.Vegas?.getOptions(), 
+          teams: vegas_getTeamAssignments(), 
+          opts: vegas_getOptions(), 
           open: $(ids.vegasSection).classList.contains("open") 
         },
         banker: { 
@@ -861,9 +874,9 @@
         if(typeof syncPlayerNamesOverlay === 'function') syncPlayerNamesOverlay();
 
         // Restore game states
-        window.Vegas?.renderTeamControls();
-        if(s.vegas?.teams) window.Vegas?.setTeamAssignments(s.vegas.teams);
-        if(s.vegas?.opts) window.Vegas?.setOptions(s.vegas.opts);
+        vegas_renderTeamControls();
+        if(s.vegas?.teams) vegas_setTeamAssignments(s.vegas.teams);
+        if(s.vegas?.opts) vegas_setOptions(s.vegas.opts);
         if(s.vegas?.open) games_open("vegas");
 
         if(s.banker?.open) games_open("banker");
@@ -874,7 +887,7 @@
         }
         if(s.skins?.open) games_open("skins");
 
-        window.Vegas?.recalc();
+        vegas_recalc();
         
         const savedDate = new Date(s.savedAt || Date.now()).toLocaleString();
         Utils.announce(`Restored saved card (${savedDate}).`);
@@ -913,8 +926,8 @@
         });
       });
       recalcAll(); 
-      window.Vegas?.renderTeamControls(); 
-      window.Vegas?.recalc(); 
+      vegas_renderTeamControls(); 
+      vegas_recalc(); 
       
       // Update stroke highlights after clearing
       if(typeof updateStrokeHighlights === 'function') {
@@ -1057,10 +1070,428 @@
 })();
 
   // =============================================================================
-  // VEGAS GAME MODE - Moved to js/vegas.js
+  // VEGAS GAME MODE
   // =============================================================================
-  // Vegas game now in separate file for better modularity
-  // See js/vegas.js for implementation
+  // Team-based golf game: pairs of players form two teams
+  // Scores combined into 2-digit numbers (e.g., 4+5 = "45")
+  // Lower combined score wins, with multipliers for birdies/eagles
+  // Opponent's digits flip on birdie+ (e.g., 45 becomes 54)
+  
+  /**
+   * Vegas game logic module - separates computation from rendering
+   */
+  const Vegas = {
+    /**
+     * Compute per-hole and total Vegas results.
+     * @param {{A:number[], B:number[]}} teams
+     * @param {{useNet:boolean, doubleBirdie:boolean, tripleEagle:boolean, pointValue:number}} opts
+     * @returns {{perHole:object[], ptsA:number, ptsB:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean, rotation:boolean}}
+     */
+    compute(teams, opts){
+      // Check if we're in rotation mode (3 players with ghost)
+      const realPlayers = PLAYERS;
+      const useRotation = realPlayers === 3;
+      
+      if(useRotation){
+        // Rotation mode: each player rotates playing with ghost (position 3)
+        const perHole=[];
+        let ptsA=0;
+        const ghostPos = 3;
+        
+        for(let h=0;h<HOLES;h++){
+          // Rotate every 6 holes: Player 0 (holes 0-5), Player 1 (holes 6-11), Player 2 (holes 12-17)
+          const playerWithGhost = Math.floor(h / 6) % 3;
+          const otherPlayers = [0,1,2].filter(p => p !== playerWithGhost);
+          
+          const teamsThisHole = {
+            A: [playerWithGhost, ghostPos],
+            B: otherPlayers
+          };
+          
+          const pairA = this._teamPair(teamsThisHole.A,h,opts.useNet);
+          const pairB = this._teamPair(teamsThisHole.B,h,opts.useNet);
+          if(!pairA || !pairB){
+            perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0, ghostPartner: playerWithGhost});
+            continue;
+          }
+
+          const aBE = this._teamHasBirdieOrEagle(teamsThisHole.A,h,opts.useNet);
+          const bBE = this._teamHasBirdieOrEagle(teamsThisHole.B,h,opts.useNet);
+
+          const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
+          const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
+
+          const vaStr=this._pairToString(effA), vbStr=this._pairToString(effB);
+          const va=Number(vaStr), vb=Number(vbStr);
+
+          let winner='A', diff=vb-va;
+          if(diff<0){ winner='B'; diff=-diff; }
+          const mult=this._multiplierForWinner(teamsThisHole[winner],h,opts.useNet,opts);
+          const holePtsA = winner==='A' ? diff*mult : -diff*mult;
+
+          perHole.push({vaStr, vbStr, mult, holePtsA, ghostPartner: playerWithGhost});
+          ptsA += holePtsA;
+        }
+        
+        // Calculate individual player points in rotation and game breakdowns
+        const playerPoints = [0, 0, 0];
+        const gameResults = [
+          {player: 0, holes: '1-6', points: 0},
+          {player: 1, holes: '7-12', points: 0},
+          {player: 2, holes: '13-18', points: 0}
+        ];
+        
+        perHole.forEach((hole, h) => {
+          if(hole.ghostPartner !== undefined){
+            playerPoints[hole.ghostPartner] += hole.holePtsA;
+            // Calculate which game this belongs to (0-5: game 0, 6-11: game 1, 12-17: game 2)
+            const gameIdx = Math.floor(h / 6);
+            gameResults[gameIdx].points += hole.holePtsA;
+          }
+        });
+        
+        const teamSum = () => { 
+          let s=0; 
+          for(let h=0;h<HOLES;h++){ 
+            for(let p=0; p<realPlayers; p++){
+              s+=getGross(p,h)||0; 
+            }
+          } 
+          return s; 
+        };
+        const totalA=teamSum();
+
+        const per = Math.max(0, opts.pointValue || 0);
+        const dollarsA = ptsA * per;
+        const dollarsB = -dollarsA;
+        const ptsB = -ptsA;
+
+        return {perHole, ptsA, ptsB, totalA, totalB:0, dollarsA, dollarsB, valid:true, rotation:true, playerPoints, gameResults};
+      }
+      
+      // Standard mode: fixed teams
+      // Each team needs exactly 2 positions (players or ghosts)
+      if(!(teams.A.length===2 && teams.B.length===2)){
+        return {perHole:[], ptsA:0, ptsB:0, totalA:0, totalB:0, dollarsA:0, dollarsB:0, valid:false, rotation:false};
+      }
+
+      const perHole=[];
+      let ptsA=0;
+
+      for(let h=0;h<HOLES;h++){
+        const pairA = this._teamPair(teams.A,h,opts.useNet);
+        const pairB = this._teamPair(teams.B,h,opts.useNet);
+        if(!pairA || !pairB){
+          perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0});
+          continue;
+        }
+
+        const aBE = this._teamHasBirdieOrEagle(teams.A,h,opts.useNet);
+        const bBE = this._teamHasBirdieOrEagle(teams.B,h,opts.useNet);
+
+        const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
+        const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
+
+        const vaStr=this._pairToString(effA), vbStr=this._pairToString(effB);
+        const va=Number(vaStr), vb=Number(vbStr);
+
+        let winner='A', diff=vb-va;
+        if(diff<0){ winner='B'; diff=-diff; }
+        const mult=this._multiplierForWinner(teams[winner],h,opts.useNet,opts);
+        const holePtsA = winner==='A' ? diff*mult : -diff*mult;
+
+        perHole.push({vaStr, vbStr, mult, holePtsA});
+        ptsA += holePtsA;
+      }
+
+      const teamSum = team => { 
+        let s=0; 
+        for(let h=0;h<HOLES;h++){ 
+          team.forEach(p=>{ 
+            // Only count real players, not ghosts
+            if(p < PLAYERS) {
+              s+=getGross(p,h)||0; 
+            }
+          }); 
+        } 
+        return s; 
+      };
+      const totalA=teamSum(teams.A), totalB=teamSum(teams.B);
+
+      const per = Math.max(0, opts.pointValue || 0);
+      const dollarsA = ptsA * per;
+      const dollarsB = -dollarsA;
+      const ptsB = -ptsA;
+
+      return {perHole, ptsA, ptsB, totalA, totalB, dollarsA, dollarsB, valid:true, rotation:false};
+    },
+    /**
+     * Render Vegas results into the DOM.
+     */
+    render(data){
+      const warn=$(ids.vegasTeamWarning);
+      if(!data.valid){
+        warn.hidden=false;
+        for(let h=0;h<HOLES;h++){
+          $(`[data-vegas-a="${h}"]`).textContent="—";
+          $(`[data-vegas-b="${h}"]`).textContent="—";
+          $(`[data-vegas-m="${h}"]`).textContent="—";
+          $(`[data-vegas-p="${h}"]`).textContent="—";
+          $(`[data-vegas-pb="${h}"]`).textContent="—";
+        }
+        $(ids.vegasTotalA).textContent="—"; $(ids.vegasTotalB).textContent="—"; $(ids.vegasPtsA).textContent="—"; $(ids.vegasPtsB).textContent="—";
+        if($(ids.vegasDollarA)) $(ids.vegasDollarA).textContent = '—';
+        if($(ids.vegasDollarB)) $(ids.vegasDollarB).textContent = '—';
+        return;
+      }
+      warn.hidden=true;
+
+      data.perHole.forEach((hole,h)=>{
+        const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+        
+        // In rotation mode, show which player is with ghost
+        let vaStr = hole.vaStr;
+        if(data.rotation && hole.ghostPartner !== undefined){
+          const partnerName = names[hole.ghostPartner] || `P${hole.ghostPartner+1}`;
+          vaStr = `${hole.vaStr} (${partnerName}+👻)`;
+        }
+        
+        $(`[data-vegas-a="${h}"]`).textContent=vaStr;
+        $(`[data-vegas-b="${h}"]`).textContent=hole.vbStr;
+        $(`[data-vegas-m="${h}"]`).textContent=(hole.mult==='—')?'—':String(hole.mult);
+        const ptsA = hole.holePtsA;
+        $(`[data-vegas-p="${h}"]`).textContent=ptsA? (ptsA>0?`+${ptsA}`:`${ptsA}`) : "—";
+        const ptsB = -ptsA;
+        $(`[data-vegas-pb="${h}"]`).textContent=ptsB? (ptsB>0?`+${ptsB}`:`${ptsB}`) : "—";
+      });
+
+      // Show individual player points in rotation mode
+      if(data.rotation && data.playerPoints){
+        const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+        const playerLines = data.playerPoints.map((pts, i) => {
+          const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
+          return `${names[i]}: ${sign}${pts}`;
+        }).join(" | ");
+        
+        $(ids.vegasPtsA).textContent = playerLines;
+        $(ids.vegasPtsB).textContent = "—";
+      } else {
+        const ptsA = data.ptsA;
+        $(ids.vegasPtsA).textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
+        const ptsB = data.ptsB;
+        $(ids.vegasPtsB).textContent = ptsB===0? "0" : (ptsB>0? `+${ptsB}`:`${ptsB}`);
+      }
+
+      const fmt = v => {
+        const abs = Math.abs(v);
+        const s = `$${abs.toFixed(2)}`;
+        if(v > 0) return `+${s}`;
+        if(v < 0) return `-${s}`;
+        return s;
+      };
+      
+      // Show netted out total in rotation mode
+      if(data.rotation){
+        const per = Math.max(0, Number($(ids.vegasPointValue)?.value)||0);
+        const netLines = data.playerPoints.map((pts, i) => {
+          const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+          const dollars = pts * per;
+          return `${names[i]}: ${fmt(dollars)}`;
+        }).join(" | ");
+        
+        $(ids.vegasDollarA).textContent = netLines;
+        $(ids.vegasDollarB).textContent = "—";
+        
+        // Show game breakdown
+        const breakdownRow = document.getElementById('vegasGameBreakdown');
+        const breakdownData = document.getElementById('vegasGameBreakdownData');
+        if(breakdownRow && breakdownData && data.gameResults){
+          breakdownRow.style.display = '';
+          const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+          const gameLines = data.gameResults.map((game, i) => {
+            const playerName = names[game.player] || `P${game.player+1}`;
+            const pts = game.points;
+            const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
+            const dollars = pts * per;
+            return `<strong>Game ${i+1}</strong> (${playerName}+👻, Holes ${game.holes}): ${sign}${pts} pts (${fmt(dollars)})`;
+          }).join(' • ');
+          breakdownData.innerHTML = gameLines;
+        }
+      } else {
+        if($(ids.vegasDollarA)) $(ids.vegasDollarA).textContent = fmt(data.dollarsA);
+        if($(ids.vegasDollarB)) $(ids.vegasDollarB).textContent = fmt(data.dollarsB);
+        
+        // Hide game breakdown in non-rotation mode
+        const breakdownRow = document.getElementById('vegasGameBreakdown');
+        if(breakdownRow) breakdownRow.style.display = 'none';
+      }
+
+      $(ids.vegasTotalA).textContent=data.totalA||"—";
+      $(ids.vegasTotalB).textContent=data.totalB||"—";
+    },
+    // Internal helpers
+    _teamPair(players, holeIdx, useNet) {
+      const vals = players.map(p => {
+        // Check if this is a ghost (position >= PLAYERS)
+        if(p >= PLAYERS) {
+          // In rotation mode (3 players), ghost is always active
+          if(PLAYERS === 3) {
+            return PARS[holeIdx]; // Ghost shoots par
+          }
+          // Otherwise check if checkbox is enabled
+          const ghostCheck = document.getElementById(`vegasGhost_${p}`);
+          if(ghostCheck && ghostCheck.checked) {
+            return PARS[holeIdx]; // Ghost shoots par
+          }
+          return null;
+        }
+        return useNet ? getNetNDB(p, holeIdx) : getGross(p, holeIdx);
+      }).filter(v => Number.isFinite(v) && v > 0);
+      if (vals.length < 2) return null;
+      vals.sort((a,b)=>a-b);
+      return [vals[0], vals[1]];
+    },
+    _pairToString(pair){ return `${pair[0]}${pair[1]}`; },
+    _teamHasBirdieOrEagle(players,h,useNet){
+      const best=Math.min(...players.map(p=>{
+        // Check if this is a ghost
+        if(p >= PLAYERS) {
+          // In rotation mode (3 players), ghost is always active
+          if(PLAYERS === 3) {
+            return PARS[h]; // Ghost shoots par (never birdie/eagle)
+          }
+          const ghostCheck = document.getElementById(`vegasGhost_${p}`);
+          if(ghostCheck && ghostCheck.checked) {
+            return PARS[h]; // Ghost shoots par (never birdie/eagle)
+          }
+          return Infinity;
+        }
+        return (useNet?getNetNDB(p,h):getGross(p,h))||Infinity;
+      }));
+      if(!Number.isFinite(best)) return {birdie:false,eagle:false};
+      const toPar=best-PARS[h]; return {birdie:toPar<=-1, eagle:toPar<=-2};
+    },
+    _multiplierForWinner(winnerPlayers,h,useNet,opts){
+      const {birdie,eagle}=this._teamHasBirdieOrEagle(winnerPlayers,h,useNet); let m=1;
+      if(opts.tripleEagle && eagle) m=Math.max(m,3);
+      if(opts.doubleBirdie && birdie) m=Math.max(m,2);
+      return m;
+    }
+  };
+
+  function vegas_renderTeamControls(){
+    const box=$(ids.vegasTeams); box.innerHTML="";
+    const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+    
+    // Vegas supports exactly 4 positions (players or ghosts)
+    const maxPositions = 4;
+    const realPlayers = Math.min(PLAYERS, maxPositions);
+    const needsGhosts = PLAYERS < maxPositions;
+    const useRotation = PLAYERS === 3;
+    
+    console.log('[Vegas] renderTeamControls - PLAYERS:', PLAYERS, 'useRotation:', useRotation);
+    
+    // In rotation mode, show info message instead of team controls
+    if(useRotation){
+      const info = document.createElement("div");
+      info.style.gridColumn = "1 / -1";
+      info.style.padding = "12px";
+      info.style.background = "rgba(100,100,255,0.1)";
+      info.style.borderRadius = "8px";
+      info.style.marginBottom = "12px";
+      info.innerHTML = `<strong>🔄 Rotation Mode (3 Players)</strong><br>Each player plays 6 holes with a ghost partner (shoots par):<br>• ${names[0]}: Holes 1-6<br>• ${names[1]}: Holes 7-12<br>• ${names[2]}: Holes 13-18`;
+      box.appendChild(info);
+      vegas_recalc();
+      return;
+    }
+    
+    for(let i=0; i<realPlayers; i++){
+      const row=document.createElement("div"); row.style.display="contents";
+      const label=document.createElement("div"); label.textContent=names[i];
+      const aWrap=document.createElement("label"); aWrap.className="radio";
+      const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+      aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
+      const bWrap=document.createElement("label"); bWrap.className="radio";
+      const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+      bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
+      row.append(label,aWrap,bWrap); box.appendChild(row);
+    }
+    
+    // Add ghost positions if needed
+    if(needsGhosts){
+      for(let i=realPlayers; i<maxPositions; i++){
+        const row=document.createElement("div"); row.style.display="contents";
+        const label=document.createElement("div"); 
+        
+        const ghostCheckWrap = document.createElement("label"); 
+        ghostCheckWrap.style.display = "flex";
+        ghostCheckWrap.style.alignItems = "center";
+        ghostCheckWrap.style.gap = "4px";
+        const ghostCheck = document.createElement("input"); 
+        ghostCheck.type="checkbox"; 
+        ghostCheck.id=`vegasGhost_${i}`;
+        ghostCheck.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+        ghostCheckWrap.appendChild(ghostCheck);
+        ghostCheckWrap.appendChild(document.createTextNode(`Ghost ${i+1} (par)`));
+        
+        label.appendChild(ghostCheckWrap);
+        
+        const aWrap=document.createElement("label"); aWrap.className="radio";
+        const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+        aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
+        const bWrap=document.createElement("label"); bWrap.className="radio";
+        const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+        bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
+        row.append(label,aWrap,bWrap); box.appendChild(row);
+      }
+    }
+    
+    // Set default team assignments
+    $(`input[name="vegasTeam_0"][value="A"]`).checked ||= true;
+    $(`input[name="vegasTeam_1"][value="A"]`).checked ||= true;
+    if(realPlayers >= 3 || needsGhosts) $(`input[name="vegasTeam_2"][value="B"]`).checked ||= true;
+    if(realPlayers >= 4 || needsGhosts) $(`input[name="vegasTeam_3"][value="B"]`).checked ||= true;
+  }
+  function vegas_getTeamAssignments(){
+    const teams={A:[],B:[]}; 
+    const maxPositions = 4; // Vegas always uses 4 positions
+    for(let i=0; i<maxPositions; i++){ 
+      // Check if this position should be included
+      if(i >= PLAYERS) {
+        // This is a ghost position - only include if checkbox is checked
+        const ghostCheck = document.getElementById(`vegasGhost_${i}`);
+        if(!ghostCheck || !ghostCheck.checked) continue;
+      }
+      const a=$(`input[name="vegasTeam_${i}"][value="A"]`)?.checked; 
+      (a?teams.A:teams.B).push(i); 
+    } 
+    return teams;
+  }
+  function vegas_setTeamAssignments(t){
+    const maxPositions = 4;
+    for(let i=0; i<maxPositions; i++){ 
+      const a=$(`input[name="vegasTeam_${i}"][value="A"]`), b=$(`input[name="vegasTeam_${i}"][value="B"]`); 
+      if(!a||!b) continue; 
+      a.checked=false; b.checked=false; 
+    }
+    t.A?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="A"]`); if(r) r.checked=true; });
+    t.B?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="B"]`); if(r) r.checked=true; });
+  }
+  function vegas_getOptions(){ return { useNet:$(ids.optUseNet)?.checked||false, doubleBirdie:$(ids.optDoubleBirdie)?.checked||false, tripleEagle:$(ids.optTripleEagle)?.checked||false, pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value)||0) }; }
+  function vegas_setOptions(o){ if('useNet'in o) $(ids.optUseNet).checked=!!o.useNet; if('doubleBirdie'in o) $(ids.optDoubleBirdie).checked=!!o.doubleBirdie; if('tripleEagle'in o) $(ids.optTripleEagle).checked=!!o.tripleEagle; if('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue; }
+
+  function vegas_recalc(){
+    const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();
+    const data = Vegas.compute(teams, opts);
+    Vegas.render(data);
+    try{ window._vegasUpdateDollars?.(); }catch{}
+  }
+
+  // ======================================================================
+  // =============================== BANKER (removed/stubbed) ===============================
+  // ======================================================================
+  // Lightweight module to separate Banker compute from render
+  // All Banker logic removed; section remains as empty stub.
 
   // =============================================================================
   // CSV IMPORT/EXPORT
@@ -1183,8 +1614,7 @@
     nameInput.autocomplete = "off";
     nameInput.addEventListener("input", () => {
       Scorecard.player.syncOverlay();
-      window.Vegas?.renderTeamControls();
-      AppManager.recalcGames();
+      vegas_renderTeamControls();
       Storage.saveDebounced();
     });
     nameTd.appendChild(nameInput);
@@ -1364,7 +1794,7 @@
    */
   function recalculateEverything() {
     Scorecard.calc.recalcTotalsRow();
-    window.Vegas?.renderTeamControls();
+    vegas_renderTeamControls();
     // Small delay to ensure Vegas team controls are rendered before recalc
     setTimeout(() => {
       AppManager.recalcGames();
@@ -1447,8 +1877,8 @@
     });
 
     // Vegas UI + wiring
-    window.Vegas?.renderTeamControls();
-    window.Vegas?.renderTable();
+    vegas_renderTeamControls();
+    vegas_renderTable();
   $(ids.optUseNet).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.optDoubleBirdie).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.optTripleEagle).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
@@ -1477,6 +1907,8 @@
     recalcAll(); AppManager.recalcGames(); loadState();
   }
 
+  function vegas_renderTable(){ const body=$(ids.vegasTableBody); body.innerHTML=""; for(let h=0;h<HOLES;h++){ const tr=document.createElement("tr"); tr.innerHTML=`<td>${h+1}</td><td data-vegas-a="${h}">—</td><td data-vegas-b="${h}">—</td><td data-vegas-m="${h}">—</td><td data-vegas-p="${h}">—</td><td data-vegas-pb="${h}">—</td>`; body.appendChild(tr);} }
+
   document.addEventListener("DOMContentLoaded", init);
 
 })();
@@ -1504,4 +1936,98 @@
 // =============================================================================
 // Junk game now in separate file for better modularity
 // See js/junk.js for implementation
+
+// VEGAS TEAM B TOTALS & DOLLAR CALCULATIONS
+// =============================================================================
+// Automatically mirror Team A totals to show Team B (negative)
+// Calculate dollar amounts based on point value
+(function(){
+  function findVegasATotalEl(){
+    const cands = ['vegasPtsA','vegasTotalA','vegasSumA'];
+    for(const id of cands){
+      const el = document.getElementById(id);
+      if(el) return el;
+    }
+    // fallback: try a data-id
+    const el = document.querySelector('#vegasSection [data-role="vegas-total-a"]');
+    return el || null;
+  }
+  function vegasUpdateDollars(){
+    const ptsEl = document.getElementById('vegasPtsA');
+    const perEl = document.getElementById('vegasPointValue');
+    const aEl = document.getElementById('vegasDollarA');
+    const bEl = document.getElementById('vegasDollarB');
+    if(!ptsEl || !perEl || !aEl || !bEl) return;
+    const pts = parseSignedInt(ptsEl.textContent);
+    let per = Number.parseFloat((perEl.value||'').trim());
+    if(!Number.isFinite(per) || per < 0) per = 0;
+    if(pts===null){ aEl.textContent='—'; bEl.textContent='—'; return; }
+    const dollarsA = pts * per;
+    const dollarsB = -dollarsA;
+    const fmt = v => {
+      const abs = Math.abs(v);
+      const s = `$${abs.toFixed(2)}`;
+      if(v>0) return `+${s}`; if(v<0) return `-${s}`; return s;
+    };
+    aEl.textContent = fmt(dollarsA);
+    bEl.textContent = fmt(dollarsB);
+  }
+  // expose for recalc callers
+  try{ window._vegasUpdateDollars = vegasUpdateDollars; }catch{}
+  function ensureVegasBTotalsUI(){
+    const sec = document.getElementById('vegasSection');
+    if(!sec) return null;
+    // look for an existing B total slot
+    let b = sec.querySelector('#vegasPtsB, [data-role="vegas-total-b"]');
+    if(b) return b;
+    // Try to append near A total
+    const a = findVegasATotalEl();
+    if(a && a.parentElement){
+      b = document.createElement('span');
+      b.id = 'vegasPtsB';
+      b.style.marginLeft = '12px';
+      b.title = "Team B total (mirror of A)";
+      a.insertAdjacentElement('afterend', b);
+      return b;
+    }
+    return null;
+  }
+  function parseSignedInt(txt){
+    if(!txt) return null;
+    const m = String(txt).match(/[-+]?\d+/);
+    return m ? parseInt(m[0], 10) : null;
+  }
+  function mirrorVegasTotals(){
+    const a = findVegasATotalEl();
+    const b = ensureVegasBTotalsUI();
+    if(!a || !b) return;
+    const aVal = parseSignedInt(a.textContent);
+    if(aVal===null) { b.textContent = ''; return; }
+    // Team B is the opposite
+    const bVal = -aVal;
+    b.textContent = (bVal>0? `+${bVal}` : String(bVal));
+  }
+
+  // Observe changes to A total and mirror to B automatically
+  function observeA(){
+    const a = findVegasATotalEl();
+    if(!a) return;
+    const mo = new MutationObserver(mirrorVegasTotals);
+    mo.observe(a, { childList: true, characterData: true, subtree: true });
+    mirrorVegasTotals();
+  }
+
+  document.addEventListener('DOMContentLoaded', ()=>{
+    observeA();
+    // Update dollars when points or $/point change
+    const pts = document.getElementById('vegasPtsA');
+    if(pts){ const mo2 = new MutationObserver(vegasUpdateDollars); mo2.observe(pts, {childList:true, characterData:true, subtree:true}); }
+    document.getElementById('vegasPointValue')?.addEventListener('input', vegasUpdateDollars);
+    vegasUpdateDollars();
+    // also try when Vegas tab is opened
+    document.getElementById('toggleVegas')?.addEventListener('click', ()=> {
+      setTimeout(()=>{ observeA(); vegasUpdateDollars(); }, 0);
+    });
+  });
+})();
 

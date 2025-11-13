@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v1.3.1';
+const CACHE_VERSION = 'v1.3.7';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache
@@ -8,6 +8,11 @@ const FILES_TO_CACHE = [
   '/',
   '/index.html',
   '/js/index.js',
+  '/js/vegas.js',
+  '/js/banker.js',
+  '/js/banker-vegas.js',
+  '/js/skins.js',
+  '/js/junk.js',
   '/stylesheet/style.css',
   '/stylesheet/hello.css'
 ];
