@@ -1661,8 +1661,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   function getPlayerNames(){
     const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
-    return [0,1,2,3].map((i)=>{
-      const v = nameInputs[i]?.value?.trim();
+    return nameInputs.map((input, i)=>{
+      const v = input?.value?.trim();
       return v || `Player ${i+1}`;
     });
   }
