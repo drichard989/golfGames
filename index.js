@@ -173,6 +173,12 @@
   let PARS = Config.pars;
   let HCPMEN = Config.hcpMen;
   let ACTIVE_COURSE = Config.activeCourse;
+  
+  // Expose PLAYERS globally for game modules
+  Object.defineProperty(window, 'PLAYERS', {
+    get() { return PLAYERS; },
+    set(val) { PLAYERS = val; }
+  });
 
   // =============================================================================
   // 📦 UTILS MODULE - DOM Helpers & Math Utilities
@@ -1432,7 +1438,7 @@
     if (addPlayerBtn) addPlayerBtn.addEventListener("click", addPlayer);
     if (removePlayerBtn) removePlayerBtn.addEventListener("click", removePlayer);
     
-    updatePlayerCountDisplay();
+    Scorecard.player.updateCountDisplay();
 
     Scorecard.calc.recalcAll(); AppManager.recalcGames(); Storage.load();
   }

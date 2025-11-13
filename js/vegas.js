@@ -43,7 +43,16 @@
   console.log('[Vegas] Module loaded');
 
   // Helper functions to access globals
-  const getPlayers = () => document.querySelectorAll('.player-row').length;
+  const getPlayers = () => {
+    // Count name inputs that have actual values (trim and check length)
+    const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
+    const validPlayers = nameInputs.filter(input => {
+      const val = input?.value?.trim();
+      return val && val.length > 0;
+    }).length;
+    console.log('[Vegas getPlayers] Total inputs:', nameInputs.length, 'Valid players:', validPlayers);
+    return validPlayers > 0 ? validPlayers : nameInputs.length;
+  };
   const getHoles = () => 18;
   const getPar = (h) => {
     const parRow = document.getElementById('parRow');
@@ -127,6 +136,7 @@ const Vegas = {
   compute(teams, opts){
     // Check if we're in rotation mode (3 players with ghost)
     const realPlayers = getPlayers();
+    console.log('[Vegas compute] realPlayers:', realPlayers, 'teams:', teams);
     const useRotation = realPlayers === 3;
     
     if(useRotation){
@@ -139,11 +149,6 @@ const Vegas = {
         // Rotate every 6 holes: Player 0 (holes 0-5), Player 1 (holes 6-11), Player 2 (holes 12-17)
         const playerWithGhost = Math.floor(h / 6) % 3;
         const otherPlayers = [0,1,2].filter(p => p !== playerWithGhost);
-        
-        // Debug logging for rotation
-        if(h === 0 || h === 6 || h === 12){
-          console.log(`[Vegas 3P] Hole ${h+1}: Player ${playerWithGhost} has ghost, others: ${otherPlayers.join(',')}`);
-        }
         
         const teamsThisHole = {
           A: [playerWithGhost, ghostPos],
@@ -303,20 +308,26 @@ const Vegas = {
     }
     if(warn) warn.hidden=true;
 
-    const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
-    console.log('[Vegas Render] Player names:', names);
+    // Get player names from scorecard - get all name inputs like Junk/Skins do
+    const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
+    const names = nameInputs.map((input, i) => {
+      const v = input?.value?.trim();
+      return v || `Player ${i+1}`;
+    });
+    
+    console.log('[Vegas Render] Name inputs count:', nameInputs.length);
+    console.log('[Vegas Render] Names array:', names);
+    console.log('[Vegas Render] data.rotation:', data.rotation);
     
     data.perHole.forEach((hole,h)=>{
       // In rotation mode, show which player is with ghost
       let vaStr = hole.vaStr;
       if(data.rotation && hole.ghostPartner !== undefined){
+        if(h === 0 || h === 6 || h === 12){
+          console.log(`[Vegas Render] Hole ${h+1}: ghostPartner=${hole.ghostPartner}, names[${hole.ghostPartner}]="${names[hole.ghostPartner]}"`);
+        }
         const partnerName = names[hole.ghostPartner] || `P${hole.ghostPartner+1}`;
         vaStr = `${hole.vaStr} (${partnerName}+👻)`;
-        
-        // Debug logging
-        if(h === 0 || h === 6 || h === 12){
-          console.log(`[Vegas Render] Hole ${h+1}: ghostPartner=${hole.ghostPartner}, name=${partnerName}, names array:`, names);
-        }
       }
       
       const a = $(`[data-vegas-a="${h}"]`);
@@ -336,7 +347,10 @@ const Vegas = {
 
     // Show individual player points in rotation mode
     if(data.rotation && data.playerPoints){
-      const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+      const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
+        const v = input?.value?.trim();
+        return v || `Player ${i+1}`;
+      });
       const playerLines = data.playerPoints.map((pts, i) => {
         const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
         return `${names[i]}: ${sign}${pts}`;
@@ -366,8 +380,11 @@ const Vegas = {
     // Show netted out total in rotation mode
     if(data.rotation){
       const per = Math.max(0, Number($(ids.vegasPointValue)?.value)||0);
+      const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
+        const v = input?.value?.trim();
+        return v || `Player ${i+1}`;
+      });
       const netLines = data.playerPoints.map((pts, i) => {
-        const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
         const dollars = pts * per;
         return `${names[i]}: ${fmt(dollars)}`;
       }).join(" | ");
@@ -382,7 +399,6 @@ const Vegas = {
       const breakdownData = document.getElementById('vegasGameBreakdownData');
       if(breakdownRow && breakdownData && data.gameResults){
         breakdownRow.style.display = '';
-        const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
         const gameLines = data.gameResults.map((game, i) => {
           const playerName = names[game.player] || `P${game.player+1}`;
           const pts = game.points;
@@ -460,7 +476,10 @@ const Vegas = {
 
 function vegas_renderTeamControls(){
   const box=$(ids.vegasTeams); box.innerHTML="";
-  const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+  const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
+    const v = input?.value?.trim();
+    return v || `Player ${i+1}`;
+  });
   
   // Vegas supports exactly 4 positions (players or ghosts)
   const maxPositions = 4;
