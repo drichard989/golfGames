@@ -183,10 +183,6 @@ Contributions welcome! Areas for contribution:
 - Additional game modes
 - Bug fixes
 
-## 📄 License
-
-MIT License - feel free to use and modify for your golf games!
-
 ## 🎯 Roadmap
 
 - [ ] Implement Banker game
