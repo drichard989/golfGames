@@ -807,12 +807,94 @@
      * Compute per-hole and total Vegas results.
      * @param {{A:number[], B:number[]}} teams
      * @param {{useNet:boolean, doubleBirdie:boolean, tripleEagle:boolean, pointValue:number}} opts
-     * @returns {{perHole:object[], ptsA:number, ptsB:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean}}
+     * @returns {{perHole:object[], ptsA:number, ptsB:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean, rotation:boolean}}
      */
     compute(teams, opts){
+      // Check if we're in rotation mode (3 players with ghost)
+      const realPlayers = PLAYERS;
+      const useRotation = realPlayers === 3;
+      
+      if(useRotation){
+        // Rotation mode: each player rotates playing with ghost (position 3)
+        const perHole=[];
+        let ptsA=0;
+        const ghostPos = 3;
+        
+        for(let h=0;h<HOLES;h++){
+          // Rotate every 6 holes: Player 0 (holes 0-5), Player 1 (holes 6-11), Player 2 (holes 12-17)
+          const playerWithGhost = Math.floor(h / 6) % 3;
+          const otherPlayers = [0,1,2].filter(p => p !== playerWithGhost);
+          
+          const teamsThisHole = {
+            A: [playerWithGhost, ghostPos],
+            B: otherPlayers
+          };
+          
+          const pairA = this._teamPair(teamsThisHole.A,h,opts.useNet);
+          const pairB = this._teamPair(teamsThisHole.B,h,opts.useNet);
+          if(!pairA || !pairB){
+            perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0, ghostPartner: playerWithGhost});
+            continue;
+          }
+
+          const aBE = this._teamHasBirdieOrEagle(teamsThisHole.A,h,opts.useNet);
+          const bBE = this._teamHasBirdieOrEagle(teamsThisHole.B,h,opts.useNet);
+
+          const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
+          const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
+
+          const vaStr=this._pairToString(effA), vbStr=this._pairToString(effB);
+          const va=Number(vaStr), vb=Number(vbStr);
+
+          let winner='A', diff=vb-va;
+          if(diff<0){ winner='B'; diff=-diff; }
+          const mult=this._multiplierForWinner(teamsThisHole[winner],h,opts.useNet,opts);
+          const holePtsA = winner==='A' ? diff*mult : -diff*mult;
+
+          perHole.push({vaStr, vbStr, mult, holePtsA, ghostPartner: playerWithGhost});
+          ptsA += holePtsA;
+        }
+        
+        // Calculate individual player points in rotation and game breakdowns
+        const playerPoints = [0, 0, 0];
+        const gameResults = [
+          {player: 0, holes: '1-6', points: 0},
+          {player: 1, holes: '7-12', points: 0},
+          {player: 2, holes: '13-18', points: 0}
+        ];
+        
+        perHole.forEach((hole, h) => {
+          if(hole.ghostPartner !== undefined){
+            playerPoints[hole.ghostPartner] += hole.holePtsA;
+            // Calculate which game this belongs to (0-5: game 0, 6-11: game 1, 12-17: game 2)
+            const gameIdx = Math.floor(h / 6);
+            gameResults[gameIdx].points += hole.holePtsA;
+          }
+        });
+        
+        const teamSum = () => { 
+          let s=0; 
+          for(let h=0;h<HOLES;h++){ 
+            for(let p=0; p<realPlayers; p++){
+              s+=getGross(p,h)||0; 
+            }
+          } 
+          return s; 
+        };
+        const totalA=teamSum();
+
+        const per = Math.max(0, opts.pointValue || 0);
+        const dollarsA = ptsA * per;
+        const dollarsB = -dollarsA;
+        const ptsB = -ptsA;
+
+        return {perHole, ptsA, ptsB, totalA, totalB:0, dollarsA, dollarsB, valid:true, rotation:true, playerPoints, gameResults};
+      }
+      
+      // Standard mode: fixed teams
       // Each team needs exactly 2 positions (players or ghosts)
       if(!(teams.A.length===2 && teams.B.length===2)){
-        return {perHole:[], ptsA:0, ptsB:0, totalA:0, totalB:0, dollarsA:0, dollarsB:0, valid:false};
+        return {perHole:[], ptsA:0, ptsB:0, totalA:0, totalB:0, dollarsA:0, dollarsB:0, valid:false, rotation:false};
       }
 
       const perHole=[];
@@ -863,7 +945,7 @@
       const dollarsB = -dollarsA;
       const ptsB = -ptsA;
 
-      return {perHole, ptsA, ptsB, totalA, totalB, dollarsA, dollarsB, valid:true};
+      return {perHole, ptsA, ptsB, totalA, totalB, dollarsA, dollarsB, valid:true, rotation:false};
     },
     /**
      * Render Vegas results into the DOM.
@@ -887,7 +969,16 @@
       warn.hidden=true;
 
       data.perHole.forEach((hole,h)=>{
-        $(`[data-vegas-a="${h}"]`).textContent=hole.vaStr;
+        const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+        
+        // In rotation mode, show which player is with ghost
+        let vaStr = hole.vaStr;
+        if(data.rotation && hole.ghostPartner !== undefined){
+          const partnerName = names[hole.ghostPartner] || `P${hole.ghostPartner+1}`;
+          vaStr = `${hole.vaStr} (${partnerName}+👻)`;
+        }
+        
+        $(`[data-vegas-a="${h}"]`).textContent=vaStr;
         $(`[data-vegas-b="${h}"]`).textContent=hole.vbStr;
         $(`[data-vegas-m="${h}"]`).textContent=(hole.mult==='—')?'—':String(hole.mult);
         const ptsA = hole.holePtsA;
@@ -896,10 +987,22 @@
         $(`[data-vegas-pb="${h}"]`).textContent=ptsB? (ptsB>0?`+${ptsB}`:`${ptsB}`) : "—";
       });
 
-      const ptsA = data.ptsA;
-      $(ids.vegasPtsA).textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
-      const ptsB = data.ptsB;
-      $(ids.vegasPtsB).textContent = ptsB===0? "0" : (ptsB>0? `+${ptsB}`:`${ptsB}`);
+      // Show individual player points in rotation mode
+      if(data.rotation && data.playerPoints){
+        const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+        const playerLines = data.playerPoints.map((pts, i) => {
+          const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
+          return `${names[i]}: ${sign}${pts}`;
+        }).join(" | ");
+        
+        $(ids.vegasPtsA).textContent = playerLines;
+        $(ids.vegasPtsB).textContent = "—";
+      } else {
+        const ptsA = data.ptsA;
+        $(ids.vegasPtsA).textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
+        const ptsB = data.ptsB;
+        $(ids.vegasPtsB).textContent = ptsB===0? "0" : (ptsB>0? `+${ptsB}`:`${ptsB}`);
+      }
 
       const fmt = v => {
         const abs = Math.abs(v);
@@ -908,8 +1011,42 @@
         if(v < 0) return `-${s}`;
         return s;
       };
-      if($(ids.vegasDollarA)) $(ids.vegasDollarA).textContent = fmt(data.dollarsA);
-      if($(ids.vegasDollarB)) $(ids.vegasDollarB).textContent = fmt(data.dollarsB);
+      
+      // Show netted out total in rotation mode
+      if(data.rotation){
+        const per = Math.max(0, Number($(ids.vegasPointValue)?.value)||0);
+        const netLines = data.playerPoints.map((pts, i) => {
+          const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+          const dollars = pts * per;
+          return `${names[i]}: ${fmt(dollars)}`;
+        }).join(" | ");
+        
+        $(ids.vegasDollarA).textContent = netLines;
+        $(ids.vegasDollarB).textContent = "—";
+        
+        // Show game breakdown
+        const breakdownRow = document.getElementById('vegasGameBreakdown');
+        const breakdownData = document.getElementById('vegasGameBreakdownData');
+        if(breakdownRow && breakdownData && data.gameResults){
+          breakdownRow.style.display = '';
+          const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+          const gameLines = data.gameResults.map((game, i) => {
+            const playerName = names[game.player] || `P${game.player+1}`;
+            const pts = game.points;
+            const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
+            const dollars = pts * per;
+            return `<strong>Game ${i+1}</strong> (${playerName}+👻, Holes ${game.holes}): ${sign}${pts} pts (${fmt(dollars)})`;
+          }).join(' • ');
+          breakdownData.innerHTML = gameLines;
+        }
+      } else {
+        if($(ids.vegasDollarA)) $(ids.vegasDollarA).textContent = fmt(data.dollarsA);
+        if($(ids.vegasDollarB)) $(ids.vegasDollarB).textContent = fmt(data.dollarsB);
+        
+        // Hide game breakdown in non-rotation mode
+        const breakdownRow = document.getElementById('vegasGameBreakdown');
+        if(breakdownRow) breakdownRow.style.display = 'none';
+      }
 
       $(ids.vegasTotalA).textContent=data.totalA||"—";
       $(ids.vegasTotalB).textContent=data.totalB||"—";
@@ -919,7 +1056,11 @@
       const vals = players.map(p => {
         // Check if this is a ghost (position >= PLAYERS)
         if(p >= PLAYERS) {
-          // Ghost is enabled if checkbox is checked
+          // In rotation mode (3 players), ghost is always active
+          if(PLAYERS === 3) {
+            return PARS[holeIdx]; // Ghost shoots par
+          }
+          // Otherwise check if checkbox is enabled
           const ghostCheck = document.getElementById(`vegasGhost_${p}`);
           if(ghostCheck && ghostCheck.checked) {
             return PARS[holeIdx]; // Ghost shoots par
@@ -937,6 +1078,10 @@
       const best=Math.min(...players.map(p=>{
         // Check if this is a ghost
         if(p >= PLAYERS) {
+          // In rotation mode (3 players), ghost is always active
+          if(PLAYERS === 3) {
+            return PARS[h]; // Ghost shoots par (never birdie/eagle)
+          }
           const ghostCheck = document.getElementById(`vegasGhost_${p}`);
           if(ghostCheck && ghostCheck.checked) {
             return PARS[h]; // Ghost shoots par (never birdie/eagle)
@@ -964,6 +1109,21 @@
     const maxPositions = 4;
     const realPlayers = Math.min(PLAYERS, maxPositions);
     const needsGhosts = PLAYERS < maxPositions;
+    const useRotation = PLAYERS === 3;
+    
+    // In rotation mode, show info message instead of team controls
+    if(useRotation){
+      const info = document.createElement("div");
+      info.style.gridColumn = "1 / -1";
+      info.style.padding = "12px";
+      info.style.background = "rgba(100,100,255,0.1)";
+      info.style.borderRadius = "8px";
+      info.style.marginBottom = "12px";
+      info.innerHTML = `<strong>🔄 Rotation Mode (3 Players)</strong><br>Each player plays 6 holes with a ghost partner (shoots par):<br>• ${names[0]}: Holes 1-6<br>• ${names[1]}: Holes 7-12<br>• ${names[2]}: Holes 13-18`;
+      box.appendChild(info);
+      vegas_recalc();
+      return;
+    }
     
     for(let i=0; i<realPlayers; i++){
       const row=document.createElement("div"); row.style.display="contents";
