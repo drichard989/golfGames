@@ -7,6 +7,8 @@
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#4a9eff" />
     <style>
       /* =========================
    Manito Golf Games — Refactored CSS
@@ -1168,7 +1170,7 @@
   <body>
 
     <header>
-            <h1>Manito Golf Games v.4</h1>
+            <h1>Manito Golf Games v.5 PWA</h1>
       <div class="controls">
         <div class="control" style="display: inline-block; margin-right: 12px;">
           <label for="courseSelect" style="margin-right: 4px;">Course:</label>
@@ -1500,5 +1502,36 @@
       </div>
       <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Computed from the scorecard.</p>
     </section>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        let refreshing = false;
+        
+        // Register service worker
+        navigator.serviceWorker.register('/sw.js').then((registration) => {
+          console.log('[PWA] Service Worker registered');
+          
+          // Check for updates immediately on load
+          registration.update();
+          
+          // Check for updates every 60 seconds while app is open
+          setInterval(() => {
+            registration.update();
+          }, 60000);
+        }).catch((error) => {
+          console.log('[PWA] Service Worker registration failed:', error);
+        });
+        
+        // Auto-reload when new version is available
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (!refreshing) {
+            refreshing = true;
+            console.log('[PWA] New version detected, reloading...');
+            window.location.reload();
+          }
+        });
+      }
+    </script>
   </body>
 </html>
