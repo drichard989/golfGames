@@ -893,6 +893,7 @@ input[type="text"] {
   #junkTable td:not(:first-child) {
     width: 68px;
     padding: var(--space-xs) 4px;
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .junk-dd > summary {
@@ -1151,4 +1152,26 @@ input[type="text"] {
   background: #f3f5f8;
   border: 1px solid #cfd3d8;
   color: #1a1c1f;
+}
+
+/* Light theme checkboxes and number inputs */
+:root[data-theme="light"] input[type="checkbox"] {
+  accent-color: #0090e0;
+}
+
+:root[data-theme="light"] input[type="number"] {
+  background: #ffffff;
+  color: #1a1c1f;
+  border: 1px solid #d3d7dc;
+}
+
+:root[data-theme="light"] input[type="number"]:focus {
+  border-color: #0090e0;
+  outline: none;
+}
+
+:root[data-theme="light"] #skinsBuyIn {
+  background: #ffffff !important;
+  color: #1a1c1f !important;
+  border: 1px solid #d3d7dc !important;
 }
