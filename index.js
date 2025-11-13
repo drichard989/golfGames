@@ -1913,21 +1913,43 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const perHole = Array.from({length: HOLES}, ()=> Array(playerCount).fill(0));
       const totals = Array(playerCount).fill(0);
       const useNet = document.getElementById('junkUseNet')?.checked || false;
-      const adjCHs = useNet ? adjustedCHs() : Array(playerCount).fill(0);
+      
+      console.log('[Junk.compute] Starting computation, useNet:', useNet, 'playerCount:', playerCount);
+      
+      // Calculate adjusted handicaps inline if using NET
+      let adjCHs = Array(playerCount).fill(0);
+      if(useNet){
+        const playerRows = Array.from(document.querySelectorAll('.player-row'));
+        const chs = playerRows.map(r => {
+          const chInput = r.querySelector('.ch-input');
+          const v = Number(chInput?.value);
+          return Number.isFinite(v) ? v : 0;
+        });
+        const minCH = Math.min(...chs);
+        adjCHs = chs.map(ch => ch - minCH); // play off low
+        console.log('[Junk.compute] CHs:', chs, 'minCH:', minCH, 'adjCHs:', adjCHs);
+      }
       
       for(let h=1; h<=HOLES; h++){
         const par = getPar(h);
-        const hcpIndex = getHCP(h);
+        const holeHcp = HCPMEN[h-1]; // Get handicap index from HCPMEN array
         for(let p=0; p<playerCount; p++){
           const score = getScore(p, h);
-          // Calculate net score if using NET scoring
-          const strokes = useNet ? strokesOnHole(adjCHs[p], hcpIndex) : 0;
+          // Calculate net score if using NET scoring (same algorithm as stroke highlighting)
+          let strokes = 0;
+          if(useNet && adjCHs[p] > 0){
+            const fullStrokes = Math.floor(adjCHs[p] / 18);
+            const remainingStrokes = adjCHs[p] % 18;
+            const getsStroke = remainingStrokes >= holeHcp;
+            strokes = fullStrokes + (getsStroke ? 1 : 0);
+          }
           const netScore = Number.isFinite(score) ? score - strokes : score;
           const d = dotsFor(netScore, par);
           perHole[h-1][p] = Number.isFinite(d) ? d : 0;
           totals[p] += Number.isFinite(d) ? d : 0;
         }
       }
+      console.log('[Junk.compute] Final totals:', totals);
       return { perHole, totals };
     },
     /**
@@ -1952,12 +1974,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
           }
         }
       }
-      // Totals: if achievements are active, let that system own totals (base + bonuses), otherwise render base totals.
-      const achActive = !!document.querySelector('details.junk-dd');
-      if(!achActive){
-        for(let p=0; p<playerCount; p++){
-          const el = document.getElementById(`junkTotP${p+1}`);
-          if(el) el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
+      // Always update base totals
+      console.log('[Junk] Updating totals:', totals);
+      for(let p=0; p<playerCount; p++){
+        const el = document.getElementById(`junkTotP${p+1}`);
+        if(el) {
+          console.log(`[Junk] Setting junkTotP${p+1} to`, totals[p]);
+          el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
+        } else {
+          console.warn(`[Junk] Element junkTotP${p+1} not found`);
         }
       }
     }
@@ -2098,8 +2123,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const junkUseNet = document.getElementById('junkUseNet');
     if(junkUseNet){
       junkUseNet.addEventListener('change', ()=> {
+        console.log('[Junk] NET toggle changed, recalculating...');
         updateJunk();
-        saveDebounced();
       });
     }
     refreshJunkHeaderNames();
