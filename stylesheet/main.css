@@ -1116,3 +1116,32 @@ input[type="text"] {
   background: #e0f2ff;
   border-color: #0090e0;
 }
+
+/* Light theme buttons */
+:root[data-theme="light"] .btn,
+:root[data-theme="light"] .theme-toggle,
+:root[data-theme="light"] button {
+  background: #f3f5f8;
+  border-color: #cfd3d8;
+  color: #1a1c1f;
+}
+
+:root[data-theme="light"] .btn:hover,
+:root[data-theme="light"] .theme-toggle:hover,
+:root[data-theme="light"] button:hover {
+  background: #e7eaed;
+}
+
+:root[data-theme="light"] .btn.accent {
+  background: #e0f2ff;
+  border-color: #0090e0;
+  color: #1a1c1f;
+}
+
+/* Light theme Junk "Dots" button */
+:root[data-theme="light"] .junk-cell summary,
+:root[data-theme="light"] .junk-cell button {
+  background: #f3f5f8;
+  border: 1px solid #cfd3d8;
+  color: #1a1c1f;
+}
