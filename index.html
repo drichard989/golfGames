@@ -1140,21 +1140,12 @@
       <div id="utilitiesSection" class="utilities-section">
         <div class="controls">
           <div class="control">
-            <label for="courseName">Course</label>
-            <input id="courseName" type="text" placeholder="Enter course name…" />
-          </div>
-          <div class="control">
-            <label for="teeName">Tee</label>
-            <input id="teeName" type="text" placeholder="Optional (e.g., Blue)" />
-          </div>
-          <div class="control">
             <label for="csvInput">CSV</label>
             <input id="csvInput" type="file" accept=".csv" />
           </div>
           <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
           <button id="resetBtn" class="btn">Reset Scores</button>
           <button id="clearAllBtn" class="btn">Clear Names & Pars</button>
-          <button id="printBtn" class="btn" onclick="try{console.log('[golfGames] inline onclick'); if(window.printScorecard){window.printScorecard();} else {window.print();}}catch(e){console.error('[golfGames] inline onclick error', e);}">🖨️ Print</button>
           <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
         </div>
       </div>
