@@ -389,19 +389,16 @@
       if(el) el.textContent = totals[i];
     }
 
-    // Calculate net totals (position relative to average)
-    const totalDots = totals.reduce((sum, t) => sum + t, 0);
-    const avgDots = totalDots / players;
+    // Calculate net totals (difference from lowest - who owes/receives money)
+    const minDots = Math.min(...totals);
     for(let i=0; i<players; i++){
       const el = document.getElementById(`junkNetP${i+1}`);
       if(!el) continue;
-      const netPos = totals[i] - avgDots;
+      const netPos = totals[i] - minDots;
       if(netPos === 0) {
         el.textContent = '0';
-      } else if(netPos > 0) {
-        el.textContent = `+${netPos.toFixed(1)}`;
       } else {
-        el.textContent = netPos.toFixed(1);
+        el.textContent = `+${netPos}`;
       }
     }
   }
