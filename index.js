@@ -14,9 +14,42 @@
   const LEADING_FIXED_COLS = 2; // Player + CH
   const NDB_BUFFER = 2; // Net Double Bogey buffer strokes above par
 
-  // Course data (can be made configurable in the future)
-  const PARS   = [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4];
-  const HCPMEN = [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8];
+  // ========== COURSE DATABASE ==========
+  // ★ TO ADD A NEW COURSE:
+  // 1. Add an entry below with a unique ID (lowercase, no spaces)
+  // 2. Provide the course name (displayed in dropdown)
+  // 3. Add pars for holes 1-18 (must be exactly 18 values)
+  // 4. Add handicap index (HCP) for holes 1-18 (must be exactly 18 values, typically 1-18)
+  //    HCP 1 = hardest hole, HCP 18 = easiest hole
+  // The course will automatically appear in the dropdown selector.
+  const COURSES = {
+    'manito': {
+      name: 'Manito Country Club',
+      pars: [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4],
+      hcpMen: [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8]
+    },    
+    'dove': {
+      name: 'Dove Canyon Country Club',
+      pars: [5,4,4,3,4,4,3,4,5, 3,5,4,3,5,4,4,3,4],
+      hcpMen: [11,7,3,15,1,13,17,9,5,14,4,12,16,2,6,10,18,8]
+      
+    },
+    // Add more courses here:
+    // 'courseid': {
+    //   name: 'Course Name',
+    //   pars: [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4],
+    //   hcpMen: [1,2,3,4,5,6,7,8,9, 10,11,12,13,14,15,16,17,18]
+    // }
+  };
+
+  // Active course data (loaded from selected course)
+  let PARS = [...COURSES.manito.pars];
+  let HCPMEN = [...COURSES.manito.hcpMen];
+  let ACTIVE_COURSE = 'manito';
+
+  // Make PARS and HCPMEN available globally for Skins/Junk modules
+  window.PARS = PARS;
+  window.HCPMEN = HCPMEN;
 
   // ---------- DOM helpers ----------
   const $  = (s, el=document) => el.querySelector(s);
@@ -103,6 +136,78 @@
     const header=$(ids.holesHeader);
     for(let h=1;h<=HOLES;h++){ const th=document.createElement("th"); th.textContent=h; header.appendChild(th); }
     ["Out","In","Total","To Par","Net"].forEach(label=>{ const th=document.createElement("th"); th.textContent=label; header.appendChild(th); });
+  }
+
+  // ---------- Course switching ----------
+  function switchCourse(courseId){
+    if(!COURSES[courseId]) {
+      console.error(`Course ${courseId} not found`);
+      return;
+    }
+    
+    ACTIVE_COURSE = courseId;
+    PARS = [...COURSES[courseId].pars];
+    HCPMEN = [...COURSES[courseId].hcpMen];
+    
+    // Update global references (for Skins/Junk modules)
+    window.PARS = PARS;
+    window.HCPMEN = HCPMEN;
+    
+    // Rebuild par and HCP rows with new values
+    updateParAndHcpRows();
+    
+    // Recalculate all player scores and net values (uses new PARS and HCPMEN for stroke allocation)
+    recalcAll();
+    
+    // Recalculate all game modes (Vegas, Skins, Junk) with new stroke allocations
+    AppManager.recalcGames();
+    
+    // Force refresh of any game-specific UI that might be open
+    const skinsSection = document.getElementById('skinsSection');
+    if(skinsSection?.classList.contains('open')){
+      // Trigger skins recalc if it's open
+      if(typeof updateSkins === 'function') updateSkins();
+    }
+    
+    const junkSection = document.getElementById('junkSection');
+    if(junkSection?.classList.contains('open')){
+      // Trigger junk recalc if it's open
+      if(typeof updateJunk === 'function') updateJunk();
+    }
+    
+    // Update stroke highlighting with new HCPMEN
+    if(typeof window.updateStrokeHighlights === 'function'){
+      window.updateStrokeHighlights();
+    }
+    
+    saveDebounced();
+  }
+
+  function updateParAndHcpRows(){
+    // Update existing par inputs
+    const parInputs = $$('#parRow input');
+    const hcpInputs = $$('#hcpRow input');
+    
+    for(let h=0; h<HOLES && h<parInputs.length; h++){
+      parInputs[h].value = PARS[h];
+    }
+    for(let h=0; h<HOLES && h<hcpInputs.length; h++){
+      hcpInputs[h].value = HCPMEN[h];
+    }
+    
+    // Update Out/In/Total for par row
+    const parRow = $('#parRow');
+    const parCells = Array.from(parRow.cells);
+    const parFront = PARS.slice(0,9).reduce((a,b)=>a+b,0);
+    const parBack  = PARS.slice(9,18).reduce((a,b)=>a+b,0);
+    const parTot = parFront + parBack;
+    
+    // Out/In/Total are at positions: 2 (name) + 18 holes = 20, 21, 22
+    if(parCells[20]) parCells[20].textContent = String(parFront);
+    if(parCells[21]) parCells[21].textContent = String(parBack);
+    if(parCells[22]) parCells[22].textContent = String(parTot);
+    
+    updateParBadge();
   }
 
   // ---------- Par & HCP rows (locked) ----------
@@ -283,6 +388,7 @@
   const STORAGE_KEY="golf_scorecard_v5";
   function saveState(){
     const state={
+      course: ACTIVE_COURSE,
       courseName:$(ids.courseName)?.value||"", teeName:$(ids.teeName)?.value||"",
       players:$$(".player-row").map(row=>({ name:$(".name-edit",row).value||"", ch:$(".ch-input",row).value||"", scores:$$("input.score-input",row).map(i=>i.value) })),
       vegas:{ teams:vegas_getTeamAssignments(), opts:vegas_getOptions(), open: $(ids.vegasSection).classList.contains("open") },
@@ -297,6 +403,16 @@
     const raw=localStorage.getItem(STORAGE_KEY); if(!raw) return;
     try{
       const s=JSON.parse(raw);
+      
+      // Restore course selection
+      if(s.course && COURSES[s.course]){
+        const courseSelect = $('#courseSelect');
+        if(courseSelect) courseSelect.value = s.course;
+        if(s.course !== ACTIVE_COURSE){
+          switchCourse(s.course);
+        }
+      }
+      
       $(ids.courseName).value=s.courseName||""; $(ids.teeName).value=s.teeName||"";
       const rows=$$(".player-row");
       s.players?.forEach((p,i)=>{ const r=rows[i]; if(!r) return; $(".name-edit",r).value=p.name||""; $(".ch-input",r).value=p.ch??""; const ins=$$("input.score-input",r); p.scores?.forEach((v,j)=>{ if(ins[j]) ins[j].value=v; }); });
@@ -693,6 +809,24 @@
       });
     $(ids.courseName).addEventListener("input", saveDebounced);
     $(ids.teeName).addEventListener("input", saveDebounced);
+
+    // Course selector - populate options and wire up
+    const courseSelect = $('#courseSelect');
+    if(courseSelect){
+      // Clear existing options and populate from COURSES
+      courseSelect.innerHTML = '';
+      Object.keys(COURSES).forEach(id => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = COURSES[id].name;
+        if(id === ACTIVE_COURSE) option.selected = true;
+        courseSelect.appendChild(option);
+      });
+      
+      courseSelect.addEventListener("change", (e) => {
+        switchCourse(e.target.value);
+      });
+    }
 
     // Games: open/close
     $(ids.toggleVegas).addEventListener("click", ()=>games_toggle("vegas"));
