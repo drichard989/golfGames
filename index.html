@@ -175,47 +175,8 @@
       /* =========================
    Scorecard (scrollable)
    ========================= */
-      .scorecard-container {
-        position: relative;
-        padding: 12px 0 24px;
-      }
-
-      .player-names-fixed {
-        position: absolute;
-        left: 0;
-        top: 12px;
-        z-index: 10;
-        background: var(--panel);
-        border: 1px solid var(--line);
-        border-right: 2px solid var(--line);
-        border-radius: 14px 0 0 14px;
-        pointer-events: none;
-      }
-
-      .player-names-fixed table {
-        border: none;
-        min-width: auto;
-        border-radius: 0;
-      }
-
-      .player-names-fixed th,
-      .player-names-fixed td {
-        text-align: left;
-        padding: 6px 10px;
-        min-width: 150px;
-        max-width: 150px;
-        width: 150px;
-        border-right: none;
-        background: var(--panel);
-        border-bottom: 1px solid var(--line);
-      }
-
-      .player-names-fixed thead th {
-        background: #0f151b;
-        position: static;
-      }
-
       .wrap {
+        padding: 12px 0 24px;
         overflow-x: auto;
         overflow-y: visible !important;
         /* allow page to scroll vertically on mobile */
@@ -1264,26 +1225,8 @@
 
     <p class="small" id="parBadge" aria-live="polite"></p>
     <!-- SCORECARD -->
-    <div class="scorecard-container">
-      <div class="player-names-fixed">
-        <table id="playerNamesTable">
-          <thead>
-            <tr>
-              <th>Player</th>
-            </tr>
-          </thead>
-          <tbody id="playerNamesBody">
-            <!-- Will be synced by JS -->
-          </tbody>
-          <tfoot>
-            <tr>
-              <td>Totals</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <div class="wrap">
-        <table id="scorecard" aria-describedby="saveStatus">
+    <div class="wrap">
+      <table id="scorecard" aria-describedby="saveStatus">
           <thead>
             <tr id="holesHeader">
               <th class="align-left">Player</th>
@@ -1316,7 +1259,6 @@
           </tr>
         </tfoot>
       </table>
-      </div>
     </div>
     <!-- GAMES LAUNCHER -->
     <div class="gamesbar">
