@@ -749,32 +749,6 @@
   };
 
   // =============================================================================
-  // LEGACY COMPATIBILITY - Backward-compatible function aliases
-  // =============================================================================
-  // These allow existing code to continue using old function names
-  const buildHeader = () => Scorecard.build.header();
-  const buildParAndHcpRows = () => Scorecard.build.parAndHcpRows();
-  const buildPlayerRows = () => Scorecard.build.playerRows();
-  const buildTotalsRow = () => Scorecard.build.totalsRow();
-  const adjustedCHs = () => Scorecard.calc.adjustedCHs();
-  const strokesOnHole = (adjCH, holeIdx) => Scorecard.calc.strokesOnHole(adjCH, holeIdx);
-  const getGross = (playerIdx, holeIdx) => Scorecard.calc.getGross(playerIdx, holeIdx);
-  const getNetNDB = (playerIdx, holeIdx) => Scorecard.calc.getNetNDB(playerIdx, holeIdx);
-  const getPlayerHoleValues = (rowEl) => Scorecard.calc.getPlayerHoleValues(rowEl);
-  const recalcRow = (rowEl) => Scorecard.calc.recalcRow(rowEl);
-  const recalcTotalsRow = () => Scorecard.calc.recalcTotalsRow();
-  const recalcAll = () => Scorecard.calc.recalcAll();
-  const syncPlayerNamesOverlay = () => Scorecard.player.syncOverlay();
-  const updatePlayerCountDisplay = () => Scorecard.player.updateCountDisplay();
-  const switchCourse = (courseId) => Scorecard.course.switch(courseId);
-  const updateParAndHcpRows = () => Scorecard.course.updateParAndHcpRows();
-  const updateParBadge = () => Scorecard.course.updateParBadge();
-
-  // =============================================================================
-  // PERSISTENCE - LocalStorage save/load
-  // =============================================================================
-  
-  // =============================================================================
   // 📦 STORAGE MODULE - State Persistence
   // =============================================================================
   
@@ -840,7 +814,7 @@
           const courseSelect = $('#courseSelect');
           if(courseSelect) courseSelect.value = s.course;
           if(s.course !== ACTIVE_COURSE){
-            switchCourse(s.course);
+            Scorecard.course.switch(s.course);
           }
         }
         
@@ -857,8 +831,8 @@
             if(ins[j]) ins[j].value = v; 
           });
         });
-        recalcAll();
-        if(typeof syncPlayerNamesOverlay === 'function') syncPlayerNamesOverlay();
+        Scorecard.calc.recalcAll();
+        Scorecard.player.syncOverlay();
 
         // Restore game states
         window.Vegas?.renderTeamControls();
@@ -892,7 +866,7 @@
         i.value = "";
         i.classList.remove("invalid");
       }); 
-      recalcAll(); 
+      Scorecard.calc.recalcAll(); 
       AppManager.recalcGames(); 
       Utils.announce("Scores cleared."); 
     },
@@ -912,7 +886,7 @@
           i.removeAttribute("title");
         });
       });
-      recalcAll(); 
+      Scorecard.calc.recalcAll(); 
       window.Vegas?.renderTeamControls(); 
       window.Vegas?.recalc(); 
       
@@ -925,16 +899,8 @@
     }
   };
   
-  // Legacy function aliases for backward compatibility
-  const STORAGE_KEY = Storage.KEY;
-  const saveState = () => Storage.save();
-  const saveDebounced = () => Storage.saveDebounced();
-  const loadState = () => Storage.load();
-  const clearScoresOnly = () => Storage.clearScoresOnly();
-  const clearAll = () => Storage.clearAll();
-  
-  // Expose saveDebounced globally for external modules
-  window.saveDebounced = saveDebounced;
+  // Expose Storage methods globally for external modules
+  window.saveDebounced = () => Storage.saveDebounced();
   
   /**
    * Display a temporary status message to the user
@@ -1132,7 +1098,7 @@
       rowEl.querySelectorAll("input.score-input").forEach(inp => { inp.value = ""; inp.classList.remove("invalid"); });
     }
 
-    recalcAll(); AppManager.recalcGames(); saveState();
+    Scorecard.calc.recalcAll(); AppManager.recalcGames(); Storage.save();
     announce("CSV imported.");
   }
   function downloadCSVTemplate() {
@@ -1385,12 +1351,12 @@
    */
   function init(){
     console.log('[golfGames] init start');
-    buildHeader(); buildParAndHcpRows(); buildPlayerRows(); buildTotalsRow(); updateParBadge();
-    syncPlayerNamesOverlay();
+    Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
+    Scorecard.player.syncOverlay();
 
-  $(ids.resetBtn).addEventListener("click", () => { console.log('[golfGames] Reset clicked'); clearScoresOnly(); });
-  $(ids.clearAllBtn).addEventListener("click", () => { console.log('[golfGames] Clear all clicked'); clearAll(); });
-  $(ids.saveBtn).addEventListener("click", () => { console.log('[golfGames] Save clicked'); saveState(); });
+  $(ids.resetBtn).addEventListener("click", () => { console.log('[golfGames] Reset clicked'); Storage.clearScoresOnly(); });
+  $(ids.clearAllBtn).addEventListener("click", () => { console.log('[golfGames] Clear all clicked'); Storage.clearAll(); });
+  $(ids.saveBtn).addEventListener("click", () => { console.log('[golfGames] Save clicked'); Storage.save(); });
   
   // Refresh All button - recalculates everything
   document.getElementById('refreshAllBtn')?.addEventListener("click", () => {
@@ -1413,7 +1379,7 @@
       });
       
       courseSelect.addEventListener("change", (e) => {
-        switchCourse(e.target.value);
+        Scorecard.course.switch(e.target.value);
       });
     }
 
@@ -1474,7 +1440,7 @@
     
     updatePlayerCountDisplay();
 
-    recalcAll(); AppManager.recalcGames(); loadState();
+    Scorecard.calc.recalcAll(); AppManager.recalcGames(); Storage.load();
   }
 
   document.addEventListener("DOMContentLoaded", init);
