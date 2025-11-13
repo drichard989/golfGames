@@ -1482,6 +1482,14 @@
     <!-- JUNK GAME -->
     <section class="game-section" id="junkSection" aria-hidden="true">
       <h2>Junk (Dots)</h2>
+      <div class="banker-controls">
+        <div class="control-box">
+          <div class="pill">Scoring</div>
+          <label class="radio">
+            <input type="checkbox" id="junkUseNet" /> Use NET scores (apply handicaps)
+          </label>
+        </div>
+      </div>
       <div class="banker-wrap">
         <table class="banker-table" id="junkTable">
           <thead>
@@ -1516,7 +1524,7 @@
           </tfoot>
         </table>
       </div>
-      <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Computed from the scorecard.</p>
+      <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Use NET scoring to apply handicap strokes.</p>
     </section>
     
     <!-- PWA Service Worker Registration -->
