@@ -639,7 +639,7 @@ tfoot td {
   left: 0;
   background-color: var(--panel);
   z-index: var(--z-sticky-col);
-  border-right: 1px solid var(--line);
+  border-right: 2px solid var(--line);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
@@ -648,6 +648,13 @@ tfoot td {
 #junkTable td:not(:first-child) {
   width: 68px;
   padding: var(--space-xs) 4px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Light theme Junk table borders */
+:root[data-theme="light"] #junkTable th:not(:first-child),
+:root[data-theme="light"] #junkTable td:not(:first-child) {
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .junk-dot {
