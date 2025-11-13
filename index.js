@@ -15,7 +15,10 @@
   
   // Scorecard configuration
   const HOLES = 18;
-  const PLAYERS = 4;
+  let PLAYERS = 4; // Dynamic: unlimited players
+  const MIN_PLAYERS = 1;
+  const MAX_PLAYERS = 99; // Effectively unlimited
+  const DEFAULT_PLAYERS = 4;
   const LEADING_FIXED_COLS = 2; // Fixed columns: Player Name + Course Handicap
   const NDB_BUFFER = 2; // Net Double Bogey: max penalty is par + buffer + strokes
 
@@ -807,6 +810,7 @@
      * @returns {{perHole:object[], ptsA:number, ptsB:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean}}
      */
     compute(teams, opts){
+      // Each team needs exactly 2 positions (players or ghosts)
       if(!(teams.A.length===2 && teams.B.length===2)){
         return {perHole:[], ptsA:0, ptsB:0, totalA:0, totalB:0, dollarsA:0, dollarsB:0, valid:false};
       }
@@ -840,7 +844,18 @@
         ptsA += holePtsA;
       }
 
-      const teamSum = team => { let s=0; for(let h=0;h<HOLES;h++){ team.forEach(p=>{ s+=getGross(p,h)||0; }); } return s; };
+      const teamSum = team => { 
+        let s=0; 
+        for(let h=0;h<HOLES;h++){ 
+          team.forEach(p=>{ 
+            // Only count real players, not ghosts
+            if(p < PLAYERS) {
+              s+=getGross(p,h)||0; 
+            }
+          }); 
+        } 
+        return s; 
+      };
       const totalA=teamSum(teams.A), totalB=teamSum(teams.B);
 
       const per = Math.max(0, opts.pointValue || 0);
@@ -901,15 +916,35 @@
     },
     // Internal helpers
     _teamPair(players, holeIdx, useNet) {
-      const vals = players.map(p => useNet ? getNetNDB(p, holeIdx) : getGross(p, holeIdx))
-        .filter(v => Number.isFinite(v) && v > 0);
+      const vals = players.map(p => {
+        // Check if this is a ghost (position >= PLAYERS)
+        if(p >= PLAYERS) {
+          // Ghost is enabled if checkbox is checked
+          const ghostCheck = document.getElementById(`vegasGhost_${p}`);
+          if(ghostCheck && ghostCheck.checked) {
+            return PARS[holeIdx]; // Ghost shoots par
+          }
+          return null;
+        }
+        return useNet ? getNetNDB(p, holeIdx) : getGross(p, holeIdx);
+      }).filter(v => Number.isFinite(v) && v > 0);
       if (vals.length < 2) return null;
       vals.sort((a,b)=>a-b);
       return [vals[0], vals[1]];
     },
     _pairToString(pair){ return `${pair[0]}${pair[1]}`; },
     _teamHasBirdieOrEagle(players,h,useNet){
-      const best=Math.min(...players.map(p=>(useNet?getNetNDB(p,h):getGross(p,h))||Infinity));
+      const best=Math.min(...players.map(p=>{
+        // Check if this is a ghost
+        if(p >= PLAYERS) {
+          const ghostCheck = document.getElementById(`vegasGhost_${p}`);
+          if(ghostCheck && ghostCheck.checked) {
+            return PARS[h]; // Ghost shoots par (never birdie/eagle)
+          }
+          return Infinity;
+        }
+        return (useNet?getNetNDB(p,h):getGross(p,h))||Infinity;
+      }));
       if(!Number.isFinite(best)) return {birdie:false,eagle:false};
       const toPar=best-PARS[h]; return {birdie:toPar<=-1, eagle:toPar<=-2};
     },
@@ -924,7 +959,13 @@
   function vegas_renderTeamControls(){
     const box=$(ids.vegasTeams); box.innerHTML="";
     const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
-    for(let i=0;i<PLAYERS;i++){
+    
+    // Vegas supports exactly 4 positions (players or ghosts)
+    const maxPositions = 4;
+    const realPlayers = Math.min(PLAYERS, maxPositions);
+    const needsGhosts = PLAYERS < maxPositions;
+    
+    for(let i=0; i<realPlayers; i++){
       const row=document.createElement("div"); row.style.display="contents";
       const label=document.createElement("div"); label.textContent=names[i];
       const aWrap=document.createElement("label"); aWrap.className="radio";
@@ -935,16 +976,64 @@
       bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
       row.append(label,aWrap,bWrap); box.appendChild(row);
     }
+    
+    // Add ghost positions if needed
+    if(needsGhosts){
+      for(let i=realPlayers; i<maxPositions; i++){
+        const row=document.createElement("div"); row.style.display="contents";
+        const label=document.createElement("div"); 
+        
+        const ghostCheckWrap = document.createElement("label"); 
+        ghostCheckWrap.style.display = "flex";
+        ghostCheckWrap.style.alignItems = "center";
+        ghostCheckWrap.style.gap = "4px";
+        const ghostCheck = document.createElement("input"); 
+        ghostCheck.type="checkbox"; 
+        ghostCheck.id=`vegasGhost_${i}`;
+        ghostCheck.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+        ghostCheckWrap.appendChild(ghostCheck);
+        ghostCheckWrap.appendChild(document.createTextNode(`Ghost ${i+1} (par)`));
+        
+        label.appendChild(ghostCheckWrap);
+        
+        const aWrap=document.createElement("label"); aWrap.className="radio";
+        const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+        aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
+        const bWrap=document.createElement("label"); bWrap.className="radio";
+        const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+        bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
+        row.append(label,aWrap,bWrap); box.appendChild(row);
+      }
+    }
+    
+    // Set default team assignments
     $(`input[name="vegasTeam_0"][value="A"]`).checked ||= true;
     $(`input[name="vegasTeam_1"][value="A"]`).checked ||= true;
-    $(`input[name="vegasTeam_2"][value="B"]`).checked ||= true;
-    $(`input[name="vegasTeam_3"][value="B"]`).checked ||= true;
+    if(realPlayers >= 3 || needsGhosts) $(`input[name="vegasTeam_2"][value="B"]`).checked ||= true;
+    if(realPlayers >= 4 || needsGhosts) $(`input[name="vegasTeam_3"][value="B"]`).checked ||= true;
   }
   function vegas_getTeamAssignments(){
-    const teams={A:[],B:[]}; for(let i=0;i<PLAYERS;i++){ const a=$(`input[name="vegasTeam_${i}"][value="A"]`)?.checked; (a?teams.A:teams.B).push(i); } return teams;
+    const teams={A:[],B:[]}; 
+    const maxPositions = 4; // Vegas always uses 4 positions
+    for(let i=0; i<maxPositions; i++){ 
+      // Check if this position should be included
+      if(i >= PLAYERS) {
+        // This is a ghost position - only include if checkbox is checked
+        const ghostCheck = document.getElementById(`vegasGhost_${i}`);
+        if(!ghostCheck || !ghostCheck.checked) continue;
+      }
+      const a=$(`input[name="vegasTeam_${i}"][value="A"]`)?.checked; 
+      (a?teams.A:teams.B).push(i); 
+    } 
+    return teams;
   }
   function vegas_setTeamAssignments(t){
-    for(let i=0;i<PLAYERS;i++){ const a=$(`input[name="vegasTeam_${i}"][value="A"]`), b=$(`input[name="vegasTeam_${i}"][value="B"]`); if(!a||!b) continue; a.checked=false; b.checked=false; }
+    const maxPositions = 4;
+    for(let i=0; i<maxPositions; i++){ 
+      const a=$(`input[name="vegasTeam_${i}"][value="A"]`), b=$(`input[name="vegasTeam_${i}"][value="B"]`); 
+      if(!a||!b) continue; 
+      a.checked=false; b.checked=false; 
+    }
     t.A?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="A"]`); if(r) r.checked=true; });
     t.B?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="B"]`); if(r) r.checked=true; });
   }
@@ -1055,6 +1144,215 @@
   }
 
   // =============================================================================
+  // PLAYER MANAGEMENT (ADD/REMOVE)
+  // =============================================================================
+  
+  /**
+   * Add a new player row to the scorecard
+   */
+  function addPlayer() {
+    if(PLAYERS >= MAX_PLAYERS) {
+      announce(`Maximum ${MAX_PLAYERS} players allowed.`);
+      return;
+    }
+    
+    const tbody = $('#scorecard').tBodies[0];
+    const p = PLAYERS; // Current player index
+    
+    // Create new player row (same structure as buildPlayerRows)
+    const tr = document.createElement("tr");
+    tr.className = "player-row";
+    tr.dataset.player = String(p);
+    
+    // Name input
+    const nameTd = document.createElement("td");
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.className = "name-edit";
+    nameInput.placeholder = `Player ${p+1}`;
+    nameInput.autocomplete = "off";
+    nameInput.addEventListener("input", () => {
+      vegas_renderTeamControls();
+      saveDebounced();
+    });
+    nameTd.appendChild(nameInput);
+    tr.appendChild(nameTd);
+    
+    // Course Handicap input
+    const chTd = document.createElement("td");
+    const MIN_HANDICAP = -50;
+    const MAX_HANDICAP = 60;
+    const chInput = document.createElement("input");
+    chInput.type = "number";
+    chInput.inputMode = "numeric";
+    chInput.className = "ch-input";
+    chInput.placeholder = "0";
+    chInput.min = "-20";
+    chInput.max = "54";
+    chInput.step = "1";
+    chInput.autocomplete = "off";
+    chInput.addEventListener("input", () => {
+      if(chInput.value !== "") {
+        chInput.value = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
+      }
+      recalcAll();
+      AppManager.recalcGames();
+      saveDebounced();
+    });
+    chTd.appendChild(chInput);
+    tr.appendChild(chTd);
+    
+    // Score inputs for each hole
+    const MIN_SCORE = 1;
+    const MAX_SCORE = 20;
+    for(let h=1; h<=HOLES; h++) {
+      const td = document.createElement("td");
+      const inp = document.createElement("input");
+      inp.type = "number";
+      inp.inputMode = "numeric";
+      inp.min = String(MIN_SCORE);
+      inp.max = String(MAX_SCORE);
+      inp.className = "score-input";
+      inp.dataset.player = String(p);
+      inp.dataset.hole = String(h);
+      inp.placeholder = "—";
+      if(h === 18) td.classList.add('hole-18');
+      
+      inp.addEventListener("input", () => {
+        if(inp.value !== "") {
+          const v = clampInt(inp.value, MIN_SCORE, MAX_SCORE);
+          if(String(v) !== inp.value) {
+            inp.classList.add("invalid");
+          } else {
+            inp.classList.remove("invalid");
+          }
+          inp.value = v;
+          
+          // Auto-advance logic
+          const currentPlayer = Number(inp.dataset.player);
+          const currentHole = Number(inp.dataset.hole);
+          
+          if(inp.value.length >= 1) {
+            let nextInput;
+            if(currentPlayer < PLAYERS - 1) {
+              nextInput = document.querySelector(
+                `.score-input[data-player="${currentPlayer + 1}"][data-hole="${currentHole}"]`
+              );
+            } else if(currentHole < HOLES) {
+              nextInput = document.querySelector(
+                `.score-input[data-player="0"][data-hole="${currentHole + 1}"]`
+              );
+            }
+            if(nextInput) {
+              setTimeout(() => nextInput.focus(), 50);
+            }
+          }
+        } else {
+          inp.classList.remove("invalid");
+        }
+        recalcRow(tr);
+        recalcTotalsRow();
+        AppManager.recalcGames();
+        saveDebounced();
+      });
+      
+      td.appendChild(inp);
+      tr.appendChild(td);
+    }
+    
+    // Summary cells: Out, In, Total, To Par, Net
+    const outTd = document.createElement("td");
+    outTd.className = "split";
+    const inTd = document.createElement("td");
+    inTd.className = "split";
+    const totalTd = document.createElement("td");
+    totalTd.className = "total";
+    const toParTd = document.createElement("td");
+    toParTd.className = "to-par";
+    const netTd = document.createElement("td");
+    netTd.className = "net";
+    tr.append(outTd, inTd, totalTd, toParTd, netTd);
+    
+    tbody.appendChild(tr);
+    
+    // Increment player count
+    PLAYERS++;
+    
+    // Recalculate everything
+    recalcTotalsRow();
+    vegas_renderTeamControls();
+    AppManager.recalcGames();
+    
+    // Refresh Skins game if it's open
+    refreshSkinsForPlayerChange();
+    
+    // Refresh Junk game if it's open
+    if(window.refreshJunkForPlayerChange) window.refreshJunkForPlayerChange();
+    
+    updatePlayerCountDisplay();
+    saveDebounced();
+    announce(`Player ${PLAYERS} added.`);
+  }
+  
+  /**
+   * Remove the last player row from the scorecard
+   * First clears all data, then removes the row
+   */
+  function removePlayer() {
+    if(PLAYERS <= MIN_PLAYERS) {
+      announce(`Minimum ${MIN_PLAYERS} player required.`);
+      return;
+    }
+    
+    const rows = $$(".player-row");
+    const lastRow = rows[rows.length - 1];
+    
+    if(lastRow) {
+      // First, clear all data in the row
+      const nameInput = $(".name-edit", lastRow);
+      const chInput = $(".ch-input", lastRow);
+      const scoreInputs = $$("input.score-input", lastRow);
+      
+      if(nameInput) nameInput.value = '';
+      if(chInput) chInput.value = '';
+      scoreInputs.forEach(inp => inp.value = '');
+      
+      // Recalculate to update totals without this player's data
+      recalcRow(lastRow);
+      recalcTotalsRow();
+      AppManager.recalcGames();
+      
+      // Now remove the row
+      lastRow.remove();
+      PLAYERS--;
+      
+      // Recalculate everything again
+      vegas_renderTeamControls();
+      AppManager.recalcGames();
+      
+      // Refresh Skins game if it's open
+      refreshSkinsForPlayerChange();
+      
+      // Refresh Junk game if it's open
+      if(window.refreshJunkForPlayerChange) window.refreshJunkForPlayerChange();
+      
+      updatePlayerCountDisplay();
+      saveDebounced();
+      announce(`Player removed. ${PLAYERS} player${PLAYERS === 1 ? '' : 's'} remaining.`);
+    }
+  }
+  
+  /**
+   * Update the player count display text
+   */
+  function updatePlayerCountDisplay() {
+    const display = document.getElementById('playerCountDisplay');
+    if(display) {
+      display.textContent = `${PLAYERS} player${PLAYERS === 1 ? '' : 's'}`;
+    }
+  }
+
+  // =============================================================================
   // INITIALIZATION & EVENT WIRING
   // =============================================================================
   
@@ -1115,6 +1413,14 @@
     const dlBtn = $(ids.dlTemplateBtn);
     if (dlBtn) dlBtn.addEventListener("click", downloadCSVTemplate);
 
+    // Player management buttons
+    const addPlayerBtn = document.getElementById('addPlayerBtn');
+    const removePlayerBtn = document.getElementById('removePlayerBtn');
+    if (addPlayerBtn) addPlayerBtn.addEventListener("click", addPlayer);
+    if (removePlayerBtn) removePlayerBtn.addEventListener("click", removePlayer);
+    
+    updatePlayerCountDisplay();
+
     recalcAll(); AppManager.recalcGames(); loadState();
   }
 
@@ -1139,12 +1445,13 @@ const Skins = {
    */
   compute(opts){
     const { carry, half, buyIn } = opts;
-    const totals=[0,0,0,0];
-    const holesWon=[[],[],[],[]];
+    const playerCount = PLAYERS;
+    const totals = Array(playerCount).fill(0);
+    const holesWon = Array(playerCount).fill(null).map(() => []);
     let pot=1;
 
     for(let h=0; h<HOLES; h++){
-      const nets = [0,1,2,3].map(p=>getNetForSkins(p,h,half));
+      const nets = Array.from({length: playerCount}, (_, p) => getNetForSkins(p, h, half));
       const filled = nets.map((n,p)=>({n,p})).filter(x=>x.n>0);
       if(filled.length<2){ if(carry) pot++; continue; }
       const min = Math.min(...filled.map(x=>x.n));
@@ -1157,7 +1464,7 @@ const Skins = {
     }
 
     // Count active players (those with at least one score)
-    const activePlayers = [0,1,2,3].filter(p => {
+    const activePlayers = Array.from({length: playerCount}, (_, p) => p).filter(p => {
       for(let h=0; h<HOLES; h++){
         if(getGross(p,h) > 0) return true;
       }
@@ -1180,7 +1487,8 @@ const Skins = {
    */
   render(data){
     const { totals, holesWon, winnings } = data;
-    for(let p=0;p<4;p++){
+    const playerCount = totals.length;
+    for(let p=0; p<playerCount; p++){
       const holesCell = document.getElementById('skinsHoles'+p);
       const totCell   = document.getElementById('skinsTotal'+p);
       const winCell   = document.getElementById('skinsWinnings'+p);
@@ -1238,10 +1546,12 @@ function getNetForSkins(playerIdx, holeIdx, half){
 function buildSkinsTable(){
   const body = document.getElementById('skinsBody');
   if(!body) return;
-  if(body.dataset.simple === '1') return;
-  // Build summary-only table: Name | Holes Skinned | Total | Winnings
+  // Always rebuild to match current player count
   body.innerHTML = '';
-  for(let p=0; p<4; p++){
+  body.dataset.simple = '';
+  
+  const playerCount = PLAYERS;
+  for(let p=0; p<playerCount; p++){
     const tr = document.createElement('tr');
     const th = document.createElement('th'); th.id = 'skinsName'+p; th.textContent = 'P'+(p+1);
     const tdH = document.createElement('td'); tdH.id = 'skinsHoles'+p;
@@ -1251,6 +1561,18 @@ function buildSkinsTable(){
     body.appendChild(tr);
   }
   body.dataset.simple = '1';
+}
+
+/**
+ * Refresh Skins table when player count changes
+ */
+function refreshSkinsForPlayerChange(){
+  const skinsSection = document.getElementById('skinsSection');
+  if(skinsSection && skinsSection.classList.contains('open')){
+    buildSkinsTable();
+    refreshSkinsHeaderNames();
+    updateSkins();
+  }
 }
 function refreshSkinsHeaderNames(){
   const names = Array.from(document.querySelectorAll('.player-row .name-edit'))
@@ -1361,11 +1683,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
      * @returns {{perHole:number[][], totals:number[]}}
      */
     compute(){
-      const perHole = Array.from({length: HOLES}, ()=> Array(4).fill(0));
-      const totals = [0,0,0,0];
+      const playerCount = document.querySelectorAll('.name-edit').length;
+      const perHole = Array.from({length: HOLES}, ()=> Array(playerCount).fill(0));
+      const totals = Array(playerCount).fill(0);
       for(let h=1; h<=HOLES; h++){
         const par = getPar(h);
-        for(let p=0; p<4; p++){
+        for(let p=0; p<playerCount; p++){
           const score = getScore(p, h);
           const d = dotsFor(score, par);
           perHole[h-1][p] = Number.isFinite(d) ? d : 0;
@@ -1381,9 +1704,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
      */
     render(data){
       const { perHole, totals } = data;
+      const playerCount = totals.length;
       // Cells: if Achievements UI present, only update the inner .junk-dot to avoid destroying wrappers.
       for(let h=1; h<=HOLES; h++){
-        for(let p=0; p<4; p++){
+        for(let p=0; p<playerCount; p++){
           const cell = document.getElementById(`junk_h${h}_p${p+1}`);
           if(!cell) continue;
           const dot = cell.querySelector('.junk-dot');
@@ -1398,11 +1722,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
       // Totals: if achievements are active, let that system own totals (base + bonuses), otherwise render base totals.
       const achActive = !!document.querySelector('details.junk-dd');
       if(!achActive){
-        const ids = ['junkTotP1','junkTotP2','junkTotP3','junkTotP4'];
-        ids.forEach((id, i)=>{
-          const el = document.getElementById(id);
-          if(el) el.textContent = Number.isFinite(totals[i]) ? totals[i] : '—';
-        });
+        for(let p=0; p<playerCount; p++){
+          const el = document.getElementById(`junkTotP${p+1}`);
+          if(el) el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
+        }
       }
     }
   };
@@ -1411,12 +1734,13 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const tbody = document.getElementById('junkBody');
     if(!tbody) return;
     tbody.innerHTML = '';
+    const playerCount = document.querySelectorAll('.name-edit').length;
     for(let h=1; h<=HOLES; h++){
       const tr = document.createElement('tr');
       const th = document.createElement('td');
       th.textContent = h;
       tr.appendChild(th);
-      for(let p=0; p<4; p++){
+      for(let p=0; p<playerCount; p++){
         const td = document.createElement('td');
         td.id = `junk_h${h}_p${p+1}`;
         td.textContent = '—';
@@ -1427,12 +1751,12 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   function refreshJunkHeaderNames(){
-    const [n1,n2,n3,n4] = getPlayerNames();
-    const ids = ['junkP1','junkP2','junkP3','junkP4'];
-    [n1,n2,n3,n4].forEach((n,i)=>{
-      const el = document.getElementById(ids[i]);
-      if(el) el.textContent = n;
-    });
+    const names = getPlayerNames();
+    const playerCount = document.querySelectorAll('.name-edit').length;
+    for(let i=0; i<playerCount; i++){
+      const el = document.getElementById(`junkP${i+1}`);
+      if(el) el.textContent = names[i] || `P${i+1}`;
+    }
   }
 
   function updateJunk(){
@@ -1441,6 +1765,81 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const data = Junk.compute();
     Junk.render(data);
   }
+
+  /**
+   * Rebuild Junk table header and footer with current player count
+   */
+  function rebuildJunkTableHeader(){
+    const thead = document.querySelector('#junkTable thead tr');
+    if(thead){
+      // Clear existing headers except first (Hole)
+      while(thead.children.length > 1) {
+        thead.removeChild(thead.lastChild);
+      }
+      
+      // Add player headers
+      const playerCount = document.querySelectorAll('.name-edit').length;
+      for(let p=0; p<playerCount; p++){
+        const th = document.createElement('th');
+        th.id = `junkP${p+1}`;
+        th.textContent = `P${p+1}`;
+        thead.appendChild(th);
+      }
+    }
+    
+    // Rebuild footer (totals rows)
+    const tfoot = document.querySelector('#junkTable tfoot');
+    if(tfoot){
+      tfoot.innerHTML = '';
+      const playerCount = document.querySelectorAll('.name-edit').length;
+      
+      // Totals row
+      const totalsRow = document.createElement('tr');
+      const totalLabel = document.createElement('td');
+      totalLabel.innerHTML = '<strong>Totals</strong>';
+      totalsRow.appendChild(totalLabel);
+      for(let p=0; p<playerCount; p++){
+        const td = document.createElement('td');
+        td.id = `junkTotP${p+1}`;
+        td.textContent = '—';
+        totalsRow.appendChild(td);
+      }
+      tfoot.appendChild(totalsRow);
+      
+      // Net Totals row
+      const netRow = document.createElement('tr');
+      const netLabel = document.createElement('td');
+      netLabel.innerHTML = '<strong>Net Totals</strong>';
+      netRow.appendChild(netLabel);
+      for(let p=0; p<playerCount; p++){
+        const td = document.createElement('td');
+        td.id = `junkNetP${p+1}`;
+        td.textContent = '—';
+        netRow.appendChild(td);
+      }
+      tfoot.appendChild(netRow);
+    }
+  }
+
+  /**
+   * Refresh Junk table when player count changes
+   */
+  function refreshJunkForPlayerChange(){
+    const junkSection = document.getElementById('junkSection');
+    if(junkSection && junkSection.classList.contains('open')){
+      rebuildJunkTableHeader();
+      buildJunkTable();
+      refreshJunkHeaderNames();
+      updateJunk();
+      // Reinitialize achievements UI after rebuilding table
+      if(window.initJunkAchievements){
+        setTimeout(() => window.initJunkAchievements(), 0);
+      }
+    }
+  }
+  
+  // Expose to global scope so it can be called from player management
+  window.refreshJunkForPlayerChange = refreshJunkForPlayerChange;
 
   function toggleGame(sectionId, toggleBtn){
     const sections = ['vegasSection','bankerSection','junkSection','skinsSection'];
@@ -1459,7 +1858,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   function initJunk(){
-    if(document.getElementById('junkBody')?.children.length) return;
+    rebuildJunkTableHeader();
     buildJunkTable();
     refreshJunkHeaderNames();
     updateJunk();
@@ -1647,19 +2046,19 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
         if(span) span.textContent = Number.isFinite(total) ? String(total) : '—';
       }
     });
-    const footIds = ['junkTotP1','junkTotP2','junkTotP3','junkTotP4'];
-    footIds.forEach((id, i)=>{
-      const el = document.getElementById(id);
-      if(el) el.textContent = (i<totals.length) ? totals[i] : '—';
-    });
+    
+    // Update totals dynamically based on player count
+    for(let i=0; i<players; i++){
+      const el = document.getElementById(`junkTotP${i+1}`);
+      if(el) el.textContent = totals[i];
+    }
 
     // Calculate net totals (each player's position relative to average)
     const totalDots = totals.reduce((sum, t) => sum + t, 0);
     const avgDots = totalDots / players;
-    const netIds = ['junkNetP1','junkNetP2','junkNetP3','junkNetP4'];
-    netIds.forEach((id, i)=>{
-      const el = document.getElementById(id);
-      if(!el || i >= totals.length) return;
+    for(let i=0; i<players; i++){
+      const el = document.getElementById(`junkNetP${i+1}`);
+      if(!el) continue;
       const netPos = totals[i] - avgDots;
       if(netPos === 0) {
         el.textContent = '0';
@@ -1668,7 +2067,7 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
       } else {
         el.textContent = netPos.toFixed(1);
       }
-    });
+    }
   }
 
   function initJunkAchievements(){
@@ -1692,6 +2091,9 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
       }
     });
   }
+  
+  // Expose to global scope for player management
+  window.initJunkAchievements = initJunkAchievements;
 
   // Initialize when Junk tab opens (and once at load)
   document.getElementById('toggleJunk')?.addEventListener('click', ()=> {
