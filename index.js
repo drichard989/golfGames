@@ -272,8 +272,12 @@
   function buildParAndHcpRows(){
     const parRow=$(ids.parRow), hcpRow=$(ids.hcpRow);
     for(let h=1;h<=HOLES;h++){
-      const tdp=document.createElement("td"), ip=document.createElement("input"); ip.type="number"; ip.inputMode="numeric"; ip.value=PARS[h-1]; ip.readOnly=true; ip.tabIndex=-1; tdp.appendChild(ip); parRow.appendChild(tdp);
-      const tdh=document.createElement("td"), ih=document.createElement("input"); ih.type="number"; ih.inputMode="numeric"; ih.value=HCPMEN[h-1]; ih.readOnly=true; ih.tabIndex=-1; tdh.appendChild(ih); hcpRow.appendChild(tdh);
+      const tdp=document.createElement("td"), ip=document.createElement("input"); ip.type="number"; ip.inputMode="numeric"; ip.value=PARS[h-1]; ip.readOnly=true; ip.tabIndex=-1; tdp.appendChild(ip); 
+      if(h === 18) tdp.classList.add('hole-18'); // Add class for styling divider
+      parRow.appendChild(tdp);
+      const tdh=document.createElement("td"), ih=document.createElement("input"); ih.type="number"; ih.inputMode="numeric"; ih.value=HCPMEN[h-1]; ih.readOnly=true; ih.tabIndex=-1; tdh.appendChild(ih); 
+      if(h === 18) tdh.classList.add('hole-18'); // Add class for styling divider
+      hcpRow.appendChild(tdh);
     }
     // Append Out / In / Total for course par, then placeholders for To Par / Net
     // Standard golf: Out = front 9, In = back 9
@@ -344,6 +348,7 @@
         inp.dataset.player=String(p); 
         inp.dataset.hole=String(h); 
         inp.placeholder="—";
+        if(h === 18) td.classList.add('hole-18'); // Add class for styling divider
         
         inp.addEventListener("input", () => { 
           if(inp.value !== ""){
@@ -405,7 +410,9 @@
   function buildTotalsRow(){
     const totalsRow=$(ids.totalsRow);
     for(let h=1;h<=HOLES;h++){
-      const td=document.createElement("td"); td.className="subtle"; td.dataset.holeTotal=String(h); td.textContent="—"; totalsRow.appendChild(td);
+      const td=document.createElement("td"); td.className="subtle"; td.dataset.holeTotal=String(h); td.textContent="—"; 
+      if(h === 18) td.classList.add('hole-18'); // Add class for styling divider
+      totalsRow.appendChild(td);
     }
     const out=document.createElement("td"), inn=document.createElement("td"), total=document.createElement("td"), blank1=document.createElement("td"), blank2=document.createElement("td");
     out.className="subtle"; inn.className="subtle"; total.className="subtle"; totalsRow.append(out,inn,total,blank1,blank2);

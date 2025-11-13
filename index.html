@@ -260,7 +260,7 @@
       /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
       th:nth-child(12),
       td:nth-child(12) {
-        border-left: 3px solid rgba(168, 179, 191, 0.4);
+        border-left: 3px solid rgba(168, 179, 191, 0.4) !important;
       }
 
       .subtle {
@@ -270,14 +270,40 @@
 
       /* Emphasize Par and Handicap rows (dark mode default) */
       .par-row th,
-      .par-row td,
+      .par-row td {
+        background: transparent;
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+        border-right: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        border-bottom: none;
+      }
+
       .hcp-row th,
       .hcp-row td {
-        background-color: #000;
+        background: transparent;
+        border-left: 1px solid rgba(255, 255, 255, 0.15);
+        border-right: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.3);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.3);
       }
 
       .par-row input,
-      .hcp-row input,
+      .hcp-row input {
+        width: 48px;
+        text-align: center;
+        border-radius: 0;
+        border: none;
+        background: transparent;
+        color: var(--ink);
+        padding: 10px 6px;
+        -moz-appearance: textfield;
+        appearance: textfield;
+        min-height: 44px;
+        font-size: 16px;
+        pointer-events: none;
+        touch-action: manipulation;
+      }
+
       .score-input,
       .ch-input {
         width: 48px;
@@ -294,6 +320,11 @@
         /* Prevents iOS zoom on focus */
         touch-action: manipulation;
         /* Better mobile tap response */
+      }
+
+      /* Divider after hole 18 */
+      .hole-18 {
+        border-right: 2px solid rgba(255, 255, 255, 0.4) !important;
       }
 
       .par-row input::-webkit-outer-spin-button,
@@ -1065,12 +1096,25 @@
         color: #1a1c1f !important
       }
 
-      :root[data-theme="light"] .hcp-row th,
-      :root[data-theme="light"] .hcp-row td,
       :root[data-theme="light"] .par-row th,
       :root[data-theme="light"] .par-row td {
-        background-color: #eceff3 !important; /* darker than #fafbfc */
+        background: transparent !important;
+        border-left: 1px solid rgba(0, 0, 0, 0.15) !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
         color: #1a1c1f !important
+      }
+
+      :root[data-theme="light"] .hcp-row th,
+      :root[data-theme="light"] .hcp-row td {
+        background: transparent !important;
+        border-left: 1px solid rgba(0, 0, 0, 0.15) !important;
+        border-top: 1px solid rgba(0, 0, 0, 0.3) !important;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.3) !important;
+        color: #1a1c1f !important
+      }
+
+      :root[data-theme="light"] .hole-18 {
+        border-right: 2px solid rgba(0, 0, 0, 0.4) !important;
       }
 
       /* =========================
