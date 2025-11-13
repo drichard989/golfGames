@@ -2057,10 +2057,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
   }
 
   
-  document.getElementById('toggleSkins')?.addEventListener('click', ()=>{
-    initSkins();
-    toggleGame('skinsSection','toggleSkins');
-  });
+  // Note: Skins toggle is handled inside the Skins IIFE
+  
 document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
     initJunk();
     toggleGame('junkSection','toggleJunk');
