@@ -308,29 +308,78 @@
       nameTd.appendChild(nameInput); tr.appendChild(nameTd);
 
       const chTd=document.createElement("td");
-      const chInput=document.createElement("input"); chInput.type="number"; chInput.inputMode="numeric"; chInput.className="ch-input"; chInput.placeholder="0"; chInput.min="-20"; chInput.max="54"; chInput.step="1"; chInput.autocomplete="off";
-  chInput.addEventListener("input",()=>{ if(chInput.value!=="") chInput.value=clampInt(chInput.value,-50,60); recalcAll(); AppManager.recalcGames(); saveDebounced(); });
+      const MIN_HANDICAP = -50;
+      const MAX_HANDICAP = 60;
+      
+      const chInput=document.createElement("input"); 
+      chInput.type="number"; 
+      chInput.inputMode="numeric"; 
+      chInput.className="ch-input"; 
+      chInput.placeholder="0"; 
+      chInput.min="-20"; 
+      chInput.max="54"; 
+      chInput.step="1"; 
+      chInput.autocomplete="off";
+      
+      chInput.addEventListener("input", () => { 
+        if(chInput.value !== "") {
+          chInput.value = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
+        }
+        recalcAll(); 
+        AppManager.recalcGames(); 
+        saveDebounced(); 
+      });
       chTd.appendChild(chInput); tr.appendChild(chTd);
 
-      for(let h=1;h<=HOLES;h++){
+      const MIN_SCORE = 1;
+      const MAX_SCORE = 20;
+      
+      for(let h=1; h<=HOLES; h++){
         const td=document.createElement("td"), inp=document.createElement("input");
-        inp.type="number"; inp.inputMode="numeric"; inp.min="1"; inp.max="20"; inp.className="score-input"; inp.dataset.player=String(p); inp.dataset.hole=String(h); inp.placeholder="—";
-        inp.addEventListener("input",()=>{ if(inp.value!==""){const v=clampInt(inp.value,1,20); if(String(v)!==inp.value) inp.classList.add("invalid"); else inp.classList.remove("invalid"); inp.value=v;
-          // Auto-advance to next player's input for same hole
-          const currentPlayer = Number(inp.dataset.player);
-          const currentHole = Number(inp.dataset.hole);
-          if(inp.value.length >= 1) {
-            let nextInput;
-            if(currentPlayer < PLAYERS - 1) {
-              // Move to next player, same hole
-              nextInput = document.querySelector(`.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`);
-            } else if(currentHole < HOLES) {
-              // Last player: move to first player, next hole
-              nextInput = document.querySelector(`.score-input[data-player="0"][data-hole="${currentHole+1}"]`);
+        inp.type="number"; 
+        inp.inputMode="numeric"; 
+        inp.min=String(MIN_SCORE); 
+        inp.max=String(MAX_SCORE); 
+        inp.className="score-input"; 
+        inp.dataset.player=String(p); 
+        inp.dataset.hole=String(h); 
+        inp.placeholder="—";
+        
+        inp.addEventListener("input", () => { 
+          if(inp.value !== ""){
+            const v = clampInt(inp.value, MIN_SCORE, MAX_SCORE); 
+            if(String(v) !== inp.value) {
+              inp.classList.add("invalid"); 
+            } else {
+              inp.classList.remove("invalid"); 
             }
-            if(nextInput) setTimeout(()=>nextInput.focus(), 50);
+            inp.value = v;
+            // Auto-advance: move to next input after score entry
+            const currentPlayer = Number(inp.dataset.player);
+            const currentHole = Number(inp.dataset.hole);
+            
+            if(inp.value.length >= 1) {
+              let nextInput;
+              
+              if(currentPlayer < PLAYERS - 1) {
+                // Move to next player, same hole
+                nextInput = document.querySelector(
+                  `.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`
+                );
+              } else if(currentHole < HOLES) {
+                // Last player: move to first player, next hole
+                nextInput = document.querySelector(
+                  `.score-input[data-player="0"][data-hole="${currentHole+1}"]`
+                );
+              }
+              
+              if(nextInput) {
+                setTimeout(() => nextInput.focus(), 50);
+              }
+            }
+          } else {
+            inp.classList.remove("invalid");
           }
-        } else {inp.classList.remove("invalid");}
           recalcRow(tr); recalcTotalsRow(); AppManager.recalcGames(); saveDebounced(); });
         td.appendChild(inp); tr.appendChild(td);
       }
@@ -421,11 +470,25 @@
     return adjGross - sr;
   }
 
-  // ---------- Row calc ----------
-  function getPlayerHoleValues(rowEl){ return $$("input.score-input",rowEl).map(i=>Number(i.value)||0); }
+  // =============================================================================
+  // ROW CALCULATIONS
+  // =============================================================================
+  
+  /**
+   * Get all hole values for a player row
+   * @param {HTMLElement} rowEl - Player row element
+   * @returns {number[]} Array of 18 scores (0 for empty)
+   */
+  function getPlayerHoleValues(rowEl){ 
+    return $$("input.score-input", rowEl).map(i => Number(i.value) || 0); 
+  }
 
+  /**
+   * Recalculate totals and net score for a single player row
+   * @param {HTMLElement} rowEl - Player row element
+   */
   function recalcRow(rowEl){
-    const s=getPlayerHoleValues(rowEl);
+    const s = getPlayerHoleValues(rowEl);
     // Standard golf: Out = front 9, In = back 9
     const out=sum(s.slice(0,9)), inn=sum(s.slice(9,18)), total=out+inn;
     const splits = rowEl.querySelectorAll("td.split");
@@ -433,18 +496,34 @@
     if(splits[1]) splits[1].textContent = inn ? String(inn) : "—";
     $(".total",rowEl)?.replaceChildren(document.createTextNode(total||"—"));
 
-    const parTotal=sum(PARS), delta=total&&parTotal? total-parTotal : 0, el=$(".to-par",rowEl);
-    if(!total){ el.textContent="—"; el.dataset.sign=""; } else { const sign=delta===0?"0":delta>0?"+":"-"; el.dataset.sign=sign; el.textContent=(delta>0?"+":"")+delta; }
+    const parTotal = sum(PARS);
+    const delta = (total && parTotal) ? total - parTotal : 0;
+    const el = $(".to-par", rowEl);
+    
+    if(!total){ 
+      el.textContent = "—"; 
+      el.dataset.sign = ""; 
+    } else { 
+      const sign = delta === 0 ? "0" : delta > 0 ? "+" : "-"; 
+      el.dataset.sign = sign; 
+      el.textContent = (delta > 0 ? "+" : "") + delta; 
+    }
 
-    // Net total
-    const pIdx=Number(rowEl.dataset.player);
-    let netTotal=0;
-    for(let h=0;h<HOLES;h++){
-      const gross=s[h]||0; if(!gross) continue;
-      const sr=strokesOnHole(adjustedCHs()[pIdx],h), ndb=PARS[h]+2+sr, adjGross=Math.min(gross,ndb);
+    // Calculate net score with NDB (Net Double Bogey) cap
+    const pIdx = Number(rowEl.dataset.player);
+    let netTotal = 0;
+    
+    for(let h=0; h<HOLES; h++){
+      const gross = s[h] || 0; 
+      if(!gross) continue;
+      
+      const sr = strokesOnHole(adjustedCHs()[pIdx], h);
+      const ndb = PARS[h] + NDB_BUFFER + sr;
+      const adjGross = Math.min(gross, ndb);
       netTotal += adjGross - sr;
     }
-    $(".net",rowEl).textContent=netTotal?String(netTotal):"—";
+    
+    $(".net", rowEl).textContent = netTotal ? String(netTotal) : "—";
   }
 
   function recalcTotalsRow(){
@@ -465,20 +544,58 @@
   // =============================================================================
   
   const STORAGE_KEY = "golf_scorecard_v5";
+  
+  /**
+   * Save current game state to localStorage
+   */
   function saveState(){
-    const state={
+    const state = {
       course: ACTIVE_COURSE,
-      players:$$(".player-row").map(row=>({ name:$(".name-edit",row).value||"", ch:$(".ch-input",row).value||"", scores:$$("input.score-input",row).map(i=>i.value) })),
-      vegas:{ teams:vegas_getTeamAssignments(), opts:vegas_getOptions(), open: $(ids.vegasSection).classList.contains("open") },
-      banker:{ open: $(ids.bankerSection).classList.contains("open") },
-      skins:{ buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10, open: $(ids.skinsSection)?.classList.contains("open") },
-      savedAt:Date.now(),
+      players: $$(".player-row").map(row => ({
+        name: $(".name-edit", row).value || "",
+        ch: $(".ch-input", row).value || "",
+        scores: $$("input.score-input", row).map(i => i.value)
+      })),
+      vegas: { 
+        teams: vegas_getTeamAssignments(), 
+        opts: vegas_getOptions(), 
+        open: $(ids.vegasSection).classList.contains("open") 
+      },
+      banker: { 
+        open: $(ids.bankerSection).classList.contains("open") 
+      },
+      skins: { 
+        buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10, 
+        open: $(ids.skinsSection)?.classList.contains("open") 
+      },
+      savedAt: Date.now(),
     };
-    localStorage.setItem(STORAGE_KEY,JSON.stringify(state)); announce("Saved.");
+    
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      announce("Saved.");
+    } catch(err) {
+      console.error('[golfGames] Failed to save state:', err);
+      announce("Save failed!");
+    }
   }
-  let saveTimer=null; function saveDebounced(){ clearTimeout(saveTimer); saveTimer=setTimeout(saveState,300); }
+  let saveTimer = null;
+  
+  /**
+   * Debounced save - waits 300ms after last change before saving
+   */
+  function saveDebounced(){ 
+    clearTimeout(saveTimer); 
+    saveTimer = setTimeout(saveState, 300); 
+  }
+  
+  /**
+   * Load saved game state from localStorage
+   */
   function loadState(){
-    const raw=localStorage.getItem(STORAGE_KEY); if(!raw) return;
+    const raw = localStorage.getItem(STORAGE_KEY); 
+    if(!raw) return;
+    
     try{
       const s=JSON.parse(raw);
       
@@ -491,16 +608,26 @@
         }
       }
       
-      const rows=$$(".player-row");
-      s.players?.forEach((p,i)=>{ const r=rows[i]; if(!r) return; $(".name-edit",r).value=p.name||""; $(".ch-input",r).value=p.ch??""; const ins=$$("input.score-input",r); p.scores?.forEach((v,j)=>{ if(ins[j]) ins[j].value=v; }); });
+      const rows = $$(".player-row");
+      s.players?.forEach((p, i) => { 
+        const r = rows[i]; 
+        if(!r) return;
+        
+        $(".name-edit", r).value = p.name || "";
+        $(".ch-input", r).value = p.ch ?? "";
+        
+        const ins = $$("input.score-input", r);
+        p.scores?.forEach((v, j) => { 
+          if(ins[j]) ins[j].value = v; 
+        });
+      });
       recalcAll();
 
+      // Restore game states
       vegas_renderTeamControls();
       if(s.vegas?.teams) vegas_setTeamAssignments(s.vegas.teams);
-      if(s.vegas?.opts)  vegas_setOptions(s.vegas.opts);
-      if(s.vegas?.open)  games_open("vegas");
-
-      
+      if(s.vegas?.opts) vegas_setOptions(s.vegas.opts);
+      if(s.vegas?.open) games_open("vegas");
 
       if(s.banker?.open) games_open("banker");
 
@@ -511,16 +638,58 @@
       if(s.skins?.open) games_open("skins");
 
       vegas_recalc();
-      announce(`Restored saved card (${new Date(s.savedAt||Date.now()).toLocaleString()}).`);
-    }catch{}
+      
+      const savedDate = new Date(s.savedAt || Date.now()).toLocaleString();
+      announce(`Restored saved card (${savedDate}).`);
+    } catch(err) {
+      console.error('[golfGames] Failed to load state:', err);
+      announce("Load failed!");
+    }
   }
 
-  function clearScoresOnly(){ $$("input.score-input").forEach(i=>{i.value="";i.classList.remove("invalid");}); recalcAll(); AppManager.recalcGames(); announce("Scores cleared."); }
-  function clearAll(){
-    $$(".player-row").forEach(r=>{ $(".name-edit",r).value=""; $(".ch-input",r).value=""; $$("input.score-input",r).forEach(i=>{i.value="";i.classList.remove("invalid");}); });
-    recalcAll(); vegas_renderTeamControls(); vegas_recalc(); announce("All fields cleared.");
+  /**
+   * Clear all score inputs only (keep names and handicaps)
+   */
+  function clearScoresOnly(){ 
+    $$("input.score-input").forEach(i => {
+      i.value = "";
+      i.classList.remove("invalid");
+    }); 
+    recalcAll(); 
+    AppManager.recalcGames(); 
+    announce("Scores cleared."); 
   }
-  function announce(t){ const el=$(ids.saveStatus); el.textContent=t; el.style.opacity="1"; setTimeout(()=>{el.style.opacity="0.75";},1200); }
+  
+  /**
+   * Clear all fields (names, handicaps, and scores)
+   */
+  function clearAll(){
+    $$(".player-row").forEach(r => { 
+      $(".name-edit", r).value = "";
+      $(".ch-input", r).value = "";
+      $$("input.score-input", r).forEach(i => {
+        i.value = "";
+        i.classList.remove("invalid");
+      });
+    });
+    recalcAll(); 
+    vegas_renderTeamControls(); 
+    vegas_recalc(); 
+    announce("All fields cleared.");
+  }
+  
+  /**
+   * Display a temporary status message to the user
+   * @param {string} t - Message text to display
+   */
+  function announce(t){ 
+    const el = $(ids.saveStatus); 
+    el.textContent = t; 
+    el.style.opacity = "1"; 
+    setTimeout(() => {
+      el.style.opacity = "0.75";
+    }, 1200); 
+  }
 
   // =============================================================================
   // GAMES UI - Toggle game sections (Vegas, Banker, Skins, Junk)
