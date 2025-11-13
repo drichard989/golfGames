@@ -322,6 +322,17 @@
         border: 2px solid var(--accent);
         box-shadow: 0 0 0 1px var(--accent);
       }
+      
+      /* Multiple strokes - add extra rings with visible separation */
+      .score-input.receives-stroke[data-strokes="2"] {
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent);
+      }
+      
+      .score-input.receives-stroke[data-strokes="3"] {
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent);
+      }
 
       .total,
       .to-par,
@@ -1098,6 +1109,16 @@
         border: 2px solid #dc3545 !important;
         box-shadow: 0 0 0 1px #dc3545 !important;
       }
+      
+      :root[data-theme="light"] .score-input.receives-stroke[data-strokes="2"] {
+        border: 2px solid #dc3545 !important;
+        box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545 !important;
+      }
+      
+      :root[data-theme="light"] .score-input.receives-stroke[data-strokes="3"] {
+        border: 2px solid #dc3545 !important;
+        box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545, 0 0 0 12px #ffffff, 0 0 0 14px #dc3545 !important;
+      }
     </style>
   </head>
   <body>
@@ -1356,9 +1377,11 @@
                 
                 if(totalStrokes > 0) {
                   input.classList.add('receives-stroke');
+                  input.setAttribute('data-strokes', totalStrokes);
                   input.setAttribute('title', 'Receives ' + totalStrokes + ' stroke(s)');
                 } else {
                   input.classList.remove('receives-stroke');
+                  input.removeAttribute('data-strokes');
                   input.removeAttribute('title');
                 }
               });
