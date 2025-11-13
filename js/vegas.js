@@ -50,7 +50,6 @@
       const val = input?.value?.trim();
       return val && val.length > 0;
     }).length;
-    console.log('[Vegas getPlayers] Total inputs:', nameInputs.length, 'Valid players:', validPlayers);
     return validPlayers > 0 ? validPlayers : nameInputs.length;
   };
   const getHoles = () => 18;
@@ -136,7 +135,6 @@ const Vegas = {
   compute(teams, opts){
     // Check if we're in rotation mode (3 players with ghost)
     const realPlayers = getPlayers();
-    console.log('[Vegas compute] realPlayers:', realPlayers, 'teams:', teams);
     const useRotation = realPlayers === 3;
     
     if(useRotation){
@@ -315,17 +313,10 @@ const Vegas = {
       return v || `Player ${i+1}`;
     });
     
-    console.log('[Vegas Render] Name inputs count:', nameInputs.length);
-    console.log('[Vegas Render] Names array:', names);
-    console.log('[Vegas Render] data.rotation:', data.rotation);
-    
     data.perHole.forEach((hole,h)=>{
       // In rotation mode, show which player is with ghost
       let vaStr = hole.vaStr;
       if(data.rotation && hole.ghostPartner !== undefined){
-        if(h === 0 || h === 6 || h === 12){
-          console.log(`[Vegas Render] Hole ${h+1}: ghostPartner=${hole.ghostPartner}, names[${hole.ghostPartner}]="${names[hole.ghostPartner]}"`);
-        }
         const partnerName = names[hole.ghostPartner] || `P${hole.ghostPartner+1}`;
         vaStr = `${hole.vaStr} (${partnerName}+👻)`;
       }
