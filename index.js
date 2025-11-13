@@ -1914,8 +1914,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
       const totals = Array(playerCount).fill(0);
       const useNet = document.getElementById('junkUseNet')?.checked || false;
       
-      console.log('[Junk.compute] Starting computation, useNet:', useNet, 'playerCount:', playerCount);
-      
       // Calculate adjusted handicaps inline if using NET
       let adjCHs = Array(playerCount).fill(0);
       if(useNet){
@@ -1927,7 +1925,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
         });
         const minCH = Math.min(...chs);
         adjCHs = chs.map(ch => ch - minCH); // play off low
-        console.log('[Junk.compute] CHs:', chs, 'minCH:', minCH, 'adjCHs:', adjCHs);
       }
       
       for(let h=1; h<=HOLES; h++){
@@ -1949,7 +1946,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
           totals[p] += Number.isFinite(d) ? d : 0;
         }
       }
-      console.log('[Junk.compute] Final totals:', totals);
       return { perHole, totals };
     },
     /**
@@ -1975,15 +1971,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
         }
       }
       // Always update base totals
-      console.log('[Junk] Updating totals:', totals);
       for(let p=0; p<playerCount; p++){
         const el = document.getElementById(`junkTotP${p+1}`);
-        if(el) {
-          console.log(`[Junk] Setting junkTotP${p+1} to`, totals[p]);
-          el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
-        } else {
-          console.warn(`[Junk] Element junkTotP${p+1} not found`);
-        }
+        if(el) el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
       }
     }
   };
@@ -2123,7 +2113,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
     const junkUseNet = document.getElementById('junkUseNet');
     if(junkUseNet){
       junkUseNet.addEventListener('change', ()=> {
-        console.log('[Junk] NET toggle changed, recalculating...');
         updateJunk();
       });
     }
