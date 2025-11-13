@@ -284,13 +284,18 @@
         text-align: left;
         padding-left: 10px;
         min-width: 150px;
-        opacity: 0;
-        /* Hidden but maintains table layout */
-        pointer-events: none;
+        position: sticky;
+        left: 0;
+        background-color: var(--panel);
+        z-index: 4;
+        border-right: 1px solid var(--line);
+        /* iOS sticky fix */
+        -webkit-transform: translateZ(0);
+        transform: translateZ(0);
       }
 
       thead th:first-child {
-        opacity: 0;
+        z-index: 5
       }
 
       tr:last-child td {
