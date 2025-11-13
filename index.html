@@ -5,6 +5,10 @@
     <title>Manito Golf Games</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
+    <!-- Aggressive cache prevention for iOS -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="manifest" href="/manifest.json" />
@@ -1170,7 +1174,7 @@
   <body>
 
     <header>
-            <h1>Manito Golf Games v.8 PWA</h1>
+            <h1>Manito Golf Games v.9 PWA</h1>
       <div class="controls">
         <div class="control" style="display: inline-block; margin-right: 12px;">
           <label for="courseSelect" style="margin-right: 4px;">Course:</label>
@@ -1519,13 +1523,20 @@
           }
         });
         
-        // Register service worker
-        navigator.serviceWorker.register('/sw.js', { 
-          updateViaCache: 'none' // Don't cache the service worker file itself
+        // AGGRESSIVE: Unregister all service workers first, then re-register fresh
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          console.log('[PWA] Found', registrations.length, 'existing registrations');
+          return Promise.all(registrations.map(r => r.unregister()));
+        }).then(() => {
+          console.log('[PWA] All old registrations cleared');
+          // Now register fresh
+          return navigator.serviceWorker.register('/sw.js', { 
+            updateViaCache: 'none' // Don't cache the service worker file itself
+          });
         }).then((registration) => {
-          console.log('[PWA] Service Worker registered');
+          console.log('[PWA] Service Worker registered fresh');
           
-          // Check for updates immediately on load
+          // Force immediate update check
           registration.update();
           
           // Check for updates when page becomes visible (iOS app switching)
