@@ -318,6 +318,11 @@
         border-color: var(--danger)
       }
 
+      .score-input.receives-stroke {
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 1px var(--accent);
+      }
+
       .total,
       .to-par,
       .split,
@@ -1087,6 +1092,12 @@
         color: #1a1c1f !important;
         border-color: #d0d4d9 !important;
       }
+
+      /* Stroke highlighting in light mode */
+      :root[data-theme="light"] .score-input.receives-stroke {
+        border: 2px solid #dc3545 !important;
+        box-shadow: 0 0 0 1px #dc3545 !important;
+      }
     </style>
   </head>
   <body>
@@ -1296,6 +1307,65 @@
           }, { once: false });
         }
       })();
+      
+      // Highlight holes where players receive strokes
+      window.addEventListener('DOMContentLoaded', function() {
+        const HCPMEN = [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8];
+        
+        function updateStrokeHighlights() {
+          setTimeout(function() {
+            const playerRows = document.querySelectorAll('.player-row');
+            if(!playerRows.length) return;
+            
+            // Get all CHs
+            const chs = [];
+            playerRows.forEach(function(row) {
+              const chInput = row.querySelector('.ch-input');
+              const val = chInput ? parseFloat(chInput.value) : 0;
+              chs.push(isNaN(val) ? 0 : val);
+            });
+            
+            // Calculate adjusted CHs (play off low)
+            const minCH = Math.min.apply(null, chs.filter(function(ch) { return ch !== 0; }));
+            if(!isFinite(minCH)) return;
+            
+            const adjustedCHs = chs.map(function(ch) { return ch - minCH; });
+            
+            // Update each player's score inputs
+            playerRows.forEach(function(row, playerIdx) {
+              const adjustedCH = adjustedCHs[playerIdx];
+              const scoreInputs = row.querySelectorAll('.score-input');
+              
+              scoreInputs.forEach(function(input, holeIdx) {
+                const holeHCP = HCPMEN[holeIdx];
+                const strokesReceived = Math.floor(adjustedCH / 18) + (adjustedCH % 18 >= holeHCP ? 1 : 0);
+                
+                if(strokesReceived > 0) {
+                  input.classList.add('receives-stroke');
+                  input.setAttribute('title', 'Receives ' + strokesReceived + ' stroke(s)');
+                } else {
+                  input.classList.remove('receives-stroke');
+                  input.removeAttribute('title');
+                }
+              });
+            });
+          }, 100);
+        }
+        
+        // Update on CH input changes and score input changes
+        document.addEventListener('input', function(e) {
+          if(e.target && e.target.classList && (e.target.classList.contains('ch-input') || e.target.classList.contains('score-input'))) {
+            updateStrokeHighlights();
+          }
+        });
+        
+        // Also update on load event from main script
+        setTimeout(updateStrokeHighlights, 500);
+        setTimeout(updateStrokeHighlights, 1000);
+        
+        // Initial update
+        updateStrokeHighlights();
+      });
     </script>
     <!-- JUNK GAME -->
     <section class="game-section" id="junkSection" aria-hidden="true">
