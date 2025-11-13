@@ -1111,6 +1111,8 @@
     const needsGhosts = PLAYERS < maxPositions;
     const useRotation = PLAYERS === 3;
     
+    console.log('[Vegas] renderTeamControls - PLAYERS:', PLAYERS, 'useRotation:', useRotation);
+    
     // In rotation mode, show info message instead of team controls
     if(useRotation){
       const info = document.createElement("div");
@@ -1438,18 +1440,18 @@
     // Increment player count
     PLAYERS++;
     
-    // Recalculate everything
-    recalcTotalsRow();
-    vegas_renderTeamControls();
-    AppManager.recalcGames();
+    console.log('[addPlayer] PLAYERS after increment:', PLAYERS);
     
-    // Refresh Skins game if it's open
-    refreshSkinsForPlayerChange();
-    
-    // Refresh Junk game if it's open
-    if(window.refreshJunkForPlayerChange) window.refreshJunkForPlayerChange();
-    
+    // Update display immediately
     updatePlayerCountDisplay();
+    
+    // Recalculate everything immediately and again after DOM update
+    recalculateEverything();
+    setTimeout(() => {
+      recalculateEverything();
+      updatePlayerCountDisplay();
+    }, 100);
+    
     saveDebounced();
     announce(`Player ${PLAYERS} added.`);
   }
@@ -1486,17 +1488,18 @@
       lastRow.remove();
       PLAYERS--;
       
-      // Recalculate everything again
-      vegas_renderTeamControls();
-      AppManager.recalcGames();
+      console.log('[removePlayer] PLAYERS after decrement:', PLAYERS);
       
-      // Refresh Skins game if it's open
-      refreshSkinsForPlayerChange();
-      
-      // Refresh Junk game if it's open
-      if(window.refreshJunkForPlayerChange) window.refreshJunkForPlayerChange();
-      
+      // Update display immediately
       updatePlayerCountDisplay();
+      
+      // Recalculate everything immediately and again after DOM update
+      recalculateEverything();
+      setTimeout(() => {
+        recalculateEverything();
+        updatePlayerCountDisplay();
+      }, 100);
+      
       saveDebounced();
       announce(`Player removed. ${PLAYERS} player${PLAYERS === 1 ? '' : 's'} remaining.`);
     }
@@ -1510,6 +1513,20 @@
     if(display) {
       display.textContent = `${PLAYERS} player${PLAYERS === 1 ? '' : 's'}`;
     }
+  }
+
+  /**
+   * Recalculate everything - all totals, games, and UI
+   */
+  function recalculateEverything() {
+    recalcTotalsRow();
+    vegas_renderTeamControls();
+    // Small delay to ensure Vegas team controls are rendered before recalc
+    setTimeout(() => {
+      AppManager.recalcGames();
+      if(typeof refreshSkinsForPlayerChange === 'function') refreshSkinsForPlayerChange();
+      if(window.refreshJunkForPlayerChange) window.refreshJunkForPlayerChange();
+    }, 0);
   }
 
   // =============================================================================
@@ -1529,6 +1546,13 @@
   $(ids.resetBtn).addEventListener("click", () => { console.log('[golfGames] Reset clicked'); clearScoresOnly(); });
   $(ids.clearAllBtn).addEventListener("click", () => { console.log('[golfGames] Clear all clicked'); clearAll(); });
   $(ids.saveBtn).addEventListener("click", () => { console.log('[golfGames] Save clicked'); saveState(); });
+  
+  // Refresh All button - recalculates everything
+  document.getElementById('refreshAllBtn')?.addEventListener("click", () => {
+    console.log('[golfGames] Refresh All clicked');
+    recalculateEverything();
+    announce('All games refreshed');
+  });
 
   // Course selector - populate options and wire up
     const courseSelect = $('#courseSelect');
