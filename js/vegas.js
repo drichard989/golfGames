@@ -303,9 +303,10 @@ const Vegas = {
     }
     if(warn) warn.hidden=true;
 
+    const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
+    console.log('[Vegas Render] Player names:', names);
+    
     data.perHole.forEach((hole,h)=>{
-      const names=$$(".player-row").map((r,i)=> $(".name-edit",r).value||`Player ${i+1}`);
-      
       // In rotation mode, show which player is with ghost
       let vaStr = hole.vaStr;
       if(data.rotation && hole.ghostPartner !== undefined){
@@ -314,7 +315,7 @@ const Vegas = {
         
         // Debug logging
         if(h === 0 || h === 6 || h === 12){
-          console.log(`[Vegas Render] Hole ${h+1}: ghostPartner=${hole.ghostPartner}, name=${partnerName}`);
+          console.log(`[Vegas Render] Hole ${h+1}: ghostPartner=${hole.ghostPartner}, name=${partnerName}, names array:`, names);
         }
       }
       
