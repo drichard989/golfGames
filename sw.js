@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v1.0.0';
+const CACHE_VERSION = 'v1.0.1';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache
@@ -49,28 +49,28 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch - network-first for HTML, cache-first for assets
+// Fetch - network-only for HTML/JS (no caching), cache-first for assets
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Network-first for HTML and JS files (always get latest)
+  // Network-only for HTML and JS files (completely bypass cache, always fresh)
   if (request.destination === 'document' || 
       url.pathname.endsWith('.html') || 
       url.pathname.endsWith('.js') ||
       url.pathname === '/') {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Update cache with new version
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
+      fetch(request, {
+        cache: 'no-store', // Don't use HTTP cache
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+      })
         .catch(() => {
-          // Offline fallback to cache
+          // Offline fallback to cache only if network fails
+          console.log('[SW] Network failed, using cached version');
           return caches.match(request);
         })
     );
