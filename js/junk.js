@@ -176,21 +176,6 @@
         const el = document.getElementById(`junkTotP${p+1}`);
         if(el) el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
       }
-      
-      // Update net totals (difference from lowest - winners positive, losers negative)
-      const minDots = Math.min(...totals);
-      for(let p=0; p<playerCount; p++){
-        const el = document.getElementById(`junkNetP${p+1}`);
-        if(!el) continue;
-        const netPos = totals[p] - minDots;
-        if(netPos === 0) {
-          el.textContent = '0';
-        } else if(netPos > 0) {
-          el.textContent = `+${netPos}`;
-        } else {
-          el.textContent = netPos;
-        }
-      }
     }
   };
 
@@ -272,19 +257,6 @@
         totalsRow.appendChild(td);
       }
       tfoot.appendChild(totalsRow);
-      
-      // Net Totals row
-      const netRow = document.createElement('tr');
-      const netLabel = document.createElement('td');
-      netLabel.innerHTML = '<strong>Net Totals</strong>';
-      netRow.appendChild(netLabel);
-      for(let p=0; p<playerCount; p++){
-        const td = document.createElement('td');
-        td.id = `junkNetP${p+1}`;
-        td.textContent = '—';
-        netRow.appendChild(td);
-      }
-      tfoot.appendChild(netRow);
     }
   }
 
@@ -402,21 +374,6 @@
     for(let i=0; i<players; i++){
       const el = document.getElementById(`junkTotP${i+1}`);
       if(el) el.textContent = totals[i];
-    }
-
-    // Calculate net totals (difference from lowest - winners positive, losers negative)
-    const minDots = Math.min(...totals);
-    for(let i=0; i<players; i++){
-      const el = document.getElementById(`junkNetP${i+1}`);
-      if(!el) continue;
-      const netPos = totals[i] - minDots;
-      if(netPos === 0) {
-        el.textContent = '0';
-      } else if(netPos > 0) {
-        el.textContent = `+${netPos}`;
-      } else {
-        el.textContent = netPos;
-      }
     }
   }
 
