@@ -8,19 +8,29 @@
 
 (() => {
   console.log('[golfGames] index.js loaded');
-  // ========== Configuration Constants ==========
+  
+  // =============================================================================
+  // CONFIGURATION CONSTANTS
+  // =============================================================================
+  
+  // Scorecard configuration
   const HOLES = 18;
   const PLAYERS = 4;
-  const LEADING_FIXED_COLS = 2; // Player + CH
-  const NDB_BUFFER = 2; // Net Double Bogey buffer strokes above par
+  const LEADING_FIXED_COLS = 2; // Fixed columns: Player Name + Course Handicap
+  const NDB_BUFFER = 2; // Net Double Bogey: max penalty is par + buffer + strokes
 
-  // ========== COURSE DATABASE ==========
+  // =============================================================================
+  // COURSE DATABASE
+  // =============================================================================
+  // 
   // ★ TO ADD A NEW COURSE:
-  // 1. Add an entry below with a unique ID (lowercase, no spaces)
-  // 2. Provide the course name (displayed in dropdown)
-  // 3. Add pars for holes 1-18 (must be exactly 18 values)
-  // 4. Add handicap index (HCP) for holes 1-18 (must be exactly 18 values, typically 1-18)
-  //    HCP 1 = hardest hole, HCP 18 = easiest hole
+  // 1. Add an entry with a unique ID (lowercase, no spaces)
+  // 2. Provide the course name (displayed in dropdown selector)
+  // 3. Add pars array for holes 1-18 (must be exactly 18 values)
+  // 4. Add handicap index array (HCP) for holes 1-18 (values 1-18)
+  //    • HCP 1 = hardest hole (most strokes given)
+  //    • HCP 18 = easiest hole (fewest strokes given)
+  // 
   // The course will automatically appear in the dropdown selector.
   const COURSES = {
     'manito': {
@@ -51,14 +61,31 @@
   window.PARS = PARS;
   window.HCPMEN = HCPMEN;
 
-  // ---------- DOM helpers ----------
+  // =============================================================================
+  // DOM HELPERS & UTILITIES
+  // =============================================================================
+  
+  /** Query selector shorthand - returns single element */
   const $  = (s, el=document) => el.querySelector(s);
+  
+  /** Query selector all shorthand - returns array of elements */
   const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
-  const sum = a => a.reduce((x,y)=>x+(Number(y)||0),0);
+  
+  /** Sum an array of values, treating non-numbers as 0 */
+  const sum = a => a.reduce((x,y) => x + (Number(y) || 0), 0);
+  
+  /** Clamp an integer value between min and max bounds */
   const clampInt = (v, min, max) => Math.max(min, Math.min(max, Number.isFinite(+v) ? Math.trunc(+v) : min));
 
-  // ---------- Shared game helpers ----------
-  /** Get par value for a specific hole (1-based index) */
+  // =============================================================================
+  // SHARED GAME HELPERS
+  // =============================================================================
+  
+  /**
+   * Get par value for a specific hole
+   * @param {number} hole - Hole number (1-based index)
+   * @returns {number} Par value or NaN if not found
+   */
   function getParForHole(hole){
     let el = document.querySelector(`#parRow input[data-hole="${hole}"]`);
     if(!el){
@@ -69,7 +96,12 @@
     return Number.isFinite(v) ? v : NaN;
   }
 
-  /** Get score for a player on a specific hole (0-based player index, 1-based hole) */
+  /**
+   * Get score for a player on a specific hole
+   * @param {number} playerIdx - Player index (0-based)
+   * @param {number} hole - Hole number (1-based)
+   * @returns {number} Score value or NaN if not found
+   */
   function getScoreForPlayer(playerIdx, hole){
     let el = document.querySelector(`.score-input[data-player="${playerIdx}"][data-hole="${hole}"]`);
     if(!el){
@@ -83,7 +115,10 @@
     return Number.isFinite(v) ? v : NaN;
   }
 
-  /** Get player names from name inputs */
+  /**
+   * Get player names from name inputs
+   * @returns {string[]} Array of 4 player names (or default "Player N")
+   */
   function getPlayerNames(){
     const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
     return [0,1,2,3].map((i)=>{
@@ -92,7 +127,14 @@
     });
   }
 
-  // Small app manager to centralize cross-game recomputes
+  // =============================================================================
+  // APP MANAGER - Central coordination for game recalculations
+  // =============================================================================
+  
+  /**
+   * Central manager to coordinate recalculations across all game modes
+   * Ensures Vegas, Skins, and Junk stay in sync when scores change
+   */
   const AppManager = {
     recalcGames(){
       try{ vegas_recalc(); }catch(e){ console.warn('vegas_recalc failed', e); }
@@ -105,8 +147,8 @@
 
   const ids = {
     holesHeader:"#holesHeader",parRow:"#parRow",hcpRow:"#hcpRow",totalsRow:"#totalsRow",
-    table:"#scorecard",courseName:"#courseName",teeName:"#teeName",
-    resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",printBtn:"#printBtn",saveStatus:"#saveStatus",
+    table:"#scorecard",
+    resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
     toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleBankerVegas:"#toggleBankerVegas",
@@ -138,7 +180,15 @@
     ["Out","In","Total","To Par","Net"].forEach(label=>{ const th=document.createElement("th"); th.textContent=label; header.appendChild(th); });
   }
 
-  // ---------- Course switching ----------
+  // =============================================================================
+  // COURSE SWITCHING
+  // =============================================================================
+  
+  /**
+   * Switch to a different golf course
+   * Updates pars, handicaps, and triggers recalculation of all scores
+   * @param {string} courseId - Course ID from COURSES database
+   */
   function switchCourse(courseId){
     if(!COURSES[courseId]) {
       console.error(`Course ${courseId} not found`);
@@ -210,7 +260,15 @@
     updateParBadge();
   }
 
-  // ---------- Par & HCP rows (locked) ----------
+  // =============================================================================
+  // SCORECARD: PAR & HANDICAP ROWS
+  // =============================================================================
+  
+  /**
+   * Build and populate Par and Handicap rows (read-only)
+   * Par row shows course par for each hole plus front/back/total
+   * HCP row shows stroke index (1-18) for each hole
+   */
   function buildParAndHcpRows(){
     const parRow=$(ids.parRow), hcpRow=$(ids.hcpRow);
     for(let h=1;h<=HOLES;h++){
@@ -231,7 +289,14 @@
     for(let i=0;i<5;i++){ hcpRow.appendChild(document.createElement("td")); }
   }
 
-  // ---------- Player rows ----------
+  // =============================================================================
+  // SCORECARD: PLAYER ROWS
+  // =============================================================================
+  
+  /**
+   * Build interactive player rows with name, handicap, and score inputs
+   * Includes auto-advance functionality and real-time calculation
+   */
   function buildPlayerRows(){
     const tbody=$(ids.table).tBodies[0];
     for(let p=0;p<PLAYERS;p++){
@@ -281,7 +346,13 @@
     }
   }
 
-  // ---------- Totals row ----------
+  // =============================================================================
+  // SCORECARD: TOTALS ROW
+  // =============================================================================
+  
+  /**
+   * Build totals row showing sum of all player scores per hole
+   */
   function buildTotalsRow(){
     const totalsRow=$(ids.totalsRow);
     for(let h=1;h<=HOLES;h++){
@@ -299,10 +370,15 @@
     el.textContent = `Par — Out ${parFront} • In ${parBack} • Total ${parTot}`;
   }
 
-  // ========== Handicap & Scoring Logic ==========
+  // =============================================================================
+  // HANDICAP & SCORING LOGIC
+  // =============================================================================
+  // Uses "play off low" system: all handicaps adjusted relative to lowest player
+  
   /**
-   * Calculate adjusted handicaps using "play off low" system.
-   * @returns {number[]} Array of adjusted handicaps (lowest player gets 0)
+   * Calculate adjusted handicaps using "play off low" system
+   * The lowest handicap player gets 0, others get the difference
+   * @returns {number[]} Array of 4 adjusted handicaps (minimum is always 0)
    */
   function adjustedCHs(){
     const chs=$$(".player-row").map(r=>{ const v=Number($(".ch-input",r)?.value); return Number.isFinite(v)?v:0; });
@@ -384,12 +460,14 @@
   }
   function recalcAll(){ $$(".player-row").forEach(recalcRow); recalcTotalsRow(); }
 
-  // ---------- Persistence ----------
-  const STORAGE_KEY="golf_scorecard_v5";
+  // =============================================================================
+  // PERSISTENCE - LocalStorage save/load
+  // =============================================================================
+  
+  const STORAGE_KEY = "golf_scorecard_v5";
   function saveState(){
     const state={
       course: ACTIVE_COURSE,
-      courseName:$(ids.courseName)?.value||"", teeName:$(ids.teeName)?.value||"",
       players:$$(".player-row").map(row=>({ name:$(".name-edit",row).value||"", ch:$(".ch-input",row).value||"", scores:$$("input.score-input",row).map(i=>i.value) })),
       vegas:{ teams:vegas_getTeamAssignments(), opts:vegas_getOptions(), open: $(ids.vegasSection).classList.contains("open") },
       banker:{ open: $(ids.bankerSection).classList.contains("open") },
@@ -413,7 +491,6 @@
         }
       }
       
-      $(ids.courseName).value=s.courseName||""; $(ids.teeName).value=s.teeName||"";
       const rows=$$(".player-row");
       s.players?.forEach((p,i)=>{ const r=rows[i]; if(!r) return; $(".name-edit",r).value=p.name||""; $(".ch-input",r).value=p.ch??""; const ins=$$("input.score-input",r); p.scores?.forEach((v,j)=>{ if(ins[j]) ins[j].value=v; }); });
       recalcAll();
@@ -440,15 +517,19 @@
 
   function clearScoresOnly(){ $$("input.score-input").forEach(i=>{i.value="";i.classList.remove("invalid");}); recalcAll(); AppManager.recalcGames(); announce("Scores cleared."); }
   function clearAll(){
-    $(ids.courseName).value=""; $(ids.teeName).value="";
     $$(".player-row").forEach(r=>{ $(".name-edit",r).value=""; $(".ch-input",r).value=""; $$("input.score-input",r).forEach(i=>{i.value="";i.classList.remove("invalid");}); });
     recalcAll(); vegas_renderTeamControls(); vegas_recalc(); announce("All fields cleared.");
   }
   function announce(t){ const el=$(ids.saveStatus); el.textContent=t; el.style.opacity="1"; setTimeout(()=>{el.style.opacity="0.75";},1200); }
 
-  // ======================================================================
-  // =============================== GAMES UI ==============================
-  // ======================================================================
+  // =============================================================================
+  // GAMES UI - Toggle game sections (Vegas, Banker, Skins, Junk)
+  // =============================================================================
+  
+  /**
+   * Open a game section and make it visible
+   * @param {string} which - Game section: 'vegas', 'banker', 'skins', or 'bankervegas'
+   */
   function games_open(which){
     if(which==="vegas"){ $(ids.vegasSection).classList.add("open"); $(ids.vegasSection).setAttribute("aria-hidden","false"); $(ids.toggleVegas).classList.add("active"); }
     if(which==="banker"){ $(ids.bankerSection).classList.add("open"); $(ids.bankerSection).setAttribute("aria-hidden","false"); $(ids.toggleBanker).classList.add("active"); }
@@ -531,10 +612,17 @@
   });
 })();
 
-  // ======================================================================
-  // =============================== VEGAS ================================
-  // ======================================================================
-  // Lightweight module to separate Vegas compute from render
+  // =============================================================================
+  // VEGAS GAME MODE
+  // =============================================================================
+  // Team-based golf game: pairs of players form two teams
+  // Scores combined into 2-digit numbers (e.g., 4+5 = "45")
+  // Lower combined score wins, with multipliers for birdies/eagles
+  // Opponent's digits flip on birdie+ (e.g., 45 becomes 54)
+  
+  /**
+   * Vegas game logic module - separates computation from rendering
+   */
   const Vegas = {
     /**
      * Compute per-hole and total Vegas results.
@@ -700,9 +788,11 @@
   // Lightweight module to separate Banker compute from render
   // All Banker logic removed; section remains as empty stub.
 
-  // ======================================================================
-  // =============================== CSV I/O ==============================
-  // ======================================================================
+  // =============================================================================
+  // CSV IMPORT/EXPORT
+  // =============================================================================
+  // Import scorecard data from CSV files
+  // Export template CSV for easy data entry
   function parseCSV(text) {
     const rows = [];
     let row = [], field = "", inQuotes = false;
@@ -788,9 +878,16 @@
     setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
 
-  // ======================================================================
-  // ============================= INIT / WIRING ==========================
-  // ======================================================================
+  // =============================================================================
+  // INITIALIZATION & EVENT WIRING
+  // =============================================================================
+  
+  /**
+   * Initialize the application:
+   * - Build scorecard structure
+   * - Wire up all event listeners
+   * - Load saved state from localStorage
+   */
   function init(){
     console.log('[golfGames] init start');
     buildHeader(); buildParAndHcpRows(); buildPlayerRows(); buildTotalsRow(); updateParBadge();
@@ -798,19 +895,8 @@
   $(ids.resetBtn).addEventListener("click", () => { console.log('[golfGames] Reset clicked'); clearScoresOnly(); });
   $(ids.clearAllBtn).addEventListener("click", () => { console.log('[golfGames] Clear all clicked'); clearAll(); });
   $(ids.saveBtn).addEventListener("click", () => { console.log('[golfGames] Save clicked'); saveState(); });
-      $(ids.printBtn).addEventListener("click", () => { 
-      console.log('[golfGames] Print button clicked'); 
-        if(window.printScorecard) { 
-        console.log('[golfGames] Calling printScorecard');
-          window.printScorecard(); 
-        } else {
-        console.error('[golfGames] printScorecard function not found');
-        }
-      });
-    $(ids.courseName).addEventListener("input", saveDebounced);
-    $(ids.teeName).addEventListener("input", saveDebounced);
 
-    // Course selector - populate options and wire up
+  // Course selector - populate options and wire up
     const courseSelect = $('#courseSelect');
     if(courseSelect){
       // Clear existing options and populate from COURSES
@@ -861,10 +947,14 @@
   document.addEventListener("DOMContentLoaded", init);
 
 
-// ============================
-// Skins game
-// ============================
-// Lightweight module to separate compute from render for maintainability.
+// =============================================================================
+// SKINS GAME MODE
+// =============================================================================
+// Net-score competition: lowest net score on each hole wins a "skin"
+// Tied holes carry forward (pot increases)
+// Supports half-pops mode (0.5 strokes instead of 1)
+// 
+// Lightweight module to separate computation from rendering for maintainability.
 const Skins = {
   /**
    * Compute skins outcome for all holes and players.
@@ -1033,9 +1123,16 @@ document.addEventListener('DOMContentLoaded', ()=>{
 })();
 
 
-// -----------------------------
-// JUNK (Dots) — Setup & Logic
-// -----------------------------
+// =============================================================================
+// JUNK (DOTS) GAME MODE
+// =============================================================================
+// Points-based game: earn dots for good scores
+// • Eagle or better: 4 dots
+// • Birdie: 2 dots
+// • Par: 1 dot
+// • Bogey or worse: 0 dots
+// 
+// Includes achievements system (Hogan, Sandy, Sadaam, Pulley, Triple)
 (function(){
   const HOLES = 18; // adjust if you support 9/27/etc.
 
@@ -1216,10 +1313,17 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
 })();
 
 
-// =============================================
-// JUNK Achievements Enhancement (Hogan/Sandy/Sadaam/Pulley + Triple)
-// Weighted achievements support (+1, +2, +3, ...).
-// =============================================
+// =============================================================================
+// JUNK ACHIEVEMENTS ENHANCEMENT
+// =============================================================================
+// Weighted bonus achievements:
+// • Hogan: +1 point
+// • Sandy: +1 point
+// • Sadaam: +1 point
+// • Pulley: +1 point
+// • Triple: +3 points
+// 
+// Each hole can have multiple achievements for bonus scoring
 (function(){
   // Each achievement has an id, label, and point value.
   // You can change pts to 2 for any of these if needed.
@@ -1421,9 +1525,11 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
 })();
 
 
-// ============================
-// Vegas B Total & UI Tweaks
-// ============================
+// =============================================================================
+// VEGAS TEAM B TOTALS & DOLLAR CALCULATIONS
+// =============================================================================
+// Automatically mirror Team A totals to show Team B (negative)
+// Calculate dollar amounts based on point value
 (function(){
   function findVegasATotalEl(){
     const cands = ['vegasPtsA','vegasTotalA','vegasSumA'];
@@ -1514,433 +1620,3 @@ document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
   });
 })();
 
-// ============================
-// Junk: ensure dropdown stays large enough on touch
-// (CSS handled in <style>, logic already present.)
-// ============================
-
-// ============================
-// PRINT SCORECARD FUNCTIONALITY
-// ============================
-// Print function - will be called from the button click handler above
-function printScorecard() {
-  console.log('printScorecard function called');
-  // Gather all data
-  const courseName = document.getElementById('courseName')?.value || 'Golf Course';
-  const teeName = document.getElementById('teeName')?.value || '';
-  const date = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const time = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  
-  // Get player data
-  const players = Array.from(document.querySelectorAll('.player-row')).map(row => ({
-    name: row.querySelector('.name-edit')?.value || 'Player',
-    ch: row.querySelector('.ch-input')?.value || '0',
-    scores: Array.from(row.querySelectorAll('input.score-input')).map(i => i.value || '—'),
-  }));
-
-  // Get pars
-  const pars = Array.from(document.querySelectorAll('#parRow input[type="number"]')).map(i => i.value);
-  
-  // Calculate player totals
-  const playerTotals = players.map(p => {
-    const scores = p.scores.map(s => Number(s) || 0);
-    const out = scores.slice(0, 9).reduce((a, b) => a + b, 0);
-    const inn = scores.slice(9, 18).reduce((a, b) => a + b, 0);
-    const total = out + inn;
-    const parTotal = pars.reduce((a, b) => Number(a) + Number(b), 0);
-    const toPar = total && parTotal ? total - parTotal : 0;
-    const net = document.querySelector(`.player-row[data-player="${players.indexOf(p)}"] .net`)?.textContent || '—';
-    return { ...p, out, inn, total, toPar, net };
-  });
-
-  // Build HTML for print
-  let html = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Golf Scorecard</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, sans-serif; color: #000; background: #fff; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 15px; }
-        .header h1 { font-size: 24px; margin: 0; }
-        .header p { font-size: 12px; color: #555; margin: 5px 0 0 0; }
-        .scorecard { width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 11px; }
-        .scorecard th { background: #eee; border: 1px solid #999; padding: 6px; font-weight: bold; text-align: center; }
-        .scorecard td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-        .scorecard td:first-child { text-align: left; font-weight: 500; }
-        .scorecard tfoot td { background: #f5f5f5; font-weight: bold; border-top: 2px solid #999; }
-        .games { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-        .game-box { border: 1px solid #ccc; padding: 15px; background: #f9f9f9; page-break-inside: avoid; }
-        .game-box h3 { font-size: 14px; margin: 0 0 10px 0; border-bottom: 1px solid #999; padding-bottom: 5px; }
-        .game-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 10px; }
-        .game-table th, .game-table td { border: 1px solid #ccc; padding: 4px; text-align: left; }
-        .game-table th { background: #eee; font-weight: bold; }
-        .footer { text-align: center; font-size: 10px; color: #999; margin-top: 40px; padding-top: 20px; border-top: 1px solid #ccc; }
-        @media print {
-          body { padding: 0; }
-          .container { max-width: 100%; }
-        }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>Manito Golf Games Scorecard</h1>
-          <p><strong>${courseName}</strong>${teeName ? ` • ${teeName}` : ''}</p>
-          <p>${date} at ${time}</p>
-        </div>
-
-        <table class="scorecard">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>CH</th>
-              ${Array.from({ length: 18 }, (_, i) => `<th>${i + 1}</th>`).join('')}
-              <th>Out</th>
-              <th>In</th>
-              <th>Total</th>
-              <th>To Par</th>
-              <th>Net</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Par</strong></td>
-              <td>—</td>
-              ${pars.map(p => `<td>${p}</td>`).join('')}
-              <td colspan="4"></td>
-            </tr>
-            ${playerTotals.map(p => `
-              <tr>
-                <td><strong>${p.name}</strong></td>
-                <td>${p.ch}</td>
-                ${p.scores.map(s => `<td>${s}</td>`).join('')}
-                <td>${p.out || '—'}</td>
-                <td>${p.inn || '—'}</td>
-                <td>${p.total || '—'}</td>
-                <td>${p.total ? (p.toPar === 0 ? 'E' : (p.toPar > 0 ? `+${p.toPar}` : p.toPar)) : '—'}</td>
-                <td>${p.net}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-
-        <div class="games">
-          ${getVegasHtml()}
-          
-          ${getSkinsHtml()}
-          ${getJunkHtml()}
-        </div>
-
-        <div class="footer">
-          <p>Printed from Manito Golf Games • ${date}</p>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
-
-  // Open print window
-  const printWindow = window.open('', '', 'width=900,height=800');
-  printWindow.document.write(html);
-  printWindow.document.close();
-  printWindow.focus();
-  setTimeout(() => printWindow.print(), 250);
-}
-
-function getVegasHtml() {
-  const vegasSection = document.getElementById('vegasSection');
-  if (!vegasSection?.classList.contains('open')) return '';
-  
-  const teamA = Array.from(document.querySelectorAll('input[name^="vegasTeam_"][value="A"]:checked')).map(inp => {
-    const idx = inp.name.match(/\d+/)[0];
-    const row = document.querySelectorAll('.player-row')[idx];
-    return row?.querySelector('.name-edit')?.value || `Player ${Number(idx) + 1}`;
-  });
-  
-  const teamB = Array.from(document.querySelectorAll('input[name^="vegasTeam_"][value="B"]:checked')).map(inp => {
-    const idx = inp.name.match(/\d+/)[0];
-    const row = document.querySelectorAll('.player-row')[idx];
-    return row?.querySelector('.name-edit')?.value || `Player ${Number(idx) + 1}`;
-  });
-  
-  const ptsA = document.getElementById('vegasPtsA')?.textContent || '—';
-  const totalA = document.getElementById('vegasTotalA')?.textContent || '—';
-  const totalB = document.getElementById('vegasTotalB')?.textContent || '—';
-  const perStr = (document.getElementById('vegasPointValue')?.value || '').trim();
-  let per = Number.parseFloat(perStr);
-  if(!Number.isFinite(per) || per < 0) per = 0;
-  const ptsANum = (ptsA && /[-+]?\d+/.test(ptsA)) ? parseInt(ptsA,10) : null;
-  const dollarsA = ptsANum===null? null : +(ptsANum * per).toFixed(2);
-  const dollarsB = dollarsA===null? null : -dollarsA;
-  const fmt = v => v===null? '—' : (v>0? `+$${v.toFixed(2)}` : (v<0? `-$${Math.abs(v).toFixed(2)}` : `$${v.toFixed(2)}`));
-
-  return `
-    <div class="game-box">
-      <h3>Vegas Game</h3>
-      <table class="game-table">
-        <tr><td><strong>Team A:</strong></td><td>${teamA.join(', ')}</td></tr>
-        <tr><td><strong>Team B:</strong></td><td>${teamB.join(', ')}</td></tr>
-        <tr><td><strong>Team A Gross:</strong></td><td>${totalA}</td></tr>
-        <tr><td><strong>Team B Gross:</strong></td><td>${totalB}</td></tr>
-        <tr><td><strong>Team A Points:</strong></td><td style="font-weight: bold; color: #090;">${ptsA}</td></tr>
-        <tr><td><strong>$/point:</strong></td><td>$${per.toFixed(2)}</td></tr>
-        <tr><td><strong>Team A $:</strong></td><td>${fmt(dollarsA)}</td></tr>
-        <tr><td><strong>Team B $:</strong></td><td>${fmt(dollarsB)}</td></tr>
-      </table>
-    </div>
-  `;
-}
-
-// Banker print block removed (game stubbed)
-
-function getSkinsHtml() {
-  const skinsSection = document.getElementById('skinsSection');
-  if (!skinsSection?.classList.contains('open')) return '';
-  
-  const players = Array.from(document.querySelectorAll('.player-row')).map(r => r.querySelector('.name-edit')?.value || 'Player');
-  const tots = [
-    document.getElementById('skinsTotal0')?.textContent || '0',
-    document.getElementById('skinsTotal1')?.textContent || '0',
-    document.getElementById('skinsTotal2')?.textContent || '0',
-    document.getElementById('skinsTotal3')?.textContent || '0',
-  ];
-
-  return `
-    <div class="game-box">
-      <h3>Skins Game</h3>
-      <table class="game-table">
-        ${tots.map((t, i) => `<tr><td>${players[i]}</td><td><strong>${t}</strong></td></tr>`).join('')}
-      </table>
-    </div>
-  `;
-}
-
-function getJunkHtml() {
-  const junkSection = document.getElementById('junkSection');
-  if (!junkSection?.classList.contains('open')) return '';
-  
-  const players = Array.from(document.querySelectorAll('.player-row')).map(r => r.querySelector('.name-edit')?.value || 'Player');
-  const tots = [
-    document.getElementById('junkTotP1')?.textContent || '0',
-    document.getElementById('junkTotP2')?.textContent || '0',
-    document.getElementById('junkTotP3')?.textContent || '0',
-    document.getElementById('junkTotP4')?.textContent || '0',
-  ];
-
-  return `
-    <div class="game-box">
-      <h3>Junk (Dots)</h3>
-      <table class="game-table">
-        ${tots.map((t, i) => `<tr><td>${players[i]}</td><td><strong>${t}</strong></td></tr>`).join('')}
-      </table>
-    </div>
-  `;
-}
-
-// ============================
-// PRINT SCORECARD & GAMES
-// ============================
-(function(){
-  function generatePrintPage(){
-    const courseName = document.getElementById('courseName')?.value || 'Golf Course';
-    const teeName = document.getElementById('teeName')?.value || '';
-    const timestamp = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    
-    const playerRows = Array.from(document.querySelectorAll('.player-row'));
-    const players = playerRows.map((row, idx) => ({
-      idx,
-      name: row.querySelector('.name-edit')?.value || `Player ${idx+1}`,
-      ch: row.querySelector('.ch-input')?.value || '0',
-      scores: Array.from(row.querySelectorAll('.score-input')).map(i => i.value || '—'),
-    }));
-
-    // Build HTML for print
-    let html = `
-    <div class="print-container">
-      <div class="print-header">
-        <h1>Manito Golf Games</h1>
-        <p><strong>${courseName}</strong>${teeName ? ` • ${teeName} Tee` : ''}</p>
-        <p>${timestamp}</p>
-      </div>
-
-      <div class="print-section">
-        <h2>Scorecard</h2>
-        <table class="print-table">
-          <thead>
-            <tr>
-              <th>Player</th>
-              <th>CH</th>
-              ${Array.from({length:18}, (_,i) => `<th>${i+1}</th>`).join('')}
-              <th>Out</th>
-              <th>In</th>
-              <th>Total</th>
-              <th>To Par</th>
-              <th>Net</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><strong>Par</strong></td>
-              <td>—</td>
-              ${Array.from({length:18}, (_,i) => `<td>${window.PARS ? window.PARS[i] : '—'}</td>`).join('')}
-              <td colspan="4"></td>
-            </tr>`;
-    
-    players.forEach(p => {
-      const scoreInputs = Array.from(document.querySelectorAll(`.player-row[data-player="${p.idx}"] .score-input`));
-      const scores = scoreInputs.map(i => Number(i.value) || 0);
-      const out = scores.slice(0, 9).reduce((a,b) => a+b, 0);
-      const inn = scores.slice(9, 18).reduce((a,b) => a+b, 0);
-      const total = out + inn;
-      const parTotal = window.PARS ? window.PARS.reduce((a,b) => a+b, 0) : 0;
-      const toPar = total && parTotal ? total - parTotal : 0;
-      const toParStr = toPar === 0 ? 'E' : (toPar > 0 ? `+${toPar}` : `${toPar}`);
-      const netEl = document.querySelector(`.player-row[data-player="${p.idx}"] .net`);
-      const net = netEl?.textContent || '—';
-
-      html += `
-            <tr>
-              <td><strong>${p.name}</strong></td>
-              <td>${p.ch}</td>
-              ${scores.map((s, i) => `<td>${s || '—'}</td>`).join('')}
-              <td>${out || '—'}</td>
-              <td>${inn || '—'}</td>
-              <td>${total || '—'}</td>
-              <td>${total ? toParStr : '—'}</td>
-              <td>${net}</td>
-            </tr>`;
-    });
-
-    html += `</tbody></table></div>`;
-
-    // Games section
-    html += `<div class="print-games-grid">`;
-
-    // Vegas
-    const vegasSection = document.getElementById('vegasSection');
-    if(vegasSection?.classList.contains('open')){
-      const vegasTeamA = document.querySelectorAll('input[name^="vegasTeam_"][value="A"]:checked');
-      const vegasTeamB = document.querySelectorAll('input[name^="vegasTeam_"][value="B"]:checked');
-      const teamANames = Array.from(vegasTeamA).map((_, i) => {
-        const playerRow = Array.from(document.querySelectorAll('.player-row'))[i];
-        return playerRow?.querySelector('.name-edit')?.value || `Player ${i+1}`;
-      }).filter((_, i) => document.querySelector(`input[name="vegasTeam_${i}"][value="A"]`)?.checked);
-      const teamBNames = Array.from(vegasTeamB).map((_, i) => {
-        const playerRow = Array.from(document.querySelectorAll('.player-row'))[i];
-        return playerRow?.querySelector('.name-edit')?.value || `Player ${i+1}`;
-      }).filter((_, i) => document.querySelector(`input[name="vegasTeam_${i}"][value="B"]`)?.checked);
-
-      const vegasPtsA = document.getElementById('vegasPtsA')?.textContent || '—';
-      const vegasTotalA = document.getElementById('vegasTotalA')?.textContent || '—';
-      const vegasTotalB = document.getElementById('vegasTotalB')?.textContent || '—';
-
-      html += `
-      <div class="print-game-box">
-        <h3>Vegas Game</h3>
-        <p><strong>Team A:</strong> ${teamANames.join(', ')}</p>
-        <p><strong>Team B:</strong> ${teamBNames.join(', ')}</p>
-        <p><strong>Team A Gross:</strong> ${vegasTotalA}</p>
-        <p><strong>Team B Gross:</strong> ${vegasTotalB}</p>
-        <p style="font-size: 14px; font-weight: bold; color: #090;"><strong>Team A Points:</strong> ${vegasPtsA}</p>
-      </div>`;
-    }
-
-    // Banker: removed from print (stub only)
-
-    // Skins
-    const skinsSection = document.getElementById('skinsSection');
-    if(skinsSection?.classList.contains('open')){
-      const skinsTotP1 = document.getElementById('skinsTotal0')?.textContent || '0';
-      const skinsTotP2 = document.getElementById('skinsTotal1')?.textContent || '0';
-      const skinsTotP3 = document.getElementById('skinsTotal2')?.textContent || '0';
-      const skinsTotP4 = document.getElementById('skinsTotal3')?.textContent || '0';
-
-      html += `
-      <div class="print-game-box">
-        <h3>Skins Game</h3>
-        <table class="print-table" style="font-size: 10px;">
-          <tr>
-            <td>${players[0]?.name || 'P1'}</td><td><strong>${skinsTotP1}</strong></td>
-          </tr>
-          <tr>
-            <td>${players[1]?.name || 'P2'}</td><td><strong>${skinsTotP2}</strong></td>
-          </tr>
-          <tr>
-            <td>${players[2]?.name || 'P3'}</td><td><strong>${skinsTotP3}</strong></td>
-          </tr>
-          <tr>
-            <td>${players[3]?.name || 'P4'}</td><td><strong>${skinsTotP4}</strong></td>
-          </tr>
-        </table>
-      </div>`;
-    }
-
-    // Junk
-    const junkSection = document.getElementById('junkSection');
-    if(junkSection?.classList.contains('open')){
-      const junkTotP1 = document.getElementById('junkTotP1')?.textContent || '0';
-      const junkTotP2 = document.getElementById('junkTotP2')?.textContent || '0';
-      const junkTotP3 = document.getElementById('junkTotP3')?.textContent || '0';
-      const junkTotP4 = document.getElementById('junkTotP4')?.textContent || '0';
-
-      html += `
-      <div class="print-game-box">
-        <h3>Junk (Dots)</h3>
-        <table class="print-table" style="font-size: 10px;">
-          <tr>
-            <td>${players[0]?.name || 'P1'}</td><td><strong>${junkTotP1}</strong></td>
-          </tr>
-          <tr>
-            <td>${players[1]?.name || 'P2'}</td><td><strong>${junkTotP2}</strong></td>
-          </tr>
-          <tr>
-            <td>${players[2]?.name || 'P3'}</td><td><strong>${junkTotP3}</strong></td>
-          </tr>
-          <tr>
-            <td>${players[3]?.name || 'P4'}</td><td><strong>${junkTotP4}</strong></td>
-          </tr>
-        </table>
-      </div>`;
-    }
-
-    html += `</div>`;
-
-    html += `
-      <div class="print-footer">
-        <p>Printed from Manito Golf Games • ${timestamp}</p>
-      </div>
-    </div>`;
-
-    return html;
-  }
-
-  // Create printScorecard function that can be called from init
-  function printScorecard(){
-    const printPage = document.getElementById('printPage');
-    if(!printPage) {
-      console.error('Print page element not found');
-      return;
-    }
-    printPage.innerHTML = generatePrintPage();
-    printPage.style.display = 'block';
-    
-    // Trigger print dialog
-    setTimeout(() => {
-      window.print();
-      // Optionally hide after print
-      setTimeout(() => {
-        printPage.style.display = 'none';
-      }, 500);
-    }, 100);
-  }
-
-  // Make functions and PARS accessible globally
-  window.printScorecard = printScorecard;
-  window.PARS = [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4];
-
-})();
