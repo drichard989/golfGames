@@ -794,20 +794,25 @@ const Skins = {
   }
 };
 function strokesOnHoleHalfAware(adjCH, i, half){
-  if(adjCH<=0) return 0;
   const holeHcp=HCPMEN[i];
   
-  if(half){
-    // Half pops: player gets strokes on half as many holes
-    // e.g., 4 handicap gets strokes on HCP 1-2 only (not 1-4)
-    const halfStrokes = Math.floor(adjCH / 2);
-    const base=Math.floor(halfStrokes/18), rem=halfStrokes%18;
-    return base+(holeHcp<=rem?1:0);
-  } else {
-    // Full strokes: standard allocation across all 18 holes
-    const base=Math.floor(adjCH/18), rem=adjCH%18;
-    return base+(holeHcp<=rem?1:0);
+  // Handle plus handicaps (negative adjCH means player gives strokes)
+  if(adjCH < 0) {
+    const absAdj = Math.abs(adjCH);
+    const base=Math.floor(absAdj/18), rem=absAdj%18;
+    const fullStrokes = base+(holeHcp<=rem?1:0);
+    // Half pops: give 0.5 strokes instead of 1
+    return half ? -(fullStrokes * 0.5) : -fullStrokes;
   }
+  
+  if(adjCH === 0) return 0;
+  
+  // Calculate full strokes normally
+  const base=Math.floor(adjCH/18), rem=adjCH%18;
+  const fullStrokes = base+(holeHcp<=rem?1:0);
+  
+  // Half pops: get 0.5 strokes instead of 1
+  return half ? (fullStrokes * 0.5) : fullStrokes;
 }
 /**
  * Calculate net score for Skins game with optional half-pops.
@@ -821,6 +826,8 @@ function getNetForSkins(playerIdx, holeIdx, half){
   const gross = getGross(playerIdx, holeIdx);
   if(!gross) return 0;
   const adj = adjCHsArr[playerIdx];
+  // For plus handicaps (negative adj), player gives strokes
+  // In half pops, they should still give the same strokes (no half logic for plus)
   const sr = strokesOnHoleHalfAware(adj, holeIdx, half);
   const ndb = PARS[holeIdx] + NDB_BUFFER + sr;
   const adjGross = Math.min(gross, ndb);
