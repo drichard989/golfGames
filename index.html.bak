@@ -1388,11 +1388,7 @@
     </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players “play off” the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     <script src="index.js" defer></script>
-    <script src="js/vegas.js" defer></script>
-    <script src="js/banker.js" defer></script>
-    <script src="js/banker-vegas.js" defer></script>
-    <script src="js/skins.js" defer></script>
-    <script src="js/junk.js" defer></script>
+    <script src="js/junk2.js" defer></script>
     <!-- Inline bootstrap to verify scripts run and to wire a minimal listener as fallback -->
     <script>
       console.log('[golfGames] inline bootstrap script loaded');
