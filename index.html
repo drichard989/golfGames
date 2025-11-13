@@ -1509,6 +1509,22 @@
     
     <!-- PWA Service Worker Registration -->
     <script>
+      // FORCE HARD RELOAD on every PWA open (mimics tap refresh)
+      window.addEventListener('pageshow', (event) => {
+        // If page was restored from cache (iOS back-forward cache), force reload
+        if (event.persisted) {
+          console.log('[PWA] Page from cache, forcing hard reload...');
+          window.location.reload();
+        }
+      });
+      
+      // Force hard reload on first load if not already done
+      if (!sessionStorage.getItem('pwa_reloaded')) {
+        console.log('[PWA] First load, forcing hard reload...');
+        sessionStorage.setItem('pwa_reloaded', 'true');
+        window.location.reload(true); // Hard reload
+      }
+      
       if ('serviceWorker' in navigator) {
         let refreshing = false;
         
