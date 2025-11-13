@@ -577,7 +577,7 @@ tfoot td {
 .banker-table th,
 .banker-table td {
   border-bottom: 1px solid var(--line);
-  padding: var(--space-sm) 10px;
+  padding: var(--space-xs) var(--space-sm);
   text-align: center;
   white-space: nowrap;
 }
@@ -608,10 +608,10 @@ tfoot td {
 .vegas-table td:first-child,
 .banker-table th:first-child,
 .banker-table td:first-child {
-  width: var(--table-cell-width);
-  min-width: var(--table-cell-width);
-  padding-left: var(--space-xs);
-  padding-right: var(--space-xs);
+  width: 40px;
+  min-width: 40px;
+  padding-left: 4px;
+  padding-right: 4px;
   position: sticky;
   left: 0;
   background-color: var(--panel);
@@ -646,7 +646,8 @@ tfoot td {
 
 #junkTable th:not(:first-child),
 #junkTable td:not(:first-child) {
-  width: 76px;
+  width: 68px;
+  padding: var(--space-xs) 4px;
 }
 
 .junk-dot {
@@ -848,8 +849,10 @@ input[type="text"] {
 /* Mobile landscape / Small tablet (768px and below) */
 @media (max-width: 768px) {
   .banker-table th,
-  .banker-table td {
-    padding: var(--space-sm) 10px;
+  .banker-table td,
+  .vegas-table th,
+  .vegas-table td {
+    padding: var(--space-xs) var(--space-sm);
   }
 
   #junkTable tbody td,
@@ -881,7 +884,8 @@ input[type="text"] {
 
   #junkTable th:not(:first-child),
   #junkTable td:not(:first-child) {
-    width: 76px;
+    width: 68px;
+    padding: var(--space-xs) 4px;
   }
 
   .junk-dd > summary {
