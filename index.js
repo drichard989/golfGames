@@ -1905,18 +1905,25 @@ document.addEventListener('DOMContentLoaded', ()=>{
   // Lightweight module to separate compute from render for Junk (Dots)
   const Junk = {
     /**
-     * Compute base dots per hole and totals for 4 players.
+     * Compute base dots per hole and totals for players.
      * @returns {{perHole:number[][], totals:number[]}}
      */
     compute(){
       const playerCount = document.querySelectorAll('.name-edit').length;
       const perHole = Array.from({length: HOLES}, ()=> Array(playerCount).fill(0));
       const totals = Array(playerCount).fill(0);
+      const useNet = document.getElementById('junkUseNet')?.checked || false;
+      const adjCHs = useNet ? adjustedCHs() : Array(playerCount).fill(0);
+      
       for(let h=1; h<=HOLES; h++){
         const par = getPar(h);
+        const hcpIndex = getHCP(h);
         for(let p=0; p<playerCount; p++){
           const score = getScore(p, h);
-          const d = dotsFor(score, par);
+          // Calculate net score if using NET scoring
+          const strokes = useNet ? strokesOnHole(adjCHs[p], hcpIndex) : 0;
+          const netScore = Number.isFinite(score) ? score - strokes : score;
+          const d = dotsFor(netScore, par);
           perHole[h-1][p] = Number.isFinite(d) ? d : 0;
           totals[p] += Number.isFinite(d) ? d : 0;
         }
@@ -2086,6 +2093,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
   function initJunk(){
     rebuildJunkTableHeader();
     buildJunkTable();
+    
+    // Add event listener for NET scoring toggle
+    const junkUseNet = document.getElementById('junkUseNet');
+    if(junkUseNet){
+      junkUseNet.addEventListener('change', ()=> {
+        updateJunk();
+        saveDebounced();
+      });
+    }
     refreshJunkHeaderNames();
     updateJunk();
 
