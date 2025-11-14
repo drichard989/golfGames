@@ -1261,6 +1261,155 @@
       textTable += '|' + padCenter(String(out || '-'), 5) + '|' + padCenter(String(inn || '-'), 5) + '|' + padCenter(String(total || '-'), 5) + '\n';
     });
     
+    // Add game results sections
+    let hasGames = false;
+    
+    // VEGAS RESULTS
+    const vegasSection = document.getElementById('vegasSection');
+    if(vegasSection && vegasSection.classList.contains('open')) {
+      hasGames = true;
+      textTable += '\n\n';
+      textTable += '='.repeat(60) + '\n';
+      textTable += 'VEGAS GAME RESULTS\n';
+      textTable += '='.repeat(60) + '\n\n';
+      
+      // Vegas options
+      const useNet = document.getElementById('optUseNet')?.checked;
+      const doubleBirdie = document.getElementById('optDoubleBirdie')?.checked;
+      const tripleEagle = document.getElementById('optTripleEagle')?.checked;
+      const pointValue = Number(document.getElementById('vegasPointValue')?.value) || 1;
+      
+      textTable += 'Options:\n';
+      textTable += `  • Use Net (NDB): ${useNet ? 'YES' : 'NO'}\n`;
+      textTable += `  • Double on Birdie: ${doubleBirdie ? 'YES' : 'NO'}\n`;
+      textTable += `  • Triple on Eagle: ${tripleEagle ? 'YES' : 'NO'}\n`;
+      textTable += `  • Point Value: $${pointValue.toFixed(2)}\n\n`;
+      
+      // Vegas team assignments
+      const vegasTeams = document.getElementById('vegasTeams');
+      if(vegasTeams) {
+        const teamInputs = vegasTeams.querySelectorAll('select');
+        const teams = Array.from(teamInputs).map(sel => sel.value);
+        textTable += 'Teams:\n';
+        playerRows.forEach((row, idx) => {
+          const name = row.querySelector('.name-edit')?.value || `Player ${idx+1}`;
+          textTable += `  ${name}: Team ${teams[idx] || 'A'}\n`;
+        });
+        textTable += '\n';
+      }
+      
+      // Vegas results
+      const ptsA = document.getElementById('vegasPtsA')?.textContent || '0';
+      const ptsB = document.getElementById('vegasPtsB')?.textContent || '0';
+      const dollarA = document.getElementById('vegasDollarA')?.textContent || '$0.00';
+      const dollarB = document.getElementById('vegasDollarB')?.textContent || '$0.00';
+      
+      textTable += 'Final Score:\n';
+      textTable += `  Team A: ${ptsA} points (${dollarA})\n`;
+      textTable += `  Team B: ${ptsB} points (${dollarB})\n`;
+    }
+    
+    // SKINS RESULTS
+    const skinsSection = document.getElementById('skinsSection');
+    if(skinsSection && skinsSection.classList.contains('open')) {
+      hasGames = true;
+      textTable += '\n\n';
+      textTable += '='.repeat(60) + '\n';
+      textTable += 'SKINS GAME RESULTS\n';
+      textTable += '='.repeat(60) + '\n\n';
+      
+      // Skins options
+      const skinsCarry = document.getElementById('skinsCarry')?.checked ?? true;
+      const skinsHalf = document.getElementById('skinsHalf')?.checked ?? false;
+      const skinsBuyIn = Number(document.getElementById('skinsBuyIn')?.value) || 10;
+      
+      textTable += 'Options:\n';
+      textTable += `  • Carry Over: ${skinsCarry ? 'YES' : 'NO'}\n`;
+      textTable += `  • Half-Pops: ${skinsHalf ? 'YES' : 'NO'}\n`;
+      textTable += `  • Buy-In: $${skinsBuyIn.toFixed(2)}\n\n`;
+      
+      // Skins results
+      const skinsPot = document.getElementById('skinsPotTot')?.textContent || '$0.00';
+      textTable += `Total Pot: ${skinsPot}\n\n`;
+      textTable += 'Player Winnings:\n';
+      
+      playerRows.forEach((row, idx) => {
+        const name = row.querySelector('.name-edit')?.value || `Player ${idx+1}`;
+        const winnings = document.getElementById(`skinsTotP${idx+1}`)?.textContent || '$0.00';
+        const count = document.getElementById(`skinsP${idx+1}`)?.textContent || '0';
+        textTable += `  ${pad(name, 20)} ${count} skins - ${winnings}\n`;
+      });
+    }
+    
+    // JUNK (DOTS) RESULTS
+    const junkSection = document.getElementById('junkSection');
+    if(junkSection && junkSection.classList.contains('open')) {
+      hasGames = true;
+      textTable += '\n\n';
+      textTable += '='.repeat(60) + '\n';
+      textTable += 'JUNK (DOTS) GAME RESULTS\n';
+      textTable += '='.repeat(60) + '\n\n';
+      
+      // Junk options
+      const junkUseNet = document.getElementById('junkUseNet')?.checked ?? false;
+      const junkPointValue = Number(document.getElementById('junkPointValue')?.value) || 1;
+      
+      textTable += 'Options:\n';
+      textTable += `  • Use Net Scoring: ${junkUseNet ? 'YES' : 'NO'}\n`;
+      textTable += `  • Point Value: $${junkPointValue.toFixed(2)}\n\n`;
+      
+      textTable += 'Scoring:\n';
+      textTable += '  • Eagle: 4 dots\n';
+      textTable += '  • Birdie: 2 dots\n';
+      textTable += '  • Par: 1 dot\n';
+      textTable += '  • Achievements: Bonus points (Hogan, Sandy, etc.)\n\n';
+      
+      // Junk results
+      textTable += 'Player Results:\n';
+      playerRows.forEach((row, idx) => {
+        const name = row.querySelector('.name-edit')?.value || `Player ${idx+1}`;
+        const dotsEl = document.querySelector(`#junkBody tr:nth-child(${idx+1}) td:nth-child(2)`);
+        const dollarsEl = document.querySelector(`#junkBody tr:nth-child(${idx+1}) td:nth-child(3)`);
+        const dots = dotsEl?.textContent?.trim() || '0';
+        const dollars = dollarsEl?.textContent?.trim() || '$0.00';
+        textTable += `  ${pad(name, 20)} ${dots} dots - ${dollars}\n`;
+      });
+    }
+    
+    // HI-LO RESULTS
+    const hiloSection = document.getElementById('hiloSection');
+    if(hiloSection && hiloSection.classList.contains('open')) {
+      hasGames = true;
+      textTable += '\n\n';
+      textTable += '='.repeat(60) + '\n';
+      textTable += 'HI-LO GAME RESULTS\n';
+      textTable += '='.repeat(60) + '\n\n';
+      
+      // Hi-Lo options
+      const hiloUnitValue = Number(document.getElementById('hiloUnitValue')?.value) || 10;
+      
+      textTable += 'Options:\n';
+      textTable += `  • Unit Value: $${hiloUnitValue.toFixed(2)}\n\n`;
+      
+      textTable += 'Format:\n';
+      textTable += '  • Front 9: 1 unit\n';
+      textTable += '  • Back 9: 1 unit\n';
+      textTable += '  • Full 18: 2 units\n';
+      textTable += '  • Auto-press on 2-0 hole wins\n\n';
+      
+      // Hi-Lo results
+      const hiloResults = document.getElementById('hiloResults');
+      if(hiloResults) {
+        const resultText = hiloResults.textContent || '';
+        textTable += 'Results:\n';
+        textTable += resultText.split('\n').map(line => '  ' + line).join('\n') + '\n';
+      }
+    }
+    
+    // Footer
+    if(hasGames) {
+      textTable += '\n' + '='.repeat(60) + '\n';
+    }
     textTable += '\n---\nGenerated from Golf Scorecard App';
     
     // Create mailto link with plain text body
