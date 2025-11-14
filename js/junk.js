@@ -284,6 +284,8 @@
     { id: "gcbc",   label: "GCBC",   pts: 3 },
     { id: "dod",    label: "DOD",    pts: 1 },
     { id: "hogan",  label: "Hogan",  pts: 1 },
+    { id: "woodie", label: "Woodie", pts: 1 },
+    { id: "chippy", label: "Chippy", pts: 1 },
     { id: "holein1", label: "Hole in 1", pts: 100 },
   ];
 
