@@ -770,6 +770,9 @@ tfoot td {
   border: 1px solid var(--line);
   background: var(--panel-alt);
   border-radius: var(--radius-lg);
+  max-height: calc(3 * var(--touch-min) + 2 * var(--space-xs) + 2 * var(--space-sm));
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .junk-dd .menu label {
