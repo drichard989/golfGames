@@ -418,24 +418,15 @@
                 }
                 inp.value = v;
                 
-                // Auto-advance: move to next input after score entry
+                // Auto-advance: move to next player on same hole
                 const currentPlayer = Number(inp.dataset.player);
                 const currentHole = Number(inp.dataset.hole);
                 
-                if(inp.value.length >= 1) {
-                  let nextInput;
-                  
-                  if(currentPlayer < PLAYERS - 1) {
-                    // Move to next player, same hole
-                    nextInput = document.querySelector(
-                      `.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`
-                    );
-                  } else if(currentHole < HOLES) {
-                    // Last player: move to first player, next hole
-                    nextInput = document.querySelector(
-                      `.score-input[data-player="0"][data-hole="${currentHole+1}"]`
-                    );
-                  }
+                if(inp.value.length >= 1 && currentPlayer < PLAYERS - 1) {
+                  // Move to next player, same hole
+                  const nextInput = document.querySelector(
+                    `.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`
+                  );
                   
                   if(nextInput) {
                     setTimeout(() => nextInput.focus(), 50);
@@ -1230,21 +1221,15 @@
           }
           inp.value = v;
           
-          // Auto-advance logic
+          // Auto-advance: move to next player on same hole
           const currentPlayer = Number(inp.dataset.player);
           const currentHole = Number(inp.dataset.hole);
           
-          if(inp.value.length >= 1) {
-            let nextInput;
-            if(currentPlayer < PLAYERS - 1) {
-              nextInput = document.querySelector(
-                `.score-input[data-player="${currentPlayer + 1}"][data-hole="${currentHole}"]`
-              );
-            } else if(currentHole < HOLES) {
-              nextInput = document.querySelector(
-                `.score-input[data-player="0"][data-hole="${currentHole + 1}"]`
-              );
-            }
+          if(inp.value.length >= 1 && currentPlayer < PLAYERS - 1) {
+            // Move to next player, same hole
+            const nextInput = document.querySelector(
+              `.score-input[data-player="${currentPlayer + 1}"][data-hole="${currentHole}"]`
+            );
             if(nextInput) {
               setTimeout(() => nextInput.focus(), 50);
             }
