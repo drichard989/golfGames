@@ -1113,8 +1113,25 @@
       rowEl.querySelectorAll("input.score-input").forEach(inp => { inp.value = ""; inp.classList.remove("invalid"); });
     }
 
-    Scorecard.calc.recalcAll(); AppManager.recalcGames(); Storage.save();
-    announce("CSV imported.");
+    Scorecard.calc.recalcAll();
+    Scorecard.player.syncOverlay();
+    
+    // Update stroke highlights with new handicaps
+    if(typeof window.updateStrokeHighlights === 'function') {
+      window.updateStrokeHighlights();
+    }
+    
+    // Force recalculate all games
+    window.Vegas?.renderTeamControls();
+    setTimeout(() => {
+      AppManager.recalcGames();
+      window.Skins?.refreshForPlayerChange();
+      window.Junk?.refreshForPlayerChange();
+      window.HiLo?.update();
+    }, 100);
+    
+    Storage.save();
+    announce("CSV imported and all calculations updated.");
   }
   function downloadCSVTemplate() {
     const headers = ["player","ch", ...Array.from({length:18},(_,i)=>`h${i+1}`)];
@@ -1131,6 +1148,50 @@
     a.download = "scorecard_template.csv";
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+  }
+
+  function exportCurrentScorecard() {
+    const headers = ["player","ch", ...Array.from({length:18},(_,i)=>`h${i+1}`)];
+    const playerRows = document.querySelectorAll(".player-row");
+    const rows = [];
+    
+    playerRows.forEach(row => {
+      const nameInput = row.querySelector(".name-edit");
+      const chInput = row.querySelector(".ch-input");
+      const scoreInputs = row.querySelectorAll("input.score-input");
+      
+      const playerName = nameInput?.value || "";
+      const ch = chInput?.value || "0";
+      const scores = Array.from(scoreInputs).map(inp => inp.value || "");
+      
+      rows.push([playerName, ch, ...scores]);
+    });
+    
+    // Build CSV with proper escaping for names with commas
+    const escapeCsvValue = (val) => {
+      const str = String(val);
+      if(str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return '"' + str.replace(/"/g, '""') + '"';
+      }
+      return str;
+    };
+    
+    let csv = headers.join(",") + "\n";
+    csv += rows.map(row => row.map(escapeCsvValue).join(",")).join("\n");
+    
+    const blob = new Blob([csv], {type:"text/csv"});
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    
+    // Generate filename with date
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+    const courseName = COURSES[ACTIVE_COURSE]?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'scorecard';
+    a.download = `${courseName}_${dateStr}.csv`;
+    
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    announce("Scorecard exported.");
   }
 
   // =============================================================================
@@ -1441,6 +1502,9 @@
     });
     const dlBtn = $(ids.dlTemplateBtn);
     if (dlBtn) dlBtn.addEventListener("click", downloadCSVTemplate);
+    
+    const exportBtn = document.getElementById('exportCSVBtn');
+    if (exportBtn) exportBtn.addEventListener("click", exportCurrentScorecard);
 
     // Player management buttons
     const addPlayerBtn = document.getElementById('addPlayerBtn');
