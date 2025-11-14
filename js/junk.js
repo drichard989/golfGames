@@ -426,7 +426,7 @@
     for(let i = 0; i < labels.length; i += 2) {
       chunks.push(labels.slice(i, i + 2).join(', '));
     }
-    labelsDiv.textContent = chunks.join('\n');
+    labelsDiv.innerHTML = chunks.join('<br>');
   }
 
   function updateJunkTotalsWeighted(){
