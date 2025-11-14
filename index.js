@@ -1215,7 +1215,7 @@
     textTable += `Date: ${dateStr}\n\n`;
     
     // Header row with dividers
-    textTable += pad('Player', 15) + pad('CH', 4) + '|';
+    textTable += pad('Player', 15) + padCenter('CH', 4) + ' |';
     for(let h=1; h<=9; h++) {
       textTable += padCenter(String(h), 3);
     }
@@ -1223,10 +1223,10 @@
     for(let h=10; h<=18; h++) {
       textTable += padCenter(String(h), 3);
     }
-    textTable += '|' + pad('Out', 5) + '|' + pad('In', 5) + '|' + 'Total\n';
+    textTable += '|' + padCenter('Out', 5) + '|' + padCenter('In', 5) + '|' + 'Total\n';
     
     // Separator line
-    textTable += '-'.repeat(15 + 4 + 1 + (3*9) + 1 + (3*9) + 1 + 5 + 1 + 5 + 1 + 5) + '\n';
+    textTable += '-'.repeat(15 + 4 + 2 + (3*9) + 1 + (3*9) + 1 + 5 + 1 + 5 + 1 + 5) + '\n';
     
     // Player rows
     playerRows.forEach(row => {
@@ -1245,7 +1245,7 @@
       const inn = inScores.reduce((a, b) => a + b, 0) || 0;
       const total = out + inn || 0;
       
-      textTable += pad(playerName.substring(0, 14), 15) + padCenter(ch, 4) + '|';
+      textTable += pad(playerName.substring(0, 14), 15) + padCenter(ch, 4) + ' |';
       
       // Front 9
       for(let i=0; i<9; i++) {
