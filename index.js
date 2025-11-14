@@ -1214,19 +1214,19 @@
     let textTable = `${courseName}\n`;
     textTable += `Date: ${dateStr}\n\n`;
     
-    // Header row
-    textTable += pad('Player', 15) + pad('CH', 4);
+    // Header row with dividers
+    textTable += pad('Player', 15) + pad('CH', 4) + '|';
     for(let h=1; h<=9; h++) {
       textTable += padCenter(String(h), 3);
     }
-    textTable += ' | ';
+    textTable += '|';
     for(let h=10; h<=18; h++) {
       textTable += padCenter(String(h), 3);
     }
-    textTable += pad('Out', 5) + pad('In', 5) + 'Total\n';
+    textTable += '|' + pad('Out', 5) + '|' + pad('In', 5) + '|' + 'Total\n';
     
     // Separator line
-    textTable += '-'.repeat(15 + 4 + (3*9) + 3 + (3*9) + 5 + 5 + 5) + '\n';
+    textTable += '-'.repeat(15 + 4 + 1 + (3*9) + 1 + (3*9) + 1 + 5 + 1 + 5 + 1 + 5) + '\n';
     
     // Player rows
     playerRows.forEach(row => {
@@ -1245,20 +1245,20 @@
       const inn = inScores.reduce((a, b) => a + b, 0) || 0;
       const total = out + inn || 0;
       
-      textTable += pad(playerName.substring(0, 14), 15) + pad(ch, 4);
+      textTable += pad(playerName.substring(0, 14), 15) + padCenter(ch, 4) + '|';
       
       // Front 9
       for(let i=0; i<9; i++) {
         textTable += padCenter(scores[i], 3);
       }
-      textTable += ' | ';
+      textTable += '|';
       
       // Back 9
       for(let i=9; i<18; i++) {
         textTable += padCenter(scores[i], 3);
       }
       
-      textTable += pad(out || '-', 5) + pad(inn || '-', 5) + (total || '-') + '\n';
+      textTable += '|' + padCenter(String(out || '-'), 5) + '|' + padCenter(String(inn || '-'), 5) + '|' + padCenter(String(total || '-'), 5) + '\n';
     });
     
     textTable += '\n---\nGenerated from Golf Scorecard App';
