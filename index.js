@@ -20,7 +20,7 @@
    ARCHITECTURE
    ============================================================================
    
-   CORE (index.js) - 1,474 lines
+   CORE (index.js) - ~1,300 lines
    ├─ Config         - Course database, constants, active course state
    ├─ Utils          - DOM helpers ($, $$), math utilities (sum, clamp)
    ├─ AppManager     - Coordinates recalculations across all game modes
@@ -81,6 +81,13 @@
       • Hole-by-hole breakdown with comparison results
       Exposed: window.HiLo {init, update, compute, render}
    
+   🔗 js/export.js        (~370 lines) - CSV and Email export
+      • CSV Export: Download scorecard as CSV file
+      • Email Export: Format scorecard + game results for email
+      • Includes all active game results with options
+      • Plain text formatting for email compatibility
+      Exposed: window.Export {exportCurrentScorecard, emailCurrentScorecard}
+   
    ============================================================================
    FILE STRUCTURE
    ============================================================================
@@ -91,6 +98,7 @@
    ├── sw.js               - Service worker for PWA caching (v1.3.7)
    ├── manifest.json       - PWA manifest
    ├── js/
+   │   ├── export.js       - CSV and Email export module
    │   ├── vegas.js        - Vegas game module
    │   ├── skins.js        - Skins game module
    │   ├── junk.js         - Junk game module
@@ -190,6 +198,13 @@
   Object.defineProperty(window, 'PLAYERS', {
     get() { return PLAYERS; },
     set(val) { PLAYERS = val; }
+  });
+  
+  // Expose COURSES and ACTIVE_COURSE for export module
+  window.COURSES = COURSES;
+  Object.defineProperty(window, 'ACTIVE_COURSE', {
+    get() { return ACTIVE_COURSE; },
+    set(val) { ACTIVE_COURSE = val; }
   });
 
   // =============================================================================
@@ -932,6 +947,9 @@
     }, 1200); 
   }
   
+  // Expose announce globally for external modules
+  window.announce = announce;
+  
   // Use Storage's announce which uses Utils.announce
   // Legacy alias maintained here for backward compatibility
 
@@ -1150,277 +1168,24 @@
     setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
 
+  // Export functions moved to js/export.js module
+  // These are wrapper functions that call the Export module
   function exportCurrentScorecard() {
-    const headers = ["player","ch", ...Array.from({length:18},(_,i)=>`h${i+1}`)];
-    const playerRows = document.querySelectorAll(".player-row");
-    const rows = [];
-    
-    playerRows.forEach(row => {
-      const nameInput = row.querySelector(".name-edit");
-      const chInput = row.querySelector(".ch-input");
-      const scoreInputs = row.querySelectorAll("input.score-input");
-      
-      const playerName = nameInput?.value || "";
-      const ch = chInput?.value || "0";
-      const scores = Array.from(scoreInputs).map(inp => inp.value || "");
-      
-      rows.push([playerName, ch, ...scores]);
-    });
-    
-    // Build CSV with proper escaping for names with commas
-    const escapeCsvValue = (val) => {
-      const str = String(val);
-      if(str.includes(',') || str.includes('"') || str.includes('\n')) {
-        return '"' + str.replace(/"/g, '""') + '"';
-      }
-      return str;
-    };
-    
-    let csv = headers.join(",") + "\n";
-    csv += rows.map(row => row.map(escapeCsvValue).join(",")).join("\n");
-    
-    const blob = new Blob([csv], {type:"text/csv"});
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    
-    // Generate filename with date
-    const date = new Date();
-    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
-    const courseName = COURSES[ACTIVE_COURSE]?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'scorecard';
-    a.download = `${courseName}_${dateStr}.csv`;
-    
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
-    announce("Scorecard exported.");
+    if(window.Export && typeof window.Export.exportCurrentScorecard === 'function') {
+      window.Export.exportCurrentScorecard();
+    } else {
+      console.error('[Export] Export module not loaded or exportCurrentScorecard not found');
+      announce('Export module not ready. Please refresh the page.');
+    }
   }
 
   function emailCurrentScorecard() {
-    const playerRows = document.querySelectorAll(".player-row");
-    const date = new Date();
-    const dateStr = date.toISOString().split('T')[0];
-    const courseName = COURSES[ACTIVE_COURSE]?.name || 'Golf Scorecard';
-    
-    // Helper function to pad strings for alignment
-    const pad = (str, len) => String(str).padEnd(len, ' ');
-    const padCenter = (str, len) => {
-      const s = String(str);
-      const totalPad = len - s.length;
-      const leftPad = Math.floor(totalPad / 2);
-      const rightPad = totalPad - leftPad;
-      return ' '.repeat(leftPad) + s + ' '.repeat(rightPad);
-    };
-    
-    // Build plain text table
-    let textTable = `${courseName}\n`;
-    textTable += `Date: ${dateStr}\n\n`;
-    
-    // Header row with dividers
-    textTable += pad('Player', 15) + padCenter('CH', 4) + ' |';
-    for(let h=1; h<=9; h++) {
-      textTable += padCenter(String(h), 3);
+    if(window.Export && typeof window.Export.emailCurrentScorecard === 'function') {
+      window.Export.emailCurrentScorecard();
+    } else {
+      console.error('[Export] Export module not loaded or emailCurrentScorecard not found');
+      announce('Export module not ready. Please refresh the page.');
     }
-    textTable += '|';
-    for(let h=10; h<=18; h++) {
-      textTable += padCenter(String(h), 3);
-    }
-    textTable += '|' + padCenter('Out', 5) + '|' + padCenter('In', 5) + '|' + 'Total\n';
-    
-    // Separator line
-    textTable += '-'.repeat(15 + 4 + 2 + (3*9) + 1 + (3*9) + 1 + 5 + 1 + 5 + 1 + 5) + '\n';
-    
-    // Player rows
-    playerRows.forEach(row => {
-      const nameInput = row.querySelector(".name-edit");
-      const chInput = row.querySelector(".ch-input");
-      const scoreInputs = row.querySelectorAll("input.score-input");
-      
-      const playerName = nameInput?.value || "Player";
-      const ch = chInput?.value || "0";
-      const scores = Array.from(scoreInputs).map(inp => inp.value || "-");
-      
-      // Calculate Out, In, Total
-      const outScores = scores.slice(0, 9).map(s => s === "-" ? 0 : Number(s));
-      const inScores = scores.slice(9, 18).map(s => s === "-" ? 0 : Number(s));
-      const out = outScores.reduce((a, b) => a + b, 0) || 0;
-      const inn = inScores.reduce((a, b) => a + b, 0) || 0;
-      const total = out + inn || 0;
-      
-      textTable += pad(playerName.substring(0, 14), 15) + padCenter(ch, 4) + ' |';
-      
-      // Front 9
-      for(let i=0; i<9; i++) {
-        textTable += padCenter(scores[i], 3);
-      }
-      textTable += '|';
-      
-      // Back 9
-      for(let i=9; i<18; i++) {
-        textTable += padCenter(scores[i], 3);
-      }
-      
-      textTable += '|' + padCenter(String(out || '-'), 5) + '|' + padCenter(String(inn || '-'), 5) + '|' + padCenter(String(total || '-'), 5) + '\n';
-    });
-    
-    // Add game results sections
-    let hasGames = false;
-    
-    // VEGAS RESULTS
-    const vegasSection = document.getElementById('vegasSection');
-    if(vegasSection && vegasSection.classList.contains('open')) {
-      hasGames = true;
-      textTable += '\n\n';
-      textTable += '='.repeat(60) + '\n';
-      textTable += 'VEGAS GAME RESULTS\n';
-      textTable += '='.repeat(60) + '\n\n';
-      
-      // Vegas options
-      const useNet = document.getElementById('optUseNet')?.checked;
-      const doubleBirdie = document.getElementById('optDoubleBirdie')?.checked;
-      const tripleEagle = document.getElementById('optTripleEagle')?.checked;
-      const pointValue = Number(document.getElementById('vegasPointValue')?.value) || 1;
-      
-      textTable += 'Options:\n';
-      textTable += `  • Use Net (NDB): ${useNet ? 'YES' : 'NO'}\n`;
-      textTable += `  • Double on Birdie: ${doubleBirdie ? 'YES' : 'NO'}\n`;
-      textTable += `  • Triple on Eagle: ${tripleEagle ? 'YES' : 'NO'}\n`;
-      textTable += `  • Point Value: $${pointValue.toFixed(2)}\n\n`;
-      
-      // Vegas team assignments
-      const vegasTeams = document.getElementById('vegasTeams');
-      if(vegasTeams) {
-        const teamInputs = vegasTeams.querySelectorAll('select');
-        const teams = Array.from(teamInputs).map(sel => sel.value);
-        textTable += 'Teams:\n';
-        playerRows.forEach((row, idx) => {
-          const name = row.querySelector('.name-edit')?.value || `Player ${idx+1}`;
-          textTable += `  ${name}: Team ${teams[idx] || 'A'}\n`;
-        });
-        textTable += '\n';
-      }
-      
-      // Vegas results
-      const ptsA = document.getElementById('vegasPtsA')?.textContent || '0';
-      const ptsB = document.getElementById('vegasPtsB')?.textContent || '0';
-      const dollarA = document.getElementById('vegasDollarA')?.textContent || '$0.00';
-      const dollarB = document.getElementById('vegasDollarB')?.textContent || '$0.00';
-      
-      textTable += 'Final Score:\n';
-      textTable += `  Team A: ${ptsA} points (${dollarA})\n`;
-      textTable += `  Team B: ${ptsB} points (${dollarB})\n`;
-    }
-    
-    // SKINS RESULTS
-    const skinsSection = document.getElementById('skinsSection');
-    if(skinsSection && skinsSection.classList.contains('open')) {
-      hasGames = true;
-      textTable += '\n\n';
-      textTable += '='.repeat(60) + '\n';
-      textTable += 'SKINS GAME RESULTS\n';
-      textTable += '='.repeat(60) + '\n\n';
-      
-      // Skins options
-      const skinsCarry = document.getElementById('skinsCarry')?.checked ?? true;
-      const skinsHalf = document.getElementById('skinsHalf')?.checked ?? false;
-      const skinsBuyIn = Number(document.getElementById('skinsBuyIn')?.value) || 10;
-      
-      textTable += 'Options:\n';
-      textTable += `  • Carry Over: ${skinsCarry ? 'YES' : 'NO'}\n`;
-      textTable += `  • Half-Pops: ${skinsHalf ? 'YES' : 'NO'}\n`;
-      textTable += `  • Buy-In: $${skinsBuyIn.toFixed(2)}\n\n`;
-      
-      // Skins results
-      const skinsPot = document.getElementById('skinsPotTot')?.textContent || '$0.00';
-      textTable += `Total Pot: ${skinsPot}\n\n`;
-      textTable += 'Player Winnings:\n';
-      
-      playerRows.forEach((row, idx) => {
-        const name = row.querySelector('.name-edit')?.value || `Player ${idx+1}`;
-        const winnings = document.getElementById(`skinsTotP${idx+1}`)?.textContent || '$0.00';
-        const count = document.getElementById(`skinsP${idx+1}`)?.textContent || '0';
-        textTable += `  ${pad(name, 20)} ${count} skins - ${winnings}\n`;
-      });
-    }
-    
-    // JUNK (DOTS) RESULTS
-    const junkSection = document.getElementById('junkSection');
-    if(junkSection && junkSection.classList.contains('open')) {
-      hasGames = true;
-      textTable += '\n\n';
-      textTable += '='.repeat(60) + '\n';
-      textTable += 'JUNK (DOTS) GAME RESULTS\n';
-      textTable += '='.repeat(60) + '\n\n';
-      
-      // Junk options
-      const junkUseNet = document.getElementById('junkUseNet')?.checked ?? false;
-      const junkPointValue = Number(document.getElementById('junkPointValue')?.value) || 1;
-      
-      textTable += 'Options:\n';
-      textTable += `  • Use Net Scoring: ${junkUseNet ? 'YES' : 'NO'}\n`;
-      textTable += `  • Point Value: $${junkPointValue.toFixed(2)}\n\n`;
-      
-      textTable += 'Scoring:\n';
-      textTable += '  • Eagle: 4 dots\n';
-      textTable += '  • Birdie: 2 dots\n';
-      textTable += '  • Par: 1 dot\n';
-      textTable += '  • Achievements: Bonus points (Hogan, Sandy, etc.)\n\n';
-      
-      // Junk results
-      textTable += 'Player Results:\n';
-      playerRows.forEach((row, idx) => {
-        const name = row.querySelector('.name-edit')?.value || `Player ${idx+1}`;
-        const dotsEl = document.querySelector(`#junkBody tr:nth-child(${idx+1}) td:nth-child(2)`);
-        const dollarsEl = document.querySelector(`#junkBody tr:nth-child(${idx+1}) td:nth-child(3)`);
-        const dots = dotsEl?.textContent?.trim() || '0';
-        const dollars = dollarsEl?.textContent?.trim() || '$0.00';
-        textTable += `  ${pad(name, 20)} ${dots} dots - ${dollars}\n`;
-      });
-    }
-    
-    // HI-LO RESULTS
-    const hiloSection = document.getElementById('hiloSection');
-    if(hiloSection && hiloSection.classList.contains('open')) {
-      hasGames = true;
-      textTable += '\n\n';
-      textTable += '='.repeat(60) + '\n';
-      textTable += 'HI-LO GAME RESULTS\n';
-      textTable += '='.repeat(60) + '\n\n';
-      
-      // Hi-Lo options
-      const hiloUnitValue = Number(document.getElementById('hiloUnitValue')?.value) || 10;
-      
-      textTable += 'Options:\n';
-      textTable += `  • Unit Value: $${hiloUnitValue.toFixed(2)}\n\n`;
-      
-      textTable += 'Format:\n';
-      textTable += '  • Front 9: 1 unit\n';
-      textTable += '  • Back 9: 1 unit\n';
-      textTable += '  • Full 18: 2 units\n';
-      textTable += '  • Auto-press on 2-0 hole wins\n\n';
-      
-      // Hi-Lo results
-      const hiloResults = document.getElementById('hiloResults');
-      if(hiloResults) {
-        const resultText = hiloResults.textContent || '';
-        textTable += 'Results:\n';
-        textTable += resultText.split('\n').map(line => '  ' + line).join('\n') + '\n';
-      }
-    }
-    
-    // Footer
-    if(hasGames) {
-      textTable += '\n' + '='.repeat(60) + '\n';
-    }
-    textTable += '\n---\nGenerated from Golf Scorecard App';
-    
-    // Create mailto link with plain text body
-    const subject = encodeURIComponent(`${courseName} - ${dateStr}`);
-    const body = encodeURIComponent(textTable);
-    
-    // Open email client with mailto link
-    const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
-    window.location.href = mailtoLink;
-    
-    announce("Opening email client...");
   }
 
   // =============================================================================
