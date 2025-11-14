@@ -1200,23 +1200,35 @@
     const dateStr = date.toISOString().split('T')[0];
     const courseName = COURSES[ACTIVE_COURSE]?.name || 'Golf Scorecard';
     
-    // Build HTML table
-    let htmlTable = `<html><body style="font-family: Arial, sans-serif;">`;
-    htmlTable += `<h2>${courseName}</h2>`;
-    htmlTable += `<p>Date: ${dateStr}</p>`;
-    htmlTable += `<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 14px;">`;
+    // Helper function to pad strings for alignment
+    const pad = (str, len) => String(str).padEnd(len, ' ');
+    const padCenter = (str, len) => {
+      const s = String(str);
+      const totalPad = len - s.length;
+      const leftPad = Math.floor(totalPad / 2);
+      const rightPad = totalPad - leftPad;
+      return ' '.repeat(leftPad) + s + ' '.repeat(rightPad);
+    };
+    
+    // Build plain text table
+    let textTable = `${courseName}\n`;
+    textTable += `Date: ${dateStr}\n\n`;
     
     // Header row
-    htmlTable += `<thead><tr style="background-color: #f0f0f0; font-weight: bold;">`;
-    htmlTable += `<th>Player</th><th>CH</th>`;
-    for(let h=1; h<=18; h++) {
-      htmlTable += `<th>${h}</th>`;
+    textTable += pad('Player', 15) + pad('CH', 4);
+    for(let h=1; h<=9; h++) {
+      textTable += padCenter(String(h), 3);
     }
-    htmlTable += `<th>Out</th><th>In</th><th>Total</th>`;
-    htmlTable += `</tr></thead>`;
+    textTable += ' | ';
+    for(let h=10; h<=18; h++) {
+      textTable += padCenter(String(h), 3);
+    }
+    textTable += pad('Out', 5) + pad('In', 5) + 'Total\n';
+    
+    // Separator line
+    textTable += '-'.repeat(15 + 4 + (3*9) + 3 + (3*9) + 5 + 5 + 5) + '\n';
     
     // Player rows
-    htmlTable += `<tbody>`;
     playerRows.forEach(row => {
       const nameInput = row.querySelector(".name-edit");
       const chInput = row.querySelector(".ch-input");
@@ -1229,29 +1241,31 @@
       // Calculate Out, In, Total
       const outScores = scores.slice(0, 9).map(s => s === "-" ? 0 : Number(s));
       const inScores = scores.slice(9, 18).map(s => s === "-" ? 0 : Number(s));
-      const out = outScores.reduce((a, b) => a + b, 0) || "-";
-      const inn = inScores.reduce((a, b) => a + b, 0) || "-";
-      const total = (out !== "-" && inn !== "-") ? out + inn : "-";
+      const out = outScores.reduce((a, b) => a + b, 0) || 0;
+      const inn = inScores.reduce((a, b) => a + b, 0) || 0;
+      const total = out + inn || 0;
       
-      htmlTable += `<tr>`;
-      htmlTable += `<td style="font-weight: bold;">${playerName}</td>`;
-      htmlTable += `<td style="text-align: center;">${ch}</td>`;
-      scores.forEach((score, idx) => {
-        const style = idx === 8 ? 'text-align: center; border-right: 2px solid #666;' : 'text-align: center;';
-        htmlTable += `<td style="${style}">${score}</td>`;
-      });
-      htmlTable += `<td style="text-align: center; font-weight: bold;">${out}</td>`;
-      htmlTable += `<td style="text-align: center; font-weight: bold;">${inn}</td>`;
-      htmlTable += `<td style="text-align: center; font-weight: bold; background-color: #f9f9f9;">${total}</td>`;
-      htmlTable += `</tr>`;
+      textTable += pad(playerName.substring(0, 14), 15) + pad(ch, 4);
+      
+      // Front 9
+      for(let i=0; i<9; i++) {
+        textTable += padCenter(scores[i], 3);
+      }
+      textTable += ' | ';
+      
+      // Back 9
+      for(let i=9; i<18; i++) {
+        textTable += padCenter(scores[i], 3);
+      }
+      
+      textTable += pad(out || '-', 5) + pad(inn || '-', 5) + (total || '-') + '\n';
     });
-    htmlTable += `</tbody></table>`;
-    htmlTable += `<p style="margin-top: 20px; font-size: 12px; color: #666;">Generated from Golf Scorecard App</p>`;
-    htmlTable += `</body></html>`;
     
-    // Create mailto link with HTML body
+    textTable += '\n---\nGenerated from Golf Scorecard App';
+    
+    // Create mailto link with plain text body
     const subject = encodeURIComponent(`${courseName} - ${dateStr}`);
-    const body = encodeURIComponent(htmlTable);
+    const body = encodeURIComponent(textTable);
     
     // Open email client with mailto link
     const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
