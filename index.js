@@ -1194,6 +1194,72 @@
     announce("Scorecard exported.");
   }
 
+  function emailCurrentScorecard() {
+    const playerRows = document.querySelectorAll(".player-row");
+    const date = new Date();
+    const dateStr = date.toISOString().split('T')[0];
+    const courseName = COURSES[ACTIVE_COURSE]?.name || 'Golf Scorecard';
+    
+    // Build HTML table
+    let htmlTable = `<html><body style="font-family: Arial, sans-serif;">`;
+    htmlTable += `<h2>${courseName}</h2>`;
+    htmlTable += `<p>Date: ${dateStr}</p>`;
+    htmlTable += `<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 14px;">`;
+    
+    // Header row
+    htmlTable += `<thead><tr style="background-color: #f0f0f0; font-weight: bold;">`;
+    htmlTable += `<th>Player</th><th>CH</th>`;
+    for(let h=1; h<=18; h++) {
+      htmlTable += `<th>${h}</th>`;
+    }
+    htmlTable += `<th>Out</th><th>In</th><th>Total</th>`;
+    htmlTable += `</tr></thead>`;
+    
+    // Player rows
+    htmlTable += `<tbody>`;
+    playerRows.forEach(row => {
+      const nameInput = row.querySelector(".name-edit");
+      const chInput = row.querySelector(".ch-input");
+      const scoreInputs = row.querySelectorAll("input.score-input");
+      
+      const playerName = nameInput?.value || "Player";
+      const ch = chInput?.value || "0";
+      const scores = Array.from(scoreInputs).map(inp => inp.value || "-");
+      
+      // Calculate Out, In, Total
+      const outScores = scores.slice(0, 9).map(s => s === "-" ? 0 : Number(s));
+      const inScores = scores.slice(9, 18).map(s => s === "-" ? 0 : Number(s));
+      const out = outScores.reduce((a, b) => a + b, 0) || "-";
+      const inn = inScores.reduce((a, b) => a + b, 0) || "-";
+      const total = (out !== "-" && inn !== "-") ? out + inn : "-";
+      
+      htmlTable += `<tr>`;
+      htmlTable += `<td style="font-weight: bold;">${playerName}</td>`;
+      htmlTable += `<td style="text-align: center;">${ch}</td>`;
+      scores.forEach((score, idx) => {
+        const style = idx === 8 ? 'text-align: center; border-right: 2px solid #666;' : 'text-align: center;';
+        htmlTable += `<td style="${style}">${score}</td>`;
+      });
+      htmlTable += `<td style="text-align: center; font-weight: bold;">${out}</td>`;
+      htmlTable += `<td style="text-align: center; font-weight: bold;">${inn}</td>`;
+      htmlTable += `<td style="text-align: center; font-weight: bold; background-color: #f9f9f9;">${total}</td>`;
+      htmlTable += `</tr>`;
+    });
+    htmlTable += `</tbody></table>`;
+    htmlTable += `<p style="margin-top: 20px; font-size: 12px; color: #666;">Generated from Golf Scorecard App</p>`;
+    htmlTable += `</body></html>`;
+    
+    // Create mailto link with HTML body
+    const subject = encodeURIComponent(`${courseName} - ${dateStr}`);
+    const body = encodeURIComponent(htmlTable);
+    
+    // Open email client with mailto link
+    const mailtoLink = `mailto:?subject=${subject}&body=${body}`;
+    window.location.href = mailtoLink;
+    
+    announce("Opening email client...");
+  }
+
   // =============================================================================
   // PLAYER MANAGEMENT (ADD/REMOVE)
   // =============================================================================
@@ -1505,6 +1571,9 @@
     
     const exportBtn = document.getElementById('exportCSVBtn');
     if (exportBtn) exportBtn.addEventListener("click", exportCurrentScorecard);
+    
+    const emailBtn = document.getElementById('emailCSVBtn');
+    if (emailBtn) emailBtn.addEventListener("click", emailCurrentScorecard);
 
     // Player management buttons
     const addPlayerBtn = document.getElementById('addPlayerBtn');
