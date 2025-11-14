@@ -562,20 +562,28 @@ tfoot td {
 }
 
 .vegas-table,
-.banker-table {
+.banker-table,
+.skins-table,
+.junk-table {
   width: max(100%, 720px);
   border-collapse: separate;
   border-spacing: 0;
 }
 
-.banker-table {
+.banker-table,
+.skins-table,
+.junk-table {
   width: max(100%, 820px);
 }
 
 .vegas-table th,
 .vegas-table td,
 .banker-table th,
-.banker-table td {
+.banker-table td,
+.skins-table th,
+.skins-table td,
+.junk-table th,
+.junk-table td {
   border-bottom: 1px solid var(--line);
   padding: var(--space-xs) var(--space-sm);
   text-align: center;
@@ -583,7 +591,9 @@ tfoot td {
 }
 
 .vegas-table thead th,
-.banker-table thead th {
+.banker-table thead th,
+.skins-table thead th,
+.junk-table thead th {
   position: sticky;
   top: 0;
   background: var(--panel-alt);
@@ -593,13 +603,17 @@ tfoot td {
 }
 
 .vegas-table thead th:first-child,
-.banker-table thead th:first-child {
+.banker-table thead th:first-child,
+.skins-table thead th:first-child,
+.junk-table thead th:first-child {
   z-index: var(--z-sticky-corner);
   background-color: var(--panel);
 }
 
 .vegas-table tfoot td,
-.banker-table tfoot td {
+.banker-table tfoot td,
+.skins-table tfoot td,
+.junk-table tfoot td {
   background: var(--panel-alt);
   font-weight: 700;
 }
@@ -607,7 +621,11 @@ tfoot td {
 .vegas-table th:first-child,
 .vegas-table td:first-child,
 .banker-table th:first-child,
-.banker-table td:first-child {
+.banker-table td:first-child,
+.skins-table th:first-child,
+.skins-table td:first-child,
+.junk-table th:first-child,
+.junk-table td:first-child {
   width: 40px;
   min-width: 40px;
   padding-left: 4px;
@@ -633,51 +651,72 @@ tfoot td {
 #junkTable td:first-child {
   width: 40px;
   min-width: 40px;
-  padding-left: 4px;
-  padding-right: 4px;
+  padding: 4px;
   position: sticky;
   left: 0;
   background-color: var(--panel);
   z-index: var(--z-sticky-col);
-  border-right: 2px solid var(--line);
+  border-right: 3px solid var(--line);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
 
 #junkTable th:not(:first-child),
 #junkTable td:not(:first-child) {
-  width: 68px;
-  padding: var(--space-xs) 4px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  width: auto;
+  min-width: max-content;
+  padding: 2px !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+#junkTable tbody td {
+  padding: 2px !important;
+  vertical-align: middle;
+  height: auto;
 }
 
 /* Light theme Junk table borders */
+:root[data-theme="light"] #junkTable th:first-child,
+:root[data-theme="light"] #junkTable td:first-child {
+  border-right: 3px solid rgba(0, 0, 0, 0.15);
+}
+
 :root[data-theme="light"] #junkTable th:not(:first-child),
 :root[data-theme="light"] #junkTable td:not(:first-child) {
-  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.junk-cell {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  min-height: 0;
+}
+
+.junk-ach-labels {
+  font-size: 9px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.1;
+  max-width: 90px;
+  word-wrap: break-word;
+  margin: 0;
+  padding: 0;
 }
 
 .junk-dot {
   display: inline-block;
   min-width: 18px;
   text-align: center;
-}
-
-.junk-cell {
-  display: inline-flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-  align-items: center;
-  justify-content: center;
-}
-
-.junk-ach-labels {
-  font-size: 10px;
-  color: var(--muted);
-  text-align: center;
-  line-height: 1.2;
-  max-width: 100px;
-  word-wrap: break-word;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .junk-dd {
@@ -691,14 +730,15 @@ tfoot td {
   border: 1px solid var(--line);
   background: var(--panel-alt);
   color: var(--ink);
-  border-radius: var(--radius-md);
-  padding: 10px var(--text-md);
-  font-size: var(--text-md);
-  line-height: 1.2;
-  min-height: var(--touch-min);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+  line-height: 1;
+  min-height: 36px;
   display: inline-flex;
   align-items: center;
   -webkit-tap-highlight-color: rgba(104, 211, 145, 0.1);
+  margin-top: 2px;
 }
 
 .junk-dd[open] > summary {
@@ -867,6 +907,10 @@ input[type="text"] {
 @media (max-width: 768px) {
   .banker-table th,
   .banker-table td,
+  .skins-table th,
+  .skins-table td,
+  .junk-table th,
+  .junk-table td,
   .vegas-table th,
   .vegas-table td {
     padding: var(--space-xs) var(--space-sm);
@@ -965,7 +1009,11 @@ input[type="text"] {
   .vegas-table th:first-child,
   .vegas-table td:first-child,
   .banker-table th:first-child,
-  .banker-table td:first-child {
+  .banker-table td:first-child,
+  .skins-table th:first-child,
+  .skins-table td:first-child,
+  .junk-table th:first-child,
+  .junk-table td:first-child {
     width: 40px;
     min-width: 40px;
     padding-left: 4px;
@@ -1108,8 +1156,12 @@ input[type="text"] {
 
 :root[data-theme="light"] .vegas-table thead th,
 :root[data-theme="light"] .banker-table thead th,
+:root[data-theme="light"] .skins-table thead th,
+:root[data-theme="light"] .junk-table thead th,
 :root[data-theme="light"] .vegas-table tfoot td,
-:root[data-theme="light"] .banker-table tfoot td {
+:root[data-theme="light"] .banker-table tfoot td,
+:root[data-theme="light"] .skins-table tfoot td,
+:root[data-theme="light"] .junk-table tfoot td {
   background: #f8fafc;
   color: #1a1c1f;
 }
