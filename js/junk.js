@@ -217,8 +217,18 @@
   function updateJunk(){
     const tbody = document.getElementById('junkBody');
     if(!tbody) return;
-    const data = Junk.compute();
-    Junk.render(data);
+    
+    // Check if achievements are active (cells are enhanced)
+    const hasEnhancedCells = tbody.querySelector('.junk-cell') !== null;
+    
+    if(hasEnhancedCells) {
+      // Use weighted update which handles achievements and labels
+      updateJunkTotalsWeighted();
+    } else {
+      // Use simple render for basic mode
+      const data = Junk.compute();
+      Junk.render(data);
+    }
   }
 
   function rebuildJunkTableHeader(){
