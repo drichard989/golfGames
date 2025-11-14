@@ -221,7 +221,49 @@
     </section>
     <!-- HI-LO GAME (placeholder) -->
     <section class="game-section" id="hiloSection" aria-hidden="true">
-      <h2>Hi-Lo - To Be Added</h2>
+      <h2>Hi-Lo</h2>
+      <p class="note">Requires 4 players. Teams: Low+High handicap vs Middle two. 3 games: Front 9 (1 unit), Back 9 (1 unit), Full 18 (2 units).</p>
+      
+      <div class="vegas-controls">
+        <div class="team-box">
+          <div class="pill">Teams</div>
+          <p id="hiloTeamA" style="margin: 4px 0;">Team A: —</p>
+          <p id="hiloTeamB" style="margin: 4px 0;">Team B: —</p>
+        </div>
+      </div>
+
+      <div class="vegas-wrap">
+        <table class="vegas-table" id="hiloTable">
+          <thead>
+            <tr>
+              <th>Game</th>
+              <th>Team A</th>
+              <th>Team B</th>
+              <th>Winner</th>
+            </tr>
+          </thead>
+          <tbody id="hiloResultsBody">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top: 20px;">Hole-by-Hole Results</h3>
+      <div class="vegas-wrap">
+        <table class="vegas-table" id="hiloHoleTable">
+          <thead>
+            <tr>
+              <th>Hole</th>
+              <th>Low Score</th>
+              <th>High Score</th>
+              <th>Points</th>
+            </tr>
+          </thead>
+          <tbody id="hiloHoleBody">
+            <!-- Filled by JS -->
+          </tbody>
+        </table>
+      </div>
     </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     <script src="index.js" defer></script>

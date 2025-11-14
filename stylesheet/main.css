@@ -639,6 +639,16 @@ tfoot td {
   transform: translateZ(0);
 }
 
+/* Hi-Lo hole-by-hole highlighting */
+#hiloHoleTable td {
+  font-size: 13px;
+}
+
+#hiloHoleTable td:nth-child(2),
+#hiloHoleTable td:nth-child(3) {
+  font-family: 'Courier New', monospace;
+}
+
 /* =========================
    Junk (Dots) — Table + Dropdown
    ========================= */

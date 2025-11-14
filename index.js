@@ -227,6 +227,7 @@
       try{ window.Vegas?.recalc(); }catch(e){ console.warn('vegas_recalc failed', e); }
       try{ window.Skins?.update(); }catch(e){ /* skins may not be open yet */ }
       try{ window.Junk?.update(); }catch(e){ /* junk may not be open yet */ }
+      try{ window.HiLo?.update(); }catch(e){ /* hilo may not be open yet */ }
     }
   };
   try{ window.AppManager = AppManager; }catch{}
