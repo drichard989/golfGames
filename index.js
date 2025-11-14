@@ -32,6 +32,7 @@
    │  └─ course      - Course switching, par/HCP updates, badge display
    ├─ Games UI       - Toggle sections (open/close/toggle)
    ├─ CSV            - Import/export scorecard data
+   ├─ Players        - Add/remove player management
    └─ Init           - Event wiring, state restoration
    
    GAME MODULES (external .js files)
@@ -70,6 +71,16 @@
       • To be implemented
       Exposed: window.BankerVegas {init}
    
+   🔗 js/hilo.js          (~400 lines) - Hi-Lo team game
+      • 4 players: Low+High handicap vs Middle two
+      • Team stroke differential applied to worst player on high team
+      • 3 games: Front 9 (1 unit), Back 9 (1 unit), Full 18 (2 units)
+      • Per-hole scoring: Low vs Low, High vs High (1 point each)
+      • Auto-press: 2-0 hole win creates new game for remaining holes
+      • Press games worth 1 unit each (2 units for Full 18 presses)
+      • Hole-by-hole breakdown with comparison results
+      Exposed: window.HiLo {init, update, compute, render}
+   
    ============================================================================
    FILE STRUCTURE
    ============================================================================
@@ -83,6 +94,7 @@
    │   ├── vegas.js        - Vegas game module
    │   ├── skins.js        - Skins game module
    │   ├── junk.js         - Junk game module
+   │   ├── hilo.js         - Hi-Lo game module
    │   ├── banker.js       - Banker game stub
    │   └── banker-vegas.js - Banker-Vegas stub
    ├── images/             - Icons and assets
@@ -792,9 +804,12 @@
       try {
         localStorage.setItem(this.KEY, JSON.stringify(state));
         Utils.announce("Saved.");
+        // Also use legacy announce for save button feedback
+        if(typeof announce === 'function') announce("Saved!");
       } catch(err) {
         console.error('[Storage] Save failed:', err);
         Utils.announce("Save failed!");
+        if(typeof announce === 'function') announce("Save failed!");
       }
     },
     
