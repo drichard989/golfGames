@@ -280,7 +280,6 @@
     { id: "kp",     label: "KP",     pts: 1 },
     { id: "hoover", label: "Hoover", pts: 10 },
     { id: "skin",   label: "Skin",   pts: 1 },
-    { id: "birdie", label: "Birdie", pts: 2 },
     { id: "pulley", label: "Pully",  pts: 1 },
     { id: "gcbc",   label: "GCBC",   pts: 3 },
     { id: "dod",    label: "DOD",    pts: 1 },
