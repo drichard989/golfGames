@@ -237,8 +237,8 @@
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
-    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleBankerVegas:"#toggleBankerVegas",
-    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", bankerVegasSection:"#bankerVegasSection",
+    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleBankerVegas:"#toggleBankerVegas", toggleHilo:"#toggleHilo",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", bankerVegasSection:"#bankerVegasSection", hiloSection:"#hiloSection",
 
     // Vegas
   vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
@@ -934,7 +934,7 @@
   
   /**
    * Open a game section and make it visible
-   * @param {string} which - Game section: 'vegas', 'banker', 'skins', or 'bankervegas'
+   * @param {string} which - Game section: 'vegas', 'banker', 'skins', 'bankervegas', or 'hilo'
    */
   function games_open(which){
     if(which==="vegas"){ $(ids.vegasSection).classList.add("open"); $(ids.vegasSection).setAttribute("aria-hidden","false"); $(ids.toggleVegas).classList.add("active"); }
@@ -951,12 +951,19 @@
       $(ids.toggleBankerVegas).classList.add("active");
       setTimeout(() => { window.BankerVegas?.init(); }, 0);
     }
+    if(which==="hilo"){ 
+      $(ids.hiloSection).classList.add("open"); 
+      $(ids.hiloSection).setAttribute("aria-hidden","false"); 
+      $(ids.toggleHilo).classList.add("active");
+      setTimeout(() => { window.HiLo?.init(); }, 0);
+    }
   }
   function games_close(which){
     if(which==="vegas"){ $(ids.vegasSection).classList.remove("open"); $(ids.vegasSection).setAttribute("aria-hidden","true"); $(ids.toggleVegas).classList.remove("active"); }
     if(which==="banker"){ $(ids.bankerSection).classList.remove("open"); $(ids.bankerSection).setAttribute("aria-hidden","true"); $(ids.toggleBanker).classList.remove("active"); }
     if(which==="skins"){ $(ids.skinsSection).classList.remove("open"); $(ids.skinsSection).setAttribute("aria-hidden","true"); $(ids.toggleSkins).classList.remove("active"); }
     if(which==="bankervegas"){ $(ids.bankerVegasSection).classList.remove("open"); $(ids.bankerVegasSection).setAttribute("aria-hidden","true"); $(ids.toggleBankerVegas).classList.remove("active"); }
+    if(which==="hilo"){ $(ids.hiloSection).classList.remove("open"); $(ids.hiloSection).setAttribute("aria-hidden","true"); $(ids.toggleHilo).classList.remove("active"); }
   }
   function games_toggle(which){
     let sec;
@@ -964,6 +971,7 @@
     else if(which==="banker") sec = $(ids.bankerSection);
     else if(which==="skins") sec = $(ids.skinsSection);
     else if(which==="bankervegas") sec = $(ids.bankerVegasSection);
+    else if(which==="hilo") sec = $(ids.hiloSection);
     const open = sec?.classList.contains("open");
     open? games_close(which) : games_open(which);
     saveDebounced();
@@ -1387,6 +1395,7 @@
     $(ids.toggleVegas).addEventListener("click", ()=>games_toggle("vegas"));
     $(ids.toggleBanker).addEventListener("click", ()=>games_toggle("banker"));
     $(ids.toggleBankerVegas).addEventListener("click", ()=>games_toggle("bankervegas"));
+    $(ids.toggleHilo).addEventListener("click", ()=>games_toggle("hilo"));
     
     // Skins: toggle and initialize
     $(ids.toggleSkins)?.addEventListener("click", () => {
