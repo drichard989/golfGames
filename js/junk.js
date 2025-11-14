@@ -365,14 +365,53 @@
     const box = document.querySelector(`details.junk-dd[data-player="${p}"][data-hole="${h}"]`);
     if(!box) return;
     
-    const achievements = [];
+    const labels = [];
+    
+    // Add score relative to par (only if earning junk points)
+    const score = getScore(p, h);
+    const par = getPar(h);
+    const useNet = document.getElementById('junkUseNet')?.checked || false;
+    
+    if(score > 0 && par > 0) {
+      let displayScore = score;
+      
+      // If NET mode, calculate net score
+      if(useNet) {
+        const playerRows = Array.from(document.querySelectorAll('.player-row'));
+        const chs = playerRows.map(r => {
+          const chInput = r.querySelector('.ch-input');
+          const v = Number(chInput?.value);
+          return Number.isFinite(v) ? v : 0;
+        });
+        const minCH = Math.min(...chs);
+        const adjCH = chs[p] - minCH;
+        const HCPMEN = window.HCPMEN || Array(18).fill(0);
+        const holeHcp = HCPMEN[h-1] || 1;
+        
+        // Calculate strokes on this hole
+        const base = Math.floor(adjCH / 18);
+        const rem = adjCH % 18;
+        const strokes = base + (holeHcp <= rem ? 1 : 0);
+        displayScore = score - strokes;
+      }
+      
+      const diff = displayScore - par;
+      
+      // Only show results that earn junk points
+      if(diff <= -2) labels.push(useNet ? 'Net Eagle' : 'Eagle');
+      else if(diff === -1) labels.push(useNet ? 'Net Birdie' : 'Birdie');
+      else if(diff === 0) labels.push(useNet ? 'Net Par' : 'Par');
+      // Don't show Bogey or worse since they don't earn junk points
+    }
+    
+    // Add achievements
     box.querySelectorAll('input.junk-ach:checked').forEach(cb=>{
       const achId = cb.dataset.key;
       const ach = ACH.find(a => a.id === achId);
-      if(ach) achievements.push(ach.label);
+      if(ach) labels.push(ach.label);
     });
     
-    labelsDiv.textContent = achievements.join(', ');
+    labelsDiv.textContent = labels.join(', ');
   }
 
   function updateJunkTotalsWeighted(){
@@ -394,6 +433,9 @@
         totals[p] += total;
         const span = tr.querySelector(`.junk-dot[data-player="${p}"][data-hole="${h}"]`);
         if(span) span.textContent = Number.isFinite(total) ? String(total) : '—';
+        
+        // Update achievement labels (includes score type)
+        updateAchievementLabels(p, h);
       }
     });
     
