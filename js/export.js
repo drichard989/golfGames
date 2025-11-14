@@ -375,9 +375,6 @@
       // Hi-Lo options
       const hiloUnitValue = Number(document.getElementById('hiloUnitValue')?.value) || 10;
 
-      textTable += 'Options:\n';
-      textTable += `  • Unit Value: $${hiloUnitValue.toFixed(2)}\n\n`;
-
       textTable += 'Format:\n';
       textTable += '  • Front 9: 1 unit\n';
       textTable += '  • Back 9: 1 unit\n';
@@ -400,6 +397,7 @@
         textTable += 'Team Results:\n';
         // Get header row from hiloTable
         const hiloTable = document.getElementById('hiloTable');
+        let totalUnitsA = 0, totalUnitsB = 0;
         if (hiloTable) {
           const headerCells = hiloTable.querySelectorAll('thead tr th');
           const headers = Array.from(headerCells).map(th => th.textContent.trim());
@@ -407,10 +405,25 @@
         }
         // Get each row
         const rows = hiloResultsBody.querySelectorAll('tr');
-        rows.forEach(tr => {
+        rows.forEach((tr, idx) => {
           const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
           textTable += '  ' + cells.join(' | ') + '\n';
+          // Track total units from the Total Units row
+          if (cells[0] && cells[0].toLowerCase().includes('total units')) {
+            // Try to parse the numbers for A and B
+            totalUnitsA = parseInt(cells[1], 10) || 0;
+            totalUnitsB = parseInt(cells[2], 10) || 0;
+          }
         });
+        // Add a clear summary line for total units
+        textTable += `\n  Total Units: Team A = ${totalUnitsA}, Team B = ${totalUnitsB}\n`;
+        if (totalUnitsA > totalUnitsB) {
+          textTable += `  Winner: Team A (+${totalUnitsA - totalUnitsB} units)\n`;
+        } else if (totalUnitsB > totalUnitsA) {
+          textTable += `  Winner: Team B (+${totalUnitsB - totalUnitsA} units)\n`;
+        } else {
+          textTable += '  Result: Tie\n';
+        }
         textTable += '\n';
       }
 
