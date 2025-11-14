@@ -296,6 +296,11 @@
         dotSpan.dataset.hole = String(holeIdx+1);
         dotSpan.textContent = currentText || '—';
 
+        const achLabels = document.createElement('div');
+        achLabels.className = 'junk-ach-labels';
+        achLabels.dataset.player = String(p);
+        achLabels.dataset.hole = String(holeIdx+1);
+
         const details = document.createElement('details');
         details.className = 'junk-dd';
         details.dataset.player = String(p);
@@ -321,6 +326,7 @@
           cb.checked = td.dataset[id] === '1';
           cb.addEventListener('change', ()=>{
             td.dataset[id] = cb.checked ? '1' : '';
+            updateAchievementLabels(p, holeIdx+1);
             updateJunkTotalsWeighted();
           });
           lab.appendChild(cb);
@@ -331,8 +337,12 @@
         details.appendChild(summary);
         details.appendChild(menu);
         wrap.appendChild(dotSpan);
+        wrap.appendChild(achLabels);
         wrap.appendChild(details);
         td.appendChild(wrap);
+        
+        // Initialize achievement labels for any pre-checked achievements
+        updateAchievementLabels(p, holeIdx+1);
       }
     });
   }
@@ -346,6 +356,23 @@
       total += w;
     });
     return total;
+  }
+
+  function updateAchievementLabels(p, h){
+    const labelsDiv = document.querySelector(`.junk-ach-labels[data-player="${p}"][data-hole="${h}"]`);
+    if(!labelsDiv) return;
+    
+    const box = document.querySelector(`details.junk-dd[data-player="${p}"][data-hole="${h}"]`);
+    if(!box) return;
+    
+    const achievements = [];
+    box.querySelectorAll('input.junk-ach:checked').forEach(cb=>{
+      const achId = cb.dataset.key;
+      const ach = ACH.find(a => a.id === achId);
+      if(ach) achievements.push(ach.label);
+    });
+    
+    labelsDiv.textContent = achievements.join(', ');
   }
 
   function updateJunkTotalsWeighted(){

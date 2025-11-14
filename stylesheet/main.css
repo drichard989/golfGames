@@ -665,9 +665,19 @@ tfoot td {
 
 .junk-cell {
   display: inline-flex;
+  flex-direction: column;
   gap: var(--space-xs);
   align-items: center;
   justify-content: center;
+}
+
+.junk-ach-labels {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 100px;
+  word-wrap: break-word;
 }
 
 .junk-dd {
