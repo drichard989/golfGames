@@ -421,7 +421,12 @@
       if(ach) labels.push(ach.label);
     });
     
-    labelsDiv.textContent = labels.join(', ');
+    // Join with line breaks after every 2 items
+    const chunks = [];
+    for(let i = 0; i < labels.length; i += 2) {
+      chunks.push(labels.slice(i, i + 2).join(', '));
+    }
+    labelsDiv.textContent = chunks.join('\n');
   }
 
   function updateJunkTotalsWeighted(){
