@@ -643,8 +643,8 @@ tfoot td {
    Junk (Dots) — Table + Dropdown
    ========================= */
 #junkTable {
-  width: max-content;
-  table-layout: fixed;
+  width: 100%;
+  table-layout: auto;
 }
 
 #junkTable th:first-child,
@@ -663,14 +663,12 @@ tfoot td {
 
 #junkTable th:not(:first-child),
 #junkTable td:not(:first-child) {
-  width: auto;
-  min-width: max-content;
-  padding: 2px !important;
+  padding: 4px !important;
   border-right: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 #junkTable tbody td {
-  padding: 2px !important;
+  padding: 4px !important;
   vertical-align: middle;
   height: auto;
 }
@@ -728,17 +726,23 @@ tfoot td {
   list-style: none;
   cursor: pointer;
   border: 1px solid var(--line);
-  background: var(--panel-alt);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--ink);
   border-radius: var(--radius-sm);
   padding: 6px 10px;
   font-size: 11px;
+  font-weight: 500;
   line-height: 1;
   min-height: 36px;
   display: inline-flex;
   align-items: center;
   -webkit-tap-highlight-color: rgba(104, 211, 145, 0.1);
   margin-top: 2px;
+  transition: background 0.15s ease;
+}
+
+.junk-dd > summary:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .junk-dd[open] > summary {
