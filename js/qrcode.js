@@ -25,7 +25,7 @@
   // ============================================================================
 
   /**
-   * Compress scorecard data for QR code
+   * Compress scorecard data for QR code or URL
    * Returns a compact JSON string
    */
   function compressData() {
@@ -335,11 +335,147 @@
   }
 
   // ============================================================================
+  // URL-BASED SHARING
+  // ============================================================================
+
+  /**
+   * Generate shareable URL with scorecard data
+   */
+  function generateShareLink() {
+    try {
+      const data = compressData();
+      
+      // Encode data for URL (base64 for safety)
+      const encoded = btoa(encodeURIComponent(data));
+      
+      // Create URL with hash parameter
+      const baseUrl = window.location.origin + window.location.pathname;
+      const shareUrl = `${baseUrl}#import=${encoded}`;
+      
+      // Copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          if (typeof window.announce === 'function') {
+            window.announce('Share link copied to clipboard!');
+          }
+        }).catch(err => {
+          console.error('[QR] Clipboard write failed:', err);
+          showUrlDialog(shareUrl);
+        });
+      } else {
+        showUrlDialog(shareUrl);
+      }
+      
+      console.log('[QR] Share link generated:', shareUrl.substring(0, 100) + '...');
+    } catch (err) {
+      console.error('[QR] Failed to generate share link:', err);
+      if (typeof window.announce === 'function') {
+        window.announce('Failed to generate share link');
+      }
+    }
+  }
+
+  /**
+   * Show dialog with share URL for manual copying
+   */
+  function showUrlDialog(url) {
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    `;
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+      background: white;
+      padding: 24px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 100%;
+    `;
+
+    const title = document.createElement('h2');
+    title.textContent = 'Share Link';
+    title.style.cssText = 'margin: 0 0 16px 0; color: #333;';
+
+    const instructions = document.createElement('p');
+    instructions.textContent = 'Copy this link to share:';
+    instructions.style.cssText = 'color: #666; font-size: 14px; margin: 8px 0;';
+
+    const urlInput = document.createElement('input');
+    urlInput.type = 'text';
+    urlInput.value = url;
+    urlInput.readOnly = true;
+    urlInput.style.cssText = `
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 12px;
+      margin: 8px 0;
+    `;
+    urlInput.onclick = () => urlInput.select();
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.className = 'btn';
+    closeBtn.style.cssText = 'margin-top: 16px;';
+    closeBtn.onclick = () => modal.remove();
+
+    container.appendChild(title);
+    container.appendChild(instructions);
+    container.appendChild(urlInput);
+    container.appendChild(closeBtn);
+    modal.appendChild(container);
+    document.body.appendChild(modal);
+
+    // Auto-select the URL
+    urlInput.select();
+  }
+
+  /**
+   * Check URL hash for import data on page load
+   */
+  function checkUrlForImport() {
+    const hash = window.location.hash;
+    if (!hash.startsWith('#import=')) return;
+
+    try {
+      // Extract and decode data
+      const encoded = hash.substring(8); // Remove '#import='
+      const decoded = decodeURIComponent(atob(encoded));
+      
+      console.log('[QR] Import data detected in URL');
+      
+      // Import the data
+      importData(decoded);
+      
+      // Clear the hash to prevent re-import on refresh
+      history.replaceState(null, '', window.location.pathname);
+    } catch (err) {
+      console.error('[QR] Failed to import from URL:', err);
+      if (typeof window.announce === 'function') {
+        window.announce('Failed to import scorecard from URL');
+      }
+    }
+  }
+
+  // ============================================================================
   // DATA IMPORT
   // ============================================================================
 
   /**
-   * Import data from QR code scan
+   * Import data from QR code scan or URL
    */
   function importData(jsonString) {
     try {
@@ -461,8 +597,17 @@
   window.QRShare = {
     generate: generateQR,
     scan: scanQR,
-    import: importData
+    import: importData,
+    generateShareLink: generateShareLink
   };
+
+  // Check for import data in URL on page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkUrlForImport);
+  } else {
+    // DOM already loaded, check immediately
+    checkUrlForImport();
+  }
 
   console.log('[QR] Module loaded');
 

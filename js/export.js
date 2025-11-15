@@ -1859,6 +1859,7 @@ console.log('[Export] Module loaded');
         
         // Generate QR code data for import
         let qrCodeHTML = '';
+        let shareLinkHTML = '';
         if (typeof QRCode !== 'undefined' && window.QRShare) {
           try {
             // Get the compressed data (same format used for QR generation)
@@ -1870,6 +1871,16 @@ console.log('[Export] Module loaded');
             });
             const course = window.ACTIVE_COURSE || 'manito';
             const qrData = JSON.stringify({ v: 1, c: course, p: players });
+            
+            // Generate share link URL
+            const encoded = btoa(encodeURIComponent(qrData));
+            const baseUrl = window.location.origin + window.location.pathname;
+            const shareUrl = `${baseUrl}#import=${encoded}`;
+            
+            shareLinkHTML = `<div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.2); border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto;">
+              <div style="font-size: 16px; font-weight: normal; margin-bottom: 8px;">📱 Import Link (tap to open in app):</div>
+              <a href="${shareUrl}" style="color: #fff; text-decoration: underline; word-break: break-all; font-size: 14px; display: block; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px;">${shareUrl}</a>
+            </div>`;
             
             // Create a temporary container for QR code generation
             const tempQR = document.createElement('div');
@@ -1902,7 +1913,7 @@ console.log('[Export] Module loaded');
           }
         }
         
-        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>${qrCodeHTML}`;
+        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>${shareLinkHTML}${qrCodeHTML}`;
         body.insertBefore(notice, body.firstChild);
       }
       
