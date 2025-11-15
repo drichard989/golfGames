@@ -1513,6 +1513,17 @@
       shareHtmlBtn.addEventListener("click", () => window.Export.shareHtmlSnapshot());
     }
 
+    // QR Code buttons
+    const generateQRBtn = document.getElementById('generateQRBtn');
+    if (generateQRBtn && window.QRShare && window.QRShare.generate) {
+      generateQRBtn.addEventListener("click", () => window.QRShare.generate());
+    }
+    
+    const scanQRBtn = document.getElementById('scanQRBtn');
+    if (scanQRBtn && window.QRShare && window.QRShare.scan) {
+      scanQRBtn.addEventListener("click", () => window.QRShare.scan());
+    }
+
     // Player management buttons
     const addPlayerBtn = document.getElementById('addPlayerBtn');
     const removePlayerBtn = document.getElementById('removePlayerBtn');
