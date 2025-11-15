@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Golf Games Test Suite</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #e0e0e0; }
+    h1 { color: #68d391; }
+    .test-suite { margin: 20px 0; border: 1px solid #333; padding: 15px; background: #0b0d10; }
+    .test-case { margin: 10px 0; padding: 8px; border-left: 3px solid #666; }
+    .test-case.pass { border-left-color: #68d391; background: #0a2a1a; }
+    .test-case.fail { border-left-color: #ff6b6b; background: #2a0a0a; }
+    .test-name { font-weight: bold; }
+    .test-error { color: #ff6b6b; margin-top: 5px; font-size: 0.9em; }
+    .summary { margin-top: 20px; padding: 15px; background: #11151a; border: 2px solid #68d391; }
+    .summary.has-failures { border-color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <h1>⛳ Golf Games Test Suite</h1>
+  <div id="results"></div>
+  <div id="summary"></div>
+
+  <script>
+    // Simple test framework
+    const tests = [];
+    let currentSuite = '';
+
+    function describe(name, fn) {
+      currentSuite = name;
+      fn();
+    }
+
+    function it(name, fn) {
+      tests.push({ suite: currentSuite, name, fn });
+    }
+
+    function assert(condition, message) {
+      if (!condition) throw new Error(message || 'Assertion failed');
+    }
+
+    function assertEqual(actual, expected, message) {
+      if (actual !== expected) {
+        throw new Error(`${message || 'Values not equal'}\nExpected: ${expected}\nActual: ${actual}`);
+      }
+    }
+
+    function assertAlmostEqual(actual, expected, tolerance = 0.001, message) {
+      if (Math.abs(actual - expected) > tolerance) {
+        throw new Error(`${message || 'Values not almost equal'}\nExpected: ${expected}\nActual: ${actual}`);
+      }
+    }
+
+    // Mock the core functions we need to test
+    const PARS = [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4];
+    const HCPMEN = [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8];
+
+    // Copy the function to test from index.js
+    function strokesOnHoleHalfAware(adjCH, i, half){
+      const holeHcp=HCPMEN[i];
+      
+      // Handle plus handicaps (negative adjCH means player gives strokes)
+      if(adjCH < 0) {
+        const absAdj = Math.abs(adjCH);
+        const base=Math.floor(absAdj/18), rem=absAdj%18;
+        const fullStrokes = base+(holeHcp<=rem?1:0);
+        // Half pops: give 0.5 strokes instead of 1
+        return half ? -(fullStrokes * 0.5) : -fullStrokes;
+      }
+      
+      if(adjCH === 0) return 0;
+      
+      // Calculate full strokes normally
+      const base=Math.floor(adjCH/18), rem=adjCH%18;
+      const fullStrokes = base+(holeHcp<=rem?1:0);
+      
+      // Half pops: get 0.5 strokes instead of 1
+      return half ? (fullStrokes * 0.5) : fullStrokes;
+    }
+
+    function adjustedCHs(chs) {
+      const minCH = Math.min(...chs);
+      return chs.map(ch => ch - minCH);
+    }
+
+    function getNetForSkins(gross, adjCH, holeIdx, half) {
+      if(!gross) return 0;
+      const sr = strokesOnHoleHalfAware(adjCH, holeIdx, half);
+      const NDB_BUFFER = 2;
+      const ndb = PARS[holeIdx] + NDB_BUFFER + sr;
+      const adjGross = Math.min(gross, ndb);
+      return adjGross - sr;
+    }
+
+    // ==================== TESTS ====================
+
+    describe('strokesOnHoleHalfAware - Full Pops', () => {
+      it('should give 0 strokes for 0 handicap', () => {
+        assertEqual(strokesOnHoleHalfAware(0, 0, false), 0);
+      });
+
+      it('should give 1 stroke on HCP 1 hole for 8 handicap', () => {
+        // HCP 1 is at index 5 (6th hole)
+        assertEqual(strokesOnHoleHalfAware(8, 5, false), 1);
+      });
+
+      it('should give 0 strokes on HCP 9 hole for 8 handicap', () => {
+        // HCP 9 is at index 7 (8th hole)
+        assertEqual(strokesOnHoleHalfAware(8, 7, false), 0);
+      });
+
+      it('should give 1 stroke per hole for 18 handicap', () => {
+        for(let i = 0; i < 18; i++) {
+          assertEqual(strokesOnHoleHalfAware(18, i, false), 1, `Hole ${i+1}`);
+        }
+      });
+
+      it('should give 2 strokes on HCP 1 for 36 handicap', () => {
+        assertEqual(strokesOnHoleHalfAware(36, 5, false), 2);
+      });
+
+      it('should handle plus handicap correctly', () => {
+        // -1 handicap gives 1 stroke on HCP 1 hole
+        assertEqual(strokesOnHoleHalfAware(-1, 5, false), -1);
+        // -1 handicap gives 0 strokes on HCP 2+ holes
+        assertEqual(strokesOnHoleHalfAware(-1, 10, false), 0);
+      });
+    });
+
+    describe('strokesOnHoleHalfAware - Half Pops', () => {
+      it('should give 0.5 strokes on HCP 1 for 8 handicap', () => {
+        assertAlmostEqual(strokesOnHoleHalfAware(8, 5, true), 0.5);
+      });
+
+      it('should give 0 strokes on HCP 9 for 8 handicap', () => {
+        assertAlmostEqual(strokesOnHoleHalfAware(8, 7, true), 0);
+      });
+
+      it('should give 0.5 strokes per hole for 18 handicap', () => {
+        for(let i = 0; i < 18; i++) {
+          assertAlmostEqual(strokesOnHoleHalfAware(18, i, true), 0.5, 0.001, `Hole ${i+1}`);
+        }
+      });
+
+      it('should give 1 stroke on HCP 1 for 36 handicap (2 * 0.5)', () => {
+        assertAlmostEqual(strokesOnHoleHalfAware(36, 5, true), 1);
+      });
+
+      it('should handle plus handicap with half pops', () => {
+        // -1 handicap gives 0.5 strokes on HCP 1 hole
+        assertAlmostEqual(strokesOnHoleHalfAware(-1, 5, true), -0.5);
+      });
+    });
+
+    describe('Net Score Calculation - Real Scenario (Hole 9)', () => {
+      // Hole 9: Par 4, HCP 3 (index 8)
+      // Players: Daniel -1, Rob 2, John 4, Alex 5
+      const chs = [-1, 2, 4, 5];
+      const adjCHs = adjustedCHs(chs); // [0, 3, 5, 6] after playing off Daniel's -1
+
+      it('should calculate correct nets with full pops on hole 9', () => {
+        // Daniel: gross 3, adjCH 0, no strokes
+        assertAlmostEqual(getNetForSkins(3, adjCHs[0], 8, false), 3);
+        // Rob: gross 3, adjCH 3, gets stroke on HCP 3
+        assertAlmostEqual(getNetForSkins(3, adjCHs[1], 8, false), 2);
+        // John: gross 4, adjCH 5, gets stroke on HCP 3
+        assertAlmostEqual(getNetForSkins(4, adjCHs[2], 8, false), 3);
+        // Alex: gross 3, adjCH 6, gets stroke on HCP 3
+        assertAlmostEqual(getNetForSkins(3, adjCHs[3], 8, false), 2);
+      });
+
+      it('should calculate correct nets with half pops on hole 9', () => {
+        // Daniel: gross 3, adjCH 0, no strokes
+        assertAlmostEqual(getNetForSkins(3, adjCHs[0], 8, true), 3);
+        // Rob: gross 3, adjCH 3, gets 0.5 stroke on HCP 3
+        assertAlmostEqual(getNetForSkins(3, adjCHs[1], 8, true), 2.5);
+        // John: gross 4, adjCH 5, gets 0.5 stroke on HCP 3
+        assertAlmostEqual(getNetForSkins(4, adjCHs[2], 8, true), 3.5);
+        // Alex: gross 3, adjCH 6, gets 0.5 stroke on HCP 3
+        assertAlmostEqual(getNetForSkins(3, adjCHs[3], 8, true), 2.5);
+      });
+
+      it('Daniel natural birdie should beat half-stroke net on hole 2', () => {
+        // Hole 2: Par 4, HCP 13 (index 1)
+        // Daniel gross 3 vs Rob gross 4
+        assertAlmostEqual(getNetForSkins(3, adjCHs[0], 1, true), 3);
+        assertAlmostEqual(getNetForSkins(4, adjCHs[1], 1, true), 4); // No stroke on HCP 13
+        assert(3 < 4, 'Daniel should win');
+      });
+    });
+
+    describe('Adjusted Handicaps (Play Off Low)', () => {
+      it('should adjust handicaps to play off the lowest', () => {
+        const result = adjustedCHs([-1, 2, 4, 5]);
+        assertEqual(result[0], 0);
+        assertEqual(result[1], 3);
+        assertEqual(result[2], 5);
+        assertEqual(result[3], 6);
+      });
+
+      it('should handle all positive handicaps', () => {
+        const result = adjustedCHs([5, 10, 15, 20]);
+        assertEqual(result[0], 0);
+        assertEqual(result[1], 5);
+        assertEqual(result[2], 10);
+        assertEqual(result[3], 15);
+      });
+
+      it('should handle all same handicaps', () => {
+        const result = adjustedCHs([10, 10, 10, 10]);
+        assert(result.every(x => x === 0), 'All should be 0');
+      });
+    });
+
+    describe('Edge Cases', () => {
+      it('should handle very high handicaps', () => {
+        // 54 handicap = 3 strokes per hole
+        assertEqual(strokesOnHoleHalfAware(54, 0, false), 3);
+        assertAlmostEqual(strokesOnHoleHalfAware(54, 0, true), 1.5);
+      });
+
+      it('should handle negative handicaps correctly', () => {
+        // -5 handicap gives strokes on HCP 1-5
+        assertEqual(strokesOnHoleHalfAware(-5, 5, false), -1); // HCP 1
+        assertEqual(strokesOnHoleHalfAware(-5, 10, false), -1); // HCP 2
+        assertEqual(strokesOnHoleHalfAware(-5, 1, false), 0); // HCP 13
+      });
+
+      it('should return 0 net for 0 gross score', () => {
+        assertEqual(getNetForSkins(0, 5, 0, false), 0);
+      });
+    });
+
+    // ==================== TEST RUNNER ====================
+
+    function runTests() {
+      const results = document.getElementById('results');
+      const summaryEl = document.getElementById('summary');
+      let passed = 0, failed = 0;
+      const failures = [];
+
+      let currentSuiteEl = null;
+
+      tests.forEach(test => {
+        if (!currentSuiteEl || currentSuiteEl.dataset.suite !== test.suite) {
+          currentSuiteEl = document.createElement('div');
+          currentSuiteEl.className = 'test-suite';
+          currentSuiteEl.dataset.suite = test.suite;
+          currentSuiteEl.innerHTML = `<h2>${test.suite}</h2>`;
+          results.appendChild(currentSuiteEl);
+        }
+
+        const testEl = document.createElement('div');
+        testEl.className = 'test-case';
+
+        try {
+          test.fn();
+          testEl.classList.add('pass');
+          testEl.innerHTML = `<div class="test-name">✓ ${test.name}</div>`;
+          passed++;
+        } catch (error) {
+          testEl.classList.add('fail');
+          testEl.innerHTML = `
+            <div class="test-name">✗ ${test.name}</div>
+            <div class="test-error">${error.message}</div>
+          `;
+          failed++;
+          failures.push({ suite: test.suite, name: test.name, error: error.message });
+        }
+
+        currentSuiteEl.appendChild(testEl);
+      });
+
+      summaryEl.className = 'summary' + (failed > 0 ? ' has-failures' : '');
+      summaryEl.innerHTML = `
+        <h2>Summary</h2>
+        <div><strong>Total:</strong> ${tests.length} tests</div>
+        <div style="color: #68d391;"><strong>Passed:</strong> ${passed}</div>
+        <div style="color: #ff6b6b;"><strong>Failed:</strong> ${failed}</div>
+        ${failed > 0 ? '<h3>Failures:</h3>' + failures.map(f => `<div>• ${f.suite} - ${f.name}</div>`).join('') : ''}
+      `;
+    }
+
+    // Run tests when page loads
+    window.addEventListener('DOMContentLoaded', runTests);
+  </script>
+</body>
+</html>
