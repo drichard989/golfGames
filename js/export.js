@@ -7,17 +7,17 @@
    FEATURES:
    • CSV Export: Download current scorecard as CSV file
    • Email Export: Generate formatted email with scorecard and game results
-   • HTML Snapshot: Export complete page as single-file HTML with inlined styles
+   • HTML Share: Export complete page as single-file HTML with inlined styles (mobile share or desktop download)
    • Includes all active game results (Vegas, Skins, Junk, Hi-Lo)
    • Shows game options and settings for each active game
    
    EXPORTS:
    • exportCurrentScorecard() - Download CSV file
    • emailCurrentScorecard() - Open email client with formatted scorecard
-   • exportHtmlSnapshot() - Download self-contained HTML snapshot
+   • shareHtmlSnapshot() - Share or download self-contained HTML snapshot
    
    Exposed as: window.Export
-   API: {exportCurrentScorecard, emailCurrentScorecard, exportHtmlSnapshot}
+   API: {exportCurrentScorecard, emailCurrentScorecard, shareHtmlSnapshot}
    
    ============================================================================
 */
@@ -1747,162 +1747,6 @@ console.log('[Export] Module loaded');
   }
 
   /**
-   * Export HTML snapshot as a single file
-   * Creates a self-contained HTML file with inlined styles and all current data
-   */
-  function exportHtmlSnapshot() {
-    try {
-      // Clone the entire document
-      const docClone = document.cloneNode(true);
-      
-      // Use the embedded CSS from the module
-      const allCSS = EMBEDDED_CSS;
-      console.log('[Export] Using embedded CSS, length:', allCSS.length);
-      
-      // Get the cloned html element
-      const htmlEl = docClone.documentElement;
-      
-      // Copy all input values from original to clone
-      const originalInputs = document.querySelectorAll('input');
-      const clonedInputs = htmlEl.querySelectorAll('input');
-      originalInputs.forEach((input, idx) => {
-        if (clonedInputs[idx]) {
-          if (input.type === 'checkbox' || input.type === 'radio') {
-            clonedInputs[idx].checked = input.checked;
-            if (input.checked) {
-              clonedInputs[idx].setAttribute('checked', 'checked');
-            } else {
-              clonedInputs[idx].removeAttribute('checked');
-            }
-          } else {
-            clonedInputs[idx].value = input.value;
-            clonedInputs[idx].setAttribute('value', input.value);
-          }
-        }
-      });
-      
-      // Copy all select values
-      const originalSelects = document.querySelectorAll('select');
-      const clonedSelects = htmlEl.querySelectorAll('select');
-      originalSelects.forEach((select, idx) => {
-        if (clonedSelects[idx]) {
-          clonedSelects[idx].value = select.value;
-          Array.from(clonedSelects[idx].options).forEach(option => {
-            option.selected = option.value === select.value;
-            if (option.selected) {
-              option.setAttribute('selected', 'selected');
-            } else {
-              option.removeAttribute('selected');
-            }
-          });
-        }
-      });
-      
-      // Copy all textarea values
-      const originalTextareas = document.querySelectorAll('textarea');
-      const clonedTextareas = htmlEl.querySelectorAll('textarea');
-      originalTextareas.forEach((textarea, idx) => {
-        if (clonedTextareas[idx]) {
-          clonedTextareas[idx].textContent = textarea.value;
-        }
-      });
-      
-      // Remove stylesheet links since we're inlining the embedded CSS
-      const links = htmlEl.querySelectorAll('link[rel="stylesheet"]');
-      links.forEach(link => link.remove());
-      console.log('[Export] Removed', links.length, 'stylesheet link(s)');
-      
-      // Remove all script tags
-      const scripts = htmlEl.querySelectorAll('script');
-      scripts.forEach(script => script.remove());
-      
-      // Remove service worker and manifest references
-      const manifest = htmlEl.querySelector('link[rel="manifest"]');
-      if (manifest) manifest.remove();
-      
-      const metaTags = htmlEl.querySelectorAll('meta[http-equiv]');
-      metaTags.forEach(meta => meta.remove());
-      
-      // Add embedded CSS at the beginning of head
-      const head = htmlEl.querySelector('head');
-      if (head) {
-        const styleEl = docClone.createElement('style');
-        styleEl.setAttribute('data-export-inline', 'true');
-        styleEl.textContent = allCSS;
-        head.insertBefore(styleEl, head.firstChild);
-        console.log('[Export] Added inline style element with', allCSS.length, 'characters');
-      }
-      
-      // Add read-only notice banner at top of body
-      const body = htmlEl.querySelector('body');
-      if (body) {
-        const exportDate = new Date();
-        const exportTimestamp = exportDate.toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        });
-        const notice = docClone.createElement('div');
-        notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
-        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>`;
-        body.insertBefore(notice, body.firstChild);
-      }
-      
-      // Add read-only notices to each game section
-      const gameSections = htmlEl.querySelectorAll('.game-section');
-      gameSections.forEach(section => {
-        const exportDate = new Date();
-        const exportTimestamp = exportDate.toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-          hour: 'numeric',
-          minute: '2-digit',
-          hour12: true
-        });
-        const sectionNotice = docClone.createElement('div');
-        sectionNotice.style.cssText = 'background: #ffa94d; color: #000; padding: 12px; text-align: center; font-size: 16px; font-weight: bold; margin: 0 0 16px 0; border: 3px solid #fd7e14; border-radius: 8px;';
-        sectionNotice.innerHTML = `📋 This is a copy of the Manito Games scoring and is not editable<br><span style="font-size: 14px; font-weight: normal; margin-top: 4px; display: inline-block;">Exported: ${exportTimestamp}</span>`;
-        section.insertBefore(sectionNotice, section.firstChild.nextSibling);
-      });
-      
-      // Create the HTML string
-      const htmlContent = '<!DOCTYPE html>\n' + htmlEl.outerHTML;
-      
-      // Create download
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      
-      // Generate filename
-      const date = new Date();
-      const dateStr = date.toISOString().split('T')[0];
-      const ACTIVE_COURSE = window.ACTIVE_COURSE || 'manito';
-      const COURSES = window.COURSES || {};
-      const courseName = COURSES[ACTIVE_COURSE]?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'scorecard';
-      a.download = `${courseName}_snapshot_${dateStr}.html`;
-      
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      if (typeof window.announce === 'function') {
-        window.announce('HTML snapshot exported.');
-      }
-    } catch (error) {
-      console.error('[Export] Error exporting HTML snapshot:', error);
-      if (typeof window.announce === 'function') {
-        window.announce('Error exporting HTML snapshot.');
-      }
-    }
-  }
-
-  /**
    * Share HTML snapshot using native share API (mobile-friendly)
    * Falls back to download if Web Share API is not available
    */
@@ -2084,7 +1928,6 @@ console.log('[Export] Module loaded');
   window.Export = {
     exportCurrentScorecard,
     emailCurrentScorecard,
-    exportHtmlSnapshot,
     shareHtmlSnapshot
   };
   

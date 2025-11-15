@@ -1508,11 +1508,6 @@
     const emailBtn = document.getElementById('emailCSVBtn');
     if (emailBtn) emailBtn.addEventListener("click", emailCurrentScorecard);
     
-    const exportHtmlBtn = document.getElementById('exportHtmlBtn');
-    if (exportHtmlBtn && window.Export && window.Export.exportHtmlSnapshot) {
-      exportHtmlBtn.addEventListener("click", () => window.Export.exportHtmlSnapshot());
-    }
-
     const shareHtmlBtn = document.getElementById('shareHtmlBtn');
     if (shareHtmlBtn && window.Export && window.Export.shareHtmlSnapshot) {
       shareHtmlBtn.addEventListener("click", () => window.Export.shareHtmlSnapshot());
