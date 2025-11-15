@@ -1502,6 +1502,11 @@
     
     const emailBtn = document.getElementById('emailCSVBtn');
     if (emailBtn) emailBtn.addEventListener("click", emailCurrentScorecard);
+    
+    const exportHtmlBtn = document.getElementById('exportHtmlBtn');
+    if (exportHtmlBtn && window.Export && window.Export.exportHtmlSnapshot) {
+      exportHtmlBtn.addEventListener("click", () => window.Export.exportHtmlSnapshot());
+    }
 
     // Player management buttons
     const addPlayerBtn = document.getElementById('addPlayerBtn');
