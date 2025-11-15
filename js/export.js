@@ -1762,7 +1762,7 @@ console.log('[Export] Module loaded');
       // Get the cloned html element
       const htmlEl = docClone.documentElement;
       
-      // Copy all input values from original to clone
+      // Copy all input values from original to clone and make them read-only
       const originalInputs = document.querySelectorAll('input');
       const clonedInputs = htmlEl.querySelectorAll('input');
       originalInputs.forEach((input, idx) => {
@@ -1774,14 +1774,18 @@ console.log('[Export] Module loaded');
             } else {
               clonedInputs[idx].removeAttribute('checked');
             }
+            clonedInputs[idx].disabled = true;
+            clonedInputs[idx].setAttribute('disabled', 'disabled');
           } else {
             clonedInputs[idx].value = input.value;
             clonedInputs[idx].setAttribute('value', input.value);
+            clonedInputs[idx].readOnly = true;
+            clonedInputs[idx].setAttribute('readonly', 'readonly');
           }
         }
       });
       
-      // Copy all select values
+      // Copy all select values and disable them
       const originalSelects = document.querySelectorAll('select');
       const clonedSelects = htmlEl.querySelectorAll('select');
       originalSelects.forEach((select, idx) => {
@@ -1795,15 +1799,19 @@ console.log('[Export] Module loaded');
               option.removeAttribute('selected');
             }
           });
+          clonedSelects[idx].disabled = true;
+          clonedSelects[idx].setAttribute('disabled', 'disabled');
         }
       });
       
-      // Copy all textarea values
+      // Copy all textarea values and make them read-only
       const originalTextareas = document.querySelectorAll('textarea');
       const clonedTextareas = htmlEl.querySelectorAll('textarea');
       originalTextareas.forEach((textarea, idx) => {
         if (clonedTextareas[idx]) {
           clonedTextareas[idx].textContent = textarea.value;
+          clonedTextareas[idx].readOnly = true;
+          clonedTextareas[idx].setAttribute('readonly', 'readonly');
         }
       });
       
