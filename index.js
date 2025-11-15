@@ -266,7 +266,7 @@
 
     // Games toggles
     toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleBankerVegas:"#toggleBankerVegas", toggleHilo:"#toggleHilo",
-    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", bankerVegasSection:"#bankerVegasSection", hiloSection:"#hiloSection",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", bankerVegasSection:"#bankerVegasSection", hiloSection:"#hiloSection", junkSection:"#junkSection",
 
     // Vegas
   vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
@@ -805,9 +805,23 @@
         banker: { 
           open: $(ids.bankerSection).classList.contains("open") 
         },
+        bankervegas: {
+          open: $(ids.bankerVegasSection)?.classList.contains("open")
+        },
         skins: { 
-          buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10, 
+          buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
+          carry: document.getElementById('skinsCarry')?.checked ?? true,
+          half: document.getElementById('skinsHalf')?.checked ?? false,
           open: $(ids.skinsSection)?.classList.contains("open") 
+        },
+        junk: {
+          useNet: document.getElementById('junkUseNet')?.checked ?? false,
+          open: $(ids.junkSection)?.classList.contains("open"),
+          achievements: (typeof window.Junk?.getAchievementState === 'function') ? window.Junk.getAchievementState() : []
+        },
+        hilo: {
+          unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10,
+          open: $(ids.hiloSection)?.classList.contains("open")
         },
         savedAt: Date.now(),
       };
@@ -874,12 +888,47 @@
         if(s.vegas?.open) games_open("vegas");
 
         if(s.banker?.open) games_open("banker");
+        
+        if(s.bankervegas?.open) games_open("bankervegas");
 
+        // Restore Skins options
         if(s.skins?.buyIn != null) {
           const buyInEl = document.getElementById('skinsBuyIn');
           if(buyInEl) buyInEl.value = s.skins.buyIn;
         }
+        if(s.skins?.carry != null) {
+          const carryEl = document.getElementById('skinsCarry');
+          if(carryEl) carryEl.checked = s.skins.carry;
+        }
+        if(s.skins?.half != null) {
+          const halfEl = document.getElementById('skinsHalf');
+          if(halfEl) halfEl.checked = s.skins.half;
+        }
         if(s.skins?.open) games_open("skins");
+        
+        // Restore Junk options
+        if(s.junk?.useNet != null) {
+          const useNetEl = document.getElementById('junkUseNet');
+          if(useNetEl) useNetEl.checked = s.junk.useNet;
+        }
+        if(s.junk?.open) {
+          games_open("junk");
+          // Restore achievements after table is initialized
+          if(s.junk?.achievements) {
+            setTimeout(() => {
+              if(window.Junk && typeof window.Junk.setAchievementState === 'function') {
+                window.Junk.setAchievementState(s.junk.achievements);
+              }
+            }, 150);
+          }
+        }
+        
+        // Restore Hi-Lo options
+        if(s.hilo?.unitValue != null) {
+          const unitValueEl = document.getElementById('hiloUnitValue');
+          if(unitValueEl) unitValueEl.value = s.hilo.unitValue;
+        }
+        if(s.hilo?.open) games_open("hilo");
 
         // Recalculate all games with restored data
         AppManager.recalcGames();
@@ -925,6 +974,11 @@
       window.Vegas?.renderTeamControls(); 
       AppManager.recalcGames();
       
+      // Clear Junk achievements
+      if(window.Junk && typeof window.Junk.clearAllAchievements === 'function') {
+        window.Junk.clearAllAchievements();
+      }
+      
       // Update stroke highlights after clearing
       if(typeof updateStrokeHighlights === 'function') {
         updateStrokeHighlights();
@@ -966,7 +1020,7 @@
   
   /**
    * Open a game section and make it visible
-   * @param {string} which - Game section: 'vegas', 'banker', 'skins', 'bankervegas', or 'hilo'
+   * @param {string} which - Game section: 'vegas', 'banker', 'skins', 'junk', 'bankervegas', or 'hilo'
    */
   function games_open(which){
     if(which==="vegas"){ $(ids.vegasSection).classList.add("open"); $(ids.vegasSection).setAttribute("aria-hidden","false"); $(ids.toggleVegas).classList.add("active"); }
@@ -977,6 +1031,12 @@
       setTimeout(() => { window.Banker?.init(); }, 0);
     }
     if(which==="skins"){ $(ids.skinsSection).classList.add("open"); $(ids.skinsSection).setAttribute("aria-hidden","false"); $(ids.toggleSkins).classList.add("active"); }
+    if(which==="junk"){ 
+      $(ids.junkSection).classList.add("open"); 
+      $(ids.junkSection).setAttribute("aria-hidden","false"); 
+      document.getElementById('toggleJunk')?.classList.add("active");
+      setTimeout(() => { window.Junk?.init(); }, 0);
+    }
     if(which==="bankervegas"){ 
       $(ids.bankerVegasSection).classList.add("open"); 
       $(ids.bankerVegasSection).setAttribute("aria-hidden","false"); 
@@ -994,6 +1054,7 @@
     if(which==="vegas"){ $(ids.vegasSection).classList.remove("open"); $(ids.vegasSection).setAttribute("aria-hidden","true"); $(ids.toggleVegas).classList.remove("active"); }
     if(which==="banker"){ $(ids.bankerSection).classList.remove("open"); $(ids.bankerSection).setAttribute("aria-hidden","true"); $(ids.toggleBanker).classList.remove("active"); }
     if(which==="skins"){ $(ids.skinsSection).classList.remove("open"); $(ids.skinsSection).setAttribute("aria-hidden","true"); $(ids.toggleSkins).classList.remove("active"); }
+    if(which==="junk"){ $(ids.junkSection).classList.remove("open"); $(ids.junkSection).setAttribute("aria-hidden","true"); document.getElementById('toggleJunk')?.classList.remove("active"); }
     if(which==="bankervegas"){ $(ids.bankerVegasSection).classList.remove("open"); $(ids.bankerVegasSection).setAttribute("aria-hidden","true"); $(ids.toggleBankerVegas).classList.remove("active"); }
     if(which==="hilo"){ $(ids.hiloSection).classList.remove("open"); $(ids.hiloSection).setAttribute("aria-hidden","true"); $(ids.toggleHilo).classList.remove("active"); }
   }
@@ -1470,6 +1531,7 @@
       if(open) {
         setTimeout(() => { window.Skins?.init(); }, 0);
       }
+      Storage.saveDebounced();
     });
     
     // Junk: toggle and initialize
@@ -1480,7 +1542,34 @@
       sec.setAttribute('aria-hidden', open ? 'false' : 'true');
       document.getElementById('toggleJunk')?.classList.toggle('active', open);
       if(open) {
-        setTimeout(() => { window.Junk?.init(); }, 0);
+        setTimeout(() => { 
+          window.Junk?.init();
+          // Restore achievements from localStorage after table is built
+          const savedState = localStorage.getItem(Storage.KEY);
+          if(savedState) {
+            try {
+              const state = JSON.parse(savedState);
+              if(state.junk?.achievements) {
+                setTimeout(() => {
+                  if(window.Junk && typeof window.Junk.setAchievementState === 'function') {
+                    window.Junk.setAchievementState(state.junk.achievements);
+                  }
+                }, 100);
+              }
+            } catch(e) {
+              console.error('[Junk] Failed to restore achievements:', e);
+            }
+          }
+        }, 0);
+      }
+      Storage.saveDebounced();
+    });
+    
+    // Clear Junk Achievements button
+    document.getElementById('clearJunkAchievements')?.addEventListener('click', () => {
+      if(confirm('Clear all Junk achievements? This cannot be undone.')) {
+        window.Junk?.clearAllAchievements();
+        Utils.announce('All achievements cleared.');
       }
     });
 

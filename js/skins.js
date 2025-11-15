@@ -368,8 +368,18 @@
     updateSkins();
 
     // Recompute on option change
-    document.getElementById('skinsCarry')?.addEventListener('change', updateSkins);
-    document.getElementById('skinsHalf')?.addEventListener('change', updateSkins);
+    document.getElementById('skinsCarry')?.addEventListener('change', () => {
+      updateSkins();
+      if (typeof window.saveDebounced === 'function') {
+        window.saveDebounced();
+      }
+    });
+    document.getElementById('skinsHalf')?.addEventListener('change', () => {
+      updateSkins();
+      if (typeof window.saveDebounced === 'function') {
+        window.saveDebounced();
+      }
+    });
     document.getElementById('skinsBuyIn')?.addEventListener('input', () => {
       updateSkins();
       // Call saveDebounced if available

@@ -348,6 +348,10 @@
             td.dataset[id] = cb.checked ? '1' : '';
             updateAchievementLabels(p, holeIdx+1);
             updateJunkTotalsWeighted();
+            // Save state when achievements change
+            if (typeof window.saveDebounced === 'function') {
+              window.saveDebounced();
+            }
           });
           lab.appendChild(cb);
           lab.append(` ${label} (+${pts})`);
@@ -521,6 +525,9 @@
     if(junkUseNet){
       junkUseNet.addEventListener('change', ()=> {
         updateJunk();
+        if (typeof window.saveDebounced === 'function') {
+          window.saveDebounced();
+        }
       });
     }
     
@@ -544,8 +551,73 @@
   // TOGGLE HANDLER
   // =============================================================================
   
-  function toggleGame(sectionId, toggleBtn){
-    const sections = ['vegasSection','bankerSection','junkSection','junkSection','skinsSection'];
+  /**
+   * Get current achievement state for saving
+   * Returns array of checked achievements: [{player, hole, key}]
+   */
+  function getAchievementState() {
+    const achievements = [];
+    const checkboxes = document.querySelectorAll('#junkTable input.junk-ach:checked');
+    checkboxes.forEach(cb => {
+      achievements.push({
+        player: parseInt(cb.dataset.player),
+        hole: parseInt(cb.dataset.hole),
+        key: cb.dataset.key
+      });
+    });
+    return achievements;
+  }
+
+  /**
+   * Restore achievement state from saved data
+   * @param {Array} achievements - Array of {player, hole, key}
+   */
+  function setAchievementState(achievements) {
+    if(!achievements || !Array.isArray(achievements)) return;
+    
+    // First, ensure the table is built and enhanced
+    const tbody = document.querySelector('#junkBody');
+    if(!tbody || !tbody.querySelector('.junk-cell')) {
+      return;
+    }
+    
+    achievements.forEach(({player, hole, key}) => {
+      const checkbox = document.querySelector(
+        `#junkTable input.junk-ach[data-player="${player}"][data-hole="${hole}"][data-key="${key}"]`
+      );
+      if(checkbox && !checkbox.checked) {
+        checkbox.checked = true;
+        // Trigger change event to update labels and totals
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+  }
+
+  /**
+   * Clear all achievements (checkboxes) for all players on all holes
+   */
+  function clearAllAchievements() {
+    // Find all achievement checkboxes in the Junk table
+    const checkboxes = document.querySelectorAll('#junkTable input[type="checkbox"]');
+    checkboxes.forEach(checkbox => {
+      if(checkbox.checked) {
+        checkbox.checked = false;
+        // Trigger change event to update the cell
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+    
+    // Update the table to recalculate totals
+    updateJunk();
+    
+    // Save the cleared state
+    if (typeof window.saveDebounced === 'function') {
+      window.saveDebounced();
+    }
+  }
+
+  function toggleGame(sectionId,toggleBtn){
+    const sections = ['vegasSection','bankerSection','junkSection','skinsSection'];
     sections.forEach(id=>{
       const sec = document.getElementById(id);
       if(!sec) return;
@@ -560,10 +632,7 @@
     });
   }
 
-  document.getElementById('toggleJunk')?.addEventListener('click', ()=>{
-    initJunk();
-    toggleGame('junkSection','toggleJunk');
-  });
+  // Note: toggleJunk click handler is in index.js to avoid duplicate listeners
 
   // =============================================================================
   // EXPOSE TO GLOBAL SCOPE
@@ -575,7 +644,10 @@
     refreshForPlayerChange: refreshJunkForPlayerChange,
     update: updateJunk,
     compute: Junk.compute,
-    render: Junk.render
+    render: Junk.render,
+    clearAllAchievements: clearAllAchievements,
+    getAchievementState: getAchievementState,
+    setAchievementState: setAchievementState
   };
 
 })();
