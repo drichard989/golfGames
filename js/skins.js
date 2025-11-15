@@ -228,20 +228,6 @@
           getNetForSkins(p, h, half)
         );
         
-        // Debug hole 9 (index 8)
-        if (h === 8) {
-          const adjCHs = getAdjustedCHs();
-          const holeHcp = getHCPIndex(h);
-          console.log('=== HOLE 9 DEBUG ===');
-          console.log('Half-pops mode:', half);
-          console.log('Hole HCP:', holeHcp);
-          for (let p = 0; p < playerCount; p++) {
-            const gross = getGross(p, h);
-            const strokes = strokesOnHoleHalfAware(adjCHs[p], h, half);
-            console.log(`Player ${p}: gross=${gross}, adjCH=${adjCHs[p]}, strokes=${strokes}, net=${nets[p]}`);
-          }
-        }
-        
         const filled = nets.map((n, p) => ({ n, p })).filter(x => x.n > 0);
         if (filled.length < 2) {
           if (carry) pot++;

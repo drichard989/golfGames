@@ -694,9 +694,10 @@
         PARS = [...COURSES[courseId].pars];
         HCPMEN = [...COURSES[courseId].hcpMen];
         
-        // Update global references (for Skins/Junk modules)
+        // Update global references (for Skins/Junk/Vegas modules)
         window.PARS = PARS;
         window.HCPMEN = HCPMEN;
+        window.ACTIVE_COURSE = ACTIVE_COURSE;
         
         // Rebuild par and HCP rows with new values
         Scorecard.course.updateParAndHcpRows();
@@ -706,6 +707,12 @@
         
         // Recalculate all game modes (Vegas, Skins, Junk) with new stroke allocations
         AppManager.recalcGames();
+        
+        // Force refresh Vegas if it's open (ensures multipliers recalculate with new HCPMEN)
+        const vegasSection = document.getElementById('vegasSection');
+        if(vegasSection?.classList.contains('open')){
+          window.Vegas?.recalc();
+        }
         
         // Force refresh of any game-specific UI that might be open
         const skinsSection = document.getElementById('skinsSection');

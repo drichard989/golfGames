@@ -104,22 +104,16 @@
       console.error('[Vegas] HCPMEN not loaded - course data missing!');
       return gross; // Fallback to gross if no handicap data
     }
+    
     const holeHcp = HCPMEN[h];
     const base = Math.floor(adj / 18);
     const rem = adj % 18;
     const sr = base + (holeHcp <= rem ? 1 : 0);
-    
-    console.log(`[Vegas] getNetNDB p${p} h${h+1}: gross=${gross}, adj=${adj}, holeHcp=${holeHcp}, sr=${sr}`);
-    
     const NDB_BUFFER = 2;
     const par = getPar(h);
     const ndb = par + NDB_BUFFER + sr;
     const adjGross = Math.min(gross, ndb);
-    const netScore = adjGross - sr;
-    
-    console.log(`[Vegas] getNetNDB p${p} h${h+1}: net=${netScore} (${gross}-${sr})`);
-    
-    return netScore;
+    return adjGross - sr;
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -477,24 +471,12 @@ const Vegas = {
     if(!Number.isFinite(best)) return {birdie:false,eagle:false};
     const par = getPar(h);
     const toPar=best-par;
-    
-    // Debug logging
-    if(toPar <= -1) {
-      console.log(`[Vegas] Hole ${h+1}: best=${best}, par=${par}, toPar=${toPar}, birdie=${toPar<=-1}, eagle=${toPar<=-2}, useNet=${useNet}`);
-    }
-    
     return {birdie:toPar<=-1, eagle:toPar<=-2};
   },
   _multiplierForWinner(winnerPlayers,h,useNet,opts){
     const {birdie,eagle}=this._teamHasBirdieOrEagle(winnerPlayers,h,useNet); let m=1;
     if(opts.tripleEagle && eagle) m=Math.max(m,3);
     if(opts.doubleBirdie && birdie) m=Math.max(m,2);
-    
-    // Debug logging for multipliers
-    if(birdie || eagle) {
-      console.log(`[Vegas] Hole ${h+1}: ${eagle ? 'EAGLE' : 'BIRDIE'} detected, mult=${m}, tripleEagle=${opts.tripleEagle}, doubleBirdie=${opts.doubleBirdie}`);
-    }
-    
     return m;
   }
 };
