@@ -106,7 +106,11 @@
    */
   function getHCPIndex(holeIdx) {
     // Use global HCPMEN array (set by Config in index.js)
-    const HCPMEN = window.HCPMEN || [11, 5, 15, 3, 9, 17, 1, 13, 7, 12, 6, 16, 2, 10, 18, 4, 14, 8];
+    const HCPMEN = window.HCPMEN;
+    if (!HCPMEN || !Array.isArray(HCPMEN)) {
+      console.error('[Skins] HCPMEN not loaded - course data missing!');
+      return 1; // Fallback only if array completely missing
+    }
     return HCPMEN[holeIdx] || 1;
   }
 

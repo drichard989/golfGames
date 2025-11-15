@@ -286,7 +286,11 @@
         
         function updateStrokeHighlights() {
           // Use global HCPMEN (updated when course changes)
-          const HCPMEN = window.HCPMEN || [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8];
+          const HCPMEN = window.HCPMEN;
+          if (!HCPMEN || !Array.isArray(HCPMEN)) {
+            console.error('[Highlights] HCPMEN not loaded - course data missing!');
+            return; // Don't highlight if no course data
+          }
           setTimeout(function() {
             const playerRows = document.querySelectorAll('.player-row');
             if(!playerRows.length) return;
