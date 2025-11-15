@@ -1866,11 +1866,154 @@ console.log('[Export] Module loaded');
     }
   }
 
+  /**
+   * Share HTML snapshot using native share API (mobile-friendly)
+   * Falls back to download if Web Share API is not available
+   */
+  async function shareHtmlSnapshot() {
+    try {
+      // Clone the entire document
+      const docClone = document.cloneNode(true);
+      
+      // Use the embedded CSS from the module
+      const allCSS = EMBEDDED_CSS;
+      console.log('[Export] Using embedded CSS for share, length:', allCSS.length);
+      
+      // Get the cloned html element
+      const htmlEl = docClone.documentElement;
+      
+      // Copy all input values from original to clone
+      const originalInputs = document.querySelectorAll('input');
+      const clonedInputs = htmlEl.querySelectorAll('input');
+      originalInputs.forEach((input, idx) => {
+        if (clonedInputs[idx]) {
+          if (input.type === 'checkbox' || input.type === 'radio') {
+            clonedInputs[idx].checked = input.checked;
+            if (input.checked) {
+              clonedInputs[idx].setAttribute('checked', 'checked');
+            } else {
+              clonedInputs[idx].removeAttribute('checked');
+            }
+          } else {
+            clonedInputs[idx].value = input.value;
+            clonedInputs[idx].setAttribute('value', input.value);
+          }
+        }
+      });
+      
+      // Copy all select values
+      const originalSelects = document.querySelectorAll('select');
+      const clonedSelects = htmlEl.querySelectorAll('select');
+      originalSelects.forEach((select, idx) => {
+        if (clonedSelects[idx]) {
+          clonedSelects[idx].value = select.value;
+          Array.from(clonedSelects[idx].options).forEach(option => {
+            option.selected = option.value === select.value;
+            if (option.selected) {
+              option.setAttribute('selected', 'selected');
+            } else {
+              option.removeAttribute('selected');
+            }
+          });
+        }
+      });
+      
+      // Copy all textarea values
+      const originalTextareas = document.querySelectorAll('textarea');
+      const clonedTextareas = htmlEl.querySelectorAll('textarea');
+      originalTextareas.forEach((textarea, idx) => {
+        if (clonedTextareas[idx]) {
+          clonedTextareas[idx].textContent = textarea.value;
+        }
+      });
+      
+      // Remove stylesheet links since we're inlining the embedded CSS
+      const links = htmlEl.querySelectorAll('link[rel="stylesheet"]');
+      links.forEach(link => link.remove());
+      console.log('[Export] Removed', links.length, 'stylesheet link(s)');
+      
+      // Remove all script tags
+      const scripts = htmlEl.querySelectorAll('script');
+      scripts.forEach(script => script.remove());
+      
+      // Remove service worker and manifest references
+      const manifest = htmlEl.querySelector('link[rel="manifest"]');
+      if (manifest) manifest.remove();
+      
+      const metaTags = htmlEl.querySelectorAll('meta[http-equiv]');
+      metaTags.forEach(meta => meta.remove());
+      
+      // Add embedded CSS at the beginning of head
+      const head = htmlEl.querySelector('head');
+      if (head) {
+        const styleEl = docClone.createElement('style');
+        styleEl.setAttribute('data-export-inline', 'true');
+        styleEl.textContent = allCSS;
+        head.insertBefore(styleEl, head.firstChild);
+        console.log('[Export] Added inline style element with', allCSS.length, 'characters');
+      }
+      
+      // Create the HTML string
+      const htmlContent = '<!DOCTYPE html>\n' + htmlEl.outerHTML;
+      
+      // Generate filename
+      const date = new Date();
+      const dateStr = date.toISOString().split('T')[0];
+      const ACTIVE_COURSE = window.ACTIVE_COURSE || 'manito';
+      const COURSES = window.COURSES || {};
+      const courseName = COURSES[ACTIVE_COURSE]?.name.replace(/[^a-zA-Z0-9]/g, '_') || 'scorecard';
+      const filename = `${courseName}_${dateStr}.html`;
+      
+      // Create blob and file
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      
+      // Check if Web Share API is available
+      if (navigator.share && navigator.canShare) {
+        const file = new File([blob], filename, { type: 'text/html' });
+        
+        // Check if we can share this file
+        if (navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: `Golf Scorecard - ${courseName}`,
+            text: `Scorecard from ${dateStr}`,
+            files: [file]
+          });
+          
+          if (typeof window.announce === 'function') {
+            window.announce('Scorecard shared!');
+          }
+          return;
+        }
+      }
+      
+      // Fallback to download if share is not available
+      console.log('[Export] Web Share API not available, falling back to download');
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      if (typeof window.announce === 'function') {
+        window.announce('Share not available - downloaded instead.');
+      }
+    } catch (error) {
+      console.error('[Export] Error sharing HTML snapshot:', error);
+      if (typeof window.announce === 'function') {
+        window.announce('Error sharing scorecard.');
+      }
+    }
+  }
+
   // Expose module globally
   window.Export = {
     exportCurrentScorecard,
     emailCurrentScorecard,
-    exportHtmlSnapshot
+    exportHtmlSnapshot,
+    shareHtmlSnapshot
   };
   
   console.log('[Export] Module exposed to window.Export:', window.Export);

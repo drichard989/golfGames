@@ -1506,6 +1506,11 @@
       exportHtmlBtn.addEventListener("click", () => window.Export.exportHtmlSnapshot());
     }
 
+    const shareHtmlBtn = document.getElementById('shareHtmlBtn');
+    if (shareHtmlBtn && window.Export && window.Export.shareHtmlSnapshot) {
+      shareHtmlBtn.addEventListener("click", () => window.Export.shareHtmlSnapshot());
+    }
+
     // Player management buttons
     const addPlayerBtn = document.getElementById('addPlayerBtn');
     const removePlayerBtn = document.getElementById('removePlayerBtn');
