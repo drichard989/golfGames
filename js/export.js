@@ -1901,40 +1901,8 @@ console.log('[Export] Module loaded');
             
             if (qrDataUrl) {
               qrCodeHTML = `<div style="margin-top: 20px; padding: 16px; background: white; display: inline-block; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-                <img id="qrCodeImage" src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto; -webkit-touch-callout: default;" alt="QR Code for import" />
-                <div style="color: #333; font-size: 14px; font-weight: normal; margin-top: 12px; text-align: center;">Scan or long-press image to save</div>
-                <button onclick="copyQRToClipboard()" style="margin-top: 12px; padding: 10px 20px; background: #4a9eff; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;">📋 Copy QR Code</button>
-                <div id="copyStatus" style="margin-top: 8px; font-size: 12px; color: #68d391; min-height: 18px;"></div>
-              </div>
-              <script>
-                async function copyQRToClipboard() {
-                  const img = document.getElementById('qrCodeImage');
-                  const status = document.getElementById('copyStatus');
-                  
-                  try {
-                    // Try modern clipboard API first
-                    const response = await fetch(img.src);
-                    const blob = await response.blob();
-                    
-                    if (navigator.clipboard && navigator.clipboard.write) {
-                      const item = new ClipboardItem({ 'image/png': blob });
-                      await navigator.clipboard.write([item]);
-                      status.textContent = '✓ QR code copied! Paste it in the app to import.';
-                      status.style.color = '#68d391';
-                    } else {
-                      throw new Error('Clipboard API not available');
-                    }
-                  } catch (err) {
-                    console.error('Copy failed:', err);
-                    // iOS fallback: show instructions
-                    status.innerHTML = '📱 iOS: Long-press the QR code image above, then tap "Save Image" or "Copy". Open the app and paste in the utilities section.';
-                    status.style.color = '#4a9eff';
-                    status.style.fontSize = '13px';
-                  }
-                  
-                  setTimeout(() => status.textContent = '', 8000);
-                }
-              </script>`;
+                <img src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto;" alt="QR Code for import" />
+              </div>`;
             }
             
             // Clean up temp container
