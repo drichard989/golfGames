@@ -497,14 +497,133 @@
   }
 
   // ============================================================================
+  // IMAGE PASTE HANDLER
+  // ============================================================================
+
+  /**
+   * Initialize paste area for QR code images
+   */
+  function initPasteArea() {
+    const pasteArea = document.getElementById('pasteArea');
+    const pasteStatus = document.getElementById('pasteStatus');
+    
+    if (!pasteArea) return;
+    
+    // Handle paste event
+    const handlePaste = async (e) => {
+      e.preventDefault();
+      
+      const items = e.clipboardData?.items;
+      if (!items) {
+        pasteStatus.textContent = '✗ No clipboard data found';
+        pasteStatus.style.color = 'var(--danger)';
+        return;
+      }
+      
+      // Find image in clipboard
+      let imageItem = null;
+      for (let item of items) {
+        if (item.type.indexOf('image') !== -1) {
+          imageItem = item;
+          break;
+        }
+      }
+      
+      if (!imageItem) {
+        pasteStatus.textContent = '✗ No image found in clipboard. Copy a QR code image first.';
+        pasteStatus.style.color = 'var(--danger)';
+        return;
+      }
+      
+      pasteStatus.textContent = '⏳ Processing QR code...';
+      pasteStatus.style.color = 'var(--muted)';
+      
+      // Get image blob
+      const blob = imageItem.getAsFile();
+      const img = new Image();
+      
+      img.onload = () => {
+        // Create canvas to extract image data
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        // Decode QR code using jsQR
+        if (typeof jsQR !== 'undefined') {
+          const code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "dontInvert",
+          });
+          
+          if (code) {
+            pasteStatus.textContent = '✓ QR code detected! Importing...';
+            pasteStatus.style.color = 'var(--accent)';
+            
+            // Import the data
+            setTimeout(() => {
+              importData(code.data);
+              pasteArea.innerHTML = '<span style="color: var(--accent); font-size: 14px;">✓ Successfully imported!</span>';
+              setTimeout(() => {
+                pasteArea.innerHTML = '<span style="color: var(--muted); font-size: 14px;">Click here and paste (Cmd/Ctrl+V)</span>';
+                pasteStatus.textContent = '';
+              }, 3000);
+            }, 500);
+          } else {
+            pasteStatus.textContent = '✗ No QR code found in image. Try scanning with camera instead.';
+            pasteStatus.style.color = 'var(--danger)';
+          }
+        } else {
+          pasteStatus.textContent = '✗ QR decoder not available. Please refresh the page.';
+          pasteStatus.style.color = 'var(--danger)';
+        }
+      };
+      
+      img.onerror = () => {
+        pasteStatus.textContent = '✗ Failed to load image';
+        pasteStatus.style.color = 'var(--danger)';
+      };
+      
+      img.src = URL.createObjectURL(blob);
+    };
+    
+    // Add paste event listeners
+    pasteArea.addEventListener('paste', handlePaste);
+    document.addEventListener('paste', (e) => {
+      // Only handle if paste area is focused or utilities section is open
+      const utilitiesSection = document.getElementById('utilitiesSection');
+      if (utilitiesSection?.classList.contains('open')) {
+        handlePaste(e);
+      }
+    });
+    
+    // Make paste area focusable
+    pasteArea.addEventListener('click', () => {
+      pasteArea.focus();
+      pasteStatus.textContent = 'Ready to paste. Use Cmd+V (Mac) or Ctrl+V (Windows).';
+      pasteStatus.style.color = 'var(--muted)';
+    });
+  }
+
+  // ============================================================================
   // PUBLIC API
   // ============================================================================
 
   window.QRShare = {
     generate: generateQR,
     scan: scanQR,
-    import: importData
+    import: importData,
+    initPasteArea: initPasteArea
   };
+
+  // Initialize paste area when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPasteArea);
+  } else {
+    initPasteArea();
+  }
 
   console.log('[QR] Module loaded');
 
