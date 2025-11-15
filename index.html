@@ -56,8 +56,6 @@
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
       <p class="small">If a player is a + handicap, enter it as a negative number (e.g., -2).</p>
     </header>
-    <header>
-    </header>
 
     <p class="small" id="parBadge" aria-live="polite"></p>
     <!-- SCORECARD -->
@@ -278,17 +276,9 @@
     <script src="js/hilo.js" defer></script>
     <script src="js/skins.js" defer></script>
     <script src="js/junk.js" defer></script>
-    <!-- Inline bootstrap to verify scripts run and to wire a minimal listener as fallback -->
+    <!-- Inline bootstrap to verify scripts run -->
     <script>
       console.log('[golfGames] inline bootstrap script loaded');
-      (function(){
-        var btn = document.getElementById('printBtn');
-        if(btn){
-          btn.addEventListener('click', function(){
-            console.log('[golfGames] inline listener fired');
-          }, { once: false });
-        }
-      })();
       
       // Highlight holes where players receive strokes
       window.addEventListener('DOMContentLoaded', function() {

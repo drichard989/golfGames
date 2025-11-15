@@ -276,9 +276,7 @@
 
     // Skins
     skinsCarry:"#skinsCarry", skinsHalf:"#skinsHalf",
-    skinsBody:"#skinsBody", skinsPotTot:"#skinsPotTot",
-    skinsTotP1:"#skinsTotP1", skinsTotP2:"#skinsTotP2", skinsTotP3:"#skinsTotP3", skinsTotP4:"#skinsTotP4",
-    skinsP1:"#skinsP1", skinsP2:"#skinsP2", skinsP3:"#skinsP3", skinsP4:"#skinsP4",
+    skinsBody:"#skinsBody",
     skinsSummary:"#skinsSummary",
 // CSV
     csvInput:"#csvInput", dlTemplateBtn:"#dlTemplateBtn",
