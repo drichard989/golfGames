@@ -1833,6 +1833,24 @@ console.log('[Export] Module loaded');
         console.log('[Export] Added inline style element with', allCSS.length, 'characters');
       }
       
+      // Add read-only notice banner at top of body
+      const body = htmlEl.querySelector('body');
+      if (body) {
+        const notice = docClone.createElement('div');
+        notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
+        notice.innerHTML = '⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️';
+        body.insertBefore(notice, body.firstChild);
+      }
+      
+      // Add read-only notices to each game section
+      const gameSections = htmlEl.querySelectorAll('.game-section');
+      gameSections.forEach(section => {
+        const sectionNotice = docClone.createElement('div');
+        sectionNotice.style.cssText = 'background: #ffa94d; color: #000; padding: 12px; text-align: center; font-size: 16px; font-weight: bold; margin: 0 0 16px 0; border: 3px solid #fd7e14; border-radius: 8px;';
+        sectionNotice.innerHTML = '📋 This is a copy of the Manito Games scoring and is not editable';
+        section.insertBefore(sectionNotice, section.firstChild.nextSibling);
+      });
+      
       // Create the HTML string
       const htmlContent = '<!DOCTYPE html>\n' + htmlEl.outerHTML;
       
@@ -1952,6 +1970,24 @@ console.log('[Export] Module loaded');
         head.insertBefore(styleEl, head.firstChild);
         console.log('[Export] Added inline style element with', allCSS.length, 'characters');
       }
+      
+      // Add read-only notice banner at top of body
+      const body = htmlEl.querySelector('body');
+      if (body) {
+        const notice = docClone.createElement('div');
+        notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
+        notice.innerHTML = '⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️';
+        body.insertBefore(notice, body.firstChild);
+      }
+      
+      // Add read-only notices to each game section
+      const gameSections = htmlEl.querySelectorAll('.game-section');
+      gameSections.forEach(section => {
+        const sectionNotice = docClone.createElement('div');
+        sectionNotice.style.cssText = 'background: #ffa94d; color: #000; padding: 12px; text-align: center; font-size: 16px; font-weight: bold; margin: 0 0 16px 0; border: 3px solid #fd7e14; border-radius: 8px;';
+        sectionNotice.innerHTML = '📋 This is a copy of the Manito Games scoring and is not editable';
+        section.insertBefore(sectionNotice, section.firstChild.nextSibling);
+      });
       
       // Create the HTML string
       const htmlContent = '<!DOCTYPE html>\n' + htmlEl.outerHTML;
