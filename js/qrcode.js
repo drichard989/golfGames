@@ -89,6 +89,17 @@
    * Generate QR code and display in modal
    */
   function generateQR() {
+    // Check if QR code library is loaded
+    if (typeof QRCode === 'undefined') {
+      console.error('[QR] QRCode library not loaded from CDN');
+      if (typeof window.announce === 'function') {
+        window.announce('QR code functionality temporarily unavailable. Please check your internet connection and refresh.');
+      } else {
+        alert('QR code functionality temporarily unavailable. Please check your internet connection and refresh.');
+      }
+      return;
+    }
+
     try {
       const data = compressData();
       
@@ -189,6 +200,17 @@
    * Open camera and scan for QR code
    */
   function scanQR() {
+    // Check if jsQR library is loaded
+    if (typeof jsQR === 'undefined') {
+      console.error('[QR] jsQR library not loaded from CDN');
+      if (typeof window.announce === 'function') {
+        window.announce('QR code scanning temporarily unavailable. Please check your internet connection and refresh.');
+      } else {
+        alert('QR code scanning temporarily unavailable. Please check your internet connection and refresh.');
+      }
+      return;
+    }
+
     // Create modal with video preview
     const modal = document.createElement('div');
     modal.id = 'scanModal';
@@ -380,9 +402,24 @@
         });
       });
 
-      // Recalculate everything
+      // Recalculate everything - full recalc of scorecard AND all games
       if (window.Scorecard?.calc?.recalcAll) {
         window.Scorecard.calc.recalcAll();
+      }
+      
+      // Recalculate all game modules
+      if (window.AppManager?.recalcGames) {
+        window.AppManager.recalcGames();
+      }
+      
+      // Update player count display
+      if (window.Scorecard?.player?.updateCountDisplay) {
+        window.Scorecard.player.updateCountDisplay();
+      }
+      
+      // Sync player overlay if needed
+      if (window.Scorecard?.player?.syncOverlay) {
+        window.Scorecard.player.syncOverlay();
       }
 
       // Save to localStorage
