@@ -1873,11 +1873,10 @@ console.log('[Export] Module loaded');
             
             // Create a temporary container for QR code generation
             const tempQR = document.createElement('div');
-            tempQR.style.display = 'none';
             document.body.appendChild(tempQR);
             
             // Generate QR code
-            new QRCode(tempQR, {
+            const qrcode = new QRCode(tempQR, {
               text: qrData,
               width: 200,
               height: 200,
@@ -1886,12 +1885,24 @@ console.log('[Export] Module loaded');
               correctLevel: QRCode.CorrectLevel.M
             });
             
-            // Extract the generated image
+            // Extract canvas/image and convert to data URL
+            const qrCanvas = tempQR.querySelector('canvas');
             const qrImage = tempQR.querySelector('img');
-            if (qrImage) {
-              qrCodeHTML = `<div style="margin-top: 16px; padding: 12px; background: white; display: inline-block; border-radius: 8px;">
-                <img src="${qrImage.src}" style="display: block; width: 200px; height: 200px;" alt="QR Code for import" />
-                <div style="color: #333; font-size: 14px; font-weight: normal; margin-top: 8px;">Scan to import this scorecard</div>
+            
+            let qrDataUrl = null;
+            
+            if (qrCanvas) {
+              // Convert canvas to data URL
+              qrDataUrl = qrCanvas.toDataURL('image/png');
+            } else if (qrImage && qrImage.src) {
+              // Use the img src if canvas not available
+              qrDataUrl = qrImage.src;
+            }
+            
+            if (qrDataUrl) {
+              qrCodeHTML = `<div style="margin-top: 20px; padding: 16px; background: white; display: inline-block; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                <img src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto;" alt="QR Code for import" />
+                <div style="color: #333; font-size: 14px; font-weight: normal; margin-top: 12px; text-align: center;">Scan to import this scorecard</div>
               </div>`;
             }
             
@@ -1902,7 +1913,11 @@ console.log('[Export] Module loaded');
           }
         }
         
-        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>${qrCodeHTML}`;
+        notice.innerHTML = `
+          <div style="margin-bottom: 12px;">⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️</div>
+          <div style="font-size: 16px; font-weight: normal;">Exported: ${exportTimestamp}</div>
+          ${qrCodeHTML}
+        `;
         body.insertBefore(notice, body.firstChild);
       }
       
