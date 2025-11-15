@@ -55,9 +55,17 @@
   const getHoles = () => 18;
   const getPar = (h) => {
     const parRow = document.getElementById('parRow');
-    if (!parRow) return 4;
+    if (!parRow) {
+      console.error('[Vegas] Par row not found - scorecard not initialized!');
+      return 4; // Fallback only if DOM missing
+    }
     const inputs = parRow.querySelectorAll('input[type="number"]');
-    return Number(inputs[h]?.value) || 4;
+    const value = Number(inputs[h]?.value);
+    if (!value || !Number.isFinite(value)) {
+      console.error(`[Vegas] Par value missing for hole ${h + 1}`);
+      return 4; // Fallback only if value missing
+    }
+    return value;
   };
   const getPars = () => {
     const pars = [];

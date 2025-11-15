@@ -56,6 +56,9 @@
       el = inputs[hole-1];
     }
     const v = el ? parseInt(el.value, 10) : NaN;
+    if (!Number.isFinite(v)) {
+      console.error(`[Junk] Par value missing for hole ${hole}`);
+    }
     return Number.isFinite(v) ? v : NaN;
   }
 

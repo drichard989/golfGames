@@ -82,9 +82,17 @@
    */
   function getPar(holeIdx) {
     const parRow = document.getElementById('parRow');
-    if (!parRow) return 4;
+    if (!parRow) {
+      console.error('[Skins] Par row not found - scorecard not initialized!');
+      return 4; // Fallback only if DOM missing
+    }
     const inputs = parRow.querySelectorAll('input[type="number"]');
-    return Number(inputs[holeIdx]?.value) || 4;
+    const value = Number(inputs[holeIdx]?.value);
+    if (!value || !Number.isFinite(value)) {
+      console.error(`[Skins] Par value missing for hole ${holeIdx + 1}`);
+      return 4; // Fallback only if value missing
+    }
+    return value;
   }
 
   /**
