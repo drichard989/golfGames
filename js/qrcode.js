@@ -392,12 +392,21 @@
         const chInput = row.querySelector('.ch-input');
         const scoreInputs = row.querySelectorAll('input.score-input');
 
-        if (nameInput) nameInput.value = player.name;
-        if (chInput) chInput.value = player.ch;
+        if (nameInput) {
+          nameInput.value = player.name;
+          nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+        
+        if (chInput) {
+          chInput.value = player.ch;
+          chInput.dispatchEvent(new Event('input', { bubbles: true }));
+          chInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
         
         player.scores.forEach((score, scoreIdx) => {
           if (scoreInputs[scoreIdx]) {
             scoreInputs[scoreIdx].value = score;
+            scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
           }
         });
       });
@@ -405,6 +414,11 @@
       // Recalculate everything - full recalc of scorecard AND all games
       if (window.Scorecard?.calc?.recalcAll) {
         window.Scorecard.calc.recalcAll();
+      }
+      
+      // Update stroke highlights (this might be separate from recalcAll)
+      if (window.updateStrokeHighlights) {
+        window.updateStrokeHighlights();
       }
       
       // Recalculate all game modules
