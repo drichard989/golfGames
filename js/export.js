@@ -1836,18 +1836,36 @@ console.log('[Export] Module loaded');
       // Add read-only notice banner at top of body
       const body = htmlEl.querySelector('body');
       if (body) {
+        const exportDate = new Date();
+        const exportTimestamp = exportDate.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
         const notice = docClone.createElement('div');
         notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
-        notice.innerHTML = '⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️';
+        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>`;
         body.insertBefore(notice, body.firstChild);
       }
       
       // Add read-only notices to each game section
       const gameSections = htmlEl.querySelectorAll('.game-section');
       gameSections.forEach(section => {
+        const exportDate = new Date();
+        const exportTimestamp = exportDate.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
         const sectionNotice = docClone.createElement('div');
         sectionNotice.style.cssText = 'background: #ffa94d; color: #000; padding: 12px; text-align: center; font-size: 16px; font-weight: bold; margin: 0 0 16px 0; border: 3px solid #fd7e14; border-radius: 8px;';
-        sectionNotice.innerHTML = '📋 This is a copy of the Manito Games scoring and is not editable';
+        sectionNotice.innerHTML = `📋 This is a copy of the Manito Games scoring and is not editable<br><span style="font-size: 14px; font-weight: normal; margin-top: 4px; display: inline-block;">Exported: ${exportTimestamp}</span>`;
         section.insertBefore(sectionNotice, section.firstChild.nextSibling);
       });
       
@@ -1974,18 +1992,36 @@ console.log('[Export] Module loaded');
       // Add read-only notice banner at top of body
       const body = htmlEl.querySelector('body');
       if (body) {
+        const exportDate = new Date();
+        const exportTimestamp = exportDate.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
         const notice = docClone.createElement('div');
         notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
-        notice.innerHTML = '⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️';
+        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>`;
         body.insertBefore(notice, body.firstChild);
       }
       
       // Add read-only notices to each game section
       const gameSections = htmlEl.querySelectorAll('.game-section');
       gameSections.forEach(section => {
+        const exportDate = new Date();
+        const exportTimestamp = exportDate.toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true
+        });
         const sectionNotice = docClone.createElement('div');
         sectionNotice.style.cssText = 'background: #ffa94d; color: #000; padding: 12px; text-align: center; font-size: 16px; font-weight: bold; margin: 0 0 16px 0; border: 3px solid #fd7e14; border-radius: 8px;';
-        sectionNotice.innerHTML = '📋 This is a copy of the Manito Games scoring and is not editable';
+        sectionNotice.innerHTML = `📋 This is a copy of the Manito Games scoring and is not editable<br><span style="font-size: 14px; font-weight: normal; margin-top: 4px; display: inline-block;">Exported: ${exportTimestamp}</span>`;
         section.insertBefore(sectionNotice, section.firstChild.nextSibling);
       });
       
