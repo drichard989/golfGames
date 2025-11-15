@@ -881,7 +881,8 @@
         }
         if(s.skins?.open) games_open("skins");
 
-        window.Vegas?.recalc();
+        // Recalculate all games with restored data
+        AppManager.recalcGames();
         
         const savedDate = new Date(s.savedAt || Date.now()).toLocaleString();
         Utils.announce(`Restored saved card (${savedDate}).`);
@@ -920,8 +921,9 @@
         });
       });
       Scorecard.calc.recalcAll(); 
+      Scorecard.player.syncOverlay();
       window.Vegas?.renderTeamControls(); 
-      window.Vegas?.recalc(); 
+      AppManager.recalcGames();
       
       // Update stroke highlights after clearing
       if(typeof updateStrokeHighlights === 'function') {
