@@ -1872,11 +1872,17 @@ console.log('[Export] Module loaded');
             const course = window.ACTIVE_COURSE || 'manito';
             const qrData = JSON.stringify({ v: 1, c: course, p: players });
             
-            // Generate share link URL with compression
+            // Generate share link URL with aggressive compression
             const compressed = qrData
-              .replace(/,"s":\["","","","","","","","","","","","","","","","","",""\]/g, ',"s":[]')
-              .replace(/,"s":\[\]/g, ',"s":0')
-              .replace(/""/g, '0');
+              .replace(/,"s":\["","","","","","","","","","","","","","","","","",""\]/g, ',"s":9')
+              .replace(/,"s":\[\]/g, ',"s":9')
+              .replace(/""/g, '-')
+              .replace(/:"(\d)"/g, ':$1')
+              .replace(/"v":/g, 'v:')
+              .replace(/"c":/g, 'c:')
+              .replace(/"p":/g, 'p:')
+              .replace(/"n":/g, 'n:')
+              .replace(/"s":/g, 's:');
             const encoded = encodeURIComponent(compressed);
             const baseUrl = window.location.origin + window.location.pathname;
             const shareUrl = `${baseUrl}#i=${encoded}`;
