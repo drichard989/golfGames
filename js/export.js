@@ -1857,9 +1857,9 @@ console.log('[Export] Module loaded');
         const notice = docClone.createElement('div');
         notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
         
-        // Generate QR code data for import
+        // Generate QR code data for import using qrcode-generator
         let qrCodeHTML = '';
-        if (typeof QRCode !== 'undefined' && window.QRShare) {
+        if (typeof qrcode !== 'undefined' && window.QRShare) {
           try {
             // Get the compressed data (same format used for QR generation)
             const players = Array.from(document.querySelectorAll('.player-row')).map(row => {
@@ -1871,42 +1871,32 @@ console.log('[Export] Module loaded');
             const course = window.ACTIVE_COURSE || 'manito';
             const qrData = JSON.stringify({ v: 1, c: course, p: players });
             
-            // Create a temporary container for QR code generation
-            const tempQR = document.createElement('div');
-            document.body.appendChild(tempQR);
+            // Create QR code object
+            const qr = qrcode(0, 'M');
+            qr.addData(qrData);
+            qr.make();
             
-            // Generate QR code
-            const qrcode = new QRCode(tempQR, {
-              text: qrData,
-              width: 200,
-              height: 200,
-              colorDark: "#000000",
-              colorLight: "#ffffff",
-              correctLevel: QRCode.CorrectLevel.M
-            });
+            // Create canvas and draw QR code
+            const size = 200;
+            const cellSize = Math.floor(size / qr.getModuleCount());
+            const actualSize = cellSize * qr.getModuleCount();
             
-            // Extract canvas/image and convert to data URL
-            const qrCanvas = tempQR.querySelector('canvas');
-            const qrImage = tempQR.querySelector('img');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = actualSize;
+            tempCanvas.height = actualSize;
+            const ctx = tempCanvas.getContext('2d');
             
-            let qrDataUrl = null;
-            
-            if (qrCanvas) {
-              // Convert canvas to data URL
-              qrDataUrl = qrCanvas.toDataURL('image/png');
-            } else if (qrImage && qrImage.src) {
-              // Use the img src if canvas not available
-              qrDataUrl = qrImage.src;
+            for (let row = 0; row < qr.getModuleCount(); row++) {
+              for (let col = 0; col < qr.getModuleCount(); col++) {
+                ctx.fillStyle = qr.isDark(row, col) ? '#000000' : '#ffffff';
+                ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+              }
             }
             
-            if (qrDataUrl) {
-              qrCodeHTML = `<div style="margin-top: 20px; padding: 16px; background: white; display: inline-block; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-                <img src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto;" alt="QR Code for import" />
-              </div>`;
-            }
-            
-            // Clean up temp container
-            document.body.removeChild(tempQR);
+            const qrDataUrl = tempCanvas.toDataURL('image/png');
+            qrCodeHTML = `<div style="margin-top: 20px; padding: 16px; background: white; display: inline-block; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+              <img src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto;" alt="QR Code for import" />
+            </div>`;
           } catch (err) {
             console.error('[Export] Failed to generate QR code for export:', err);
           }

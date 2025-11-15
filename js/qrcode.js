@@ -12,7 +12,7 @@
    • Validation and error handling
    
    DEPENDENCIES:
-   • qrcodejs (https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js)
+   • qrcode-generator (https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js)
    • jsQR (https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js)
    
    ============================================================================ */
@@ -132,8 +132,8 @@
    */
   function generateQR() {
     // Check if QR code library is loaded
-    if (typeof QRCode === 'undefined') {
-      console.error('[QR] QRCode library not loaded from CDN');
+    if (typeof qrcode === 'undefined') {
+      console.error('[QR] qrcode-generator library not loaded from CDN');
       if (typeof window.announce === 'function') {
         window.announce('QR code functionality temporarily unavailable. Please check your internet connection and refresh.');
       } else {
@@ -145,8 +145,8 @@
     try {
       const data = compressData();
       
-      // Check data size (QR codes have limits)
-      if (data.length > 2953) { // Max for QR Code version 40 with byte mode
+      // qrcode-generator can handle large amounts of data
+      if (data.length > 4000) {
         if (typeof window.announce === 'function') {
           window.announce('Scorecard data too large for QR code. Try removing some players or scores.');
         }
@@ -205,20 +205,35 @@
       modal.appendChild(container);
       document.body.appendChild(modal);
 
-      // Generate QR code using qrcodejs library
-      if (typeof QRCode !== 'undefined') {
+      // Generate QR code using qrcode-generator library
+      if (typeof qrcode !== 'undefined') {
         // Clear any existing QR code
         qrContainer.innerHTML = '';
         
-        // Generate new QR code
-        new QRCode(qrContainer, {
-          text: data,
-          width: 256,
-          height: 256,
-          colorDark: "#000000",
-          colorLight: "#ffffff",
-          correctLevel: QRCode.CorrectLevel.M
-        });
+        // Create QR code object
+        const qr = qrcode(0, 'M'); // 0 = auto-detect version, 'M' = medium error correction
+        qr.addData(data);
+        qr.make();
+        
+        // Create image element with the QR code
+        const size = 256;
+        const cellSize = Math.floor(size / qr.getModuleCount());
+        const actualSize = cellSize * qr.getModuleCount();
+        
+        const canvas = document.createElement('canvas');
+        canvas.width = actualSize;
+        canvas.height = actualSize;
+        const ctx = canvas.getContext('2d');
+        
+        // Draw QR code on canvas
+        for (let row = 0; row < qr.getModuleCount(); row++) {
+          for (let col = 0; col < qr.getModuleCount(); col++) {
+            ctx.fillStyle = qr.isDark(row, col) ? '#000000' : '#ffffff';
+            ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+          }
+        }
+        
+        qrContainer.appendChild(canvas);
       } else {
         qrContainer.innerHTML = '<p style="color: red;">QR Code library not loaded. Please refresh the page.</p>';
       }
@@ -499,6 +514,21 @@
   // ============================================================================
   // PUBLIC API
   // ============================================================================
+
+  // Wait for QRCode library to load before exposing API
+  function waitForLibrary() {
+    if (typeof qrcode !== 'undefined') {
+      console.log('[QR] qrcode-generator library detected');
+    } else {
+      console.log('[QR] Waiting for qrcode-generator library...');
+    }
+  }
+
+  // Check immediately
+  waitForLibrary();
+
+  // Also check after a short delay in case library loads after this module
+  setTimeout(waitForLibrary, 100);
 
   window.QRShare = {
     generate: generateQR,

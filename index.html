@@ -15,10 +15,6 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#4a9eff" />
     <link rel="stylesheet" href="stylesheet/main.css" />
-    
-    <!-- QR Code Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   </head>
   <body>
 
@@ -418,6 +414,10 @@
       <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Use NET scoring to apply handicap strokes.</p>
     </section>
 
+    <!-- QR Code Libraries (must load before qrcode.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
     <!-- QR Code Share Module -->
     <script src="js/qrcode.js"></script>
 
