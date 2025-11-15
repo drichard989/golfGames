@@ -55,6 +55,13 @@
           <button id="shareHtmlBtn" class="btn">📱 Share Results</button>
           <button id="generateQRBtn" class="btn">📷 Share via QR Code</button>
           <button id="scanQRBtn" class="btn">📸 Scan QR Code</button>
+          <div style="margin-top: 12px; padding: 12px; background: var(--panel-alt); border: 2px dashed var(--line); border-radius: 8px; text-align: center;">
+            <div style="font-size: 14px; margin-bottom: 8px; color: var(--muted);">📋 Or paste QR code image here:</div>
+            <div id="pasteArea" style="min-height: 100px; display: flex; align-items: center; justify-content: center; background: var(--panel); border-radius: 6px; cursor: pointer; padding: 20px; border: 2px dashed var(--line);" tabindex="0">
+              <span style="color: var(--muted); font-size: 14px;">Click here and paste (Cmd/Ctrl+V)</span>
+            </div>
+            <div id="pasteStatus" style="margin-top: 8px; font-size: 12px; min-height: 18px;"></div>
+          </div>
           <button id="resetBtn" class="btn">Reset Scores</button>
           <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
         </div>

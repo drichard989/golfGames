@@ -1901,9 +1901,34 @@ console.log('[Export] Module loaded');
             
             if (qrDataUrl) {
               qrCodeHTML = `<div style="margin-top: 20px; padding: 16px; background: white; display: inline-block; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-                <img src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto;" alt="QR Code for import" />
+                <img id="qrCodeImage" src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto;" alt="QR Code for import" />
                 <div style="color: #333; font-size: 14px; font-weight: normal; margin-top: 12px; text-align: center;">Scan to import this scorecard</div>
-              </div>`;
+                <button onclick="copyQRToClipboard()" style="margin-top: 12px; padding: 10px 20px; background: #4a9eff; color: white; border: none; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;">📋 Copy QR Code</button>
+                <div id="copyStatus" style="margin-top: 8px; font-size: 12px; color: #68d391; min-height: 18px;"></div>
+              </div>
+              <script>
+                function copyQRToClipboard() {
+                  const img = document.getElementById('qrCodeImage');
+                  const status = document.getElementById('copyStatus');
+                  
+                  // Convert data URL to blob
+                  fetch(img.src)
+                    .then(res => res.blob())
+                    .then(blob => {
+                      const item = new ClipboardItem({ 'image/png': blob });
+                      return navigator.clipboard.write([item]);
+                    })
+                    .then(() => {
+                      status.textContent = '✓ QR code copied! Paste it in the app to import.';
+                      setTimeout(() => status.textContent = '', 3000);
+                    })
+                    .catch(err => {
+                      console.error('Copy failed:', err);
+                      status.textContent = '✗ Copy failed. Try scanning instead.';
+                      status.style.color = '#ff6b6b';
+                    });
+                }
+              </script>`;
             }
             
             // Clean up temp container
