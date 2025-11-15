@@ -1523,11 +1523,6 @@
     if (scanQRBtn && window.QRShare && window.QRShare.scan) {
       scanQRBtn.addEventListener("click", () => window.QRShare.scan());
     }
-    
-    const shareLinkBtn = document.getElementById('shareLinkBtn');
-    if (shareLinkBtn && window.QRShare && window.QRShare.generateShareLink) {
-      shareLinkBtn.addEventListener("click", () => window.QRShare.generateShareLink());
-    }
 
     // Player management buttons
     const addPlayerBtn = document.getElementById('addPlayerBtn');
