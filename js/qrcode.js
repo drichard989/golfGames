@@ -29,17 +29,21 @@
    * Compresses repeated patterns to make URLs shorter
    */
   function compressString(str) {
-    // Use built-in compression if available
-    if (typeof CompressionStream !== 'undefined') {
-      // Modern browsers - not widely supported yet
-      return str;
-    }
-    
-    // Simple run-length encoding for empty scores
+    // More aggressive compression
     let compressed = str
-      .replace(/,"s":\["","","","","","","","","","","","","","","","","",""\]/g, ',"s":[]')
-      .replace(/,"s":\[\]/g, ',"s":0')
-      .replace(/""/g, '0');
+      // Replace empty score arrays
+      .replace(/,"s":\["","","","","","","","","","","","","","","","","",""\]/g, ',"s":9')
+      .replace(/,"s":\[\]/g, ',"s":9')
+      // Replace empty strings with single char
+      .replace(/""/g, '-')
+      // Remove unnecessary quotes around single digits
+      .replace(/:"(\d)"/g, ':$1')
+      // Shorten keys
+      .replace(/"v":/g, 'v:')
+      .replace(/"c":/g, 'c:')
+      .replace(/"p":/g, 'p:')
+      .replace(/"n":/g, 'n:')
+      .replace(/"s":/g, 's:');
     
     return compressed;
   }
@@ -50,8 +54,14 @@
   function decompressString(str) {
     // Reverse the compression
     let decompressed = str
-      .replace(/"s":0/g, '"s":[]')
-      .replace(/0/g, '""');
+      .replace(/v:/g, '"v":')
+      .replace(/c:/g, '"c":')
+      .replace(/p:/g, '"p":')
+      .replace(/n:/g, '"n":')
+      .replace(/s:/g, '"s":')
+      .replace(/:(\d+)([,\}])/g, ':"$1"$2')
+      .replace(/s:9/g, '"s":[]')
+      .replace(/-/g, '""');
     
     return decompressed;
   }
@@ -443,39 +453,79 @@
     title.style.cssText = 'margin: 0 0 16px 0; color: #333;';
 
     const instructions = document.createElement('p');
-    instructions.textContent = 'Copy this link to share:';
+    instructions.textContent = 'Copy and paste this entire link (tap textarea to select all):';
     instructions.style.cssText = 'color: #666; font-size: 14px; margin: 8px 0;';
 
-    const urlInput = document.createElement('input');
-    urlInput.type = 'text';
-    urlInput.value = url;
-    urlInput.readOnly = true;
-    urlInput.style.cssText = `
+    const urlTextarea = document.createElement('textarea');
+    urlTextarea.value = url;
+    urlTextarea.readOnly = true;
+    urlTextarea.rows = 6;
+    urlTextarea.style.cssText = `
       width: 100%;
       padding: 12px;
-      border: 1px solid #ccc;
+      border: 2px solid #4a9eff;
       border-radius: 6px;
       font-family: monospace;
       font-size: 12px;
       margin: 8px 0;
+      resize: none;
+      box-sizing: border-box;
     `;
-    urlInput.onclick = () => urlInput.select();
+    
+    // Select all on tap
+    urlTextarea.onclick = () => {
+      urlTextarea.select();
+      urlTextarea.setSelectionRange(0, 99999); // For mobile
+      
+      // Try to copy again
+      try {
+        document.execCommand('copy');
+        instructions.textContent = '✓ Link copied! Paste in iMessage or email.';
+        instructions.style.color = '#68d391';
+      } catch (err) {
+        // Ignore
+      }
+    };
+
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = 'Copy Link';
+    copyBtn.className = 'btn';
+    copyBtn.style.cssText = 'margin-right: 8px;';
+    copyBtn.onclick = () => {
+      urlTextarea.select();
+      urlTextarea.setSelectionRange(0, 99999);
+      try {
+        document.execCommand('copy');
+        instructions.textContent = '✓ Link copied! Paste in iMessage or email.';
+        instructions.style.color = '#68d391';
+      } catch (err) {
+        instructions.textContent = 'Copy failed - please select and copy manually';
+        instructions.style.color = '#ff6b6b';
+      }
+    };
 
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
     closeBtn.className = 'btn';
-    closeBtn.style.cssText = 'margin-top: 16px;';
     closeBtn.onclick = () => modal.remove();
+
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = 'margin-top: 16px;';
+    buttonContainer.appendChild(copyBtn);
+    buttonContainer.appendChild(closeBtn);
 
     container.appendChild(title);
     container.appendChild(instructions);
-    container.appendChild(urlInput);
-    container.appendChild(closeBtn);
+    container.appendChild(urlTextarea);
+    container.appendChild(buttonContainer);
     modal.appendChild(container);
     document.body.appendChild(modal);
 
     // Auto-select the URL
-    urlInput.select();
+    setTimeout(() => {
+      urlTextarea.select();
+      urlTextarea.setSelectionRange(0, 99999);
+    }, 100);
   }
 
   /**
