@@ -1841,7 +1841,7 @@ console.log('[Export] Module loaded');
         console.log('[Export] Added inline style element with', allCSS.length, 'characters');
       }
       
-      // Add read-only notice banner at top of body
+      // Add read-only notice banner at top of body WITH QR CODE
       const body = htmlEl.querySelector('body');
       if (body) {
         const exportDate = new Date();
@@ -1853,9 +1853,56 @@ console.log('[Export] Module loaded');
           minute: '2-digit',
           hour12: true
         });
+        
         const notice = docClone.createElement('div');
         notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
-        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>`;
+        
+        // Generate QR code data for import
+        let qrCodeHTML = '';
+        if (typeof QRCode !== 'undefined' && window.QRShare) {
+          try {
+            // Get the compressed data (same format used for QR generation)
+            const players = Array.from(document.querySelectorAll('.player-row')).map(row => {
+              const name = row.querySelector('.name-edit')?.value || '';
+              const ch = row.querySelector('.ch-input')?.value || '0';
+              const scores = Array.from(row.querySelectorAll('input.score-input')).map(inp => inp.value || '');
+              return { n: name, c: ch, s: scores };
+            });
+            const course = window.ACTIVE_COURSE || 'manito';
+            const qrData = JSON.stringify({ v: 1, c: course, p: players });
+            
+            // Create a temporary container for QR code generation
+            const tempQR = document.createElement('div');
+            tempQR.style.display = 'none';
+            document.body.appendChild(tempQR);
+            
+            // Generate QR code
+            new QRCode(tempQR, {
+              text: qrData,
+              width: 200,
+              height: 200,
+              colorDark: "#000000",
+              colorLight: "#ffffff",
+              correctLevel: QRCode.CorrectLevel.M
+            });
+            
+            // Extract the generated image
+            const qrImage = tempQR.querySelector('img');
+            if (qrImage) {
+              qrCodeHTML = `<div style="margin-top: 16px; padding: 12px; background: white; display: inline-block; border-radius: 8px;">
+                <img src="${qrImage.src}" style="display: block; width: 200px; height: 200px;" alt="QR Code for import" />
+                <div style="color: #333; font-size: 14px; font-weight: normal; margin-top: 8px;">Scan to import this scorecard</div>
+              </div>`;
+            }
+            
+            // Clean up temp container
+            document.body.removeChild(tempQR);
+          } catch (err) {
+            console.error('[Export] Failed to generate QR code for export:', err);
+          }
+        }
+        
+        notice.innerHTML = `⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️<br><span style="font-size: 16px; font-weight: normal; margin-top: 8px; display: inline-block;">Exported: ${exportTimestamp}</span>${qrCodeHTML}`;
         body.insertBefore(notice, body.firstChild);
       }
       
