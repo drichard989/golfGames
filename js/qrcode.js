@@ -25,6 +25,38 @@
   // ============================================================================
 
   /**
+   * Simple LZ-based compression for URLs
+   * Compresses repeated patterns to make URLs shorter
+   */
+  function compressString(str) {
+    // Use built-in compression if available
+    if (typeof CompressionStream !== 'undefined') {
+      // Modern browsers - not widely supported yet
+      return str;
+    }
+    
+    // Simple run-length encoding for empty scores
+    let compressed = str
+      .replace(/,"s":\["","","","","","","","","","","","","","","","","",""\]/g, ',"s":[]')
+      .replace(/,"s":\[\]/g, ',"s":0')
+      .replace(/""/g, '0');
+    
+    return compressed;
+  }
+
+  /**
+   * Decompress string
+   */
+  function decompressString(str) {
+    // Reverse the compression
+    let decompressed = str
+      .replace(/"s":0/g, '"s":[]')
+      .replace(/0/g, '""');
+    
+    return decompressed;
+  }
+
+  /**
    * Compress scorecard data for QR code or URL
    * Returns a compact JSON string
    */
@@ -344,13 +376,16 @@
   function generateShareLink() {
     try {
       const data = compressData();
+      const compressed = compressString(data);
       
-      // Encode data for URL (base64 for safety)
-      const encoded = btoa(encodeURIComponent(data));
+      // Encode data for URL - use encodeURIComponent for better compatibility
+      const encoded = encodeURIComponent(compressed);
       
       // Create URL with hash parameter
       const baseUrl = window.location.origin + window.location.pathname;
-      const shareUrl = `${baseUrl}#import=${encoded}`;
+      const shareUrl = `${baseUrl}#i=${encoded}`;
+      
+      console.log('[QR] Share link length:', shareUrl.length);
       
       // Copy to clipboard
       if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -448,12 +483,23 @@
    */
   function checkUrlForImport() {
     const hash = window.location.hash;
-    if (!hash.startsWith('#import=')) return;
+    
+    // Support both new (#i=) and old (#import=) formats
+    if (!hash.startsWith('#i=') && !hash.startsWith('#import=')) return;
 
     try {
-      // Extract and decode data
-      const encoded = hash.substring(8); // Remove '#import='
-      const decoded = decodeURIComponent(atob(encoded));
+      let decoded;
+      
+      if (hash.startsWith('#i=')) {
+        // New compressed format
+        const encoded = hash.substring(3); // Remove '#i='
+        decoded = decodeURIComponent(encoded);
+        decoded = decompressString(decoded);
+      } else {
+        // Old base64 format (backwards compatibility)
+        const encoded = hash.substring(8); // Remove '#import='
+        decoded = decodeURIComponent(atob(encoded));
+      }
       
       console.log('[QR] Import data detected in URL');
       

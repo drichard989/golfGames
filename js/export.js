@@ -1872,14 +1872,18 @@ console.log('[Export] Module loaded');
             const course = window.ACTIVE_COURSE || 'manito';
             const qrData = JSON.stringify({ v: 1, c: course, p: players });
             
-            // Generate share link URL
-            const encoded = btoa(encodeURIComponent(qrData));
+            // Generate share link URL with compression
+            const compressed = qrData
+              .replace(/,"s":\["","","","","","","","","","","","","","","","","",""\]/g, ',"s":[]')
+              .replace(/,"s":\[\]/g, ',"s":0')
+              .replace(/""/g, '0');
+            const encoded = encodeURIComponent(compressed);
             const baseUrl = window.location.origin + window.location.pathname;
-            const shareUrl = `${baseUrl}#import=${encoded}`;
+            const shareUrl = `${baseUrl}#i=${encoded}`;
             
             shareLinkHTML = `<div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.2); border-radius: 8px; max-width: 600px; margin-left: auto; margin-right: auto;">
-              <div style="font-size: 16px; font-weight: normal; margin-bottom: 8px;">📱 Import Link (tap to open in app):</div>
-              <a href="${shareUrl}" style="color: #fff; text-decoration: underline; word-break: break-all; font-size: 14px; display: block; background: rgba(0,0,0,0.3); padding: 8px; border-radius: 4px;">${shareUrl}</a>
+              <div style="font-size: 16px; font-weight: normal; margin-bottom: 8px;">📱 Tap to import in app:</div>
+              <a href="${shareUrl}" style="color: #fff; text-decoration: none; word-break: break-all; font-size: 16px; display: block; background: rgba(0,0,0,0.3); padding: 12px; border-radius: 4px; font-weight: bold;">🔗 Open Scorecard in App</a>
             </div>`;
             
             // Create a temporary container for QR code generation
