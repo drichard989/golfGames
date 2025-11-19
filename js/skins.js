@@ -198,7 +198,13 @@
     const par = getPar(holeIdx);
     const ndb = par + NDB_BUFFER + sr;
     const adjGross = Math.min(gross, ndb);
-    return adjGross - sr;
+    const netScore = adjGross - sr;
+    
+    if (holeIdx === 0 && playerIdx < 3) {
+      console.log(`[getNetForSkins] P${playerIdx} H1: adjCH=${adj}, strokes=${sr}, gross=${gross}, net=${netScore}, half=${half}`);
+    }
+    
+    return netScore;
   }
 
   /**
