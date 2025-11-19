@@ -137,6 +137,12 @@
       <h2>Skins</h2>
       <div class="banker-controls">
         <div class="control-box">
+          <div class="pill">Options</div>
+          <label class="radio">
+            <input type="checkbox" id="skinsCarry" checked /> Carry over on ties
+          </label>
+        </div>
+        <div class="control-box">
           <div class="pill">Scoring Mode</div>
           <label class="radio">
             <input type="radio" name="skinsMode" id="skinsModeGross" value="gross" checked /> Gross (raw scores)
@@ -152,11 +158,6 @@
           </div>
         </div>
         <div class="control-box">
-          <div class="pill">Options</div>
-          <label class="radio">
-            <input type="checkbox" id="skinsCarry" checked /> Carry over on ties
-          </label>
-          <br />
           <label class="input-label">
             Buy-in per player: $<input type="number" id="skinsBuyIn" min="0" step="0.01" value="10" inputmode="decimal" autocomplete="off"
               style="width: 80px; display: inline-block; margin-left: 4px; -moz-appearance: textfield; appearance: textfield;" />
