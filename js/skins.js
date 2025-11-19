@@ -397,12 +397,15 @@
       if (e.target.checked) {
         // Clear and disable Half-Pops when Gross is selected
         const halfEl = document.getElementById('skinsHalf');
+        const wasHalfChecked = halfEl?.checked;
         if (halfEl) {
           halfEl.checked = false;
           halfEl.disabled = true;
         }
-        // Force recalculation after state change
-        updateSkins();
+        // Use setTimeout to ensure DOM updates are complete before recalculating
+        setTimeout(() => {
+          updateSkins();
+        }, 0);
       }
       if (typeof window.saveDebounced === 'function') {
         window.saveDebounced();
