@@ -198,7 +198,13 @@
     const par = getPar(holeIdx);
     const ndb = par + NDB_BUFFER + sr;
     const adjGross = Math.min(gross, ndb);
-    return adjGross - sr;
+    const netScore = adjGross - sr;
+    
+    if (holeIdx === 0 && playerIdx < 3) {
+      console.log(`[getNetForSkins] P${playerIdx} H1: adjCH=${adj}, strokes=${sr}, gross=${gross}, net=${netScore}, half=${half}`);
+    }
+    
+    return netScore;
   }
 
   /**
@@ -406,15 +412,20 @@
       if (e.target.checked) {
         // Clear and disable Half-Pops when Gross is selected
         const halfEl = document.getElementById('skinsHalf');
-        const wasHalfChecked = halfEl?.checked;
         if (halfEl) {
+          const wasChecked = halfEl.checked;
           halfEl.checked = false;
           halfEl.disabled = true;
+          
+          // If half-pop was enabled, we need to force a recalc
+          // since unchecking programmatically doesn't trigger change event
+          if (wasChecked) {
+            // Force immediate recalculation
+            updateSkins();
+          }
         }
-        // Use setTimeout to ensure DOM updates are complete before recalculating
-        setTimeout(() => {
-          updateSkins();
-        }, 0);
+        // Always recalculate when switching to GROSS
+        updateSkins();
       }
       if (typeof window.saveDebounced === 'function') {
         window.saveDebounced();
