@@ -359,6 +359,9 @@
     const carry = document.getElementById('skinsCarry')?.checked ?? true;
     const half = document.getElementById('skinsHalf')?.checked ?? false;
     const buyIn = Math.max(0, Number(document.getElementById('skinsBuyIn')?.value) || 0);
+    
+    console.log('[Skins] updateSkins called - useNet:', useNet, 'half:', half, 'carry:', carry);
+    
     const data = Skins.compute({ carry, half, buyIn, useNet });
     Skins.render(data);
   }
