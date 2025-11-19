@@ -12,11 +12,10 @@
 
 (() => {
   'use strict';
-  console.log('[BankerVegas] Module loaded (stub)');
 
   const BankerVegas = {
     init() {
-      console.log('[BankerVegas] init() called - game not yet implemented');
+      // Stub - game not yet implemented
       const section = document.getElementById('bankerVegasSection');
       if (section) {
         const h2 = section.querySelector('h2');
@@ -25,13 +24,9 @@
     },
     
     update() {
-      console.log('[BankerVegas] update() called - game not yet implemented');
+      // Stub - game not yet implemented
     }
   };
-
-  // Expose to global scope
-  window.BankerVegas = BankerVegas;
   
-  console.log('[BankerVegas] Module initialized, exposed as window.BankerVegas');
-
+  window.BankerVegas = BankerVegas;
 })();

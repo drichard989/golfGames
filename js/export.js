@@ -24,7 +24,6 @@
 
 (() => {
   'use strict';
-  console.log('[Export] Module loaded');
 
   /* ============================================================================
      EMBEDDED CSS FOR HTML SNAPSHOT EXPORT
@@ -1300,7 +1299,6 @@ input[type="text"] {
   border: 1px solid #d3d7dc !important;
 }
 ` + '`;\n  // END EMBEDDED CSS - DO NOT REMOVE THIS LINE\n';
-console.log('[Export] Module loaded');
 
   /**
    * Export current scorecard as CSV file
@@ -1366,7 +1364,6 @@ console.log('[Export] Module loaded');
    * - Game options and settings for each active game
    */
   function emailCurrentScorecard() {
-    console.log('[Export] emailCurrentScorecard called');
     const playerRows = document.querySelectorAll(".player-row");
     const date = new Date();
     const dateStr = date.toISOString().split('T')[0];
@@ -1439,14 +1436,11 @@ console.log('[Export] Module loaded');
     
     // Add game results sections
     let hasGames = false;
-    console.log('[Export] Checking for active games...');
     
     // VEGAS RESULTS
     const vegasSection = document.getElementById('vegasSection');
-    console.log('[Export] Vegas section:', vegasSection, 'Open:', vegasSection?.classList.contains('open'));
     if(vegasSection && vegasSection.classList.contains('open')) {
       hasGames = true;
-      console.log('[Export] Adding Vegas results');
       textTable += '\n\n';
       textTable += '='.repeat(60) + '\n';
       textTable += 'VEGAS GAME RESULTS\n';
@@ -1498,11 +1492,13 @@ console.log('[Export] Module loaded');
       textTable += '='.repeat(60) + '\n\n';
       
       // Skins options
+      const skinsMode = document.getElementById('skinsModeNet')?.checked ? 'Net' : 'Gross';
       const skinsCarry = document.getElementById('skinsCarry')?.checked ?? true;
       const skinsHalf = document.getElementById('skinsHalf')?.checked ?? false;
       const skinsBuyIn = Number(document.getElementById('skinsBuyIn')?.value) || 10;
       
       textTable += 'Options:\n';
+      textTable += `  • Scoring Mode: ${skinsMode}\n`;
       textTable += `  • Carry Over: ${skinsCarry ? 'YES' : 'NO'}\n`;
       textTable += `  • Half-Pops: ${skinsHalf ? 'YES' : 'NO'}\n`;
       textTable += `  • Buy-In: $${skinsBuyIn.toFixed(2)}\n\n`;
@@ -1757,7 +1753,6 @@ console.log('[Export] Module loaded');
       
       // Use the embedded CSS from the module
       const allCSS = EMBEDDED_CSS;
-      console.log('[Export] Using embedded CSS for share, length:', allCSS.length);
       
       // Get the cloned html element
       const htmlEl = docClone.documentElement;
@@ -1815,10 +1810,195 @@ console.log('[Export] Module loaded');
         }
       });
       
+      // CRITICAL: Merge the dual-table layout into a single unified table for export
+      // This eliminates alignment issues by combining Name/CH columns with score columns
+      
+      const fixedTable = htmlEl.querySelector('#scorecardFixed');
+      const scrollTable = htmlEl.querySelector('#scorecard');
+      const scorecardContainer = htmlEl.querySelector('.scorecard-container');
+      
+      if (fixedTable && scrollTable && scorecardContainer) {
+        // Create a new unified table
+        const unifiedTable = docClone.createElement('table');
+        unifiedTable.id = 'scorecardUnified';
+        unifiedTable.style.cssText = 'width: 100%; border-collapse: separate; border-spacing: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden;';
+        
+        // Build header row
+        const headerRow = docClone.createElement('tr');
+        const fixedHeaders = fixedTable.querySelectorAll('thead th');
+        const scrollHeaders = scrollTable.querySelectorAll('thead th');
+        
+        fixedHeaders.forEach(th => {
+          const newTh = th.cloneNode(true);
+          newTh.style.cssText = 'border-bottom: 1px solid var(--line); text-align: center; padding: 6px 3px; background: var(--panel-alt); position: sticky; top: 0; z-index: 3;';
+          if (th.textContent.includes('Player')) {
+            newTh.style.textAlign = 'left';
+            newTh.style.paddingLeft = '8px';
+          }
+          headerRow.appendChild(newTh);
+        });
+        
+        scrollHeaders.forEach(th => {
+          const newTh = th.cloneNode(true);
+          newTh.style.cssText = 'border-bottom: 1px solid var(--line); text-align: center; padding: 6px 3px; background: var(--panel-alt); position: sticky; top: 0; z-index: 3;';
+          headerRow.appendChild(newTh);
+        });
+        
+        const thead = docClone.createElement('thead');
+        thead.appendChild(headerRow);
+        unifiedTable.appendChild(thead);
+        
+        // Build body rows (Par, HCP, Players)
+        const tbody = docClone.createElement('tbody');
+        
+        // Par row
+        const fixedParRow = fixedTable.querySelector('.par-row');
+        const scrollParRow = scrollTable.querySelector('.par-row');
+        if (fixedParRow && scrollParRow) {
+          const unifiedParRow = docClone.createElement('tr');
+          unifiedParRow.className = 'par-row';
+          
+          fixedParRow.querySelectorAll('td').forEach(td => {
+            const newTd = td.cloneNode(true);
+            newTd.style.cssText = 'border-bottom: 1px solid var(--line); text-align: center; padding: 6px 3px; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.3);';
+            if (td.classList.contains('align-left') || td.textContent.includes('Par')) {
+              newTd.style.textAlign = 'left';
+              newTd.style.paddingLeft = '8px';
+            }
+            unifiedParRow.appendChild(newTd);
+          });
+          
+          scrollParRow.querySelectorAll('td').forEach(td => {
+            const newTd = td.cloneNode(true);
+            newTd.style.cssText = 'border-bottom: 1px solid var(--line); text-align: center; padding: 6px 3px; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.3);';
+            unifiedParRow.appendChild(newTd);
+          });
+          
+          tbody.appendChild(unifiedParRow);
+        }
+        
+        // HCP row
+        const fixedHcpRow = fixedTable.querySelector('.hcp-row');
+        const scrollHcpRow = scrollTable.querySelector('.hcp-row');
+        if (fixedHcpRow && scrollHcpRow) {
+          const unifiedHcpRow = docClone.createElement('tr');
+          unifiedHcpRow.className = 'hcp-row';
+          
+          fixedHcpRow.querySelectorAll('td').forEach(td => {
+            const newTd = td.cloneNode(true);
+            newTd.style.cssText = 'border-bottom: 1px solid rgba(255, 255, 255, 0.3); text-align: center; padding: 6px 3px; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.3);';
+            if (td.classList.contains('align-left') || td.textContent.includes('HCP')) {
+              newTd.style.textAlign = 'left';
+              newTd.style.paddingLeft = '8px';
+            }
+            unifiedHcpRow.appendChild(newTd);
+          });
+          
+          scrollHcpRow.querySelectorAll('td').forEach(td => {
+            const newTd = td.cloneNode(true);
+            newTd.style.cssText = 'border-bottom: 1px solid rgba(255, 255, 255, 0.3); text-align: center; padding: 6px 3px; vertical-align: middle; border-top: 1px solid rgba(255, 255, 255, 0.3);';
+            unifiedHcpRow.appendChild(newTd);
+          });
+          
+          tbody.appendChild(unifiedHcpRow);
+        }
+        
+        // Player rows
+        const fixedPlayerRows = fixedTable.querySelectorAll('.player-row');
+        const scrollPlayerRows = scrollTable.querySelectorAll('.player-row');
+        
+        fixedPlayerRows.forEach((fixedRow, idx) => {
+          const scrollRow = scrollPlayerRows[idx];
+          if (scrollRow) {
+            const unifiedPlayerRow = docClone.createElement('tr');
+            unifiedPlayerRow.className = 'player-row';
+            
+            fixedRow.querySelectorAll('td').forEach(td => {
+              const newTd = td.cloneNode(true);
+              newTd.style.cssText = 'border-bottom: 1px solid var(--line); text-align: center; padding: 6px 3px; vertical-align: middle;';
+              // Keep name cell left-aligned
+              const nameEdit = newTd.querySelector('.name-edit');
+              if (nameEdit) {
+                newTd.style.textAlign = 'left';
+                newTd.style.paddingLeft = '8px';
+              }
+              unifiedPlayerRow.appendChild(newTd);
+            });
+            
+            scrollRow.querySelectorAll('td').forEach(td => {
+              const newTd = td.cloneNode(true);
+              newTd.style.cssText = 'border-bottom: 1px solid var(--line); text-align: center; padding: 6px 3px; vertical-align: middle;';
+              unifiedPlayerRow.appendChild(newTd);
+            });
+            
+            tbody.appendChild(unifiedPlayerRow);
+          }
+        });
+        
+        unifiedTable.appendChild(tbody);
+        
+        // Build footer (Totals)
+        const fixedFooter = fixedTable.querySelector('tfoot tr');
+        const scrollFooter = scrollTable.querySelector('tfoot tr');
+        if (fixedFooter && scrollFooter) {
+          const tfoot = docClone.createElement('tfoot');
+          const unifiedFooterRow = docClone.createElement('tr');
+          
+          fixedFooter.querySelectorAll('td').forEach(td => {
+            const newTd = td.cloneNode(true);
+            newTd.style.cssText = 'background: var(--panel-alt); font-weight: 600; text-align: center; padding: 6px 3px; vertical-align: middle;';
+            if (td.textContent.includes('Totals')) {
+              newTd.style.textAlign = 'left';
+              newTd.style.paddingLeft = '8px';
+            }
+            unifiedFooterRow.appendChild(newTd);
+          });
+          
+          scrollFooter.querySelectorAll('td').forEach(td => {
+            const newTd = td.cloneNode(true);
+            newTd.style.cssText = 'background: var(--panel-alt); font-weight: 600; text-align: center; padding: 6px 3px; vertical-align: middle;';
+            unifiedFooterRow.appendChild(newTd);
+          });
+          
+          tfoot.appendChild(unifiedFooterRow);
+          unifiedTable.appendChild(tfoot);
+        }
+        
+        // Replace the dual-table container with the unified table
+        scorecardContainer.innerHTML = '';
+        scorecardContainer.style.cssText = 'overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 12px 0 24px;';
+        scorecardContainer.appendChild(unifiedTable);
+      }
+      
+      // Ensure the scorecard container maintains proper display
+      
+      // Hide utilities section and extra controls in export
+      const utilitiesSection = htmlEl.querySelector('.utilities-section');
+      if (utilitiesSection) {
+        utilitiesSection.style.display = 'none';
+      }
+      
+      const headerControls = htmlEl.querySelectorAll('header .controls');
+      headerControls.forEach(control => {
+        control.style.display = 'none';
+      });
+      
+      // Hide the header itself to remove extra whitespace
+      const header = htmlEl.querySelector('header');
+      if (header) {
+        header.style.display = 'none';
+      }
+      
+      // Ensure tables are properly displayed
+      const allTables = htmlEl.querySelectorAll('table');
+      allTables.forEach(table => {
+        table.style.display = 'table';
+        table.style.width = '100%';
+      });
+      
       // Remove stylesheet links since we're inlining the embedded CSS
       const links = htmlEl.querySelectorAll('link[rel="stylesheet"]');
       links.forEach(link => link.remove());
-      console.log('[Export] Removed', links.length, 'stylesheet link(s)');
       
       // Remove all script tags
       const scripts = htmlEl.querySelectorAll('script');
@@ -1838,7 +2018,6 @@ console.log('[Export] Module loaded');
         styleEl.setAttribute('data-export-inline', 'true');
         styleEl.textContent = allCSS;
         head.insertBefore(styleEl, head.firstChild);
-        console.log('[Export] Added inline style element with', allCSS.length, 'characters');
       }
       
       // Add read-only notice banner at top of body WITH QR CODE
@@ -1855,7 +2034,7 @@ console.log('[Export] Module loaded');
         });
         
         const notice = docClone.createElement('div');
-        notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; position: sticky; top: 0; z-index: 9999; border-bottom: 4px solid #c92a2a;';
+        notice.style.cssText = 'background: #ff6b6b; color: white; padding: 20px; text-align: center; font-size: 20px; font-weight: bold; margin: 0; border-bottom: 4px solid #c92a2a; position: relative; z-index: 100;';
         
         // Generate QR code data for import using qrcode-generator
         let qrCodeHTML = '';
@@ -1894,15 +2073,22 @@ console.log('[Export] Module loaded');
             }
             
             const qrDataUrl = tempCanvas.toDataURL('image/png');
-            qrCodeHTML = `<div style="margin-top: 20px; padding: 16px; background: white; display: inline-block; border-radius: 12px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
-              <img src="${qrDataUrl}" style="display: block; width: 200px; height: 200px; margin: 0 auto;" alt="QR Code for import" />
+            qrCodeHTML = `<div style="margin-top: 16px; padding: 12px; background: white; display: inline-block; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15);">
+              <img src="${qrDataUrl}" style="display: block; width: 150px; height: 150px; margin: 0;" alt="QR Code to re-import this scorecard" />
+              <div style="color: #333; font-size: 11px; font-weight: normal; margin-top: 6px;">Scan to import</div>
             </div>`;
           } catch (err) {
             console.error('[Export] Failed to generate QR code for export:', err);
           }
         }
         
+        // Get course name
+        const ACTIVE_COURSE = window.ACTIVE_COURSE || 'manito';
+        const COURSES = window.COURSES || {};
+        const courseName = COURSES[ACTIVE_COURSE]?.name || 'Golf Course';
+        
         notice.innerHTML = `
+          <div style="font-size: 24px; font-weight: bold; margin-bottom: 8px;">⛳ ${courseName}</div>
           <div style="margin-bottom: 12px;">⚠️ This is a copy of the Manito Games scoring and is not editable ⚠️</div>
           <div style="font-size: 16px; font-weight: normal;">Exported: ${exportTimestamp}</div>
           ${qrCodeHTML}
@@ -1962,7 +2148,6 @@ console.log('[Export] Module loaded');
       }
       
       // Fallback to download if share is not available
-      console.log('[Export] Web Share API not available, falling back to download');
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -1989,7 +2174,5 @@ console.log('[Export] Module loaded');
     emailCurrentScorecard,
     shareHtmlSnapshot
   };
-  
-  console.log('[Export] Module exposed to window.Export:', window.Export);
 
 })();

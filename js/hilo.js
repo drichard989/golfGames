@@ -19,19 +19,18 @@
 
 (() => {
   'use strict';
-  console.log('[HiLo] Module loaded');
 
   // =============================================================================
   // HELPER FUNCTIONS
   // =============================================================================
 
   function getPlayerCount() {
-    return document.querySelectorAll('.player-row').length;
+    return document.querySelectorAll('#scorecardFixed .player-row').length;
   }
 
   function getPlayerNames() {
     const names = [];
-    const playerRows = document.querySelectorAll('.player-row');
+    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
     playerRows.forEach((row, idx) => {
       const nameInput = row.querySelector('.name-edit');
       const name = nameInput?.value?.trim() || `Player ${idx + 1}`;
@@ -42,7 +41,7 @@
 
   function getHandicaps() {
     const handicaps = [];
-    const playerRows = document.querySelectorAll('.player-row');
+    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
     playerRows.forEach(row => {
       const chInput = row.querySelector('.ch-input');
       const ch = Number(chInput?.value) || 0;
@@ -430,7 +429,6 @@
 
   const HiLo = {
     init() {
-      console.log('[HiLo] Initializing...');
       this.update();
     },
     
@@ -442,7 +440,5 @@
 
   // Expose to global scope
   window.HiLo = HiLo;
-  
-  console.log('[HiLo] Module initialized');
 
 })();

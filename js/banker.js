@@ -13,11 +13,10 @@
 
 (() => {
   'use strict';
-  console.log('[Banker] Module loaded (stub)');
 
   const Banker = {
     init() {
-      console.log('[Banker] init() called - game not yet implemented');
+      // Stub - game not yet implemented
       const section = document.getElementById('bankerSection');
       if (section) {
         const h2 = section.querySelector('h2');
@@ -26,13 +25,9 @@
     },
     
     update() {
-      console.log('[Banker] update() called - game not yet implemented');
+      // Stub - game not yet implemented
     }
   };
-
-  // Expose to global scope
-  window.Banker = Banker;
   
-  console.log('[Banker] Module initialized, exposed as window.Banker');
-
+  window.Banker = Banker;
 })();

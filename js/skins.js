@@ -35,7 +35,6 @@
 
 (() => {
   'use strict';
-  console.log('[Skins] Module loaded');
 
   // =============================================================================
   // HELPER FUNCTIONS
@@ -212,11 +211,11 @@
   const Skins = {
     /**
      * Compute skins outcome for all holes and players
-     * @param {{carry:boolean, half:boolean, buyIn:number}} opts
+     * @param {{carry:boolean, half:boolean, buyIn:number, useNet:boolean}} opts
      * @returns {{totals:number[], holesWon:string[][], winnings:number[], pot:number, totalSkins:number, activePlayers:number}}
      */
     compute(opts) {
-      const { carry, half, buyIn } = opts;
+      const { carry, half, buyIn, useNet } = opts;
       const playerCount = getPlayerCount();
       const HOLES = getHoleCount();
       const totals = Array(playerCount).fill(0);
@@ -224,11 +223,12 @@
       let pot = 1;
 
       for (let h = 0; h < HOLES; h++) {
-        const nets = Array.from({ length: playerCount }, (_, p) => 
-          getNetForSkins(p, h, half)
+        // Use gross or net scores based on mode
+        const scores = Array.from({ length: playerCount }, (_, p) => 
+          useNet ? getNetForSkins(p, h, half) : getGross(p, h)
         );
         
-        const filled = nets.map((n, p) => ({ n, p })).filter(x => x.n > 0);
+        const filled = scores.map((n, p) => ({ n, p })).filter(x => x.n > 0);
         if (filled.length < 2) {
           if (carry) pot++;
           continue;
@@ -340,10 +340,11 @@
    * Update Skins calculations and render
    */
   function updateSkins() {
+    const useNet = document.getElementById('skinsModeNet')?.checked ?? false;
     const carry = document.getElementById('skinsCarry')?.checked ?? true;
     const half = document.getElementById('skinsHalf')?.checked ?? false;
     const buyIn = Math.max(0, Number(document.getElementById('skinsBuyIn')?.value) || 0);
-    const data = Skins.compute({ carry, half, buyIn });
+    const data = Skins.compute({ carry, half, buyIn, useNet });
     Skins.render(data);
   }
 
@@ -365,8 +366,46 @@
   function initSkins() {
     buildSkinsTable();
     refreshSkinsHeaderNames();
+    
+    // Set initial state of Half-Pops based on mode
+    const grossRadio = document.getElementById('skinsModeGross');
+    const halfEl = document.getElementById('skinsHalf');
+    if (grossRadio?.checked && halfEl) {
+      halfEl.checked = false;
+      halfEl.disabled = true;
+    }
+    
     updateSkins();
 
+    // Recompute on mode change (gross/net radio buttons)
+    document.getElementById('skinsModeGross')?.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        // Clear and disable Half-Pops when Gross is selected
+        const halfEl = document.getElementById('skinsHalf');
+        if (halfEl) {
+          halfEl.checked = false;
+          halfEl.disabled = true;
+        }
+      }
+      updateSkins();
+      if (typeof window.saveDebounced === 'function') {
+        window.saveDebounced();
+      }
+    });
+    document.getElementById('skinsModeNet')?.addEventListener('change', (e) => {
+      if (e.target.checked) {
+        // Enable Half-Pops when Net is selected
+        const halfEl = document.getElementById('skinsHalf');
+        if (halfEl) {
+          halfEl.disabled = false;
+        }
+      }
+      updateSkins();
+      if (typeof window.saveDebounced === 'function') {
+        window.saveDebounced();
+      }
+    });
+    
     // Recompute on option change
     document.getElementById('skinsCarry')?.addEventListener('change', () => {
       updateSkins();
@@ -414,7 +453,5 @@
     compute: Skins.compute,
     render: Skins.render
   };
-
-  console.log('[Skins] Module initialized, exposed as window.Skins');
 
 })();
