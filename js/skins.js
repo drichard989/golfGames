@@ -45,7 +45,7 @@
    * @returns {number[]} Array of adjusted handicaps
    */
   function getAdjustedCHs() {
-    const playerRows = document.querySelectorAll('.player-row');
+    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
     const chs = [];
     playerRows.forEach(row => {
       const chInput = row.querySelector('.ch-input');
@@ -63,7 +63,7 @@
    * @returns {number}
    */
   function getPlayerCount() {
-    return document.querySelectorAll('.player-row').length;
+    return document.querySelectorAll('#scorecardFixed .player-row').length;
   }
 
   /**
@@ -192,7 +192,7 @@
    */
   function getPlayerNames() {
     const names = [];
-    const playerRows = document.querySelectorAll('.player-row');
+    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
     playerRows.forEach((row, idx) => {
       const nameInput = row.querySelector('.name-edit');
       const name = nameInput?.value?.trim() || 
