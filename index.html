@@ -37,6 +37,7 @@
         <button id="removePlayerBtn" class="btn">− Remove Player</button>
         <button id="addPlayerBtn" class="btn">+ Add Player</button>
         <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
+        <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
         <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
       </div>
       <div id="utilitiesSection" class="utilities-section">
@@ -60,41 +61,67 @@
     </header>
 
     <p class="small" id="parBadge" aria-live="polite"></p>
-    <!-- SCORECARD -->
-    <div class="wrap">
-      <table id="scorecard" aria-describedby="saveStatus">
+    <!-- SCORECARD - Dual Table Layout -->
+    <div class="scorecard-container">
+      <!-- Fixed Left Column (Player Names + CH) -->
+      <div class="scorecard-fixed">
+        <table id="scorecardFixed" aria-describedby="saveStatus">
           <thead>
-            <tr id="holesHeader">
+            <tr id="holesHeaderFixed">
               <th class="align-left">Player</th>
               <th>CH</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="par-row" id="parRowFixed">
+              <td class="align-left">
+                <strong>Par</strong>
+                <span class="subtle">(from card)</span>
+              </td>
+              <td></td>
+            </tr>
+            <tr class="hcp-row" id="hcpRowFixed">
+              <td class="align-left">
+                <strong>HCP Index</strong>
+                <span class="subtle">(from card)</span>
+              </td>
+              <td></td>
+            </tr>
+            <!-- Player rows inserted by JS -->
+          </tbody>
+          <tfoot>
+            <tr id="totalsRowFixed">
+              <td class="align-left">Totals</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      
+      <!-- Scrollable Right Columns (Holes + Scores) -->
+      <div class="scorecard-scroll">
+        <table id="scorecard" aria-describedby="saveStatus">
+          <thead>
+            <tr id="holesHeader">
               <!-- JS fills Holes 1–18 + Out + In + Total + To Par + Net -->
             </tr>
           </thead>
-        <tbody>
-          <tr class="par-row" id="parRow">
-            <td class="align-left">
-              <strong>Par</strong>
-              <span class="subtle">(from card)</span>
-            </td>
-            <td></td>
-          </tr>
-          <tr class="hcp-row" id="hcpRow">
-            <td class="align-left">
-              <strong>HCP Index</strong>
-              <span class="subtle">(from card)</span>
-            </td>
-            <td></td>
-          </tr>
-          <!-- Player rows inserted by JS -->
-        </tbody>
-        <tfoot>
-          <tr id="totalsRow">
-            <td class="align-left">Totals</td>
-            <td></td>
-            <!-- JS adds per-hole sums + Out/In/Total; placeholders align To Par / Net -->
-          </tr>
-        </tfoot>
-      </table>
+          <tbody>
+            <tr class="par-row" id="parRow">
+              <!-- JS fills par values -->
+            </tr>
+            <tr class="hcp-row" id="hcpRow">
+              <!-- JS fills HCP values -->
+            </tr>
+            <!-- Player rows inserted by JS -->
+          </tbody>
+          <tfoot>
+            <tr id="totalsRow">
+              <!-- JS adds per-hole sums + Out/In/Total -->
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </div>
     <!-- GAMES LAUNCHER -->
     <div class="gamesbar">
@@ -110,12 +137,25 @@
       <h2>Skins</h2>
       <div class="banker-controls">
         <div class="control-box">
-          <div class="pill">Options</div>
+          <div class="pill">Scoring Mode</div>
           <label class="radio">
-            <input type="checkbox" id="skinsCarry" /> Carry over on ties </label>
+            <input type="radio" name="skinsMode" id="skinsModeGross" value="gross" checked /> Gross (raw scores)
+          </label>
           <br />
           <label class="radio">
-            <input type="checkbox" id="skinsHalf" /> Half pops </label>
+            <input type="radio" name="skinsMode" id="skinsModeNet" value="net" /> Net (with handicaps)
+          </label>
+          <div style="margin-left: 24px; margin-top: 4px;">
+            <label class="radio">
+              <input type="checkbox" id="skinsHalf" /> Half-Pops (0.5 strokes)
+            </label>
+          </div>
+        </div>
+        <div class="control-box">
+          <div class="pill">Options</div>
+          <label class="radio">
+            <input type="checkbox" id="skinsCarry" checked /> Carry over on ties
+          </label>
           <br />
           <label class="input-label">
             Buy-in per player: $<input type="number" id="skinsBuyIn" min="0" step="0.01" value="10" inputmode="decimal" autocomplete="off"
@@ -124,6 +164,7 @@
         </div>
         <div class="control-box">
           <div class="pill">Legend</div>
+          <div class="small">Gross = Raw scores without handicap adjustment.</div>
           <div class="small">Net = Gross − strokes (play off low CH). NDB cap applies.</div>
           <div class="small">Pot = Buy-in × Active Players. Dollar winnings = (Skins won / Total skins) × Pot.</div>
         </div>

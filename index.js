@@ -261,7 +261,9 @@
 
   const ids = {
     holesHeader:"#holesHeader",parRow:"#parRow",hcpRow:"#hcpRow",totalsRow:"#totalsRow",
+    holesHeaderFixed:"#holesHeaderFixed",parRowFixed:"#parRowFixed",hcpRowFixed:"#hcpRowFixed",totalsRowFixed:"#totalsRowFixed",
     table:"#scorecard",
+    tableFixed:"#scorecardFixed",
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
@@ -275,6 +277,7 @@
   vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB",
 
     // Skins
+    skinsModeGross:"#skinsModeGross", skinsModeNet:"#skinsModeNet",
     skinsCarry:"#skinsCarry", skinsHalf:"#skinsHalf",
     skinsBody:"#skinsBody",
     skinsSummary:"#skinsSummary",
@@ -358,13 +361,38 @@
        */
       playerRows(){
         const tbody=$(ids.table).tBodies[0];
+        const tbodyFixed=$(ids.tableFixed).tBodies[0];
+        
         for(let p=0;p<PLAYERS;p++){
+          // Create row for scrollable table (scores only)
           const tr=document.createElement("tr"); 
           tr.className="player-row"; 
           tr.dataset.player=String(p);
+          
+          // Create row for fixed table (name + CH only)
+          const trFixed=document.createElement("tr"); 
+          trFixed.className="player-row"; 
+          trFixed.dataset.player=String(p);
 
-          // Name input
+          // Name input (in fixed table)
           const nameTd=document.createElement("td");
+          
+          // Create container for delete button and name input
+          const nameCellContainer = document.createElement("div");
+          nameCellContainer.className = "name-cell-container";
+          
+          // Delete button
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "player-delete-btn";
+          deleteBtn.textContent = "−";
+          deleteBtn.title = "Remove player";
+          deleteBtn.type = "button";
+          deleteBtn.addEventListener("click", () => {
+            // Get current index dynamically from the row's dataset
+            const currentIndex = Number(trFixed.dataset.player);
+            Scorecard.player.removeByIndex(currentIndex);
+          });
+          
           const nameInput=document.createElement("input"); 
           nameInput.type="text"; 
           nameInput.className="name-edit"; 
@@ -376,10 +404,13 @@
             AppManager.recalcGames(); 
             Storage.saveDebounced(); 
           });
-          nameTd.appendChild(nameInput); 
-          tr.appendChild(nameTd);
+          
+          nameCellContainer.appendChild(deleteBtn);
+          nameCellContainer.appendChild(nameInput);
+          nameTd.appendChild(nameCellContainer); 
+          trFixed.appendChild(nameTd);
 
-          // Course Handicap input
+          // Course Handicap input (in fixed table)
           const chTd=document.createElement("td");
           const MIN_HANDICAP = -50;
           const MAX_HANDICAP = 60;
@@ -396,16 +427,24 @@
           
           chInput.addEventListener("input", () => { 
             if(chInput.value !== "") {
-              chInput.value = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
+              const clamped = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
+              if(String(clamped) !== chInput.value) {
+                chInput.value = clamped;
+                return; // Let the new input event handle the recalc
+              }
             }
             Scorecard.calc.recalcAll(); 
-            AppManager.recalcGames(); 
+            AppManager.recalcGames();
+            // Only apply highlighting if not currently loading from storage
+            if (!Storage._isLoading) {
+              Scorecard.calc.applyStrokeHighlighting();
+            }
             Storage.saveDebounced(); 
           });
           chTd.appendChild(chInput); 
-          tr.appendChild(chTd);
+          trFixed.appendChild(chTd);
 
-          // Score inputs for each hole
+          // Score inputs for each hole (in scrollable table)
           const MIN_SCORE = 1;
           const MAX_SCORE = 20;
           
@@ -419,6 +458,7 @@
             inp.dataset.player=String(p); 
             inp.dataset.hole=String(h); 
             inp.placeholder="—";
+            inp.autocomplete="off";
             if(h === 18) td.classList.add('hole-18'); // Add class for styling divider
             
             inp.addEventListener("input", () => { 
@@ -431,15 +471,28 @@
                 }
                 inp.value = v;
                 
-                // Auto-advance: move to next player on same hole
+                // Auto-advance based on configured direction
                 const currentPlayer = Number(inp.dataset.player);
                 const currentHole = Number(inp.dataset.hole);
                 
-                if(inp.value.length >= 1 && currentPlayer < PLAYERS - 1) {
-                  // Move to next player, same hole
-                  const nextInput = document.querySelector(
-                    `.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`
-                  );
+                if(inp.value.length >= 1) {
+                  let nextInput = null;
+                  
+                  if(Config.ADVANCE_DIRECTION === 'down') {
+                    // Move to next player on same hole
+                    if(currentPlayer < PLAYERS - 1) {
+                      nextInput = document.querySelector(
+                        `.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`
+                      );
+                    }
+                  } else {
+                    // Move to next hole for same player
+                    if(currentHole < HOLES - 1) {
+                      nextInput = document.querySelector(
+                        `.score-input[data-player="${currentPlayer}"][data-hole="${currentHole+1}"]`
+                      );
+                    }
+                  }
                   
                   if(nextInput) {
                     setTimeout(() => nextInput.focus(), 50);
@@ -450,14 +503,18 @@
               }
               Scorecard.calc.recalcRow(tr); 
               Scorecard.calc.recalcTotalsRow(); 
-              AppManager.recalcGames(); 
+              AppManager.recalcGames();
+              // Only apply highlighting if not currently loading from storage
+              if (!Storage._isLoading) {
+                Scorecard.calc.applyStrokeHighlighting();
+              }
               Storage.saveDebounced(); 
             });
             td.appendChild(inp); 
             tr.appendChild(td);
           }
 
-          // Summary cells: Out, In, Total, To Par, Net
+          // Summary cells: Out, In, Total, To Par, Net (in scrollable table)
           const outTd=document.createElement("td"); outTd.className="split";
           const inTd=document.createElement("td"); inTd.className="split";
           const totalTd=document.createElement("td"); totalTd.className="total";
@@ -466,6 +523,7 @@
           tr.append(outTd,inTd,totalTd,toParTd,netTd);
 
           tbody.appendChild(tr);
+          tbodyFixed.appendChild(trFixed);
         }
       },
 
@@ -487,6 +545,46 @@
               blank2=document.createElement("td");
         out.className="subtle"; inn.className="subtle"; total.className="subtle"; 
         totalsRow.append(out,inn,total,blank1,blank2);
+      },
+
+      /**
+       * Sync row heights between fixed and scrollable tables
+       * This ensures perfect vertical alignment on all devices
+       */
+    syncRowHeights(skipHighlighting = false) {        const fixedTable = $(ids.tableFixed);
+        const scrollTable = $(ids.table);
+        
+        if (!fixedTable || !scrollTable) return;
+        
+        const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
+        const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
+        
+        // Reset heights first
+        [...fixedRows, ...scrollRows].forEach(row => {
+          row.style.height = '';
+        });
+        
+        // Force layout recalculation
+        void document.body.offsetHeight;
+        
+        // Sync each row pair
+        const maxRows = Math.max(fixedRows.length, scrollRows.length);
+        for (let i = 0; i < maxRows; i++) {
+          const fixedRow = fixedRows[i];
+          const scrollRow = scrollRows[i];
+          
+          if (fixedRow && scrollRow) {
+            const fixedHeight = fixedRow.offsetHeight;
+            const scrollHeight = scrollRow.offsetHeight;
+            const maxHeight = Math.max(fixedHeight, scrollHeight);
+            
+            fixedRow.style.height = `${maxHeight}px`;
+            scrollRow.style.height = `${maxHeight}px`;
+          }
+        }
+        
+        // Note: Stroke highlighting is managed by recalcAll() with proper timing
+        // Do not call applyStrokeHighlighting() here to avoid race conditions
       }
     },
 
@@ -498,12 +596,14 @@
        * @returns {number[]} Array of adjusted handicaps (minimum is always 0)
        */
       adjustedCHs(){
-        const chs=$$(".player-row").map(r=>{ 
-          const v=Number($(".ch-input",r)?.value); 
-          return Number.isFinite(v)?v:0; 
+        const fixedRows = $$("#scorecardFixed .player-row");
+        const chs = fixedRows.map(r => { 
+          const chInput = $(".ch-input", r);
+          const v = Number(chInput?.value);
+          return Number.isFinite(v) ? v : 0; 
         });
-        const minCH=Math.min(...chs);
-        return chs.map(ch=>ch-minCH); // play off low
+        const minCH = Math.min(...chs);
+        return chs.map(ch => ch - minCH); // play off low
       },
 
       /**
@@ -514,7 +614,22 @@
        */
       strokesOnHole(adjCH, holeIdx){
         if(adjCH<=0) return 0;
-        const base=Math.floor(adjCH/18), rem=adjCH%18, holeHcp=HCPMEN[holeIdx];
+        
+        // Defensive check: ensure Config.hcpMen is initialized
+        if(!Config.hcpMen || !Array.isArray(Config.hcpMen) || Config.hcpMen.length === 0) {
+          console.error('[strokesOnHole] Config.hcpMen not initialized!', Config.hcpMen);
+          return 0;
+        }
+        
+        const base=Math.floor(adjCH/18), rem=adjCH%18;
+        const holeHcp = Config.hcpMen[holeIdx];
+        
+        // Defensive check: ensure holeHcp is a valid number
+        if(typeof holeHcp !== 'number' || !Number.isFinite(holeHcp)) {
+          console.error(`[strokesOnHole] Invalid holeHcp at index ${holeIdx}:`, holeHcp, 'Config.hcpMen:', Config.hcpMen);
+          return 0;
+        }
+        
         return base+(holeHcp<=rem?1:0);
       },
 
@@ -555,45 +670,72 @@
 
       /**
        * Recalculate totals and net score for a single player row
-       * @param {HTMLElement} rowEl - Player row element
+       * @param {HTMLElement} rowEl - Player row element (from #scorecard)
+       * @param {number} playerAdjCH - Optional pre-calculated adjusted CH for this player
        */
-      recalcRow(rowEl){
+      recalcRow(rowEl, playerAdjCH){
         const s = Scorecard.calc.getPlayerHoleValues(rowEl);
         // Standard golf: Out = front 9, In = back 9
         const out=sum(s.slice(0,9)), inn=sum(s.slice(9,18)), total=out+inn;
         const splits = rowEl.querySelectorAll("td.split");
         if(splits[0]) splits[0].textContent = out ? String(out) : "—";
         if(splits[1]) splits[1].textContent = inn ? String(inn) : "—";
-        $(".total",rowEl)?.replaceChildren(document.createTextNode(total||"—"));
+        const totalEl = $(".total",rowEl);
+        if(totalEl) totalEl.replaceChildren(document.createTextNode(total||"—"));
 
         const parTotal = sum(PARS);
         const delta = (total && parTotal) ? total - parTotal : 0;
         const el = $(".to-par", rowEl);
         
-        if(!total){ 
-          el.textContent = "—"; 
-          el.dataset.sign = ""; 
-        } else { 
-          const sign = delta === 0 ? "0" : delta > 0 ? "+" : "-"; 
-          el.dataset.sign = sign; 
-          el.textContent = (delta > 0 ? "+" : "") + delta; 
+        if(el) {
+          if(!total){ 
+            el.textContent = "—"; 
+            el.dataset.sign = ""; 
+          } else { 
+            const sign = delta === 0 ? "0" : delta > 0 ? "+" : "-"; 
+            el.dataset.sign = sign; 
+            el.textContent = (delta > 0 ? "+" : "") + delta; 
+          }
         }
 
-        // Calculate net score with NDB (Net Double Bogey) cap
+        // Calculate net score with NDB (Net Double Bogey) cap and apply stroke highlighting
         const pIdx = Number(rowEl.dataset.player);
-        let netTotal = 0;
         
-        for(let h=0; h<HOLES; h++){
-          const gross = s[h] || 0; 
-          if(!gross) continue;
-          
-          const sr = Scorecard.calc.strokesOnHole(Scorecard.calc.adjustedCHs()[pIdx], h);
-          const ndb = PARS[h] + NDB_BUFFER + sr;
-          const adjGross = Math.min(gross, ndb);
-          netTotal += adjGross - sr;
+        // Use pre-calculated adjCH if provided, otherwise calculate it
+        if(playerAdjCH === undefined) {
+          const adjCHs = Scorecard.calc.adjustedCHs();
+          playerAdjCH = adjCHs[pIdx];
         }
         
-        $(".net", rowEl).textContent = netTotal ? String(netTotal) : "—";
+        let netTotal = 0;
+        
+        // Get all score inputs for this player to apply stroke highlighting
+        const scoreInputs = $$("input.score-input", rowEl);
+        
+        for(let h=0; h<HOLES; h++){
+          const gross = s[h] || 0;
+          const sr = Scorecard.calc.strokesOnHole(playerAdjCH, h);
+          const ndb = PARS[h] + NDB_BUFFER + sr;
+          const adjGross = Math.min(gross, ndb);
+          if(gross) netTotal += adjGross - sr;
+          
+          // Apply stroke highlighting to all holes (not just those with scores)
+          const input = scoreInputs[h];
+          if(!input) continue;
+          
+          if(sr > 0) {
+            input.classList.add("receives-stroke");
+            input.dataset.strokes = String(sr);
+            input.title = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
+          } else {
+            input.classList.remove("receives-stroke");
+            input.removeAttribute("data-strokes");
+            input.removeAttribute("title");
+          }
+        }
+        
+        const netEl = $(".net", rowEl);
+        if(netEl) netEl.textContent = netTotal ? String(netTotal) : "—";
       },
 
       /**
@@ -605,15 +747,15 @@
           $(`[data-hole-total="${h}"]`).textContent = t? String(t) : "—";
         }
         const tds=$(ids.totalsRow).querySelectorAll("td"), base=LEADING_FIXED_COLS+HOLES;
-        const OUT=$$(".player-row").map(r=>{ 
+        const OUT=$$("#scorecard .player-row").map(r=>{ 
           const s=r.querySelectorAll("td.split"); 
           return Number(s[0]?.textContent)||0; 
         }).reduce((a,b)=>a+b,0);
-        const INN=$$(".player-row").map(r=>{ 
+        const INN=$$("#scorecard .player-row").map(r=>{ 
           const s=r.querySelectorAll("td.split"); 
           return Number(s[1]?.textContent)||0; 
         }).reduce((a,b)=>a+b,0);
-        const TOT=$$(".player-row").map(r=>Number($(".total",r)?.textContent)||0).reduce((a,b)=>a+b,0);
+        const TOT=$$("#scorecard .player-row").map(r=>Number($(".total",r)?.textContent)||0).reduce((a,b)=>a+b,0);
         tds[base+0].textContent=OUT||"—"; 
         tds[base+1].textContent=INN||"—"; 
         tds[base+2].textContent=TOT||"—";
@@ -623,13 +765,92 @@
        * Recalculate all player rows and totals row
        */
       recalcAll(){ 
-        $$(".player-row").forEach(Scorecard.calc.recalcRow); 
-        Scorecard.calc.recalcTotalsRow(); 
+        // Throttle to prevent rapid repeated calls
+        const now = Date.now();
+        if(this._lastRecalcAll && (now - this._lastRecalcAll) < 100) {
+          return;
+        }
+        this._lastRecalcAll = now;
+        
+        // Calculate adjusted CHs once for all players
+        const adjCHs = Scorecard.calc.adjustedCHs();
+        
+        // Pass adjCHs to each recalcRow to avoid recalculating
+        $$("#scorecard .player-row").forEach(row => {
+          const pIdx = Number(row.dataset.player);
+          Scorecard.calc.recalcRow(row, adjCHs[pIdx]);
+        });
+        
+        Scorecard.calc.recalcTotalsRow();
+        
+        // NOTE: Highlighting is applied separately after page load completes
+        // Do NOT call applyStrokeHighlighting() here during normal recalc
+      },
+      
+      /**
+       * Apply stroke highlighting to all score inputs based on adjusted handicaps
+       * This is called after recalcAll and can be called independently after DOM operations
+       */
+      applyStrokeHighlighting() {
+        const adjCHs = Scorecard.calc.adjustedCHs();
+        
+        $$("#scorecard .player-row").forEach(row => {
+          const pIdx = Number(row.dataset.player);
+          const playerAdjCH = adjCHs[pIdx];
+          const scoreInputs = $$("input.score-input", row);
+          
+          for(let h=0; h<HOLES; h++){
+            const holeHcp = Config.hcpMen[h];
+            const sr = Scorecard.calc.strokesOnHole(playerAdjCH, h);
+            const input = scoreInputs[h];
+            if(!input) continue;
+            
+            if(sr > 0) {
+              input.classList.add("receives-stroke");
+              input.dataset.strokes = String(sr);
+              input.title = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
+              
+              // FORCE inline styles as backup (nuclear option for testing)
+              if(sr === 1) {
+                input.style.border = '2px solid var(--accent)';
+                input.style.boxShadow = '0 0 0 1px var(--accent)';
+              } else if(sr === 2) {
+                input.style.border = '2px solid var(--accent)';
+                input.style.boxShadow = '0 0 0 6px var(--bg), 0 0 0 8px var(--accent)';
+              } else {
+                input.style.border = '2px solid var(--accent)';
+                input.style.boxShadow = '0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent)';
+              }
+            } else {
+              input.classList.remove("receives-stroke");
+              input.removeAttribute("data-strokes");
+              input.removeAttribute("title");
+              input.style.border = '';
+              input.style.boxShadow = '';
+            }
+          }
+        });
       }
     },
 
     // ========== PLAYER MANAGEMENT ==========
     player: {
+      /**
+       * Add a new player row to both tables
+       */
+      add: addPlayer,
+      
+      /**
+       * Remove the last player row from both tables
+       */
+      remove: removePlayer,
+      
+      /**
+       * Remove a specific player by index with confirmation
+       * @param {number} playerIndex - Zero-based player index to remove
+       */
+      removeByIndex: removePlayerByIndex,
+      
       /**
        * Sync the fixed player names overlay with the main scorecard table
        */
@@ -654,8 +875,8 @@
         hcpRow.appendChild(hcpTd);
         playerNamesBody.appendChild(hcpRow);
         
-        // Add player rows - sync with actual player inputs
-        const playerRows = document.querySelectorAll('.player-row');
+        // Add player rows - sync with actual player inputs from fixed table
+        const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
         playerRows.forEach((row, idx) => {
           const nameInput = row.querySelector('.name-edit');
           const overlayRow = document.createElement('tr');
@@ -690,9 +911,13 @@
           return;
         }
         
+        // Update Config object first (source of truth)
+        Config.switchCourse(courseId);
+        
+        // Update module-level variables (for backward compatibility)
         ACTIVE_COURSE = courseId;
-        PARS = [...COURSES[courseId].pars];
-        HCPMEN = [...COURSES[courseId].hcpMen];
+        PARS = Config.pars;
+        HCPMEN = Config.hcpMen;
         
         // Update global references (for Skins/Junk/Vegas modules)
         window.PARS = PARS;
@@ -785,18 +1010,30 @@
   const Storage = {
     KEY: Config.STORAGE_KEY,
     saveTimer: null,
+    _isLoading: false,
     
     /**
      * Save current game state to localStorage
      */
     save() {
+      const scoreRows = $$("#scorecard .player-row");
+      const fixedRows = $$("#scorecardFixed .player-row");
+      
       const state = {
         course: ACTIVE_COURSE,
-        players: $$(".player-row").map(row => ({
-          name: $(".name-edit", row).value || "",
-          ch: $(".ch-input", row).value || "",
-          scores: $$("input.score-input", row).map(i => i.value)
-        })),
+        advanceDirection: Config.ADVANCE_DIRECTION,
+        players: scoreRows.map((row, idx) => {
+          const fixedRow = fixedRows[idx];
+          const scoreInputs = $$("input.score-input", row);
+          const scores = scoreInputs.map(i => i.value);
+          const playerData = {
+            name: fixedRow ? $(".name-edit", fixedRow).value || "" : "",
+            ch: fixedRow ? $(".ch-input", fixedRow).value || "" : "",
+            scores: scores
+          };
+          console.log(`[Storage] Player ${idx}:`, playerData.name, 'CH:', playerData.ch, 'Scores:', scores);
+          return playerData;
+        }),
         vegas: { 
           teams: window.Vegas?.getTeamAssignments(), 
           opts: window.Vegas?.getOptions(), 
@@ -809,6 +1046,7 @@
           open: $(ids.bankerVegasSection)?.classList.contains("open")
         },
         skins: { 
+          mode: document.getElementById('skinsModeNet')?.checked ? 'net' : 'gross',
           buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
           carry: document.getElementById('skinsCarry')?.checked ?? true,
           half: document.getElementById('skinsHalf')?.checked ?? false,
@@ -850,8 +1088,12 @@
      * Load saved game state from localStorage
      */
     load() {
+      this._isLoading = true;
       const raw = localStorage.getItem(this.KEY); 
-      if(!raw) return;
+      if(!raw) {
+        this._isLoading = false;
+        return;
+      }
       
       try{
         const s = JSON.parse(raw);
@@ -865,33 +1107,63 @@
           }
         }
         
-        const rows = $$(".player-row");
+        // Restore advance direction
+        if(s.advanceDirection) {
+          Config.ADVANCE_DIRECTION = s.advanceDirection;
+          const label = document.getElementById('advanceLabel');
+          if(label) {
+            label.textContent = Config.ADVANCE_DIRECTION === 'down' ? 'Advance: ↓ Down' : 'Advance: → Right';
+          }
+        }
+        
+        // CRITICAL: Explicitly query each table to avoid ambiguity
+        const scoreRows = $$("#scorecard .player-row");  // Scrollable table with scores
+        const fixedRows = $$("#scorecardFixed .player-row");  // Fixed table with names/CH
+        
         s.players?.forEach((p, i) => { 
-          const r = rows[i]; 
-          if(!r) return;
+          const r = scoreRows[i]; 
+          const fixedR = fixedRows[i];
+          if(!r || !fixedR) return;
           
-          $(".name-edit", r).value = p.name || "";
-          $(".ch-input", r).value = (p.ch !== undefined && p.ch !== null && p.ch !== "") ? p.ch : "0";
+          $(".name-edit", fixedR).value = p.name || "";
+          $(".ch-input", fixedR).value = (p.ch !== undefined && p.ch !== null && p.ch !== "") ? p.ch : "0";
           
           const ins = $$("input.score-input", r);
           p.scores?.forEach((v, j) => { 
-            if(ins[j]) ins[j].value = v; 
+            if(ins[j]) ins[j].value = v;
           });
         });
-        Scorecard.calc.recalcAll();
-        Scorecard.player.syncOverlay();
-
+        
+      Scorecard.calc.recalcAll();
+      Scorecard.player.syncOverlay();
+      
+      // Use setTimeout to ensure highlighting runs after all event handlers settle
+      // Keep _isLoading flag true until highlighting is complete to prevent race conditions
+      setTimeout(() => {
+        Scorecard.calc.applyStrokeHighlighting();
+        // Clear loading flag AFTER highlighting is applied
+        this._isLoading = false;
+      }, 0);
+      
         // Restore game states
         window.Vegas?.renderTeamControls();
         if(s.vegas?.teams) window.Vegas?.setTeamAssignments(s.vegas.teams);
         if(s.vegas?.opts) window.Vegas?.setOptions(s.vegas.opts);
-        if(s.vegas?.open) games_open("vegas");
-
-        if(s.banker?.open) games_open("banker");
-        
-        if(s.bankervegas?.open) games_open("bankervegas");
+        // Games default to closed - only open if previously saved as open
+        // if(s.vegas?.open) games_open("vegas");
+        // if(s.banker?.open) games_open("banker");
+        // if(s.bankervegas?.open) games_open("bankervegas");
 
         // Restore Skins options
+        if(s.skins?.mode != null) {
+          const modeGrossEl = document.getElementById('skinsModeGross');
+          const modeNetEl = document.getElementById('skinsModeNet');
+          if(s.skins.mode === 'net') {
+            if(modeNetEl) modeNetEl.checked = true;
+          } else {
+            if(modeGrossEl) modeGrossEl.checked = true;
+          }
+        }
         if(s.skins?.buyIn != null) {
           const buyInEl = document.getElementById('skinsBuyIn');
           if(buyInEl) buyInEl.value = s.skins.buyIn;
@@ -904,31 +1176,29 @@
           const halfEl = document.getElementById('skinsHalf');
           if(halfEl) halfEl.checked = s.skins.half;
         }
-        if(s.skins?.open) games_open("skins");
+        // if(s.skins?.open) games_open("skins");
         
         // Restore Junk options
         if(s.junk?.useNet != null) {
           const useNetEl = document.getElementById('junkUseNet');
           if(useNetEl) useNetEl.checked = s.junk.useNet;
         }
-        if(s.junk?.open) {
-          games_open("junk");
-          // Restore achievements after table is initialized
-          if(s.junk?.achievements) {
-            setTimeout(() => {
-              if(window.Junk && typeof window.Junk.setAchievementState === 'function') {
-                window.Junk.setAchievementState(s.junk.achievements);
-              }
-            }, 150);
-          }
+        // Restore achievements even if section is closed
+        if(s.junk?.achievements) {
+          setTimeout(() => {
+            if(window.Junk && typeof window.Junk.setAchievementState === 'function') {
+              window.Junk.setAchievementState(s.junk.achievements);
+            }
+          }, 150);
         }
+        // if(s.junk?.open) games_open("junk");
         
         // Restore Hi-Lo options
         if(s.hilo?.unitValue != null) {
           const unitValueEl = document.getElementById('hiloUnitValue');
           if(unitValueEl) unitValueEl.value = s.hilo.unitValue;
         }
-        if(s.hilo?.open) games_open("hilo");
+        // if(s.hilo?.open) games_open("hilo");
 
         // Recalculate all games with restored data
         AppManager.recalcGames();
@@ -1271,15 +1541,38 @@
     }
     
     const tbody = $('#scorecard').tBodies[0];
+    const tbodyFixed = $('#scorecardFixed').tBodies[0];
     const p = PLAYERS; // Current player index
     
-    // Create new player row (same structure as Scorecard.build.playerRows)
+    // Create new player row for scrollable table (scores only)
     const tr = document.createElement("tr");
     tr.className = "player-row";
     tr.dataset.player = String(p);
     
-    // Name input
+    // Create new player row for fixed table (name + CH only)
+    const trFixed = document.createElement("tr");
+    trFixed.className = "player-row";
+    trFixed.dataset.player = String(p);
+    
+    // Name input (in fixed table)
     const nameTd = document.createElement("td");
+    
+    // Create container for delete button and name input
+    const nameCellContainer = document.createElement("div");
+    nameCellContainer.className = "name-cell-container";
+    
+    // Delete button
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "player-delete-btn";
+    deleteBtn.textContent = "−";
+    deleteBtn.title = "Remove player";
+    deleteBtn.type = "button";
+    deleteBtn.addEventListener("click", () => {
+      // Get current index dynamically from the row's dataset
+      const currentIndex = Number(trFixed.dataset.player);
+      Scorecard.player.removeByIndex(currentIndex);
+    });
+    
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.className = "name-edit";
@@ -1291,10 +1584,13 @@
       AppManager.recalcGames();
       Storage.saveDebounced();
     });
-    nameTd.appendChild(nameInput);
-    tr.appendChild(nameTd);
     
-    // Course Handicap input
+    nameCellContainer.appendChild(deleteBtn);
+    nameCellContainer.appendChild(nameInput);
+    nameTd.appendChild(nameCellContainer);
+    trFixed.appendChild(nameTd);
+    
+    // Course Handicap input (in fixed table)
     const chTd = document.createElement("td");
     const MIN_HANDICAP = -50;
     const MAX_HANDICAP = 60;
@@ -1309,16 +1605,20 @@
     chInput.autocomplete = "off";
     chInput.addEventListener("input", () => {
       if(chInput.value !== "") {
-        chInput.value = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
+        const clamped = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
+        if(String(clamped) !== chInput.value) {
+          chInput.value = clamped;
+          return; // Let the new input event handle the recalc
+        }
       }
       Scorecard.calc.recalcAll();
       AppManager.recalcGames();
       Storage.saveDebounced();
     });
     chTd.appendChild(chInput);
-    tr.appendChild(chTd);
+    trFixed.appendChild(chTd);
     
-    // Score inputs for each hole
+    // Score inputs for each hole (in scrollable table)
     const MIN_SCORE = 1;
     const MAX_SCORE = 20;
     for(let h=1; h<=HOLES; h++) {
@@ -1344,15 +1644,29 @@
           }
           inp.value = v;
           
-          // Auto-advance: move to next player on same hole
+          // Auto-advance based on configured direction
           const currentPlayer = Number(inp.dataset.player);
           const currentHole = Number(inp.dataset.hole);
           
-          if(inp.value.length >= 1 && currentPlayer < PLAYERS - 1) {
-            // Move to next player, same hole
-            const nextInput = document.querySelector(
-              `.score-input[data-player="${currentPlayer + 1}"][data-hole="${currentHole}"]`
-            );
+          if(inp.value.length >= 1) {
+            let nextInput = null;
+            
+            if(Config.ADVANCE_DIRECTION === 'down') {
+              // Move to next player on same hole
+              if(currentPlayer < PLAYERS - 1) {
+                nextInput = document.querySelector(
+                  `.score-input[data-player="${currentPlayer + 1}"][data-hole="${currentHole}"]`
+                );
+              }
+            } else {
+              // Move to next hole for same player
+              if(currentHole < HOLES - 1) {
+                nextInput = document.querySelector(
+                  `.score-input[data-player="${currentPlayer}"][data-hole="${currentHole + 1}"]`
+                );
+              }
+            }
+            
             if(nextInput) {
               setTimeout(() => nextInput.focus(), 50);
             }
@@ -1363,6 +1677,10 @@
         Scorecard.calc.recalcRow(tr);
         Scorecard.calc.recalcTotalsRow();
         AppManager.recalcGames();
+        // Reapply highlighting after a brief delay to ensure it persists
+        setTimeout(() => {
+          Scorecard.calc.applyStrokeHighlighting();
+        }, 150);
         Storage.saveDebounced();
       });
       
@@ -1370,7 +1688,7 @@
       tr.appendChild(td);
     }
     
-    // Summary cells: Out, In, Total, To Par, Net
+    // Summary cells: Out, In, Total, To Par, Net (in scrollable table)
     const outTd = document.createElement("td");
     outTd.className = "split";
     const inTd = document.createElement("td");
@@ -1384,11 +1702,10 @@
     tr.append(outTd, inTd, totalTd, toParTd, netTd);
     
     tbody.appendChild(tr);
+    tbodyFixed.appendChild(trFixed);
     
     // Increment player count
     PLAYERS++;
-    
-    console.log('[addPlayer] PLAYERS after increment:', PLAYERS);
     
     // Update display immediately
     Scorecard.player.updateCountDisplay();
@@ -1396,14 +1713,248 @@
     // Recalculate everything immediately and again after DOM update
     recalculateEverything();
     Scorecard.player.syncOverlay();
+    requestAnimationFrame(() => Scorecard.build.syncRowHeights());
     setTimeout(() => {
       recalculateEverything();
       Scorecard.player.updateCountDisplay();
       Scorecard.player.syncOverlay();
+      requestAnimationFrame(() => Scorecard.build.syncRowHeights());
     }, 100);
     
     Storage.saveDebounced();
     Utils.announce(`Player ${PLAYERS} added.`);
+  }
+  
+  /**
+   * Show custom styled confirmation modal for player deletion
+   * @param {string} playerName - Name of player to delete
+   * @param {Function} callback - Callback function with boolean result
+   */
+  function showDeleteConfirmModal(playerName, callback) {
+    const isLightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+    
+    // Create modal backdrop
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: ${isLightTheme ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.85)'};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      animation: fadeIn 0.2s ease;
+    `;
+    
+    // Create modal container
+    const container = document.createElement('div');
+    container.style.cssText = `
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-xl);
+      padding: var(--space-xl);
+      max-width: 400px;
+      width: 90%;
+      box-shadow: ${isLightTheme ? '0 8px 32px rgba(0, 0, 0, 0.15)' : '0 8px 32px rgba(0, 0, 0, 0.4)'};
+      animation: slideUp 0.3s ease;
+    `;
+    
+    // Title
+    const title = document.createElement('h3');
+    title.textContent = 'Remove Player?';
+    title.style.cssText = `
+      margin: 0 0 var(--space-md) 0;
+      color: var(--ink);
+      font-size: var(--text-2xl);
+    `;
+    
+    // Message
+    const message = document.createElement('p');
+    message.textContent = `Are you sure you want to remove ${playerName}? This action cannot be undone.`;
+    message.style.cssText = `
+      margin: 0 0 var(--space-xl) 0;
+      color: var(--muted);
+      font-size: var(--text-lg);
+      line-height: 1.5;
+    `;
+    
+    // Button container
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = `
+      display: flex;
+      gap: var(--space-md);
+      justify-content: flex-end;
+    `;
+    
+    // Cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'delete-modal-cancel-btn';
+    cancelBtn.style.cssText = `
+      padding: var(--space-md) var(--space-xl);
+      border: 1px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      border-radius: var(--radius-lg);
+      font-size: var(--text-lg);
+      cursor: pointer;
+      min-height: var(--touch-min);
+      transition: all 0.2s ease;
+    `;
+    
+    // Delete button
+    const deleteBtn = document.createElement('button');
+    deleteBtn.textContent = 'Remove';
+    deleteBtn.className = 'delete-modal-confirm-btn';
+    deleteBtn.style.cssText = `
+      padding: var(--space-md) var(--space-xl);
+      border: 1px solid var(--danger);
+      background: var(--danger);
+      color: white;
+      border-radius: var(--radius-lg);
+      font-size: var(--text-lg);
+      font-weight: 600;
+      cursor: pointer;
+      min-height: var(--touch-min);
+      transition: all 0.2s ease;
+    `;
+    
+    // Get computed colors for hover effects
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    const dangerColor = getComputedStyle(document.documentElement).getPropertyValue('--danger').trim();
+    
+    // Hover effects
+    cancelBtn.onmouseover = () => {
+      cancelBtn.style.background = accentColor;
+      cancelBtn.style.color = isLightTheme ? '#ffffff' : '#000000';
+      cancelBtn.style.borderColor = accentColor;
+    };
+    cancelBtn.onmouseout = () => {
+      cancelBtn.style.background = 'var(--panel)';
+      cancelBtn.style.color = 'var(--ink)';
+      cancelBtn.style.borderColor = 'var(--line)';
+    };
+    
+    deleteBtn.onmouseover = () => {
+      deleteBtn.style.filter = 'brightness(1.1)';
+      deleteBtn.style.transform = 'scale(1.02)';
+    };
+    deleteBtn.onmouseout = () => {
+      deleteBtn.style.filter = 'brightness(1)';
+      deleteBtn.style.transform = 'scale(1)';
+    };
+    
+    // Close modal function
+    const closeModal = (result) => {
+      modal.style.animation = 'fadeOut 0.2s ease';
+      setTimeout(() => {
+        modal.remove();
+        callback(result);
+      }, 200);
+    };
+    
+    // Event listeners
+    cancelBtn.onclick = () => closeModal(false);
+    deleteBtn.onclick = () => closeModal(true);
+    modal.onclick = (e) => {
+      if (e.target === modal) closeModal(false);
+    };
+    
+    // Escape key to cancel
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        closeModal(false);
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
+    
+    // Assemble and show
+    buttonContainer.appendChild(cancelBtn);
+    buttonContainer.appendChild(deleteBtn);
+    container.appendChild(title);
+    container.appendChild(message);
+    container.appendChild(buttonContainer);
+    modal.appendChild(container);
+    document.body.appendChild(modal);
+    
+    // Focus delete button for keyboard accessibility
+    deleteBtn.focus();
+  }
+  
+  /**
+   * Remove a specific player by index with confirmation
+   * @param {number} playerIndex - Zero-based player index to remove
+   */
+  function removePlayerByIndex(playerIndex) {
+    if(PLAYERS <= MIN_PLAYERS) {
+      Utils.announce(`Minimum ${MIN_PLAYERS} player required.`);
+      return;
+    }
+    
+    const rows = $$('#scorecard .player-row');
+    const rowsFixed = $$('#scorecardFixed .player-row');
+    const targetRow = rows[playerIndex];
+    const targetRowFixed = rowsFixed[playerIndex];
+    
+    if(!targetRow || !targetRowFixed) {
+      Utils.announce('Player not found.');
+      return;
+    }
+    
+    // Get player name for confirmation
+    const nameInput = $('.name-edit', targetRowFixed);
+    const playerName = nameInput?.value || `Player ${playerIndex + 1}`;
+    
+    // Show custom confirmation modal
+    showDeleteConfirmModal(playerName, (confirmed) => {
+      if (!confirmed) return;
+      
+      // Remove the rows
+      targetRow.remove();
+      targetRowFixed.remove();
+      PLAYERS--;
+      
+      // Update remaining player indices
+      const updatedRows = $$('#scorecard .player-row');
+      const updatedRowsFixed = $$('#scorecardFixed .player-row');
+      
+      updatedRows.forEach((row, idx) => {
+        row.dataset.player = String(idx);
+        const scoreInputs = $$('input.score-input', row);
+        scoreInputs.forEach(inp => {
+          inp.dataset.player = String(idx);
+        });
+      });
+      
+      updatedRowsFixed.forEach((row, idx) => {
+        row.dataset.player = String(idx);
+        const nameInp = $('.name-edit', row);
+        if(nameInp && !nameInp.value) {
+          nameInp.placeholder = `Player ${idx + 1}`;
+        }
+      });
+      
+      // Update display immediately
+      Scorecard.player.updateCountDisplay();
+      
+      // Recalculate everything immediately and again after DOM update
+      recalculateEverything();
+      Scorecard.player.syncOverlay();
+      requestAnimationFrame(() => Scorecard.build.syncRowHeights());
+      setTimeout(() => {
+        recalculateEverything();
+        Scorecard.player.updateCountDisplay();
+        Scorecard.player.syncOverlay();
+        requestAnimationFrame(() => Scorecard.build.syncRowHeights());
+      }, 100);
+      
+      Storage.saveDebounced();
+      Utils.announce(`${playerName} removed. ${PLAYERS} player${PLAYERS === 1 ? '' : 's'} remaining.`);
+    });
   }
   
   /**
@@ -1416,13 +1967,15 @@
       return;
     }
     
-    const rows = $$(".player-row");
+    const rows = $$('#scorecard .player-row');
+    const rowsFixed = $$('#scorecardFixed .player-row');
     const lastRow = rows[rows.length - 1];
+    const lastRowFixed = rowsFixed[rowsFixed.length - 1];
     
-    if(lastRow) {
-      // First, clear all data in the row
-      const nameInput = $(".name-edit", lastRow);
-      const chInput = $(".ch-input", lastRow);
+    if(lastRow && lastRowFixed) {
+      // First, clear all data in both rows
+      const nameInput = $(".name-edit", lastRowFixed);
+      const chInput = $(".ch-input", lastRowFixed);
       const scoreInputs = $$("input.score-input", lastRow);
       
       if(nameInput) nameInput.value = '';
@@ -1434,11 +1987,10 @@
       Scorecard.calc.recalcTotalsRow();
       AppManager.recalcGames();
       
-      // Now remove the row
+      // Now remove both rows
       lastRow.remove();
+      lastRowFixed.remove();
       PLAYERS--;
-      
-      console.log('[removePlayer] PLAYERS after decrement:', PLAYERS);
       
       // Update display immediately
       Scorecard.player.updateCountDisplay();
@@ -1446,10 +1998,12 @@
       // Recalculate everything immediately and again after DOM update
       recalculateEverything();
       Scorecard.player.syncOverlay();
+      requestAnimationFrame(() => Scorecard.build.syncRowHeights());
       setTimeout(() => {
         recalculateEverything();
         Scorecard.player.updateCountDisplay();
         Scorecard.player.syncOverlay();
+        requestAnimationFrame(() => Scorecard.build.syncRowHeights());
       }, 100);
       
       Storage.saveDebounced();
@@ -1482,17 +2036,30 @@
    * - Load saved state from localStorage
    */
   function init(){
-    console.log('[golfGames] init start');
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
     Scorecard.player.syncOverlay();
+    
+    // Sync row heights after tables are built (skip highlighting on init - will be applied after data loads)
+    requestAnimationFrame(() => {
+      Scorecard.build.syncRowHeights(true);
+    });
 
-  $(ids.resetBtn).addEventListener("click", () => { console.log('[golfGames] Reset clicked'); Storage.clearScoresOnly(); });
-  $(ids.clearAllBtn).addEventListener("click", () => { console.log('[golfGames] Clear all clicked'); Storage.clearAll(); });
-  $(ids.saveBtn).addEventListener("click", () => { console.log('[golfGames] Save clicked'); Storage.save(); });
+  $(ids.resetBtn).addEventListener("click", () => { Storage.clearScoresOnly(); });
+  $(ids.clearAllBtn).addEventListener("click", () => { Storage.clearAll(); });
+  $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
+  
+  // Auto-advance direction toggle
+  document.getElementById('advanceToggle')?.addEventListener("click", () => {
+    Config.ADVANCE_DIRECTION = Config.ADVANCE_DIRECTION === 'down' ? 'right' : 'down';
+    const label = document.getElementById('advanceLabel');
+    if(label) {
+      label.textContent = Config.ADVANCE_DIRECTION === 'down' ? 'Advance: ↓ Down' : 'Advance: → Right';
+    }
+    Storage.saveDebounced();
+  });
   
   // Refresh All button - recalculates everything
   document.getElementById('refreshAllBtn')?.addEventListener("click", () => {
-    console.log('[golfGames] Refresh All clicked');
     recalculateEverything();
     announce('All games refreshed');
   });
@@ -1623,7 +2190,21 @@
     
     Scorecard.player.updateCountDisplay();
 
-    Scorecard.calc.recalcAll(); AppManager.recalcGames(); Storage.load();
+    // Load saved state first, then recalc (loading will trigger its own recalcAll)
+    Storage.load();
+    
+    // If no saved state was loaded, do initial calculation
+    if(!localStorage.getItem(Storage.KEY)) {
+      Scorecard.calc.recalcAll(); 
+      AppManager.recalcGames();
+    }
+    
+    // Force save before page unload to prevent data loss
+    window.addEventListener('beforeunload', () => {
+      // Clear any pending debounced save and save immediately
+      clearTimeout(Storage.saveTimer);
+      Storage.save();
+    });
   }
 
   document.addEventListener("DOMContentLoaded", init);
@@ -1660,3 +2241,13 @@
   // Vegas game now in separate file for better modularity
   // See js/vegas.js for implementation
 
+  // Sync row heights on window resize
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      if(typeof Scorecard !== 'undefined' && Scorecard.build && typeof Scorecard.build.syncRowHeights === 'function') {
+        requestAnimationFrame(() => Scorecard.build.syncRowHeights());
+      }
+    }, 150);
+  });

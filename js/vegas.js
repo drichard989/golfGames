@@ -40,7 +40,6 @@
 
 (() => {
   'use strict';
-  console.log('[Vegas] Module loaded');
 
   // Helper functions to access globals
   const getPlayers = () => {
@@ -494,8 +493,6 @@ function vegas_renderTeamControls(){
   const needsGhosts = getPlayers() < maxPositions;
   const useRotation = getPlayers() === 3;
   
-  console.log('[Vegas] renderTeamControls - getPlayers():', getPlayers(), 'useRotation:', useRotation);
-  
   // In rotation mode, show info message instead of team controls
   if(useRotation){
     const info = document.createElement("div");
@@ -622,7 +619,5 @@ function vegas_renderTable(){
     recalc: vegas_recalc,
     renderTable: vegas_renderTable
   };
-
-  console.log('[Vegas] Module initialized, exposed as window.Vegas');
 
 })();

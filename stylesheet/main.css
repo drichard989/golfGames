@@ -210,50 +210,72 @@ h1 {
 }
 
 /* =========================
-   Scorecard (Scrollable)
+   Scorecard (Dual-Table Layout)
    ========================= */
-.wrap {
-  padding: var(--space-md) 0 24px;
-  overflow-x: auto;
-  overflow-y: visible !important;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x pan-y;
-  overscroll-behavior-x: contain;
-  position: relative;
-  background: var(--panel);
-  scroll-behavior: smooth;
-}
-
-.wrap::before,
-.wrap::after {
-  content: "";
-  position: sticky;
-  top: 0;
-  width: 18px;
-  height: 100%;
-  pointer-events: none;
-  z-index: var(--z-shadow);
-}
-
-.wrap::before {
-  left: 0;
-  box-shadow: inset 12px 0 12px -12px var(--shadow);
-}
-
-.wrap::after {
-  right: 0;
-  box-shadow: inset -12px 0 12px -12px var(--shadow);
-}
-
-table {
-  width: 100%;
-  min-width: 860px;
-  border-collapse: separate;
-  border-spacing: 0;
+.scorecard-container {
+  display: flex;
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-2xl);
   overflow: hidden;
+  margin: var(--space-md) 0 24px;
+}
+
+.scorecard-fixed {
+  flex-shrink: 0;
+  flex-grow: 0;
+  min-width: 160px;
+  max-width: 160px;
+  width: 160px;
+  background: var(--panel);
+  z-index: 10;
+  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+.scorecard-scroll {
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
+  scroll-behavior: smooth;
+}
+
+/* Scrollbar styling */
+.scorecard-scroll::-webkit-scrollbar {
+  height: 8px;
+}
+
+.scorecard-scroll::-webkit-scrollbar-track {
+  background: var(--panel-alt);
+}
+
+.scorecard-scroll::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 4px;
+}
+
+.scorecard-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+}
+
+#scorecardFixed {
+  border-right: 2px solid rgba(168, 179, 191, 0.4);
+  min-width: 160px;
+  max-width: 160px;
+  width: 160px;
+}
+
+#scorecard {
+  min-width: 860px;
 }
 
 thead th {
@@ -273,21 +295,90 @@ td {
   white-space: nowrap;
 }
 
-th:first-child,
-td:first-child {
+/* Fixed table specific styling */
+#scorecardFixed th:first-child,
+#scorecardFixed td:first-child {
   text-align: left;
-  padding-left: 8px;
-  min-width: 140px;
-  position: sticky;
-  left: 0;
+  padding: var(--space-xs) 6px;
+  min-width: 105px;
+  max-width: 105px;
+  width: 105px;
   background-color: var(--panel);
-  z-index: var(--z-sticky-col);
-  border-right: 1px solid var(--line);
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-thead th:first-child {
+#scorecardFixed th:nth-child(2),
+#scorecardFixed td:nth-child(2) {
+  min-width: 55px;
+  max-width: 55px;
+  width: 55px;
+  padding: var(--space-xs) 3px;
+  background-color: var(--panel);
+  font-size: 12px;
+}
+
+/* Name cell container with delete button */
+.name-cell-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.player-delete-btn {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--danger);
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.player-delete-btn:hover {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+  transform: scale(1.1);
+}
+
+.player-delete-btn:active {
+  transform: scale(0.95);
+}
+
+/* Input styling for fixed table */
+#scorecardFixed .name-edit {
+  flex: 1;
+  min-width: 0;
+  max-width: none;
+  font-size: 12px;
+  padding: 6px 3px;
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+#scorecardFixed .ch-input {
+  width: 49px;
+  font-size: 12px;
+  padding: 6px 3px;
+  text-align: center;
+}
+
+#scorecardFixed thead th:first-child {
   z-index: var(--z-sticky-first-col);
 }
 
@@ -295,15 +386,24 @@ tr:last-child td {
   border-bottom: none;
 }
 
-/* Divider after CH column (before hole 1) */
-th:nth-child(2),
-td:nth-child(2) {
-  border-right: 3px solid rgba(168, 179, 191, 0.4) !important;
+/* Scrollable table - reset first-child styling (hole 1 should not be special) */
+#scorecard th:first-child,
+#scorecard td:first-child {
+  text-align: center;
+  padding: var(--space-xs) 3px;
+  min-width: auto;
+  position: static;
+  left: auto;
+  background-color: transparent;
+  z-index: auto;
+  border-right: none;
+  -webkit-transform: none;
+  transform: none;
 }
 
 /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
-th:nth-child(12),
-td:nth-child(12) {
+#scorecard th:nth-child(10),
+#scorecard td:nth-child(10) {
   border-left: 3px solid rgba(168, 179, 191, 0.4) !important;
 }
 
@@ -394,18 +494,18 @@ td:nth-child(12) {
 
 /* Stroke highlighting with progressive rings */
 .score-input.receives-stroke {
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 0 1px var(--accent) !important;
 }
 
 .score-input.receives-stroke[data-strokes="2"] {
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent);
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent) !important;
 }
 
 .score-input.receives-stroke[data-strokes="3"] {
-  border: 2px solid var(--accent);
-  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent);
+  border: 2px solid var(--accent) !important;
+  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent) !important;
 }
 
 .total,
@@ -1253,4 +1353,47 @@ input[type="text"] {
   background: #ffffff !important;
   color: #1a1c1f !important;
   border: 1px solid #d3d7dc !important;
+}
+
+/* Light theme delete button */
+:root[data-theme="light"] .player-delete-btn {
+  background: #f3f5f8;
+  border-color: #cfd3d8;
+  color: #dc3545;
+}
+
+:root[data-theme="light"] .player-delete-btn:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+/* Modal animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

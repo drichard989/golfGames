@@ -89,10 +89,6 @@
     // Convert to JSON and compress
     const json = JSON.stringify(data);
     
-    // Basic compression: remove spaces and use shorter keys
-    // For better compression, could use LZString or similar
-    console.log('[QR] Data size:', json.length, 'bytes');
-    
     return json;
   }
 
@@ -345,6 +341,11 @@
       instructions.textContent = 'Camera access denied. Please enable camera permissions.';
       instructions.style.color = 'red';
     });
+    
+    // Store cleanup function globally so it can be called from anywhere
+    window.__qrCameraCleanup = () => {
+      stopCamera();
+    };
 
     // Scan for QR codes in video frames
     function scanFrame() {
@@ -365,7 +366,6 @@
           });
 
           if (code) {
-            console.log('[QR] Code detected:', code.data.substring(0, 50) + '...');
             scanning = false;
             stopCamera();
             importData(code.data);
@@ -381,7 +381,17 @@
     function stopCamera() {
       scanning = false;
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+        stream.getTracks().forEach(track => {
+          track.stop();
+        });
+        stream = null;
+      }
+      if (video.srcObject) {
+        video.srcObject = null;
+      }
+      // Clean up global reference
+      if (window.__qrCameraCleanup) {
+        delete window.__qrCameraCleanup;
       }
     }
 
@@ -401,108 +411,163 @@
   function importData(jsonString) {
     try {
       const data = decompressData(jsonString);
-      
-      console.log('[QR] Importing data:', data);
 
-      // Confirm with user
       const playerCount = data.players.length;
       const courseName = window.COURSES?.[data.course]?.name || data.course;
+      const currentRowCount = document.querySelectorAll('#scorecardFixed .player-row').length;
       
-      if (!confirm(`Import scorecard with ${playerCount} players from ${courseName}?`)) {
-        return;
-      }
-
-      // Switch course if needed
-      if (data.course !== window.ACTIVE_COURSE) {
-        const courseSelect = document.getElementById('courseSelect');
-        if (courseSelect) {
-          courseSelect.value = data.course;
-          courseSelect.dispatchEvent(new Event('change'));
-        }
-      }
-
-      // Ensure we have enough player rows
-      const currentRows = document.querySelectorAll('.player-row').length;
-      if (playerCount > currentRows) {
-        // Add more players
-        for (let i = currentRows; i < playerCount; i++) {
-          if (window.Scorecard?.player?.add) {
-            window.Scorecard.player.add();
-          }
-        }
-      } else if (playerCount < currentRows) {
-        // Remove extra players
-        for (let i = currentRows; i > playerCount; i--) {
-          if (window.Scorecard?.player?.remove) {
-            window.Scorecard.player.remove();
-          }
-        }
-      }
-
-      // Import player data
-      const rows = document.querySelectorAll('.player-row');
-      data.players.forEach((player, idx) => {
-        const row = rows[idx];
-        if (!row) return;
-
-        const nameInput = row.querySelector('.name-edit');
-        const chInput = row.querySelector('.ch-input');
-        const scoreInputs = row.querySelectorAll('input.score-input');
-
-        if (nameInput) {
-          nameInput.value = player.name;
-          nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-        }
+      // Show import options modal
+      showImportModal(playerCount, courseName, currentRowCount, (mode) => {
+        if (!mode) return; // User cancelled
         
-        if (chInput) {
-          chInput.value = player.ch;
-          chInput.dispatchEvent(new Event('input', { bubbles: true }));
-          chInput.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-        
-        player.scores.forEach((score, scoreIdx) => {
-          if (scoreInputs[scoreIdx]) {
-            scoreInputs[scoreIdx].value = score;
-            scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
+        try {
+          // Switch course if needed
+          if (data.course !== window.ACTIVE_COURSE) {
+            const courseSelect = document.getElementById('courseSelect');
+            if (courseSelect) {
+              courseSelect.value = data.course;
+              courseSelect.dispatchEvent(new Event('change'));
+            }
           }
-        });
+
+          if (mode === 'replace') {
+            // REPLACE MODE: Clear existing and set to exact count
+            const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
+            
+            // Remove all existing players
+            while (document.querySelectorAll('#scorecardFixed .player-row').length > 0) {
+              if (window.Scorecard?.player?.remove) {
+                window.Scorecard.player.remove();
+              } else {
+                break;
+              }
+            }
+            
+            // Add exact number needed
+            for (let i = 0; i < playerCount; i++) {
+              if (window.Scorecard?.player?.add) {
+                window.Scorecard.player.add();
+              }
+            }
+            
+            // Import all players starting at index 0
+            const rows = document.querySelectorAll('#scorecardFixed .player-row');
+            data.players.forEach((player, idx) => {
+              const row = rows[idx];
+              if (!row) return;
+
+              const nameInput = row.querySelector('.name-edit');
+              const chInput = row.querySelector('.ch-input');
+              const scoreRow = document.querySelectorAll('#scorecard .player-row')[idx];
+              const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
+
+              if (nameInput) {
+                nameInput.value = player.name;
+                nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+              
+              if (chInput) {
+                chInput.value = player.ch;
+                chInput.dispatchEvent(new Event('input', { bubbles: true }));
+                chInput.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              
+              if (scoreInputs) {
+                player.scores.forEach((score, scoreIdx) => {
+                  if (scoreInputs[scoreIdx]) {
+                    scoreInputs[scoreIdx].value = score;
+                    scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
+                  }
+                });
+              }
+            });
+          } else if (mode === 'add') {
+            // ADD MODE: Append to existing players
+            const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
+            
+            // Add new player rows
+            for (let i = 0; i < playerCount; i++) {
+              if (window.Scorecard?.player?.add) {
+                window.Scorecard.player.add();
+              }
+            }
+            
+            // Import players starting after existing ones
+            const allRows = document.querySelectorAll('#scorecardFixed .player-row');
+            data.players.forEach((player, idx) => {
+              const rowIndex = currentRows + idx;
+              const row = allRows[rowIndex];
+              if (!row) return;
+
+              const nameInput = row.querySelector('.name-edit');
+              const chInput = row.querySelector('.ch-input');
+              const allScoreRows = document.querySelectorAll('#scorecard .player-row');
+              const scoreRow = allScoreRows[rowIndex];
+              const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
+
+              if (nameInput) {
+                nameInput.value = player.name;
+                nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+              }
+              
+              if (chInput) {
+                chInput.value = player.ch;
+                chInput.dispatchEvent(new Event('input', { bubbles: true }));
+                chInput.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+              
+              if (scoreInputs) {
+                player.scores.forEach((score, scoreIdx) => {
+                  if (scoreInputs[scoreIdx]) {
+                    scoreInputs[scoreIdx].value = score;
+                    scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
+                  }
+                });
+              }
+            });
+          }
+
+          // Recalculate everything - full recalc of scorecard AND all games
+          if (window.Scorecard?.calc?.recalcAll) {
+            window.Scorecard.calc.recalcAll();
+          }
+          
+          // Update stroke highlights (this might be separate from recalcAll)
+          if (window.updateStrokeHighlights) {
+            window.updateStrokeHighlights();
+          }
+          
+          // Recalculate all game modules
+          if (window.AppManager?.recalcGames) {
+            window.AppManager.recalcGames();
+          }
+          
+          // Update player count display
+          if (window.Scorecard?.player?.updateCountDisplay) {
+            window.Scorecard.player.updateCountDisplay();
+          }
+          
+          // Sync player overlay if needed
+          if (window.Scorecard?.player?.syncOverlay) {
+            window.Scorecard.player.syncOverlay();
+          }
+
+          // Save to localStorage
+          if (window.Storage?.save) {
+            window.Storage.save();
+          }
+
+          const finalCount = document.querySelectorAll('#scorecardFixed .player-row').length;
+          if (typeof window.announce === 'function') {
+            window.announce(`Scorecard imported! ${finalCount} player${finalCount !== 1 ? 's' : ''} total.`);
+          }
+        } catch (err) {
+          console.error('[QR] Import processing failed:', err);
+          if (typeof window.announce === 'function') {
+            window.announce('Failed to process import: ' + err.message);
+          }
+        }
       });
-
-      // Recalculate everything - full recalc of scorecard AND all games
-      if (window.Scorecard?.calc?.recalcAll) {
-        window.Scorecard.calc.recalcAll();
-      }
-      
-      // Update stroke highlights (this might be separate from recalcAll)
-      if (window.updateStrokeHighlights) {
-        window.updateStrokeHighlights();
-      }
-      
-      // Recalculate all game modules
-      if (window.AppManager?.recalcGames) {
-        window.AppManager.recalcGames();
-      }
-      
-      // Update player count display
-      if (window.Scorecard?.player?.updateCountDisplay) {
-        window.Scorecard.player.updateCountDisplay();
-      }
-      
-      // Sync player overlay if needed
-      if (window.Scorecard?.player?.syncOverlay) {
-        window.Scorecard.player.syncOverlay();
-      }
-
-      // Save to localStorage
-      if (window.Storage?.save) {
-        window.Storage.save();
-      }
-
-      if (typeof window.announce === 'function') {
-        window.announce('Scorecard imported successfully!');
-      }
-
-      console.log('[QR] Import complete');
     } catch (err) {
       console.error('[QR] Import failed:', err);
       if (typeof window.announce === 'function') {
@@ -511,17 +576,202 @@
     }
   }
 
+  /**
+   * Show modal asking user how to import: Add or Replace
+   */
+  function showImportModal(playerCount, courseName, currentCount, callback) {
+    // Detect if light theme is active
+    const isLightTheme = document.documentElement.getAttribute('data-theme') === 'light';
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: ${isLightTheme ? 'rgba(0, 0, 0, 0.4)' : 'rgba(0, 0, 0, 0.85)'};
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    `;
+
+    const container = document.createElement('div');
+    container.style.cssText = `
+      background: var(--panel, #1a1a1a);
+      border: 1px solid var(--line, #333);
+      padding: 28px;
+      border-radius: 12px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: ${isLightTheme ? '0 8px 32px rgba(0, 0, 0, 0.15)' : '0 8px 32px rgba(0, 0, 0, 0.4)'};
+    `;
+
+    const title = document.createElement('h2');
+    title.textContent = 'Import Scorecard';
+    title.style.cssText = `
+      margin: 0 0 16px 0;
+      color: var(--ink, white);
+      font-size: 22px;
+      text-align: center;
+    `;
+
+    const info = document.createElement('div');
+    info.style.cssText = `
+      color: var(--muted, #aaa);
+      font-size: 15px;
+      margin-bottom: 24px;
+      line-height: 1.6;
+      text-align: center;
+    `;
+    info.innerHTML = `
+      <p style="margin: 0 0 8px 0;"><strong style="color: var(--ink, white);">${playerCount} player${playerCount !== 1 ? 's' : ''}</strong> from <strong style="color: var(--ink, white);">${courseName}</strong></p>
+      ${currentCount > 0 ? `<p style="margin: 8px 0 0 0; font-size: 14px;">Currently ${currentCount} player${currentCount !== 1 ? 's' : ''} in scorecard</p>` : ''}
+    `;
+
+    const buttonsContainer = document.createElement('div');
+    buttonsContainer.style.cssText = `
+      display: flex;
+      gap: 12px;
+      flex-direction: column;
+    `;
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'btn qr-import-add-btn';
+    addBtn.innerHTML = `
+      <div style="text-align: left;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">➕ Add Players</div>
+        <div style="font-size: 13px; opacity: 0.8;">Keep existing ${currentCount} player${currentCount !== 1 ? 's' : ''}, add ${playerCount} more (total: ${currentCount + playerCount})</div>
+      </div>
+    `;
+    addBtn.style.cssText = `
+      padding: 16px 20px;
+      background: var(--panel-alt, #252525);
+      border: 2px solid var(--accent, #68d391);
+      color: var(--ink, white);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      text-align: left;
+      width: 100%;
+    `;
+    
+    // Store original colors for hover
+    const addBtnOriginalBg = getComputedStyle(document.documentElement).getPropertyValue('--panel-alt').trim() || '#252525';
+    const addBtnHoverBg = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#68d391';
+    const addBtnOriginalColor = getComputedStyle(document.documentElement).getPropertyValue('--ink').trim() || 'white';
+    
+    addBtn.onmouseover = () => {
+      addBtn.style.background = addBtnHoverBg;
+      addBtn.style.color = isLightTheme ? '#ffffff' : '#000000';
+    };
+    addBtn.onmouseout = () => {
+      addBtn.style.background = addBtnOriginalBg;
+      addBtn.style.color = addBtnOriginalColor;
+    };
+
+    const replaceBtn = document.createElement('button');
+    replaceBtn.className = 'btn qr-import-replace-btn';
+    replaceBtn.innerHTML = `
+      <div style="text-align: left;">
+        <div style="font-size: 16px; font-weight: 600; margin-bottom: 4px;">🔄 Replace All</div>
+        <div style="font-size: 13px; opacity: 0.8;">${currentCount > 0 ? `Clear all ${currentCount} player${currentCount !== 1 ? 's' : ''}, ` : ''}import ${playerCount} player${playerCount !== 1 ? 's' : ''} (total: ${playerCount})</div>
+      </div>
+    `;
+    replaceBtn.style.cssText = `
+      padding: 16px 20px;
+      background: var(--panel-alt, #252525);
+      border: 2px solid var(--line, #333);
+      color: var(--ink, white);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      text-align: left;
+      width: 100%;
+    `;
+    
+    const replaceBtnOriginalBg = getComputedStyle(document.documentElement).getPropertyValue('--panel-alt').trim() || '#252525';
+    const replaceBtnHoverBg = getComputedStyle(document.documentElement).getPropertyValue('--panel').trim() || '#1a1a1a';
+    
+    replaceBtn.onmouseover = () => {
+      replaceBtn.style.borderColor = addBtnHoverBg;
+      replaceBtn.style.background = replaceBtnHoverBg;
+    };
+    replaceBtn.onmouseout = () => {
+      replaceBtn.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--line').trim() || '#333';
+      replaceBtn.style.background = replaceBtnOriginalBg;
+    };
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn qr-import-cancel-btn';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText = `
+      padding: 12px 20px;
+      background: transparent;
+      border: 1px solid var(--line, #333);
+      color: var(--muted, #aaa);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+      margin-top: 8px;
+    `;
+    cancelBtn.onmouseover = () => {
+      cancelBtn.style.background = replaceBtnOriginalBg;
+    };
+    cancelBtn.onmouseout = () => {
+      cancelBtn.style.background = 'transparent';
+    };
+
+    addBtn.onclick = () => {
+      // Clean up camera if it's still active
+      if (typeof window.__qrCameraCleanup === 'function') {
+        window.__qrCameraCleanup();
+      }
+      modal.remove();
+      callback('add');
+    };
+
+    replaceBtn.onclick = () => {
+      // Clean up camera if it's still active
+      if (typeof window.__qrCameraCleanup === 'function') {
+        window.__qrCameraCleanup();
+      }
+      modal.remove();
+      callback('replace');
+    };
+
+    cancelBtn.onclick = () => {
+      // Ensure camera is fully stopped if it was active
+      if (typeof window.__qrCameraCleanup === 'function') {
+        window.__qrCameraCleanup();
+      }
+      modal.remove();
+      callback(null);
+    };
+
+    buttonsContainer.appendChild(addBtn);
+    buttonsContainer.appendChild(replaceBtn);
+    buttonsContainer.appendChild(cancelBtn);
+
+    container.appendChild(title);
+    container.appendChild(info);
+    container.appendChild(buttonsContainer);
+    modal.appendChild(container);
+    document.body.appendChild(modal);
+  }
+
   // ============================================================================
   // PUBLIC API
   // ============================================================================
 
   // Wait for QRCode library to load before exposing API
   function waitForLibrary() {
-    if (typeof qrcode !== 'undefined') {
-      console.log('[QR] qrcode-generator library detected');
-    } else {
-      console.log('[QR] Waiting for qrcode-generator library...');
-    }
+    // Check silently
   }
 
   // Check immediately
@@ -535,7 +785,5 @@
     scan: scanQR,
     import: importData
   };
-
-  console.log('[QR] Module loaded');
 
 })();
