@@ -401,8 +401,9 @@
           halfEl.checked = false;
           halfEl.disabled = true;
         }
+        // Force recalculation after state change
+        updateSkins();
       }
-      updateSkins();
       if (typeof window.saveDebounced === 'function') {
         window.saveDebounced();
       }
@@ -414,8 +415,9 @@
         if (halfEl) {
           halfEl.disabled = false;
         }
+        // Force recalculation after state change
+        updateSkins();
       }
-      updateSkins();
       if (typeof window.saveDebounced === 'function') {
         window.saveDebounced();
       }
