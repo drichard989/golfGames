@@ -412,15 +412,20 @@
       if (e.target.checked) {
         // Clear and disable Half-Pops when Gross is selected
         const halfEl = document.getElementById('skinsHalf');
-        const wasHalfChecked = halfEl?.checked;
         if (halfEl) {
+          const wasChecked = halfEl.checked;
           halfEl.checked = false;
           halfEl.disabled = true;
+          
+          // If half-pop was enabled, we need to force a recalc
+          // since unchecking programmatically doesn't trigger change event
+          if (wasChecked) {
+            // Force immediate recalculation
+            updateSkins();
+          }
         }
-        // Use setTimeout to ensure DOM updates are complete before recalculating
-        setTimeout(() => {
-          updateSkins();
-        }, 0);
+        // Always recalculate when switching to GROSS
+        updateSkins();
       }
       if (typeof window.saveDebounced === 'function') {
         window.saveDebounced();
