@@ -251,15 +251,6 @@ Contributions welcome! Areas for contribution:
 
 ## 🎯 Roadmap
 
-- [ ] Implement Banker game
-- [ ] Implement Banker-Vegas game
-- [ ] Add stroke play leaderboard
-- [ ] Match play head-to-head
-- [ ] Statistics and history tracking
-- [ ] Multi-round tournament support
-- [ ] Shareable scorecards (QR/link)
-- [ ] Real-time multiplayer sync
-
 ## 📊 Stats
 
 - **Total Lines**: ~3,018 across all modules
