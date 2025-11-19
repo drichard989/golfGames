@@ -46,13 +46,6 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       // Take control of all clients immediately
       return self.clients.claim();
-    }).then(() => {
-      // Notify all clients to reload
-      return self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({ type: 'RELOAD' });
-        });
-      });
     })
   );
 });
