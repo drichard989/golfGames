@@ -45,17 +45,22 @@
    * @returns {number[]} Array of adjusted handicaps
    */
   function getAdjustedCHs() {
-    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
-    const chs = [];
-    playerRows.forEach(row => {
-      const chInput = row.querySelector('.ch-input');
-      const val = chInput?.value || '';
-      chs.push(val === '' ? null : parseFloat(val));
-    });
-    const validCHs = chs.filter(ch => ch !== null);
-    if (validCHs.length === 0) return chs.map(() => 0);
-    const minCH = Math.min(...validCHs);
-    return chs.map(ch => ch !== null ? ch - minCH : 0);
+    try {
+      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const chs = [];
+      playerRows.forEach(row => {
+        const chInput = row.querySelector('.ch-input');
+        const val = chInput?.value || '';
+        chs.push(val === '' ? null : parseFloat(val));
+      });
+      const validCHs = chs.filter(ch => ch !== null);
+      if (validCHs.length === 0) return chs.map(() => 0);
+      const minCH = Math.min(...validCHs);
+      return chs.map(ch => ch !== null ? ch - minCH : 0);
+    } catch (error) {
+      console.error('[Skins] Error getting adjusted CHs:', error);
+      return [];
+    }
   }
 
   /**
@@ -63,7 +68,12 @@
    * @returns {number}
    */
   function getPlayerCount() {
-    return document.querySelectorAll('#scorecardFixed .player-row').length;
+    try {
+      return document.querySelectorAll('#scorecardFixed .player-row').length;
+    } catch (error) {
+      console.error('[Skins] Error getting player count:', error);
+      return 0;
+    }
   }
 
   /**
@@ -80,18 +90,23 @@
    * @returns {number}
    */
   function getPar(holeIdx) {
-    const parRow = document.getElementById('parRow');
-    if (!parRow) {
-      console.error('[Skins] Par row not found - scorecard not initialized!');
-      return 4; // Fallback only if DOM missing
+    try {
+      const parRow = document.getElementById('parRow');
+      if (!parRow) {
+        console.error('[Skins] Par row not found - scorecard not initialized!');
+        return 4; // Fallback only if DOM missing
+      }
+      const inputs = parRow.querySelectorAll('input[type="number"]');
+      const value = Number(inputs[holeIdx]?.value);
+      if (!value || !Number.isFinite(value)) {
+        console.error(`[Skins] Par value missing for hole ${holeIdx + 1}`);
+        return 4; // Fallback only if value missing
+      }
+      return value;
+    } catch (error) {
+      console.error('[Skins] Error getting par:', error);
+      return 4;
     }
-    const inputs = parRow.querySelectorAll('input[type="number"]');
-    const value = Number(inputs[holeIdx]?.value);
-    if (!value || !Number.isFinite(value)) {
-      console.error(`[Skins] Par value missing for hole ${holeIdx + 1}`);
-      return 4; // Fallback only if value missing
-    }
-    return value;
   }
 
   /**

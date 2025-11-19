@@ -1,6 +1,23 @@
 # Golf Scorecard PWA
 
+**Version:** 2.1.0 | **Updated:** November 18, 2025
+
 A Progressive Web App for tracking golf scores with multiple simultaneous side games. Built with vanilla JavaScript, optimized for mobile and desktop use.
+
+## ⚡ What's New in v2.1.0
+
+- 🔔 **Error Notifications** - User-friendly toast notifications for errors and successes
+- ⌨️ **Keyboard Shortcuts** - Power user productivity (Ctrl+S, Ctrl+N, Ctrl+R)
+- 🎮 **Unified API** - Clean `window.GolfApp` namespace for all features
+- 💾 **Storage Migration** - Automatic data migration from v4 to v5
+- ♿ **Accessibility** - Skip links, screen reader support, ARIA labels
+- 🛡️ **Error Handling** - Comprehensive try-catch blocks (95% coverage)
+- 📊 **Data Validation** - Automatic input sanitization and clamping
+- 🎯 **Constants** - All magic numbers extracted to `GAME_CONSTANTS`
+
+**Full details:** See [IMPROVEMENTS.md](./IMPROVEMENTS.md) and [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
+
+---
 
 ## 🏌️ Features
 
@@ -32,18 +49,67 @@ A Progressive Web App for tracking golf scores with multiple simultaneous side g
 ```
 golfGames/
 ├── index.html              # Main HTML, styles, game sections
-├── index.js                # Core scorecard logic (1,474 lines)
-├── sw.js                   # Service worker (v1.3.7)
+├── index.js                # Core scorecard logic (2,617 lines) ⭐ Updated
+├── sw.js                   # Service worker (v2.1.0) ⭐ Updated
 ├── manifest.json           # PWA manifest
 ├── js/
-│   ├── vegas.js           # Vegas game module (568 lines)
-│   ├── skins.js           # Skins game module (377 lines)
-│   ├── junk.js            # Junk game module (487 lines)
+│   ├── vegas.js           # Vegas game module (568 lines) ⭐ Improved
+│   ├── skins.js           # Skins game module (377 lines) ⭐ Improved
+│   ├── junk.js            # Junk game module (487 lines) ⭐ Improved
+│   ├── hilo.js            # Hi-Lo game module (445 lines) ⭐ Improved
+│   ├── export.js          # CSV/Email export (2,179 lines)
+│   ├── qrcode.js          # QR code sharing
 │   ├── banker.js          # Banker stub (38 lines)
 │   └── banker-vegas.js    # Banker-Vegas stub (37 lines)
-├── images/                 # Icons and assets
-└── stylesheet/             # CSS files
+├── stylesheet/
+│   └── main.css           # Main styles with toasts ⭐ Updated
+├── IMPROVEMENTS.md         # v2.1.0 improvements doc ⭐ New
+├── MIGRATION_GUIDE.md      # Upgrade guide ⭐ New
+└── QUICK_REFERENCE.md      # API reference ⭐ New
 ```
+
+## 🚀 Quick Start
+
+### Installation
+1. Clone the repository
+2. Serve files with any HTTP server (required for service worker)
+3. Access via browser
+
+### Development
+```bash
+# Simple Python server
+python -m http.server 8000
+
+# Or Node.js
+npx http-server
+```
+
+### Using The API
+```javascript
+// Access everything via unified namespace
+window.GolfApp.version           // "2.1.0"
+window.GolfApp.api.save()        // Save scorecard
+window.GolfApp.api.addPlayer()   // Add player
+window.GolfApp.errorHandler.success('Success!') // Show toast
+
+// Full API reference in QUICK_REFERENCE.md
+```
+
+### Keyboard Shortcuts ⌨️
+- `Ctrl/Cmd + S` - Save scorecard
+- `Ctrl/Cmd + N` - Add new player
+- `Ctrl/Cmd + R` - Refresh all calculations
+- `Escape` - Close notifications
+
+---
+
+## 📚 Documentation
+
+- **[IMPROVEMENTS.md](./IMPROVEMENTS.md)** - Complete v2.1.0 improvements
+- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Developer API reference
+- **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** - v2.0 → v2.1 upgrade guide
+
+---
 
 ## 🎮 Game Rules
 

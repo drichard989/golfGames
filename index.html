@@ -17,6 +17,11 @@
     <link rel="stylesheet" href="stylesheet/main.css" />
   </head>
   <body>
+    <!-- Skip navigation link for keyboard users -->
+    <a href="#main-scorecard" class="skip-link">Skip to scorecard</a>
+    
+    <!-- Accessibility announcer for screen readers -->
+    <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <header>
       <h1>Manito Golf Games v.21 PWA</h1>
@@ -62,7 +67,7 @@
 
     <p class="small" id="parBadge" aria-live="polite"></p>
     <!-- SCORECARD - Dual Table Layout -->
-    <div class="scorecard-container">
+    <div class="scorecard-container" id="main-scorecard">
       <!-- Fixed Left Column (Player Names + CH) -->
       <div class="scorecard-fixed">
         <table id="scorecardFixed" aria-describedby="saveStatus">

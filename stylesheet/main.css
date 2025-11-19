@@ -82,6 +82,40 @@ body {
   height: 100%;
 }
 
+/* Skip link for keyboard accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--accent);
+  color: var(--bg);
+  padding: var(--space-md) var(--space-lg);
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-md) 0;
+  font-weight: 600;
+  z-index: 9999;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Screen reader only utility class */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
@@ -1396,4 +1430,128 @@ input[type="text"] {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+/* =========================
+   Error & Success Toast Notifications
+   ========================= */
+
+.error-toast,
+.success-toast {
+  position: fixed;
+  top: var(--space-xl);
+  right: var(--space-xl);
+  max-width: 400px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 32px var(--shadow);
+  padding: var(--space-lg);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: all 0.3s ease;
+  z-index: 10000;
+  pointer-events: all;
+}
+
+.error-toast {
+  border-left: 4px solid var(--danger);
+}
+
+.success-toast {
+  border-left: 4px solid var(--accent);
+}
+
+.error-content,
+.success-content {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.error-icon,
+.success-icon {
+  font-size: var(--text-2xl);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.error-icon {
+  color: var(--danger);
+}
+
+.success-icon {
+  color: var(--accent);
+  font-weight: bold;
+}
+
+.error-body {
+  flex: 1;
+}
+
+.error-message,
+.success-message {
+  font-size: var(--text-lg);
+  color: var(--ink);
+  font-weight: 500;
+  margin-bottom: var(--space-xs);
+}
+
+.error-details {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  margin-top: var(--space-xs);
+}
+
+.error-close {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  margin-left: var(--space-sm);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.error-close:hover {
+  color: var(--ink);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .error-toast,
+  .success-toast {
+    left: var(--space-md);
+    right: var(--space-md);
+    top: var(--space-md);
+    max-width: none;
+  }
+}
+
+/* Light theme overrides */
+:root[data-theme="light"] .error-toast,
+:root[data-theme="light"] .success-toast {
+  background: #ffffff;
+  border-color: #d3d7dc;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+:root[data-theme="light"] .error-message,
+:root[data-theme="light"] .success-message {
+  color: #1a1c1f;
+}
+
+:root[data-theme="light"] .error-details {
+  color: #6c757d;
+}
+
+:root[data-theme="light"] .error-close {
+  color: #6c757d;
+}
+
+:root[data-theme="light"] .error-close:hover {
+  color: #1a1c1f;
 }

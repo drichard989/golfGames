@@ -45,56 +45,89 @@
   
   const HOLES = 18;
   
+  // Access game constants with fallbacks
+  const getJunkConstants = () => {
+    if (window.GAME_CONSTANTS?.JUNK) {
+      return window.GAME_CONSTANTS.JUNK;
+    }
+    // Fallback constants if not loaded
+    return {
+      POINTS: { EAGLE: 4, BIRDIE: 2, PAR: 1, BOGEY: 0 },
+      ACHIEVEMENTS: { HOGAN: 5, SANDY: 3, SADAAM: 2, PULLEY: 1, TRIPLE: 10 }
+    };
+  };
+  
   // =============================================================================
   // HELPERS - Read data from main scorecard
   // =============================================================================
   
   function getPar(hole){
-    let el = document.querySelector(`#parRow input[data-hole="${hole}"]`);
-    if(!el){
-      const inputs = document.querySelectorAll('#parRow input');
-      el = inputs[hole-1];
+    try {
+      let el = document.querySelector(`#parRow input[data-hole="${hole}"]`);
+      if(!el){
+        const inputs = document.querySelectorAll('#parRow input');
+        el = inputs[hole-1];
+      }
+      const v = el ? parseInt(el.value, 10) : NaN;
+      if (!Number.isFinite(v)) {
+        console.error(`[Junk] Par value missing for hole ${hole}`);
+      }
+      return Number.isFinite(v) ? v : NaN;
+    } catch (error) {
+      console.error('[Junk] Error getting par:', error);
+      return NaN;
     }
-    const v = el ? parseInt(el.value, 10) : NaN;
-    if (!Number.isFinite(v)) {
-      console.error(`[Junk] Par value missing for hole ${hole}`);
-    }
-    return Number.isFinite(v) ? v : NaN;
   }
 
   function getScore(playerIdx, hole){
-    let sel = `.score-input[data-player="${playerIdx}"][data-hole="${hole}"]`;
-    let el = document.querySelector(sel);
-    if(!el){
-      const row = document.querySelector(`tr[data-player="${playerIdx}"]`) || document.querySelectorAll('tbody tr')[2 + playerIdx];
-      if(row){
-        const inputs = row.querySelectorAll('.score-input');
-        el = inputs[hole-1];
+    try {
+      let sel = `.score-input[data-player="${playerIdx}"][data-hole="${hole}"]`;
+      let el = document.querySelector(sel);
+      if(!el){
+        const row = document.querySelector(`tr[data-player="${playerIdx}"]`) || document.querySelectorAll('tbody tr')[2 + playerIdx];
+        if(row){
+          const inputs = row.querySelectorAll('.score-input');
+          el = inputs[hole-1];
+        }
       }
+      const v = el ? parseInt(el.value, 10) : NaN;
+      return Number.isFinite(v) ? v : NaN;
+    } catch (error) {
+      console.error('[Junk] Error getting score:', error);
+      return NaN;
     }
-    const v = el ? parseInt(el.value, 10) : NaN;
-    return Number.isFinite(v) ? v : NaN;
   }
 
   function getPlayerNames(){
-    const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
-    return nameInputs.map((input, i)=>{
-      const v = input?.value?.trim();
-      return v || `Player ${i+1}`;
-    });
+    try {
+      const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
+      return nameInputs.map((input, i)=>{
+        const v = input?.value?.trim();
+        return v || `Player ${i+1}`;
+      });
+    } catch (error) {
+      console.error('[Junk] Error getting player names:', error);
+      return [];
+    }
   }
   
   function getPlayerCount(){
-    return document.querySelectorAll('.name-edit').length;
+    try {
+      return document.querySelectorAll('.name-edit').length;
+    } catch (error) {
+      console.error('[Junk] Error getting player count:', error);
+      return 0;
+    }
   }
 
   function dotsFor(score, par){
     if(!Number.isFinite(score) || !Number.isFinite(par)) return 0;
+    const POINTS = getJunkConstants().POINTS;
     const diff = score - par;
-    if(diff <= -2) return 4; // eagle or better
-    if(diff === -1) return 2; // birdie
-    if(diff === 0)  return 1; // par
-    return 0; // bogey or worse
+    if(diff <= -2) return POINTS.EAGLE; // eagle or better
+    if(diff === -1) return POINTS.BIRDIE; // birdie
+    if(diff === 0)  return POINTS.PAR; // par
+    return POINTS.BOGEY; // bogey or worse
   }
 
   // =============================================================================
