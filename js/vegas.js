@@ -41,31 +41,47 @@
 (() => {
   'use strict';
 
-  // Helper functions to access globals
+  // Access game constants with fallbacks
+  const getMultipliers = () => window.GAME_CONSTANTS?.VEGAS?.MULTIPLIERS || { DEFAULT: 1, BIRDIE: 2, EAGLE: 3 };
+
+  // Helper functions to access globals with error handling
   const getPlayers = () => {
-    // Count name inputs that have actual values (trim and check length)
-    const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
-    const validPlayers = nameInputs.filter(input => {
-      const val = input?.value?.trim();
-      return val && val.length > 0;
-    }).length;
-    return validPlayers > 0 ? validPlayers : nameInputs.length;
+    try {
+      // Count name inputs that have actual values (trim and check length)
+      const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
+      const validPlayers = nameInputs.filter(input => {
+        const val = input?.value?.trim();
+        return val && val.length > 0;
+      }).length;
+      return validPlayers > 0 ? validPlayers : nameInputs.length;
+    } catch (error) {
+      console.error('[Vegas] Error getting player count:', error);
+      return 0;
+    }
   };
+  
   const getHoles = () => 18;
+  
   const getPar = (h) => {
-    const parRow = document.getElementById('parRow');
-    if (!parRow) {
-      console.error('[Vegas] Par row not found - scorecard not initialized!');
-      return 4; // Fallback only if DOM missing
+    try {
+      const parRow = document.getElementById('parRow');
+      if (!parRow) {
+        console.error('[Vegas] Par row not found - scorecard not initialized!');
+        return 4; // Fallback only if DOM missing
+      }
+      const inputs = parRow.querySelectorAll('input[type="number"]');
+      const value = Number(inputs[h]?.value);
+      if (!value || !Number.isFinite(value)) {
+        console.error(`[Vegas] Par value missing for hole ${h + 1}`);
+        return 4; // Fallback only if value missing
+      }
+      return value;
+    } catch (error) {
+      console.error('[Vegas] Error getting par:', error);
+      return 4;
     }
-    const inputs = parRow.querySelectorAll('input[type="number"]');
-    const value = Number(inputs[h]?.value);
-    if (!value || !Number.isFinite(value)) {
-      console.error(`[Vegas] Par value missing for hole ${h + 1}`);
-      return 4; // Fallback only if value missing
-    }
-    return value;
   };
+  
   const getPars = () => {
     const pars = [];
     for (let i = 0; i < 18; i++) {
@@ -75,8 +91,13 @@
   };
 
   const getGross = (p, h) => {
-    const input = document.querySelector(`.score-input[data-player="${p}"][data-hole="${h + 1}"]`);
-    return Number(input?.value) || 0;
+    try {
+      const input = document.querySelector(`.score-input[data-player="${p}"][data-hole="${h + 1}"]`);
+      return Number(input?.value) || 0;
+    } catch (error) {
+      console.error('[Vegas] Error getting gross score:', error);
+      return 0;
+    }
   };
 
   const getNetNDB = (p, h) => {

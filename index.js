@@ -224,6 +224,38 @@
     MIN_SCORE: 1,
     MAX_SCORE: 20
   };
+  
+  // Game scoring constants
+  const GAME_CONSTANTS = {
+    JUNK: {
+      POINTS: {
+        EAGLE: 4,
+        BIRDIE: 2,
+        PAR: 1,
+        BOGEY: 0
+      },
+      ACHIEVEMENTS: {
+        HOGAN: 5,
+        SANDY: 3,
+        SADAAM: 2,
+        PULLEY: 1,
+        TRIPLE: 10
+      }
+    },
+    VEGAS: {
+      MULTIPLIERS: {
+        DEFAULT: 1,
+        BIRDIE: 2,
+        EAGLE: 3
+      }
+    },
+    SKINS: {
+      DEFAULT_BUYIN: 10
+    }
+  };
+  
+  // Expose game constants globally for game modules
+  window.GAME_CONSTANTS = GAME_CONSTANTS;
 
   // =============================================================================
   // 📦 UTILS MODULE - DOM Helpers & Math Utilities
@@ -255,7 +287,84 @@
     getPlayerRows: () => ({
       scrollable: Array.from(document.querySelectorAll('#scorecard .player-row')),
       fixed: Array.from(document.querySelectorAll('#scorecardFixed .player-row'))
-    })
+    }),
+    
+    /**
+     * Debounce function execution
+     * @param {Function} fn - Function to debounce
+     * @param {number} delay - Delay in milliseconds
+     * @returns {Function} Debounced function
+     */
+    debounce: (fn, delay) => {
+      let timer = null;
+      return function(...args) {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn.apply(this, args), delay);
+      };
+    },
+    
+    /**
+     * Throttle function execution
+     * @param {Function} fn - Function to throttle
+     * @param {number} limit - Time limit in milliseconds
+     * @returns {Function} Throttled function
+     */
+    throttle: (fn, limit) => {
+      let inThrottle = false;
+      return function(...args) {
+        if (!inThrottle) {
+          fn.apply(this, args);
+          inThrottle = true;
+          setTimeout(() => inThrottle = false, limit);
+        }
+      };
+    },
+    
+    /**
+     * Safe DOM query with error handling
+     * @param {string} selector - CSS selector
+     * @param {Document|Element} parent - Parent element
+     * @param {string} context - Context for error message
+     * @returns {Element|null} Element or null if not found
+     */
+    safeQuery: (selector, parent = document, context = 'DOM') => {
+      try {
+        const el = parent.querySelector(selector);
+        if (!el) {
+          console.warn(`[${context}] Element not found: ${selector}`);
+        }
+        return el;
+      } catch (error) {
+        console.error(`[${context}] Query error for ${selector}:`, error);
+        return null;
+      }
+    },
+    
+    /**
+     * Validate and sanitize input value
+     * @param {any} value - Value to validate
+     * @param {string} type - Type of validation ('score', 'handicap', 'name')
+     * @returns {any} Validated value
+     */
+    validate: (value, type) => {
+      switch (type) {
+        case 'score': {
+          const num = Number(value);
+          if (!Number.isFinite(num)) return null;
+          return Math.max(LIMITS.MIN_SCORE, Math.min(LIMITS.MAX_SCORE, Math.floor(num)));
+        }
+        case 'handicap': {
+          const num = Number(value);
+          if (!Number.isFinite(num)) return null;
+          return Math.max(LIMITS.MIN_HANDICAP, Math.min(LIMITS.MAX_HANDICAP, num));
+        }
+        case 'name': {
+          return String(value || '').trim().substring(0, 50);
+        }
+        default:
+          return value;
+      }
+    }
   };
   
   // Legacy globals for backward compatibility
@@ -263,6 +372,110 @@
   const $$ = Utils.$$;
   const sum = Utils.sum;
   const clampInt = Utils.clampInt;
+  
+  // =============================================================================
+  // ERROR NOTIFICATION SYSTEM
+  // =============================================================================
+  
+  /**
+   * Error notification system for user-friendly error messages
+   */
+  const ErrorHandler = {
+    /**
+     * Show error toast notification
+     * @param {string} message - User-friendly error message
+     * @param {string|null} details - Technical details (optional)
+     * @param {number} duration - Display duration in ms
+     */
+    show(message, details = null, duration = 5000) {
+      const existingToast = document.querySelector('.error-toast');
+      if (existingToast) existingToast.remove();
+      
+      const toast = document.createElement('div');
+      toast.className = 'error-toast';
+      toast.setAttribute('role', 'alert');
+      toast.setAttribute('aria-live', 'assertive');
+      toast.innerHTML = `
+        <div class="error-content">
+          <div class="error-icon">⚠️</div>
+          <div class="error-body">
+            <div class="error-message">${this.escapeHtml(message)}</div>
+            ${details ? `<div class="error-details">${this.escapeHtml(details)}</div>` : ''}
+          </div>
+          <button class="error-close" aria-label="Close">×</button>
+        </div>
+      `;
+      
+      const closeBtn = toast.querySelector('.error-close');
+      closeBtn.addEventListener('click', () => toast.remove());
+      
+      document.body.appendChild(toast);
+      
+      // Animate in
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      });
+      
+      // Auto-remove
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+      
+      // Log for debugging
+      console.error('[App Error]', message, details || '');
+    },
+    
+    /**
+     * Show success notification
+     * @param {string} message - Success message
+     * @param {number} duration - Display duration in ms
+     */
+    success(message, duration = 3000) {
+      const existingToast = document.querySelector('.success-toast');
+      if (existingToast) existingToast.remove();
+      
+      const toast = document.createElement('div');
+      toast.className = 'success-toast';
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
+      toast.innerHTML = `
+        <div class="success-content">
+          <div class="success-icon">✓</div>
+          <div class="success-message">${this.escapeHtml(message)}</div>
+        </div>
+      `;
+      
+      document.body.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+      });
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    },
+    
+    /**
+     * Escape HTML to prevent XSS
+     * @param {string} text - Text to escape
+     * @returns {string} Escaped text
+     */
+    escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  };
+  
+  // Expose globally
+  window.ErrorHandler = ErrorHandler;
 
   // =============================================================================
   // APP MANAGER - Central coordination for game recalculations
@@ -1028,17 +1241,98 @@
   
   const Storage = {
     KEY: Config.STORAGE_KEY,
+    CURRENT_VERSION: 5,
     saveTimer: null,
     _isLoading: false,
     
     /**
+     * Migration functions for each version upgrade
+     * Each function transforms data from version N to N+1
+     */
+    migrations: {
+      /**
+       * Migrate from v4 to v5
+       * @param {Object} oldData - v4 data structure
+       * @returns {Object} v5 data structure
+       */
+      v4_to_v5(oldData) {
+        console.log('[Storage] Migrating v4 -> v5');
+        return {
+          ...oldData,
+          // v5 added advance direction
+          advanceDirection: oldData.advanceDirection || 'down',
+          // v5 added Hi-Lo game
+          hilo: oldData.hilo || { open: false, unitValue: 10 },
+          // v5 added Junk achievements
+          junk: {
+            ...oldData.junk,
+            achievements: oldData.junk?.achievements || []
+          }
+        };
+      },
+      
+      /**
+       * Template for future v5 to v6 migration
+       * @param {Object} oldData - v5 data structure
+       * @returns {Object} v6 data structure
+       */
+      v5_to_v6(oldData) {
+        console.log('[Storage] Migrating v5 -> v6');
+        // Add new fields for v6 here
+        return {
+          ...oldData,
+          version: 6
+        };
+      }
+    },
+    
+    /**
+     * Attempt to migrate data from older versions
+     * @returns {Object|null} Migrated data or null if no migration needed
+     */
+    attemptMigration() {
+      try {
+        // Try to load from v4
+        const v4Data = localStorage.getItem('golf_scorecard_v4');
+        if (v4Data) {
+          console.log('[Storage] Found v4 data, attempting migration');
+          const parsed = JSON.parse(v4Data);
+          const migrated = this.migrations.v4_to_v5(parsed);
+          
+          // Save migrated data to v5
+          localStorage.setItem(this.KEY, JSON.stringify(migrated));
+          
+          // Keep v4 data as backup
+          localStorage.setItem('golf_scorecard_v4_backup', v4Data);
+          
+          ErrorHandler.success('Data migrated from previous version!');
+          return migrated;
+        }
+        
+        return null;
+      } catch (error) {
+        console.error('[Storage] Migration failed:', error);
+        ErrorHandler.show('Failed to migrate old data', 'Starting with fresh scorecard');
+        return null;
+      }
+    },
+    
+    /**
      * Save current game state to localStorage
+     * @returns {boolean} Success status
      */
     save() {
-      const scoreRows = $$("#scorecard .player-row");
-      const fixedRows = $$("#scorecardFixed .player-row");
-      
-      const state = {
+      try {
+        const scoreRows = $$("#scorecard .player-row");
+        const fixedRows = $$("#scorecardFixed .player-row");
+        
+        if (scoreRows.length === 0 || fixedRows.length === 0) {
+          console.warn('[Storage] No player rows found, skipping save');
+          return false;
+        }
+        
+        const state = {
+          version: this.CURRENT_VERSION,
         course: ACTIVE_COURSE,
         advanceDirection: Config.ADVANCE_DIRECTION,
         players: scoreRows.map((row, idx) => {
@@ -1080,18 +1374,32 @@
           unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10,
           open: $(ids.hiloSection)?.classList.contains("open")
         },
-        savedAt: Date.now(),
-      };
-      
-      try {
-        localStorage.setItem(this.KEY, JSON.stringify(state));
+          savedAt: Date.now(),
+        };
+        
+        // Validate state before saving
+        if (!state.course || !state.players) {
+          throw new Error('Invalid state structure');
+        }
+        
+        const serialized = JSON.stringify(state);
+        
+        // Check localStorage quota
+        if (serialized.length > 5000000) { // 5MB limit
+          throw new Error('State too large to save');
+        }
+        
+        localStorage.setItem(this.KEY, serialized);
         Utils.announce("Saved.");
-        // Also use legacy announce for save button feedback
         if(typeof announce === 'function') announce("Saved!");
+        return true;
+        
       } catch(err) {
         console.error('[Storage] Save failed:', err);
+        ErrorHandler.show('Failed to save scorecard', err.message);
         Utils.announce("Save failed!");
         if(typeof announce === 'function') announce("Save failed!");
+        return false;
       }
     },
     
@@ -1105,16 +1413,29 @@
     
     /**
      * Load saved game state from localStorage
+     * @returns {boolean} Success status
      */
     load() {
       this._isLoading = true;
-      const raw = localStorage.getItem(this.KEY); 
-      if(!raw) {
-        this._isLoading = false;
-        return;
-      }
       
-      try{
+      try {
+        let raw = localStorage.getItem(this.KEY);
+        
+        // If no current version data, try migration
+        if (!raw) {
+          const migrated = this.attemptMigration();
+          if (migrated) {
+            raw = JSON.stringify(migrated);
+          } else {
+            this._isLoading = false;
+            return false;
+          }
+        }
+        
+        if (!raw) {
+          this._isLoading = false;
+          return false;
+        }
         const s = JSON.parse(raw);
         
         // Restore course selection
@@ -1310,42 +1631,79 @@
   /**
    * Open a game section and make it visible
    * @param {string} which - Game section: 'vegas', 'banker', 'skins', 'junk', 'bankervegas', or 'hilo'
+   * @throws {Error} If game section not found
    */
   function games_open(which){
-    if(which==="vegas"){ $(ids.vegasSection).classList.add("open"); $(ids.vegasSection).setAttribute("aria-hidden","false"); $(ids.toggleVegas).classList.add("active"); }
-    if(which==="banker"){ 
-      $(ids.bankerSection).classList.add("open"); 
-      $(ids.bankerSection).setAttribute("aria-hidden","false"); 
-      $(ids.toggleBanker).classList.add("active");
-      window.Banker?.init();
-    }
-    if(which==="skins"){ $(ids.skinsSection).classList.add("open"); $(ids.skinsSection).setAttribute("aria-hidden","false"); $(ids.toggleSkins).classList.add("active"); }
-    if(which==="junk"){ 
-      $(ids.junkSection).classList.add("open"); 
-      $(ids.junkSection).setAttribute("aria-hidden","false"); 
-      document.getElementById('toggleJunk')?.classList.add("active");
-      window.Junk?.init();
-    }
-    if(which==="bankervegas"){ 
-      $(ids.bankerVegasSection).classList.add("open"); 
-      $(ids.bankerVegasSection).setAttribute("aria-hidden","false"); 
-      $(ids.toggleBankerVegas).classList.add("active");
-      window.BankerVegas?.init();
-    }
-    if(which==="hilo"){ 
-      $(ids.hiloSection).classList.add("open"); 
-      $(ids.hiloSection).setAttribute("aria-hidden","false"); 
-      $(ids.toggleHilo).classList.add("active");
-      window.HiLo?.init();
+    try {
+      const gameConfig = {
+        vegas: { section: ids.vegasSection, toggle: ids.toggleVegas, init: null },
+        banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => window.Banker?.init() },
+        skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: null },
+        junk: { section: ids.junkSection, toggle: 'toggleJunk', init: () => window.Junk?.init() },
+        bankervegas: { section: ids.bankerVegasSection, toggle: ids.toggleBankerVegas, init: () => window.BankerVegas?.init() },
+        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init() }
+      };
+      
+      const config = gameConfig[which];
+      if (!config) {
+        console.error(`[Games] Unknown game: ${which}`);
+        return;
+      }
+      
+      const section = typeof config.section === 'string' ? document.getElementById(config.section.replace('#', '')) : $(config.section);
+      const toggleBtn = typeof config.toggle === 'string' ? document.getElementById(config.toggle) : $(config.toggle);
+      
+      if (!section) {
+        ErrorHandler.show(`Cannot open ${which} game`, 'Game section not found in DOM');
+        return;
+      }
+      
+      section.classList.add('open');
+      section.setAttribute('aria-hidden', 'false');
+      if (toggleBtn) toggleBtn.classList.add('active');
+      
+      if (config.init) {
+        try {
+          config.init();
+        } catch (error) {
+          console.error(`[Games] Error initializing ${which}:`, error);
+          ErrorHandler.show(`Error opening ${which}`, error.message);
+        }
+      }
+    } catch (error) {
+      console.error('[Games] Error in games_open:', error);
+      ErrorHandler.show('Error opening game', error.message);
     }
   }
+  /**
+   * Close a game section
+   * @param {string} which - Game section to close
+   */
   function games_close(which){
-    if(which==="vegas"){ $(ids.vegasSection).classList.remove("open"); $(ids.vegasSection).setAttribute("aria-hidden","true"); $(ids.toggleVegas).classList.remove("active"); }
-    if(which==="banker"){ $(ids.bankerSection).classList.remove("open"); $(ids.bankerSection).setAttribute("aria-hidden","true"); $(ids.toggleBanker).classList.remove("active"); }
-    if(which==="skins"){ $(ids.skinsSection).classList.remove("open"); $(ids.skinsSection).setAttribute("aria-hidden","true"); $(ids.toggleSkins).classList.remove("active"); }
-    if(which==="junk"){ $(ids.junkSection).classList.remove("open"); $(ids.junkSection).setAttribute("aria-hidden","true"); document.getElementById('toggleJunk')?.classList.remove("active"); }
-    if(which==="bankervegas"){ $(ids.bankerVegasSection).classList.remove("open"); $(ids.bankerVegasSection).setAttribute("aria-hidden","true"); $(ids.toggleBankerVegas).classList.remove("active"); }
-    if(which==="hilo"){ $(ids.hiloSection).classList.remove("open"); $(ids.hiloSection).setAttribute("aria-hidden","true"); $(ids.toggleHilo).classList.remove("active"); }
+    try {
+      const gameConfig = {
+        vegas: { section: ids.vegasSection, toggle: ids.toggleVegas },
+        banker: { section: ids.bankerSection, toggle: ids.toggleBanker },
+        skins: { section: ids.skinsSection, toggle: ids.toggleSkins },
+        junk: { section: ids.junkSection, toggle: 'toggleJunk' },
+        bankervegas: { section: ids.bankerVegasSection, toggle: ids.toggleBankerVegas },
+        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo }
+      };
+      
+      const config = gameConfig[which];
+      if (!config) return;
+      
+      const section = typeof config.section === 'string' ? document.getElementById(config.section.replace('#', '')) : $(config.section);
+      const toggleBtn = typeof config.toggle === 'string' ? document.getElementById(config.toggle) : $(config.toggle);
+      
+      if (section) {
+        section.classList.remove('open');
+        section.setAttribute('aria-hidden', 'true');
+      }
+      if (toggleBtn) toggleBtn.classList.remove('active');
+    } catch (error) {
+      console.error('[Games] Error in games_close:', error);
+    }
   }
   function games_toggle(which){
     let sec;
@@ -2210,9 +2568,112 @@
       clearTimeout(Storage.saveTimer);
       Storage.save();
     });
+    
+    // Add keyboard shortcuts for power users
+    document.addEventListener('keydown', (e) => {
+      // Ctrl/Cmd + S: Save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        Storage.save();
+        ErrorHandler.success('Scorecard saved!');
+      }
+      
+      // Ctrl/Cmd + N: Add player
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault();
+        addPlayer();
+      }
+      
+      // Ctrl/Cmd + R: Refresh all calculations
+      if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        recalculateEverything();
+        ErrorHandler.success('All calculations refreshed!');
+      }
+      
+      // Escape: Close any open modals/toasts
+      if (e.key === 'Escape') {
+        const toast = document.querySelector('.error-toast, .success-toast');
+        if (toast) toast.remove();
+      }
+    });
+    
+    // Log initialization complete
+    console.log('[GolfApp] Initialization complete');
   }
 
   document.addEventListener("DOMContentLoaded", init);
+  
+  // =============================================================================
+  // UNIFIED NAMESPACE - Expose organized API
+  // =============================================================================
+  
+  /**
+   * Unified namespace for the Golf Scorecard application
+   * Provides organized access to all modules and utilities
+   */
+  window.GolfApp = {
+    version: '2.1.0',
+    
+    // Core modules
+    config: Config,
+    utils: Utils,
+    scorecard: Scorecard,
+    storage: Storage,
+    errorHandler: ErrorHandler,
+    appManager: AppManager,
+    
+    // Game modules (populated by external scripts)
+    games: {
+      get vegas() { return window.Vegas; },
+      get skins() { return window.Skins; },
+      get junk() { return window.Junk; },
+      get hilo() { return window.HiLo; },
+      get banker() { return window.Banker; },
+      get bankerVegas() { return window.BankerVegas; }
+    },
+    
+    // Utility functions
+    api: {
+      save: () => Storage.save(),
+      load: () => Storage.load(),
+      export: () => window.Export?.exportCurrentScorecard(),
+      email: () => window.Export?.emailCurrentScorecard(),
+      addPlayer,
+      removePlayer,
+      recalculateEverything
+    },
+    
+    // Constants
+    constants: {
+      HOLES,
+      get PLAYERS() { return PLAYERS; },
+      MIN_PLAYERS,
+      MAX_PLAYERS,
+      TIMING,
+      LIMITS,
+      GAME_CONSTANTS
+    },
+    
+    // Debug utilities
+    debug: {
+      getState: () => ({
+        players: PLAYERS,
+        course: ACTIVE_COURSE,
+        pars: PARS,
+        hcpMen: HCPMEN
+      }),
+      clearStorage: () => {
+        localStorage.removeItem(Storage.KEY);
+        console.log('[Debug] Storage cleared');
+      },
+      testError: () => ErrorHandler.show('Test error', 'This is a test error notification'),
+      testSuccess: () => ErrorHandler.success('Test success notification')
+    }
+  };
+  
+  // Log API availability
+  console.log('[GolfApp] Unified API available at window.GolfApp');
 
 })();
 

@@ -25,60 +25,90 @@
   // =============================================================================
 
   function getPlayerCount() {
-    return document.querySelectorAll('#scorecardFixed .player-row').length;
+    try {
+      return document.querySelectorAll('#scorecardFixed .player-row').length;
+    } catch (error) {
+      console.error('[HiLo] Error getting player count:', error);
+      return 0;
+    }
   }
 
   function getPlayerNames() {
-    const names = [];
-    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
-    playerRows.forEach((row, idx) => {
-      const nameInput = row.querySelector('.name-edit');
-      const name = nameInput?.value?.trim() || `Player ${idx + 1}`;
-      names.push(name);
-    });
-    return names;
+    try {
+      const names = [];
+      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      playerRows.forEach((row, idx) => {
+        const nameInput = row.querySelector('.name-edit');
+        const name = nameInput?.value?.trim() || `Player ${idx + 1}`;
+        names.push(name);
+      });
+      return names;
+    } catch (error) {
+      console.error('[HiLo] Error getting player names:', error);
+      return [];
+    }
   }
 
   function getHandicaps() {
-    const handicaps = [];
-    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
-    playerRows.forEach(row => {
-      const chInput = row.querySelector('.ch-input');
-      const ch = Number(chInput?.value) || 0;
-      handicaps.push(ch);
-    });
-    return handicaps;
+    try {
+      const handicaps = [];
+      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      playerRows.forEach(row => {
+        const chInput = row.querySelector('.ch-input');
+        const ch = Number(chInput?.value) || 0;
+        handicaps.push(ch);
+      });
+      return handicaps;
+    } catch (error) {
+      console.error('[HiLo] Error getting handicaps:', error);
+      return [];
+    }
   }
 
   function getGross(playerIdx, holeIdx) {
-    const input = document.querySelector(
-      `.score-input[data-player="${playerIdx}"][data-hole="${holeIdx + 1}"]`
-    );
-    return Number(input?.value) || 0;
+    try {
+      const input = document.querySelector(
+        `.score-input[data-player="${playerIdx}"][data-hole="${holeIdx + 1}"]`
+      );
+      return Number(input?.value) || 0;
+    } catch (error) {
+      console.error('[HiLo] Error getting gross score:', error);
+      return 0;
+    }
   }
 
   function getPar(holeIdx) {
-    const parRow = document.getElementById('parRow');
-    if (!parRow) {
-      console.error('[HiLo] Par row not found - scorecard not initialized!');
-      return 4; // Fallback only if DOM missing
+    try {
+      const parRow = document.getElementById('parRow');
+      if (!parRow) {
+        console.error('[HiLo] Par row not found - scorecard not initialized!');
+        return 4; // Fallback only if DOM missing
+      }
+      const inputs = parRow.querySelectorAll('input[type="number"]');
+      const value = Number(inputs[holeIdx]?.value);
+      if (!value || !Number.isFinite(value)) {
+        console.error(`[HiLo] Par value missing for hole ${holeIdx + 1}`);
+        return 4; // Fallback only if value missing
+      }
+      return value;
+    } catch (error) {
+      console.error('[HiLo] Error getting par:', error);
+      return 4;
     }
-    const inputs = parRow.querySelectorAll('input[type="number"]');
-    const value = Number(inputs[holeIdx]?.value);
-    if (!value || !Number.isFinite(value)) {
-      console.error(`[HiLo] Par value missing for hole ${holeIdx + 1}`);
-      return 4; // Fallback only if value missing
-    }
-    return value;
   }
 
   function getHCPIndex(holeIdx) {
-    const HCPMEN = window.HCPMEN;
-    if (!HCPMEN || !Array.isArray(HCPMEN)) {
-      console.error('[HiLo] HCPMEN not loaded - course data missing!');
-      return 1; // Fallback only if array completely missing
+    try {
+      const HCPMEN = window.HCPMEN;
+      if (!HCPMEN || !Array.isArray(HCPMEN)) {
+        console.error('[HiLo] HCPMEN not loaded - course data missing!');
+        return 1; // Fallback only if array completely missing
+      }
+      return HCPMEN[holeIdx] || 1;
+    } catch (error) {
+      console.error('[HiLo] Error getting HCP index:', error);
+      return 1;
     }
-    return HCPMEN[holeIdx] || 1;
   }
 
   // =============================================================================
