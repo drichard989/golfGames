@@ -208,6 +208,24 @@
   });
 
   // =============================================================================
+  // 🔧 CONSTANTS - Magic numbers extracted for clarity
+  // =============================================================================
+  
+  const TIMING = {
+    FOCUS_DELAY_MS: 50,          // Delay before focusing next input (prevents race conditions)
+    RECALC_DEBOUNCE_MS: 300,     // Debounce delay for auto-save
+    INIT_RETRY_DELAY_MS: 150,    // Delay for game module initialization retries
+    RESIZE_DEBOUNCE_MS: 150      // Debounce delay for window resize handler
+  };
+  
+  const LIMITS = {
+    MIN_HANDICAP: -50,
+    MAX_HANDICAP: 60,
+    MIN_SCORE: 1,
+    MAX_SCORE: 20
+  };
+
+  // =============================================================================
   // 📦 UTILS MODULE - DOM Helpers & Math Utilities
   // =============================================================================
   
@@ -231,7 +249,13 @@
     announce: (msg) => {
       const el = document.getElementById('announcer');
       if (el) el.textContent = msg;
-    }
+    },
+    
+    /** Get player rows from both tables (avoids duplicate queries) */
+    getPlayerRows: () => ({
+      scrollable: Array.from(document.querySelectorAll('#scorecard .player-row')),
+      fixed: Array.from(document.querySelectorAll('#scorecardFixed .player-row'))
+    })
   };
   
   // Legacy globals for backward compatibility
@@ -412,8 +436,6 @@
 
           // Course Handicap input (in fixed table)
           const chTd=document.createElement("td");
-          const MIN_HANDICAP = -50;
-          const MAX_HANDICAP = 60;
           
           const chInput=document.createElement("input"); 
           chInput.type="number"; 
@@ -427,7 +449,7 @@
           
           chInput.addEventListener("input", () => { 
             if(chInput.value !== "") {
-              const clamped = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
+              const clamped = clampInt(chInput.value, LIMITS.MIN_HANDICAP, LIMITS.MAX_HANDICAP);
               if(String(clamped) !== chInput.value) {
                 chInput.value = clamped;
                 return; // Let the new input event handle the recalc
@@ -445,15 +467,12 @@
           trFixed.appendChild(chTd);
 
           // Score inputs for each hole (in scrollable table)
-          const MIN_SCORE = 1;
-          const MAX_SCORE = 20;
-          
           for(let h=1; h<=HOLES; h++){
             const td=document.createElement("td"), inp=document.createElement("input");
             inp.type="number"; 
             inp.inputMode="numeric"; 
-            inp.min=String(MIN_SCORE); 
-            inp.max=String(MAX_SCORE); 
+            inp.min=String(LIMITS.MIN_SCORE); 
+            inp.max=String(LIMITS.MAX_SCORE); 
             inp.className="score-input"; 
             inp.dataset.player=String(p); 
             inp.dataset.hole=String(h); 
@@ -463,7 +482,7 @@
             
             inp.addEventListener("input", () => { 
               if(inp.value !== ""){
-                const v = clampInt(inp.value, MIN_SCORE, MAX_SCORE); 
+                const v = clampInt(inp.value, LIMITS.MIN_SCORE, LIMITS.MAX_SCORE); 
                 if(String(v) !== inp.value) {
                   inp.classList.add("invalid"); 
                 } else {
@@ -495,7 +514,7 @@
                   }
                   
                   if(nextInput) {
-                    setTimeout(() => nextInput.focus(), 50);
+                    setTimeout(() => nextInput.focus(), TIMING.FOCUS_DELAY_MS);
                   }
                 }
               } else {
@@ -1081,7 +1100,7 @@
      */
     saveDebounced() {
       clearTimeout(this.saveTimer);
-      this.saveTimer = setTimeout(() => this.save(), 300);
+      this.saveTimer = setTimeout(() => this.save(), TIMING.RECALC_DEBOUNCE_MS);
     },
     
     /**
@@ -1298,26 +1317,26 @@
       $(ids.bankerSection).classList.add("open"); 
       $(ids.bankerSection).setAttribute("aria-hidden","false"); 
       $(ids.toggleBanker).classList.add("active");
-      setTimeout(() => { window.Banker?.init(); }, 0);
+      window.Banker?.init();
     }
     if(which==="skins"){ $(ids.skinsSection).classList.add("open"); $(ids.skinsSection).setAttribute("aria-hidden","false"); $(ids.toggleSkins).classList.add("active"); }
     if(which==="junk"){ 
       $(ids.junkSection).classList.add("open"); 
       $(ids.junkSection).setAttribute("aria-hidden","false"); 
       document.getElementById('toggleJunk')?.classList.add("active");
-      setTimeout(() => { window.Junk?.init(); }, 0);
+      window.Junk?.init();
     }
     if(which==="bankervegas"){ 
       $(ids.bankerVegasSection).classList.add("open"); 
       $(ids.bankerVegasSection).setAttribute("aria-hidden","false"); 
       $(ids.toggleBankerVegas).classList.add("active");
-      setTimeout(() => { window.BankerVegas?.init(); }, 0);
+      window.BankerVegas?.init();
     }
     if(which==="hilo"){ 
       $(ids.hiloSection).classList.add("open"); 
       $(ids.hiloSection).setAttribute("aria-hidden","false"); 
       $(ids.toggleHilo).classList.add("active");
-      setTimeout(() => { window.HiLo?.init(); }, 0);
+      window.HiLo?.init();
     }
   }
   function games_close(which){
@@ -1668,7 +1687,7 @@
             }
             
             if(nextInput) {
-              setTimeout(() => nextInput.focus(), 50);
+              setTimeout(() => nextInput.focus(), TIMING.FOCUS_DELAY_MS);
             }
           }
         } else {
@@ -1707,21 +1726,15 @@
     // Increment player count
     PLAYERS++;
     
-    // Update display immediately
-    Scorecard.player.updateCountDisplay();
-    
-    // Recalculate everything immediately and again after DOM update
-    recalculateEverything();
-    Scorecard.player.syncOverlay();
-    requestAnimationFrame(() => Scorecard.build.syncRowHeights());
-    setTimeout(() => {
-      recalculateEverything();
-      Scorecard.player.updateCountDisplay();
-      Scorecard.player.syncOverlay();
-      requestAnimationFrame(() => Scorecard.build.syncRowHeights());
-    }, 100);
-    
-    Storage.saveDebounced();
+      // Update display and recalculate after DOM settles
+      requestAnimationFrame(() => {
+        Scorecard.player.updateCountDisplay();
+        Scorecard.player.syncOverlay();
+        recalculateEverything();
+        // CRITICAL: Reapply stroke highlighting since adjusted handicaps changed
+        Scorecard.calc.applyStrokeHighlighting();
+        Scorecard.build.syncRowHeights();
+      });    Storage.saveDebounced();
     Utils.announce(`Player ${PLAYERS} added.`);
   }
   
@@ -1938,19 +1951,15 @@
         }
       });
       
-      // Update display immediately
-      Scorecard.player.updateCountDisplay();
-      
-      // Recalculate everything immediately and again after DOM update
-      recalculateEverything();
-      Scorecard.player.syncOverlay();
-      requestAnimationFrame(() => Scorecard.build.syncRowHeights());
-      setTimeout(() => {
-        recalculateEverything();
+      // Update display and recalculate after DOM settles
+      requestAnimationFrame(() => {
         Scorecard.player.updateCountDisplay();
         Scorecard.player.syncOverlay();
-        requestAnimationFrame(() => Scorecard.build.syncRowHeights());
-      }, 100);
+        recalculateEverything();
+        // CRITICAL: Reapply stroke highlighting since adjusted handicaps changed
+        Scorecard.calc.applyStrokeHighlighting();
+        Scorecard.build.syncRowHeights();
+      });
       
       Storage.saveDebounced();
       Utils.announce(`${playerName} removed. ${PLAYERS} player${PLAYERS === 1 ? '' : 's'} remaining.`);
@@ -1992,19 +2001,15 @@
       lastRowFixed.remove();
       PLAYERS--;
       
-      // Update display immediately
-      Scorecard.player.updateCountDisplay();
-      
-      // Recalculate everything immediately and again after DOM update
-      recalculateEverything();
-      Scorecard.player.syncOverlay();
-      requestAnimationFrame(() => Scorecard.build.syncRowHeights());
-      setTimeout(() => {
-        recalculateEverything();
+      // Update display and recalculate after DOM settles
+      requestAnimationFrame(() => {
         Scorecard.player.updateCountDisplay();
         Scorecard.player.syncOverlay();
-        requestAnimationFrame(() => Scorecard.build.syncRowHeights());
-      }, 100);
+        recalculateEverything();
+        // CRITICAL: Reapply stroke highlighting since adjusted handicaps changed
+        Scorecard.calc.applyStrokeHighlighting();
+        Scorecard.build.syncRowHeights();
+      });
       
       Storage.saveDebounced();
       Utils.announce(`Player removed. ${PLAYERS} player${PLAYERS === 1 ? '' : 's'} remaining.`);
