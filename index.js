@@ -2569,35 +2569,6 @@
       Storage.save();
     });
     
-    // Add keyboard shortcuts for power users
-    document.addEventListener('keydown', (e) => {
-      // Ctrl/Cmd + S: Save
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        Storage.save();
-        ErrorHandler.success('Scorecard saved!');
-      }
-      
-      // Ctrl/Cmd + N: Add player
-      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
-        e.preventDefault();
-        addPlayer();
-      }
-      
-      // Ctrl/Cmd + R: Refresh all calculations
-      if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
-        e.preventDefault();
-        recalculateEverything();
-        ErrorHandler.success('All calculations refreshed!');
-      }
-      
-      // Escape: Close any open modals/toasts
-      if (e.key === 'Escape') {
-        const toast = document.querySelector('.error-toast, .success-toast');
-        if (toast) toast.remove();
-      }
-    });
-    
     // Log initialization complete
     console.log('[GolfApp] Initialization complete');
   }
