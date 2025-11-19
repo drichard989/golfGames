@@ -237,11 +237,17 @@
       const holesWon = Array(playerCount).fill(null).map(() => []);
       let pot = 1;
 
+      console.log('[Skins.compute] Starting with useNet:', useNet, 'half:', half);
+
       for (let h = 0; h < HOLES; h++) {
         // Use gross or net scores based on mode
         const scores = Array.from({ length: playerCount }, (_, p) => 
           useNet ? getNetForSkins(p, h, half) : getGross(p, h)
         );
+        
+        if (h === 0) {
+          console.log('[Skins.compute] Hole 1 scores:', scores, 'useNet:', useNet, 'half:', half);
+        }
         
         const filled = scores.map((n, p) => ({ n, p })).filter(x => x.n > 0);
         if (filled.length < 2) {
