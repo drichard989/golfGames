@@ -1824,61 +1824,201 @@
     const missing = required.filter(k => !(k in hmap));
     if (missing.length) { alert("CSV is missing columns: " + missing.join(", ")); return; }
 
-    const rows = data.slice(1).filter(r => r.some(x => x && x !== "")).slice(0, 4);
+    const rows = data.slice(1).filter(r => r.some(x => x && x !== "")).slice(0, 99);
     if (!rows.length) { alert("No data rows found under the header."); return; }
+
+    // Create custom dialog for mode selection
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+    
+    const dialogBox = document.createElement('div');
+    dialogBox.style.cssText = `
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    `;
+    
+    const title = document.createElement('h3');
+    title.textContent = 'Import CSV';
+    title.style.cssText = 'margin: 0 0 12px 0; color: var(--ink);';
+    
+    const message = document.createElement('p');
+    message.textContent = `Found ${rows.length} player(s) in CSV file.`;
+    message.style.cssText = 'margin: 0 0 20px 0; color: var(--muted);';
+    
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'display: flex; gap: 12px;';
+    
+    const replaceBtn = document.createElement('button');
+    replaceBtn.textContent = 'Replace Players';
+    replaceBtn.className = 'btn';
+    replaceBtn.style.cssText = 'flex: 1; background: var(--danger); color: white;';
+    
+    const addBtn = document.createElement('button');
+    addBtn.textContent = 'Add Players';
+    addBtn.className = 'btn';
+    addBtn.style.cssText = 'flex: 1; background: var(--accent); color: var(--bg);';
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn';
+    cancelBtn.style.cssText = 'flex: 1;';
+    
+    btnContainer.append(replaceBtn, addBtn, cancelBtn);
+    dialogBox.append(title, message, btnContainer);
+    dialog.appendChild(dialogBox);
+    document.body.appendChild(dialog);
+    
+    // Wait for user choice
+    const mode = await new Promise((resolve) => {
+      replaceBtn.onclick = () => { dialog.remove(); resolve('replace'); };
+      addBtn.onclick = () => { dialog.remove(); resolve('add'); };
+      cancelBtn.onclick = () => { dialog.remove(); resolve('cancel'); };
+    });
+    
+    if (mode === 'cancel') return;
 
     // Get player rows from both tables
     const fixedTable = document.querySelector("#scorecardFixed");
     const scrollTable = document.querySelector("#scorecard");
-    const fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
-    const scrollPlayerRows = scrollTable?.querySelectorAll(".player-row");
+    let fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
+    let scrollPlayerRows = scrollTable?.querySelectorAll(".player-row");
     
-    rows.forEach((r, idx) => {
-      const obj = rowToPlayerObj(hmap, r);
+    if (mode === 'replace') {
+      // REPLACE MODE: Clear all and import from position 0
+      // Ensure we have enough player slots
+      const currentPlayerCount = fixedPlayerRows.length;
+      const neededPlayers = rows.length;
       
-      // Update name and CH in fixed table
-      const fixedRow = fixedPlayerRows?.[idx];
-      if (fixedRow) {
-        const nameInput = fixedRow.querySelector(".name-edit");
-        const chInput = fixedRow.querySelector(".ch-input");
-        if (nameInput) nameInput.value = obj.player || `Player ${idx+1}`;
-        if (chInput) chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
+      // Add more players if needed
+      while (PLAYERS < neededPlayers) {
+        addPlayer();
       }
       
-      // Update scores in scroll table (only first 18 inputs)
-      const scrollRow = scrollPlayerRows?.[idx];
-      if (scrollRow) {
-        const inputs = scrollRow.querySelectorAll("input.score-input");
-        for (let i = 0; i < 18; i++) {
-          if (inputs[i]) {
-            const v = obj.holes[i];
-            inputs[i].value = (v === "" || isNaN(v)) ? "" : String(Math.max(1, Math.min(20, Math.trunc(v))));
-            inputs[i].classList.remove("invalid");
+      // Refresh player row references
+      fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
+      scrollPlayerRows = scrollTable?.querySelectorAll(".player-row");
+      
+      rows.forEach((r, idx) => {
+        const obj = rowToPlayerObj(hmap, r);
+        
+        // Update name and CH in fixed table
+        const fixedRow = fixedPlayerRows?.[idx];
+        if (fixedRow) {
+          const nameInput = fixedRow.querySelector(".name-edit");
+          const chInput = fixedRow.querySelector(".ch-input");
+          if (nameInput) nameInput.value = obj.player || `Player ${idx+1}`;
+          if (chInput) chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
+        }
+        
+        // Update scores in scroll table (only first 18 inputs)
+        const scrollRow = scrollPlayerRows?.[idx];
+        if (scrollRow) {
+          const inputs = scrollRow.querySelectorAll("input.score-input");
+          for (let i = 0; i < 18; i++) {
+            if (inputs[i]) {
+              const v = obj.holes[i];
+              inputs[i].value = (v === "" || isNaN(v)) ? "" : String(Math.max(1, Math.min(20, Math.trunc(v))));
+              inputs[i].classList.remove("invalid");
+            }
+          }
+        }
+      });
+      
+      // Clear remaining players
+      for (let i = rows.length; i < fixedPlayerRows.length; i++) {
+        const fixedRow = fixedPlayerRows?.[i];
+        const scrollRow = scrollPlayerRows?.[i];
+        
+        if (fixedRow) {
+          const nameInput = fixedRow.querySelector(".name-edit");
+          const chInput = fixedRow.querySelector(".ch-input");
+          if (nameInput) nameInput.value = "";
+          if (chInput) chInput.value = "";
+        }
+        
+        if (scrollRow) {
+          const inputs = scrollRow.querySelectorAll("input.score-input");
+          // Only clear first 18 inputs
+          for (let j = 0; j < Math.min(18, inputs.length); j++) {
+            inputs[j].value = "";
+            inputs[j].classList.remove("invalid");
           }
         }
       }
-    });
-    
-    // Clear remaining players
-    for (let i = rows.length; i < 4; i++) {
-      const fixedRow = fixedPlayerRows?.[i];
-      const scrollRow = scrollPlayerRows?.[i];
-      
-      if (fixedRow) {
-        const nameInput = fixedRow.querySelector(".name-edit");
-        const chInput = fixedRow.querySelector(".ch-input");
-        if (nameInput) nameInput.value = "";
-        if (chInput) chInput.value = "";
-      }
-      
-      if (scrollRow) {
-        const inputs = scrollRow.querySelectorAll("input.score-input");
-        // Only clear first 18 inputs
-        for (let j = 0; j < Math.min(18, inputs.length); j++) {
-          inputs[j].value = "";
-          inputs[j].classList.remove("invalid");
+    } else {
+      // ADD MODE: Find first empty player slot, add more slots if needed
+      let startIdx = 0;
+      for (let i = 0; i < fixedPlayerRows.length; i++) {
+        const nameInput = fixedPlayerRows[i]?.querySelector(".name-edit");
+        const hasName = nameInput?.value?.trim();
+        if (!hasName) {
+          startIdx = i;
+          break;
+        }
+        if (i === fixedPlayerRows.length - 1) {
+          // All slots full, start after last player
+          startIdx = fixedPlayerRows.length;
+          break;
         }
       }
+      
+      // Add more player slots if needed
+      const availableSlots = fixedPlayerRows.length - startIdx;
+      const neededSlots = rows.length - availableSlots;
+      
+      if (neededSlots > 0) {
+        for (let i = 0; i < neededSlots; i++) {
+          if (PLAYERS >= MAX_PLAYERS) break;
+          addPlayer();
+        }
+      }
+      
+      // Refresh player row references
+      fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
+      scrollPlayerRows = scrollTable?.querySelectorAll(".player-row");
+      
+      // Add players starting from first empty slot
+      rows.forEach((r, idx) => {
+        const targetIdx = startIdx + idx;
+        if (targetIdx >= fixedPlayerRows.length) return; // Skip if exceeds max
+        
+        const obj = rowToPlayerObj(hmap, r);
+        
+        const fixedRow = fixedPlayerRows?.[targetIdx];
+        if (fixedRow) {
+          const nameInput = fixedRow.querySelector(".name-edit");
+          const chInput = fixedRow.querySelector(".ch-input");
+          if (nameInput) nameInput.value = obj.player || `Player ${targetIdx+1}`;
+          if (chInput) chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
+        }
+        
+        const scrollRow = scrollPlayerRows?.[targetIdx];
+        if (scrollRow) {
+          const inputs = scrollRow.querySelectorAll("input.score-input");
+          for (let i = 0; i < 18; i++) {
+            if (inputs[i]) {
+              const v = obj.holes[i];
+              inputs[i].value = (v === "" || isNaN(v)) ? "" : String(Math.max(1, Math.min(20, Math.trunc(v))));
+              inputs[i].classList.remove("invalid");
+            }
+          }
+        }
+      });
     }
 
     Scorecard.calc.recalcAll();
