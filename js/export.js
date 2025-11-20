@@ -1306,17 +1306,29 @@ input[type="text"] {
    */
   function exportCurrentScorecard() {
     const headers = ["player","ch", ...Array.from({length:18},(_,i)=>`h${i+1}`)];
-    const playerRows = document.querySelectorAll(".player-row");
+    
+    // Get player rows from the scrollable table (has all score inputs)
+    const scrollTable = document.querySelector("#scorecard");
+    const playerRows = scrollTable?.querySelectorAll(".player-row");
+    
+    // Get names and CH from fixed table
+    const fixedTable = document.querySelector("#scorecardFixed");
+    const fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
+    
     const rows = [];
     
-    playerRows.forEach(row => {
-      const nameInput = row.querySelector(".name-edit");
-      const chInput = row.querySelector(".ch-input");
-      const scoreInputs = row.querySelectorAll("input.score-input");
+    playerRows?.forEach((row, idx) => {
+      // Get name and CH from fixed table
+      const fixedRow = fixedPlayerRows?.[idx];
+      const nameInput = fixedRow?.querySelector(".name-edit");
+      const chInput = fixedRow?.querySelector(".ch-input");
       
       const playerName = nameInput?.value || "";
       const ch = chInput?.value || "0";
-      const scores = Array.from(scoreInputs).map(inp => inp.value || "");
+      
+      // Get ONLY the first 18 score inputs (holes 1-18, excluding Out/In/Total/ToPar/Net)
+      const scoreInputs = row.querySelectorAll("input.score-input");
+      const scores = Array.from(scoreInputs).slice(0, 18).map(inp => inp.value || "");
       
       rows.push([playerName, ch, ...scores]);
     });

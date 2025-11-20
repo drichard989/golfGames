@@ -1827,23 +1827,58 @@
     const rows = data.slice(1).filter(r => r.some(x => x && x !== "")).slice(0, 4);
     if (!rows.length) { alert("No data rows found under the header."); return; }
 
-    const playerRows = document.querySelectorAll(".player-row");
+    // Get player rows from both tables
+    const fixedTable = document.querySelector("#scorecardFixed");
+    const scrollTable = document.querySelector("#scorecard");
+    const fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
+    const scrollPlayerRows = scrollTable?.querySelectorAll(".player-row");
+    
     rows.forEach((r, idx) => {
       const obj = rowToPlayerObj(hmap, r);
-      const rowEl = playerRows[idx]; if (!rowEl) return;
-      const nameInput = rowEl.querySelector(".name-edit"); nameInput.value = obj.player || `Player ${idx+1}`;
-      const chInput = rowEl.querySelector(".ch-input"); chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
-      const inputs = rowEl.querySelectorAll("input.score-input");
-      for (let i = 0; i < 18; i++) { const v = obj.holes[i];
-        inputs[i].value = (v === "" || isNaN(v)) ? "" : String(Math.max(1, Math.min(20, Math.trunc(v))));
-        inputs[i].classList.remove("invalid");
+      
+      // Update name and CH in fixed table
+      const fixedRow = fixedPlayerRows?.[idx];
+      if (fixedRow) {
+        const nameInput = fixedRow.querySelector(".name-edit");
+        const chInput = fixedRow.querySelector(".ch-input");
+        if (nameInput) nameInput.value = obj.player || `Player ${idx+1}`;
+        if (chInput) chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
+      }
+      
+      // Update scores in scroll table (only first 18 inputs)
+      const scrollRow = scrollPlayerRows?.[idx];
+      if (scrollRow) {
+        const inputs = scrollRow.querySelectorAll("input.score-input");
+        for (let i = 0; i < 18; i++) {
+          if (inputs[i]) {
+            const v = obj.holes[i];
+            inputs[i].value = (v === "" || isNaN(v)) ? "" : String(Math.max(1, Math.min(20, Math.trunc(v))));
+            inputs[i].classList.remove("invalid");
+          }
+        }
       }
     });
+    
+    // Clear remaining players
     for (let i = rows.length; i < 4; i++) {
-      const rowEl = playerRows[i]; if (!rowEl) continue;
-      rowEl.querySelector(".name-edit").value = "";
-      rowEl.querySelector(".ch-input").value = "";
-      rowEl.querySelectorAll("input.score-input").forEach(inp => { inp.value = ""; inp.classList.remove("invalid"); });
+      const fixedRow = fixedPlayerRows?.[i];
+      const scrollRow = scrollPlayerRows?.[i];
+      
+      if (fixedRow) {
+        const nameInput = fixedRow.querySelector(".name-edit");
+        const chInput = fixedRow.querySelector(".ch-input");
+        if (nameInput) nameInput.value = "";
+        if (chInput) chInput.value = "";
+      }
+      
+      if (scrollRow) {
+        const inputs = scrollRow.querySelectorAll("input.score-input");
+        // Only clear first 18 inputs
+        for (let j = 0; j < Math.min(18, inputs.length); j++) {
+          inputs[j].value = "";
+          inputs[j].classList.remove("invalid");
+        }
+      }
     }
 
     Scorecard.calc.recalcAll();
