@@ -11,7 +11,6 @@ const FILES_TO_CACHE = [
   '/manifest.json',
   '/js/vegas.js',
   '/js/banker.js',
-  '/js/banker-vegas.js',
   '/js/skins.js',
   '/js/junk.js',
   '/js/hilo.js',

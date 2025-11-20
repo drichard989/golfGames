@@ -34,7 +34,6 @@ A Progressive Web App for tracking golf scores with multiple simultaneous side g
 - **Skins**: Classic carry-over competition with half-pops mode
 - **Junk (Dots)**: Points for eagles/birdies/pars with achievements
 - **Banker**: Points-per-match (stub - to be implemented)
-- **Banker-Vegas**: Combined game (stub - to be implemented)
 
 ### PWA Features
 - **Offline Support**: Full functionality without internet connection
@@ -59,8 +58,7 @@ golfGames/
 │   ├── hilo.js            # Hi-Lo game module (445 lines) ⭐ Improved
 │   ├── export.js          # CSV/Email export (2,179 lines)
 │   ├── qrcode.js          # QR code sharing
-│   ├── banker.js          # Banker stub (38 lines)
-│   └── banker-vegas.js    # Banker-Vegas stub (37 lines)
+│   └── banker.js          # Banker stub (38 lines)
 ├── stylesheet/
 │   └── main.css           # Main styles with toasts ⭐ Updated
 ├── IMPROVEMENTS.md         # v2.1.0 improvements doc ⭐ New
@@ -243,7 +241,6 @@ Where:
 
 Contributions welcome! Areas for contribution:
 - Implement Banker game logic
-- Implement Banker-Vegas game logic
 - Add new courses
 - UI/UX improvements
 - Additional game modes

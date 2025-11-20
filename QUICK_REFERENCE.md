@@ -137,7 +137,6 @@ GolfApp.games.skins         // Skins game
 GolfApp.games.junk          // Junk (Dots) game
 GolfApp.games.hilo          // Hi-Lo game
 GolfApp.games.banker        // Banker game (stub)
-GolfApp.games.bankerVegas   // Banker-Vegas game (stub)
 
 // Vegas API Example
 GolfApp.games.vegas.compute()
