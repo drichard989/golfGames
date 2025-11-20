@@ -66,11 +66,6 @@
       • To be implemented
       Exposed: window.Banker {init}
    
-   🔗 js/banker-vegas.js  (37 lines) - Banker-Vegas combination [STUB]
-      • Combines Banker and Vegas mechanics
-      • To be implemented
-      Exposed: window.BankerVegas {init}
-   
    🔗 js/hilo.js          (~400 lines) - Hi-Lo team game
       • 4 players: Low+High handicap vs Middle two
       • Team stroke differential applied to worst player on high team
@@ -103,8 +98,7 @@
    │   ├── skins.js        - Skins game module
    │   ├── junk.js         - Junk game module
    │   ├── hilo.js         - Hi-Lo game module
-   │   ├── banker.js       - Banker game stub
-   │   └── banker-vegas.js - Banker-Vegas stub
+   │   └── banker.js       - Banker game stub
    ├── images/             - Icons and assets
    └── stylesheet/         - CSS files
    
@@ -504,8 +498,8 @@
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
-    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleBankerVegas:"#toggleBankerVegas", toggleHilo:"#toggleHilo",
-    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", bankerVegasSection:"#bankerVegasSection", hiloSection:"#hiloSection", junkSection:"#junkSection",
+    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleHilo:"#toggleHilo",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", hiloSection:"#hiloSection", junkSection:"#junkSection",
 
     // Vegas
   vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
@@ -1355,9 +1349,6 @@
         banker: { 
           open: $(ids.bankerSection).classList.contains("open") 
         },
-        bankervegas: {
-          open: $(ids.bankerVegasSection)?.classList.contains("open")
-        },
         skins: { 
           mode: document.getElementById('skinsModeNet')?.checked ? 'net' : 'gross',
           buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
@@ -1457,8 +1448,19 @@
         }
         
         // CRITICAL: Explicitly query each table to avoid ambiguity
-        const scoreRows = $$("#scorecard .player-row");  // Scrollable table with scores
-        const fixedRows = $$("#scorecardFixed .player-row");  // Fixed table with names/CH
+        let scoreRows = $$("#scorecard .player-row");  // Scrollable table with scores
+        let fixedRows = $$("#scorecardFixed .player-row");  // Fixed table with names/CH
+        
+        // Add more players if saved data has more than current row count
+        if (s.players && s.players.length > scoreRows.length) {
+          const needed = s.players.length - scoreRows.length;
+          for (let i = 0; i < needed && PLAYERS < MAX_PLAYERS; i++) {
+            addPlayer();
+          }
+          // Refresh queries after adding rows
+          scoreRows = $$("#scorecard .player-row");
+          fixedRows = $$("#scorecardFixed .player-row");
+        }
         
         s.players?.forEach((p, i) => { 
           const r = scoreRows[i]; 
@@ -1492,7 +1494,6 @@
         // Games default to closed - only open if previously saved as open
         // if(s.vegas?.open) games_open("vegas");
         // if(s.banker?.open) games_open("banker");
-        // if(s.bankervegas?.open) games_open("bankervegas");
 
         // Restore Skins options
         if(s.skins?.mode != null) {
@@ -1630,7 +1631,7 @@
   
   /**
    * Open a game section and make it visible
-   * @param {string} which - Game section: 'vegas', 'banker', 'skins', 'junk', 'bankervegas', or 'hilo'
+   * @param {string} which - Game section: 'vegas', 'banker', 'skins', 'junk', or 'hilo'
    * @throws {Error} If game section not found
    */
   function games_open(which){
@@ -1640,7 +1641,6 @@
         banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => window.Banker?.init() },
         skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: null },
         junk: { section: ids.junkSection, toggle: 'toggleJunk', init: () => window.Junk?.init() },
-        bankervegas: { section: ids.bankerVegasSection, toggle: ids.toggleBankerVegas, init: () => window.BankerVegas?.init() },
         hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init() }
       };
       
@@ -1686,7 +1686,6 @@
         banker: { section: ids.bankerSection, toggle: ids.toggleBanker },
         skins: { section: ids.skinsSection, toggle: ids.toggleSkins },
         junk: { section: ids.junkSection, toggle: 'toggleJunk' },
-        bankervegas: { section: ids.bankerVegasSection, toggle: ids.toggleBankerVegas },
         hilo: { section: ids.hiloSection, toggle: ids.toggleHilo }
       };
       
@@ -1710,7 +1709,6 @@
     if(which==="vegas") sec = $(ids.vegasSection);
     else if(which==="banker") sec = $(ids.bankerSection);
     else if(which==="skins") sec = $(ids.skinsSection);
-    else if(which==="bankervegas") sec = $(ids.bankerVegasSection);
     else if(which==="hilo") sec = $(ids.hiloSection);
     const open = sec?.classList.contains("open");
     open? games_close(which) : games_open(which);
@@ -2583,7 +2581,68 @@
     });
 
   $(ids.resetBtn).addEventListener("click", () => { Storage.clearScoresOnly(); });
-  $(ids.clearAllBtn).addEventListener("click", () => { Storage.clearAll(); });
+  $(ids.clearAllBtn).addEventListener("click", async () => {
+    // Create confirmation dialog
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+    
+    const dialogBox = document.createElement('div');
+    dialogBox.style.cssText = `
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 400px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    `;
+    
+    const title = document.createElement('h3');
+    title.textContent = 'Clear All Names & Scores?';
+    title.style.cssText = 'margin: 0 0 12px 0; color: var(--ink);';
+    
+    const message = document.createElement('p');
+    message.textContent = 'This will clear all player names, handicaps, and scores. This action cannot be undone.';
+    message.style.cssText = 'margin: 0 0 20px 0; color: var(--muted);';
+    
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'display: flex; gap: 12px;';
+    
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Clear All';
+    clearBtn.className = 'btn';
+    clearBtn.style.cssText = 'flex: 1; background: var(--danger); color: white;';
+    
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn';
+    cancelBtn.style.cssText = 'flex: 1;';
+    
+    btnContainer.append(clearBtn, cancelBtn);
+    dialogBox.append(title, message, btnContainer);
+    dialog.appendChild(dialogBox);
+    document.body.appendChild(dialog);
+    
+    // Wait for user choice
+    const confirmed = await new Promise((resolve) => {
+      clearBtn.onclick = () => { dialog.remove(); resolve(true); };
+      cancelBtn.onclick = () => { dialog.remove(); resolve(false); };
+    });
+    
+    if (confirmed) {
+      Storage.clearAll();
+    }
+  });
   $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
   
   // Auto-advance direction toggle
@@ -2623,7 +2682,6 @@
     // Games: open/close
     $(ids.toggleVegas).addEventListener("click", ()=>games_toggle("vegas"));
     $(ids.toggleBanker).addEventListener("click", ()=>games_toggle("banker"));
-    $(ids.toggleBankerVegas).addEventListener("click", ()=>games_toggle("bankervegas"));
     $(ids.toggleHilo).addEventListener("click", ()=>games_toggle("hilo"));
     
     // Skins: toggle and initialize
@@ -2775,8 +2833,7 @@
       get skins() { return window.Skins; },
       get junk() { return window.Junk; },
       get hilo() { return window.HiLo; },
-      get banker() { return window.Banker; },
-      get bankerVegas() { return window.BankerVegas; }
+      get banker() { return window.Banker; }
     },
     
     // Utility functions
@@ -2828,12 +2885,6 @@
 // =============================================================================
 // Banker game now in separate file (stub/placeholder)
 // See js/banker.js for implementation
-
-// =============================================================================
-// BANKER-VEGAS GAME MODE - Moved to js/banker-vegas.js
-// =============================================================================
-// Banker-Vegas game now in separate file (stub/placeholder)
-// See js/banker-vegas.js for implementation
 
 // =============================================================================
 // SKINS GAME MODE - Moved to js/skins.js

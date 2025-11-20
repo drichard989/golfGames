@@ -64,7 +64,7 @@ window.GolfApp = {
   scorecard: Scorecard,
   storage: Storage,
   errorHandler: ErrorHandler,
-  games: { vegas, skins, junk, hilo, banker, bankerVegas },
+  games: { vegas, skins, junk, hilo, banker },
   api: { save, load, export, email, addPlayer, removePlayer },
   constants: { HOLES, PLAYERS, TIMING, LIMITS, GAME_CONSTANTS },
   debug: { getState, clearStorage, testError, testSuccess }
