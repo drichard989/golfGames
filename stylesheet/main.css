@@ -264,12 +264,15 @@ h1 {
   background: var(--panel);
   z-index: 10;
   box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .scorecard-scroll {
   flex: 1;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;

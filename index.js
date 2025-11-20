@@ -785,29 +785,35 @@
         const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
         const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
         
-        // Reset heights first
+        // Reset heights to auto to allow natural sizing
         [...fixedRows, ...scrollRows].forEach(row => {
-          row.style.height = '';
+          row.style.height = 'auto';
         });
         
-        // Force layout recalculation
-        void document.body.offsetHeight;
+        // Force multiple layout recalculations
+        void fixedTable.offsetHeight;
+        void scrollTable.offsetHeight;
         
-        // Sync each row pair
-        const maxRows = Math.max(fixedRows.length, scrollRows.length);
-        for (let i = 0; i < maxRows; i++) {
-          const fixedRow = fixedRows[i];
-          const scrollRow = scrollRows[i];
-          
-          if (fixedRow && scrollRow) {
-            const fixedHeight = fixedRow.offsetHeight;
-            const scrollHeight = scrollRow.offsetHeight;
-            const maxHeight = Math.max(fixedHeight, scrollHeight);
+        // Small delay to ensure layout completes
+        requestAnimationFrame(() => {
+          // Sync each row pair
+          const maxRows = Math.max(fixedRows.length, scrollRows.length);
+          for (let i = 0; i < maxRows; i++) {
+            const fixedRow = fixedRows[i];
+            const scrollRow = scrollRows[i];
             
-            fixedRow.style.height = `${maxHeight}px`;
-            scrollRow.style.height = `${maxHeight}px`;
+            if (fixedRow && scrollRow) {
+              // Get fresh measurements
+              const fixedHeight = fixedRow.getBoundingClientRect().height;
+              const scrollHeight = scrollRow.getBoundingClientRect().height;
+              const maxHeight = Math.max(fixedHeight, scrollHeight);
+              
+              // Apply explicit heights
+              fixedRow.style.height = `${maxHeight}px`;
+              scrollRow.style.height = `${maxHeight}px`;
+            }
           }
-        }
+        });
         
         // Note: Stroke highlighting is managed by recalcAll() with proper timing
         // Do not call applyStrokeHighlighting() here to avoid race conditions
@@ -2906,8 +2912,23 @@
 
   // Sync row heights on window resize
   let resizeTimeout;
+  let resizeAnimationFrame;
+  
   window.addEventListener('resize', () => {
+    // Cancel pending operations
     clearTimeout(resizeTimeout);
+    if (resizeAnimationFrame) {
+      cancelAnimationFrame(resizeAnimationFrame);
+    }
+    
+    // Immediate sync during resize for responsiveness
+    if(typeof Scorecard !== 'undefined' && Scorecard.build && typeof Scorecard.build.syncRowHeights === 'function') {
+      resizeAnimationFrame = requestAnimationFrame(() => {
+        Scorecard.build.syncRowHeights();
+      });
+    }
+    
+    // Final sync after resize completes
     resizeTimeout = setTimeout(() => {
       if(typeof Scorecard !== 'undefined' && Scorecard.build && typeof Scorecard.build.syncRowHeights === 'function') {
         requestAnimationFrame(() => Scorecard.build.syncRowHeights());
