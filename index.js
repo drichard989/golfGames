@@ -652,7 +652,7 @@
           
           const chInput=document.createElement("input"); 
           chInput.type="number"; 
-          chInput.inputMode="numeric"; 
+          chInput.inputMode="decimal"; 
           chInput.className="ch-input"; 
           chInput.value="0"; 
           chInput.min="-20"; 
@@ -2148,7 +2148,7 @@
     const MAX_HANDICAP = 60;
     const chInput = document.createElement("input");
     chInput.type = "number";
-    chInput.inputMode = "numeric";
+    chInput.inputMode = "decimal";
     chInput.className = "ch-input";
     chInput.value = "0";
     chInput.min = "-20";
