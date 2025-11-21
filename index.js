@@ -721,7 +721,10 @@
                   }
                   
                   if(nextInput) {
-                    setTimeout(() => nextInput.focus(), TIMING.FOCUS_DELAY_MS);
+                    setTimeout(() => {
+                      nextInput.focus();
+                      nextInput.select();
+                    }, TIMING.FOCUS_DELAY_MS);
                   }
                 }
               } else {
@@ -2224,7 +2227,10 @@
             }
             
             if(nextInput) {
-              setTimeout(() => nextInput.focus(), TIMING.FOCUS_DELAY_MS);
+              setTimeout(() => {
+                nextInput.focus();
+                nextInput.select();
+              }, TIMING.FOCUS_DELAY_MS);
             }
           }
         } else {
