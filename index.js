@@ -701,7 +701,7 @@
                 const currentPlayer = Number(inp.dataset.player);
                 const currentHole = Number(inp.dataset.hole);
                 
-                if(inp.value.length >= 1) {
+                if(inp.value.length >= 1 && Config.ADVANCE_DIRECTION !== 'disabled') {
                   let nextInput = null;
                   
                   if(Config.ADVANCE_DIRECTION === 'down') {
@@ -711,7 +711,7 @@
                         `.score-input[data-player="${currentPlayer+1}"][data-hole="${currentHole}"]`
                       );
                     }
-                  } else {
+                  } else if(Config.ADVANCE_DIRECTION === 'right') {
                     // Move to next hole for same player
                     if(currentHole < HOLES - 1) {
                       nextInput = document.querySelector(
@@ -1452,7 +1452,13 @@
           Config.ADVANCE_DIRECTION = s.advanceDirection;
           const label = document.getElementById('advanceLabel');
           if(label) {
-            label.textContent = Config.ADVANCE_DIRECTION === 'down' ? 'Advance: ↓ Down' : 'Advance: → Right';
+            if (Config.ADVANCE_DIRECTION === 'down') {
+              label.textContent = 'Advance: ↓ Down';
+            } else if (Config.ADVANCE_DIRECTION === 'right') {
+              label.textContent = 'Advance: → Right';
+            } else if (Config.ADVANCE_DIRECTION === 'disabled') {
+              label.textContent = 'Advance: ✕ Disabled';
+            }
           }
         }
         
@@ -2207,7 +2213,7 @@
           const currentPlayer = Number(inp.dataset.player);
           const currentHole = Number(inp.dataset.hole);
           
-          if(inp.value.length >= 1) {
+          if(inp.value.length >= 1 && Config.ADVANCE_DIRECTION !== 'disabled') {
             let nextInput = null;
             
             if(Config.ADVANCE_DIRECTION === 'down') {
@@ -2217,7 +2223,7 @@
                   `.score-input[data-player="${currentPlayer + 1}"][data-hole="${currentHole}"]`
                 );
               }
-            } else {
+            } else if(Config.ADVANCE_DIRECTION === 'right') {
               // Move to next hole for same player
               if(currentHole < HOLES - 1) {
                 nextInput = document.querySelector(
@@ -2659,10 +2665,23 @@
   
   // Auto-advance direction toggle
   document.getElementById('advanceToggle')?.addEventListener("click", () => {
-    Config.ADVANCE_DIRECTION = Config.ADVANCE_DIRECTION === 'down' ? 'right' : 'down';
+    if (Config.ADVANCE_DIRECTION === 'down') {
+      Config.ADVANCE_DIRECTION = 'right';
+    } else if (Config.ADVANCE_DIRECTION === 'right') {
+      Config.ADVANCE_DIRECTION = 'disabled';
+    } else {
+      Config.ADVANCE_DIRECTION = 'down';
+    }
+    
     const label = document.getElementById('advanceLabel');
     if(label) {
-      label.textContent = Config.ADVANCE_DIRECTION === 'down' ? 'Advance: ↓ Down' : 'Advance: → Right';
+      if (Config.ADVANCE_DIRECTION === 'down') {
+        label.textContent = 'Advance: ↓ Down';
+      } else if (Config.ADVANCE_DIRECTION === 'right') {
+        label.textContent = 'Advance: → Right';
+      } else {
+        label.textContent = 'Advance: ✕ Disabled';
+      }
     }
     Storage.saveDebounced();
   });
