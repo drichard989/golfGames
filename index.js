@@ -486,6 +486,7 @@
       try{ window.Skins?.update(); }catch(e){ /* skins may not be open yet */ }
       try{ window.Junk?.update(); }catch(e){ /* junk may not be open yet */ }
       try{ window.HiLo?.update(); }catch(e){ /* hilo may not be open yet */ }
+      try{ window.Wolf?.recalc(); }catch(e){ /* wolf may not be open yet */ }
     }
   };
   try{ window.AppManager = AppManager; }catch{}
@@ -498,8 +499,8 @@
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
-    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleHilo:"#toggleHilo",
-    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", hiloSection:"#hiloSection", junkSection:"#junkSection",
+    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleHilo:"#toggleHilo", toggleWolf:"#toggleWolf",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", hiloSection:"#hiloSection", junkSection:"#junkSection", wolfSection:"#wolfSection",
 
     // Vegas
   vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
@@ -1656,7 +1657,8 @@
         banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => window.Banker?.init() },
         skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: null },
         junk: { section: ids.junkSection, toggle: 'toggleJunk', init: () => window.Junk?.init() },
-        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init() }
+        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init() },
+        wolf: { section: ids.wolfSection, toggle: ids.toggleWolf, init: () => window.Wolf?.init() }
       };
       
       const config = gameConfig[which];
@@ -1701,7 +1703,8 @@
         banker: { section: ids.bankerSection, toggle: ids.toggleBanker },
         skins: { section: ids.skinsSection, toggle: ids.toggleSkins },
         junk: { section: ids.junkSection, toggle: 'toggleJunk' },
-        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo }
+        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo },
+        wolf: { section: ids.wolfSection, toggle: ids.toggleWolf }
       };
       
       const config = gameConfig[which];
@@ -1725,6 +1728,7 @@
     else if(which==="banker") sec = $(ids.bankerSection);
     else if(which==="skins") sec = $(ids.skinsSection);
     else if(which==="hilo") sec = $(ids.hiloSection);
+    else if(which==="wolf") sec = $(ids.wolfSection);
     const open = sec?.classList.contains("open");
     open? games_close(which) : games_open(which);
     saveDebounced();
@@ -2714,6 +2718,7 @@
     $(ids.toggleVegas).addEventListener("click", ()=>games_toggle("vegas"));
     $(ids.toggleBanker).addEventListener("click", ()=>games_toggle("banker"));
     $(ids.toggleHilo).addEventListener("click", ()=>games_toggle("hilo"));
+    $(ids.toggleWolf).addEventListener("click", ()=>games_toggle("wolf"));
     
     // Skins: toggle and initialize
     $(ids.toggleSkins)?.addEventListener("click", () => {
@@ -2864,7 +2869,8 @@
       get skins() { return window.Skins; },
       get junk() { return window.Junk; },
       get hilo() { return window.HiLo; },
-      get banker() { return window.Banker; }
+      get banker() { return window.Banker; },
+      get wolf() { return window.Wolf; }
     },
     
     // Utility functions
