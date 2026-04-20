@@ -675,23 +675,36 @@
               if (window.Scorecard?.build?.syncRowHeights) {
                 window.Scorecard.build.syncRowHeights();
               }
-        
-        // Clear the import flag now that all operations are complete
-        window._qrImportInProgress = false;
-        console.log('[QR Import] Import complete, flag cleared');
-            if (window.Scorecard?.player?.syncOverlay) {
-              window.Scorecard.player.syncOverlay();
-            }
+              
+              // Clear the import flag now that all operations are complete
+              window._qrImportInProgress = false;
+              console.log('[QR Import] Import complete, flag cleared');
+            });
+          }
+          
+          // Recalculate all game modules
+          if (window.AppManager?.recalcGames) {
+            window.AppManager.recalcGames();
+          }
+          
+          // Update player count display
+          if (window.Scorecard?.player?.updateCountDisplay) {
+            window.Scorecard.player.updateCountDisplay();
+          }
+          
+          // Sync player overlay if needed
+          if (window.Scorecard?.player?.syncOverlay) {
+            window.Scorecard.player.syncOverlay();
+          }
 
-            // Save to localStorage
-            if (window.Storage?.save) {
-              window.Storage.save();
-            }
-            
-            const finalCount = document.querySelectorAll('#scorecardFixed .player-row').length;
-            if (typeof window.announce === 'function') {
-              window.announce(`Scorecard imported! ${finalCount} player${finalCount !== 1 ? 's' : ''} total.`);
-            }
+          // Save to localStorage
+          if (window.Storage?.save) {
+            window.Storage.save();
+          }
+          
+          const finalCount = document.querySelectorAll('#scorecardFixed .player-row').length;
+          if (typeof window.announce === 'function') {
+            window.announce(`Scorecard imported! ${finalCount} player${finalCount !== 1 ? 's' : ''} total.`);
           }
         } catch (err) {
           console.error('[QR] Import processing failed:', err);
