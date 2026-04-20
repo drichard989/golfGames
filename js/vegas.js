@@ -265,19 +265,37 @@ const Vegas = {
         continue;
       }
 
-      const aBE = this._teamHasBirdieOrEagle(teams.A,h,opts.useNet);
-      const bBE = this._teamHasBirdieOrEagle(teams.B,h,opts.useNet);
+      // Convert pairs to numbers (initially sorted low-high)
+      let va = Number(this._pairToString(pairA));
+      let vb = Number(this._pairToString(pairB));
 
-      const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
-      const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
+      // Determine initial winner
+      let winner = va < vb ? 'A' : 'B';
+      let loser = winner === 'A' ? 'B' : 'A';
 
-      const vaStr=this._pairToString(effA), vbStr=this._pairToString(effB);
-      const va=Number(vaStr), vb=Number(vbStr);
+      // Check if LOSER made birdie/eagle
+      const loserTeam = teams[loser];
+      const loserBE = this._teamHasBirdieOrEagle(loserTeam, h, opts.useNet);
 
-      let winner='A', diff=vb-va;
-      if(diff<0){ winner='B'; diff=-diff; }
-      const mult=this._multiplierForWinner(teams[winner],h,opts.useNet,opts);
+      // If loser made birdie+, flip WINNER's digits
+      if(loserBE.birdie || loserBE.eagle) {
+        if(winner === 'A') {
+          va = Number(`${pairA[1]}${pairA[0]}`);
+        } else {
+          vb = Number(`${pairB[1]}${pairB[0]}`);
+        }
+        // Re-determine winner after flip
+        winner = va < vb ? 'A' : 'B';
+      }
+
+      // Calculate points with correct winner
+      const diff = Math.abs(va - vb);
+      const mult = this._multiplierForWinner(teams[winner], h, opts.useNet, opts);
       const holePtsA = winner==='A' ? diff*mult : -diff*mult;
+
+      // Store display strings
+      const vaStr = String(va);
+      const vbStr = String(vb);
 
       perHole.push({vaStr, vbStr, mult, holePtsA});
       ptsA += holePtsA;
