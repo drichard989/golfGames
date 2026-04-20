@@ -508,11 +508,12 @@
                 const chInput = fixedRow.querySelector('.ch-input');
                 const scoreInputs = scoreRow.querySelectorAll('input.score-input');
                 
-                if (nameInput) nameInput.value = player.name || '';
-                if (chInput) chInput.value = player.ch || '0';
+                // Use compressed property names (n, c, s)
+                if (nameInput) nameInput.value = player.n || '';
+                if (chInput) chInput.value = player.c || '0';
                 
-                if (scoreInputs && player.scores) {
-                  player.scores.forEach((score, holeIdx) => {
+                if (scoreInputs && player.s) {
+                  player.s.forEach((score, holeIdx) => {
                     if (scoreInputs[holeIdx]) {
                       scoreInputs[holeIdx].value = score || '';
                     }
