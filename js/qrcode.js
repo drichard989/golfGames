@@ -469,116 +469,59 @@
           }
 
           if (mode === 'replace') {
-            console.log('[QR Import] REPLACE mode - clearing all existing players');
-            // REPLACE MODE: Clear existing data and adjust row count
+            console.log('[QR Import] REPLACE mode - preparing bulk import');
             const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
-            console.log('[QR Import] Current rows before clear:', currentRows);
+            console.log('[QR Import] Current rows:', currentRows, '| Needed:', playerCount);
             
-            // Clear all existing player data (names, handicaps, scores)
-            document.querySelectorAll('.player-row').forEach(r => {
-              const nameInput = r.querySelector('.name-edit');
-              const chInput = r.querySelector('.ch-input');
-              const scoreInputs = r.querySelectorAll('input.score-input');
-              
-              if (nameInput) nameInput.value = '';
-              if (chInput) chInput.value = '0';
-              scoreInputs.forEach(inp => {
-                inp.value = '';
-                inp.classList.remove('invalid', 'receives-stroke');
-                inp.removeAttribute('data-strokes');
-                inp.removeAttribute('title');
-              });
-            });
-            
-            // Adjust player count to match import
+            // STEP 1: Adjust row count FIRST
             if (currentRows < playerCount) {
-              // Need to add more rows
               const toAdd = playerCount - currentRows;
-              console.log('[QR Import] Adding', toAdd, 'new rows');
+              console.log('[QR Import] Adding', toAdd, 'rows');
               for (let i = 0; i < toAdd; i++) {
-                if (window.GolfApp?.api?.addPlayer) {
-                  window.GolfApp.api.addPlayer();
-                } else {
-                  console.error('[QR Import] GolfApp.api.addPlayer not found!');
-                }
+                window.GolfApp?.api?.addPlayer();
               }
             } else if (currentRows > playerCount) {
-              // Need to remove rows (but leave at least 1)
               const toRemove = Math.min(currentRows - playerCount, currentRows - 1);
-              console.log('[QR Import] Removing', toRemove, 'extra rows');
+              console.log('[QR Import] Removing', toRemove, 'rows');
               for (let i = 0; i < toRemove; i++) {
-                if (window.GolfApp?.api?.removePlayer) {
-                  window.GolfApp.api.removePlayer();
-                } else {
-                  console.error('[QR Import] GolfApp.api.removePlayer not found!');
-                  break;
-                }
+                window.GolfApp?.api?.removePlayer();
               }
             }
-            console.log('[QR Import] Row adjustment complete, current count:', 
-                        document.querySelectorAll('#scorecardFixed .player-row').length);
             
-            console.log('[QR Import] Waiting for DOM update...');
-            // CRITICAL FIX: Wait for DOM to update before populating rows
-            // Use requestAnimationFrame to ensure rows are fully rendered
+            // STEP 2: Wait for DOM to settle, then do SILENT bulk import (NO EVENTS)
             requestAnimationFrame(() => {
-              console.log('[QR Import] DOM updated, populating data...');
-              // Import all players starting at index 0
-              const rows = document.querySelectorAll('#scorecardFixed .player-row');
-              console.log('[QR Import] Found', rows.length, 'rows after add');
+              console.log('[QR Import] DOM ready, performing SILENT bulk import...');
+              const fixedRows = document.querySelectorAll('#scorecardFixed .player-row');
+              const scoreRows = document.querySelectorAll('#scorecard .player-row');
+              
+              // Populate all data WITHOUT triggering events (no dispatchEvent!)
               data.players.forEach((player, idx) => {
-                console.log('[QR Import] Populating player', idx, ':', player.name);
-                const row = rows[idx];
-                if (!row) {
-                  console.warn('[QR Import] Row', idx, 'not found!');
+                const fixedRow = fixedRows[idx];
+                const scoreRow = scoreRows[idx];
+                if (!fixedRow || !scoreRow) {
+                  console.warn('[QR Import] Row', idx, 'not found');
                   return;
                 }
-
-                const nameInput = row.querySelector('.name-edit');
-                const chInput = row.querySelector('.ch-input');
-                const scoreRow = document.querySelectorAll('#scorecard .player-row')[idx];
-                const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
-
-                console.log('[QR Import] REPLACE - Player', idx, 'inputs:', {
-                  nameInput: !!nameInput,
-                  chInput: !!chInput,
-                  scoreRow: !!scoreRow,
-                  scoreInputsCount: scoreInputs?.length,
-                  scoresCount: player.scores?.length
-                });
-
-                if (nameInput) {
-                  nameInput.value = player.name;
-                  nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-                }
                 
-                if (chInput) {
-                  chInput.value = player.ch;
-                  chInput.dispatchEvent(new Event('input', { bubbles: true }));
-                  chInput.dispatchEvent(new Event('change', { bubbles: true }));
-                }
+                // Set values directly without events
+                const nameInput = fixedRow.querySelector('.name-edit');
+                const chInput = fixedRow.querySelector('.ch-input');
+                const scoreInputs = scoreRow.querySelectorAll('input.score-input');
                 
-                // SCORE POPULATION - DETAILED DEBUG
-                console.log('[QR Import] REPLACE - Populating scores for player', idx);
+                if (nameInput) nameInput.value = player.name || '';
+                if (chInput) chInput.value = player.ch || '0';
+                
                 if (scoreInputs && player.scores) {
-                  console.log('[QR Import] REPLACE - First 3 scores:', player.scores.slice(0, 3));
-                  player.scores.forEach((score, scoreIdx) => {
-                    if (scoreInputs[scoreIdx]) {
-                      console.log(`[QR Import] REPLACE - Hole ${scoreIdx + 1} = ${score}`);
-                      scoreInputs[scoreIdx].value = score;
-                      scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
-                    } else {
-                      console.warn(`[QR Import] REPLACE - Input ${scoreIdx} not found!`);
+                  player.scores.forEach((score, holeIdx) => {
+                    if (scoreInputs[holeIdx]) {
+                      scoreInputs[holeIdx].value = score || '';
                     }
                   });
-                  console.log('[QR Import] REPLACE - Score population complete for player', idx);
-                } else {
-                  console.error('[QR Import] REPLACE - Cannot populate scores - scoreInputs:', !!scoreInputs, 'player.scores:', !!player.scores);
                 }
               });
               
-              console.log('[QR Import] Data populated, triggering post-import updates...');
-              // CRITICAL: Trigger all updates AFTER data is populated
+              console.log('[QR Import] Bulk import complete, triggering SINGLE recalc');
+              // STEP 3: ONE recalculation at the very end
               performPostImportUpdates();
             });
           } else if (mode === 'add') {
