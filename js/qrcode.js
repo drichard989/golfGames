@@ -69,14 +69,24 @@
   /**
    * Compress scorecard data for QR code or URL
    * Returns a compact JSON string
+   * Only includes players that have a name OR at least one score
    */
   function compressData() {
-    const players = Array.from(document.querySelectorAll('.player-row')).map(row => {
-      const name = row.querySelector('.name-edit')?.value || '';
-      const ch = row.querySelector('.ch-input')?.value || '0';
-      const scores = Array.from(row.querySelectorAll('input.score-input')).map(inp => inp.value || '');
-      return { n: name, c: ch, s: scores };
-    });
+    const players = Array.from(document.querySelectorAll('.player-row'))
+      .map(row => {
+        const name = row.querySelector('.name-edit')?.value || '';
+        const ch = row.querySelector('.ch-input')?.value || '0';
+        const scores = Array.from(row.querySelectorAll('input.score-input')).map(inp => inp.value || '');
+        return { n: name, c: ch, s: scores };
+      })
+      .filter(p => {
+        // Only include players with a name OR at least one score
+        const hasName = p.n.trim().length > 0;
+        const hasScores = p.s.some(score => score && score.trim().length > 0);
+        return hasName || hasScores;
+      });
+
+    console.log('[QR Export] Filtered to', players.length, 'players with data (excluded blank rows)');
 
     const course = window.ACTIVE_COURSE || 'manito';
 
@@ -419,8 +429,17 @@
 
       const playerCount = data.players.length;
       const courseName = window.COURSES?.[data.course]?.name || data.course;
-      const currentRowCount = document.querySelectorAll('#scorecardFixed .player-row').length;
-      console.log('[QR Import] Player count:', playerCount, 'Current rows:', currentRowCount);
+      
+      // Count current players more explicitly with logging
+      const fixedTableRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const scrollTableRows = document.querySelectorAll('#scorecard .player-row');
+      const currentRowCount = fixedTableRows.length;
+      
+      console.log('[QR Import] Player counts:');
+      console.log('  - Incoming players from QR:', playerCount);
+      console.log('  - Current rows in #scorecardFixed:', fixedTableRows.length);
+      console.log('  - Current rows in #scorecard:', scrollTableRows.length);
+      console.log('  - Using currentRowCount:', currentRowCount);
       
       // Show import options modal
       showImportModal(playerCount, courseName, currentRowCount, (mode) => {
