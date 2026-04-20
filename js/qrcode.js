@@ -430,6 +430,13 @@
           return; // User cancelled
         }
         
+        // Guard against double execution
+        if (window._qrImportInProgress) {
+          console.warn('[QR Import] Import already in progress, aborting to prevent duplicates!');
+          return;
+        }
+        window._qrImportInProgress = true;
+        
         try {
           console.log('[QR Import] Processing import in mode:', mode);
           // Switch course if needed
@@ -585,6 +592,11 @@
               }
               
               console.log('[QR Import] Total rows:', allRowsNow.length, 'Starting import at index:', startIndex);
+              
+              // Get score rows ONCE before the loop (after rows are added)
+              const allScoreRows = document.querySelectorAll('#scorecard .player-row');
+              console.log('[QR Import] Total score rows:', allScoreRows.length);
+              
               data.players.forEach((player, idx) => {
                 const rowIndex = startIndex + idx;
                 console.log('[QR Import] Populating player', idx, 'at row index', rowIndex, ':', player.name);
@@ -596,7 +608,6 @@
 
                 const nameInput = row.querySelector('.name-edit');
                 const chInput = row.querySelector('.ch-input');
-                const allScoreRows = document.querySelectorAll('#scorecard .player-row');
                 const scoreRow = allScoreRows[rowIndex];
                 const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
 
