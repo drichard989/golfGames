@@ -1359,18 +1359,32 @@ input[type="text"] {
     // Append Banker data if present
     if (bankerData && bankerData.holes && bankerData.holes.length > 0) {
       csv += "\n\n# Banker Game Data\n";
-      csv += "# Format: hole,banker,maxBet,bankerDouble,playerBets\n";
-      csv += "# playerBets format: playerIndex:amount:doubled|...\n";
+      csv += "Hole,BankerPlayer,MaxBet,BankerDoubled,PlayerBets\n";
+      
+      // Get player names for readable output
+      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const playerNames = Array.from(playerRows).map(row => {
+        const nameInput = row.querySelector('.name-edit');
+        return nameInput?.value?.trim() || '';
+      });
       
       bankerData.holes.forEach((hole, idx) => {
         if (hole.banker >= 0 || hole.bets.some(b => b.amount > 0)) {
           const h = idx + 1;
+          const bankerName = hole.banker >= 0 ? (playerNames[hole.banker] || `Player${hole.banker+1}`) : '';
+          const bankerDoubledText = hole.bankerDouble ? 'Yes' : 'No';
+          
+          // Format bets with player names: "PlayerName:$Amount:Yes/No"
           const betsStr = hole.bets
             .filter(b => b.amount > 0)
-            .map(b => `${b.player}:${b.amount}:${b.doubled ? '1' : '0'}`)
+            .map(b => {
+              const pName = playerNames[b.player] || `Player${b.player+1}`;
+              const doubledText = b.doubled ? 'Yes' : 'No';
+              return `${pName}:$${b.amount}:${doubledText}`;
+            })
             .join('|');
           
-          csv += `BANKER,${h},${hole.banker},${hole.maxBet},${hole.bankerDouble ? '1' : '0'},${betsStr}\n`;
+          csv += `${h},${bankerName},$${hole.maxBet},${bankerDoubledText},${betsStr}\n`;
         }
       });
     }

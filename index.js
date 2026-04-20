@@ -2095,25 +2095,75 @@
           });
         }
         
+        // Get player names for matching
+        const fixedPlayerRows = fixedTable?.querySelectorAll('.player-row');
+        const playerNames = Array.from(fixedPlayerRows || []).map(row => {
+          const nameInput = row.querySelector('.name-edit');
+          return (nameInput?.value || '').trim().toLowerCase();
+        });
+        
+        // Helper to find player index by name
+        const findPlayerIndex = (name) => {
+          const searchName = name.trim().toLowerCase();
+          // Try exact match first
+          let idx = playerNames.indexOf(searchName);
+          if (idx >= 0) return idx;
+          
+          // Try matching "PlayerN" format
+          const match = searchName.match(/^player(\d+)$/);
+          if (match) {
+            const num = Number(match[1]) - 1;
+            if (num >= 0 && num < playerNames.length) return num;
+          }
+          
+          // Try as number (for backward compatibility with old format)
+          const asNum = Number(name);
+          if (Number.isFinite(asNum) && asNum >= 0 && asNum < playerNames.length) {
+            return asNum;
+          }
+          
+          return -1;
+        };
+        
         // Parse Banker rows and populate state
+        // New format: Hole,BankerPlayer,MaxBet,BankerDoubled,PlayerBets
+        // PlayerBets format: PlayerName:$Amount:Yes/No|...
         bankerRows.forEach(row => {
-          // Format: BANKER,hole,banker,maxBet,bankerDouble,playerBets
-          const hole = Number(row[1]) - 1; // Convert to 0-based index
+          const hole = Number(row[0]) - 1; // Convert to 0-based index
           if (hole >= 0 && hole < 18) {
-            bankerState.holes[hole].banker = Number(row[2]);
-            bankerState.holes[hole].maxBet = Number(row[3]);
-            bankerState.holes[hole].bankerDouble = row[4] === '1';
+            // Parse banker (can be name or index for backward compatibility)
+            const bankerValue = row[1] || '';
+            bankerState.holes[hole].banker = findPlayerIndex(bankerValue);
             
-            // Parse player bets (format: playerIndex:amount:doubled|...)
-            if (row[5]) {
-              const betStrings = row[5].split('|');
+            // Parse max bet (remove $ if present)
+            const maxBetStr = String(row[2] || '10').replace(/[^0-9.]/g, '');
+            bankerState.holes[hole].maxBet = Number(maxBetStr) || 10;
+            
+            // Parse banker double (Yes/No or 1/0 for backward compatibility)
+            const bankerDoubleStr = String(row[3] || 'No').toLowerCase();
+            bankerState.holes[hole].bankerDouble = bankerDoubleStr === 'yes' || bankerDoubleStr === '1' || bankerDoubleStr === 'true';
+            
+            // Parse player bets
+            // New format: PlayerName:$Amount:Yes/No
+            // Old format: playerIndex:amount:1/0 (for backward compatibility)
+            if (row[4]) {
+              const betStrings = row[4].split('|');
               betStrings.forEach(betStr => {
-                const [playerIdx, amount, doubled] = betStr.split(':');
-                bankerState.holes[hole].bets.push({
-                  player: Number(playerIdx),
-                  amount: Number(amount),
-                  doubled: doubled === '1'
-                });
+                const parts = betStr.split(':');
+                if (parts.length >= 3) {
+                  const playerValue = parts[0];
+                  const amountStr = parts[1].replace(/[^0-9.]/g, '');
+                  const doubledStr = parts[2].toLowerCase();
+                  
+                  const playerIdx = findPlayerIndex(playerValue);
+                  if (playerIdx >= 0) {
+                    bankerState.holes[hole].bets.push({
+                      player: playerIdx,
+                      amount: Number(amountStr) || 0,
+                      doubled: doubledStr === 'yes' || doubledStr === '1' || doubledStr === 'true'
+                    });
+                  }
+                }
               });
             }
           }
