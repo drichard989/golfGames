@@ -373,6 +373,7 @@
         }
         
         bankerSelect.addEventListener('change', () => {
+          this.updateBetInputs();
           this.update();
           if (typeof window.saveDebounced === 'function') {
             window.saveDebounced();
