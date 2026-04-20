@@ -72,11 +72,33 @@
    * Only includes players that have a name (ignores orphaned score rows)
    */
   function compressData() {
-    const players = Array.from(document.querySelectorAll('.player-row'))
-      .map(row => {
-        const name = row.querySelector('.name-edit')?.value || '';
-        const ch = row.querySelector('.ch-input')?.value || '0';
-        const scores = Array.from(row.querySelectorAll('input.score-input')).map(inp => inp.value || '');
+    // Get player rows from FIXED table (has names/CH), then match with score rows
+    const fixedRows = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    const scoreRows = Array.from(document.querySelectorAll('#scorecard .player-row'));
+    
+    console.log('[QR Export] Found', fixedRows.length, 'fixed rows and', scoreRows.length, 'score rows');
+    
+    const players = fixedRows
+      .map((fixedRow, idx) => {
+        const scoreRow = scoreRows[idx];
+        const name = fixedRow.querySelector('.name-edit')?.value || '';
+        const ch = fixedRow.querySelector('.ch-input')?.value || '0';
+        
+        // Debug: Check if scoreRow exists and has inputs
+        if (!scoreRow) {
+          console.error('[QR Export] Player', idx, '- NO SCORE ROW FOUND!');
+          return { n: name, c: ch, s: [] };
+        }
+        
+        const scoreInputs = scoreRow.querySelectorAll('input.score-input');
+        console.log('[QR Export] Player', idx, '- Found', scoreInputs.length, 'score inputs in row');
+        
+        const scores = Array.from(scoreInputs).map(inp => {
+          const val = inp.value || '';
+          return val;
+        });
+        
+        console.log('[QR Export] Player', idx, ':', name, 'CH:', ch, 'Scores with values:', scores.filter(s => s).length, '/', scores.length, 'First 3 scores:', scores.slice(0, 3));
         return { n: name, c: ch, s: scores };
       })
       .filter(p => {
