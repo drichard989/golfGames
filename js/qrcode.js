@@ -409,6 +409,9 @@
    * Import data from QR code scan or URL
    */
   function importData(jsonString) {
+    // EMERGENCY DEBUG - Log BEFORE try block
+    console.log('[QR Import] ★★★ FUNCTION CALLED ★★★ Data length:', jsonString?.length);
+    
     try {
       console.log('[QR Import] Starting import, raw data:', jsonString.substring(0, 50) + '...');
       const data = decompressData(jsonString);
@@ -483,6 +486,14 @@
                 const scoreRow = document.querySelectorAll('#scorecard .player-row')[idx];
                 const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
 
+                console.log('[QR Import] REPLACE - Player', idx, 'inputs:', {
+                  nameInput: !!nameInput,
+                  chInput: !!chInput,
+                  scoreRow: !!scoreRow,
+                  scoreInputsCount: scoreInputs?.length,
+                  scoresCount: player.scores?.length
+                });
+
                 if (nameInput) {
                   nameInput.value = player.name;
                   nameInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -494,13 +505,22 @@
                   chInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
                 
-                if (scoreInputs) {
+                // SCORE POPULATION - DETAILED DEBUG
+                console.log('[QR Import] REPLACE - Populating scores for player', idx);
+                if (scoreInputs && player.scores) {
+                  console.log('[QR Import] REPLACE - First 3 scores:', player.scores.slice(0, 3));
                   player.scores.forEach((score, scoreIdx) => {
                     if (scoreInputs[scoreIdx]) {
+                      console.log(`[QR Import] REPLACE - Hole ${scoreIdx + 1} = ${score}`);
                       scoreInputs[scoreIdx].value = score;
                       scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
+                    } else {
+                      console.warn(`[QR Import] REPLACE - Input ${scoreIdx} not found!`);
                     }
                   });
+                  console.log('[QR Import] REPLACE - Score population complete for player', idx);
+                } else {
+                  console.error('[QR Import] REPLACE - Cannot populate scores - scoreInputs:', !!scoreInputs, 'player.scores:', !!player.scores);
                 }
               });
               
@@ -545,6 +565,14 @@
                 const scoreRow = allScoreRows[rowIndex];
                 const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
 
+                console.log('[QR Import] ADD - Player', idx, 'at rowIndex', rowIndex, 'inputs:', {
+                  nameInput: !!nameInput,
+                  chInput: !!chInput,
+                  scoreRow: !!scoreRow,
+                  scoreInputsCount: scoreInputs?.length,
+                  scoresCount: player.scores?.length
+                });
+
                 if (nameInput) {
                   nameInput.value = player.name;
                   nameInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -556,13 +584,22 @@
                   chInput.dispatchEvent(new Event('change', { bubbles: true }));
                 }
                 
-                if (scoreInputs) {
+                // SCORE POPULATION - DETAILED DEBUG
+                console.log('[QR Import] ADD - Populating scores for player', idx, 'at row', rowIndex);
+                if (scoreInputs && player.scores) {
+                  console.log('[QR Import] ADD - First 3 scores:', player.scores.slice(0, 3));
                   player.scores.forEach((score, scoreIdx) => {
                     if (scoreInputs[scoreIdx]) {
+                      console.log(`[QR Import] ADD - Hole ${scoreIdx + 1} = ${score}`);
                       scoreInputs[scoreIdx].value = score;
                       scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
+                    } else {
+                      console.warn(`[QR Import] ADD - Input ${scoreIdx} not found!`);
                     }
                   });
+                  console.log('[QR Import] ADD - Score population complete for player', idx);
+                } else {
+                  console.error('[QR Import] ADD - Cannot populate scores - scoreInputs:', !!scoreInputs, 'player.scores:', !!player.scores);
                 }
               });
               
@@ -618,11 +655,6 @@
             if (typeof window.announce === 'function') {
               window.announce(`Scorecard imported! ${finalCount} player${finalCount !== 1 ? 's' : ''} total.`);
             }
-          }
-
-          const finalCount = document.querySelectorAll('#scorecardFixed .player-row').length;
-          if (typeof window.announce === 'function') {
-            window.announce(`Scorecard imported! ${finalCount} player${finalCount !== 1 ? 's' : ''} total.`);
           }
         } catch (err) {
           console.error('[QR] Import processing failed:', err);
