@@ -605,7 +605,7 @@
           betInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
           betInput.addEventListener('input', () => {
             // Validate bet against max bet
-            const maxBetInput = document.getElementById(`banker_max_h${h}`);
+            const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
             const maxBet = maxBetInput ? Number(maxBetInput.value) : 0;
             const playerBet = Number(betInput.value) || 0;
             
