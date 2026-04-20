@@ -255,9 +255,44 @@
       </div>
       <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
     </section>
-    <!-- BANKER GAME (stubbed: empty window) -->
+    <!-- BANKER GAME -->
     <section class="game-section" id="bankerSection" aria-hidden="true">
-      <h2>Banker - To Be Added</h2>
+      <h2>🏦 Banker</h2>
+      <div class="banker-controls">
+        <div class="control-box">
+          <div class="pill">How It Works</div>
+          <p class="small" style="margin: 0; line-height: 1.4;">
+            One player is the <strong>Banker</strong> per hole. Banker sets max bet. 
+            Other players bet (min to max). Players can double after hitting. 
+            Banker can double all bets after hitting. Lower NET score wins.
+          </p>
+        </div>
+        <div class="control-box">
+          <div class="pill">Legend</div>
+          <div class="small">Banker: Player taking bets on this hole</div>
+          <div class="small">Max Bet: Highest amount other players can bet</div>
+          <div class="small">Bets: Each player's bet amount + double option (2×)</div>
+          <div class="small">Banker 2×: Banker doubles all outstanding bets</div>
+          <div class="small">NET scoring: Everyone gets their handicap strokes (+ handicaps add strokes)</div>
+        </div>
+      </div>
+      <div class="banker-wrap">
+        <table class="banker-table" id="bankerTable">
+          <thead>
+            <tr>
+              <th>Hole</th>
+              <th>Banker</th>
+              <th>Max Bet</th>
+              <th>Bets</th>
+              <th>Banker 2×</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="bankerBody"></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <p class="small">Select a banker per hole, set max bet, then enter player bets. Check 2× to double. Lower net score wins (with handicap strokes).</p>
     </section>
     <!-- HI-LO GAME (placeholder) -->
     <section class="game-section" id="hiloSection" aria-hidden="true">
