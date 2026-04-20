@@ -285,11 +285,14 @@
         carryoverFromHoles = []; // Reset carryover list
       }
 
-      // Calculate dollar winnings (simple: skins × value per skin)
+      // Calculate gross winnings (skins × value per skin)
       const totalSkins = totals.reduce((sum, t) => sum + t, 0);
-      const winnings = totals.map(skinCount => skinCount * buyIn);
+      const grossWinnings = totals.map(skinCount => skinCount * buyIn);
+      
+      // Calculate net winnings (what each player won/lost after paying buy-in)
+      const netWinnings = grossWinnings.map(gross => gross - buyIn);
 
-      return { totals, holesWon, carryoverHoles, winnings, totalSkins };
+      return { totals, holesWon, carryoverHoles, winnings: netWinnings, totalSkins };
     },
 
     /**
@@ -320,7 +323,16 @@
         if (totCell) totCell.textContent = String(totals[p] || 0);
         if (winCell) {
           const amount = winnings[p] || 0;
-          winCell.textContent = amount > 0 ? `$${amount.toFixed(2)}` : '—';
+          if (amount > 0) {
+            winCell.textContent = `+$${amount.toFixed(2)}`;
+            winCell.style.color = 'var(--accent)'; // Green for profit
+          } else if (amount < 0) {
+            winCell.textContent = `-$${Math.abs(amount).toFixed(2)}`;
+            winCell.style.color = 'var(--danger)'; // Red for loss
+          } else {
+            winCell.textContent = '$0.00';
+            winCell.style.color = 'var(--muted)'; // Gray for break-even
+          }
         }
       }
     }
