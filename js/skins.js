@@ -324,14 +324,17 @@
         if (winCell) {
           const amount = winnings[p] || 0;
           if (amount > 0) {
-            winCell.textContent = `+$${amount.toFixed(2)}`;
+            winCell.textContent = `Collects $${amount.toFixed(2)}`;
             winCell.style.color = 'var(--accent)'; // Green for profit
+            winCell.style.fontWeight = '600';
           } else if (amount < 0) {
-            winCell.textContent = `-$${Math.abs(amount).toFixed(2)}`;
+            winCell.textContent = `Owes $${Math.abs(amount).toFixed(2)}`;
             winCell.style.color = 'var(--danger)'; // Red for loss
+            winCell.style.fontWeight = '600';
           } else {
-            winCell.textContent = '$0.00';
+            winCell.textContent = 'Even';
             winCell.style.color = 'var(--muted)'; // Gray for break-even
+            winCell.style.fontWeight = '400';
           }
         }
       }
