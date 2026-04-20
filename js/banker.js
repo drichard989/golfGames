@@ -154,6 +154,197 @@
 
   const Banker = {
     /**
+     * Get current banker game state for saving
+     * @returns {Object} Complete banker game state
+     */
+    getState() {
+      const state = {
+        holes: []
+      };
+      
+      for (let h = 1; h <= 18; h++) {
+        const holeState = {
+          banker: -1,
+          maxBet: 10,
+          bankerDouble: false,
+          bets: []
+        };
+        
+        // Get banker selection
+        const bankerSelect = document.getElementById(`banker_select_h${h}`);
+        if (bankerSelect) {
+          holeState.banker = Number(bankerSelect.value);
+        }
+        
+        // Get max bet
+        const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
+        if (maxBetInput) {
+          holeState.maxBet = Number(maxBetInput.value) || 10;
+        }
+        
+        // Get banker double
+        const bankerDoubleBtn = document.getElementById(`banker_bdouble_h${h}`);
+        if (bankerDoubleBtn) {
+          holeState.bankerDouble = bankerDoubleBtn.dataset.active === 'true';
+        }
+        
+        // Get player bets
+        const playerCount = getPlayerCount();
+        for (let p = 0; p < playerCount; p++) {
+          const betInput = document.getElementById(`banker_bet_p${p}_h${h}`);
+          const doubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          
+          if (betInput) {
+            const betAmount = Number(betInput.value) || 0;
+            const doubled = doubleBtn?.dataset.active === 'true';
+            
+            // Save all bets, even if 0, to maintain consistency
+            holeState.bets.push({
+              player: p,
+              amount: betAmount,
+              doubled: doubled
+            });
+          }
+        }
+        
+        state.holes.push(holeState);
+      }
+      
+      return state;
+    },
+    
+    /**
+     * Set banker game state from saved data
+     * @param {Object} state - Saved banker game state
+     */
+    setState(state) {
+      if (!state || !state.holes) return;
+      
+      // Delay to ensure DOM is ready
+      setTimeout(() => {
+        state.holes.forEach((holeState, idx) => {
+          const h = idx + 1;
+          
+          // Set banker selection
+          const bankerSelect = document.getElementById(`banker_select_h${h}`);
+          if (bankerSelect && holeState.banker !== undefined) {
+            bankerSelect.value = String(holeState.banker);
+            // Trigger change event to update bet inputs
+            bankerSelect.dispatchEvent(new Event('change'));
+          }
+          
+          // Set max bet
+          const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
+          if (maxBetInput && holeState.maxBet !== undefined) {
+            maxBetInput.value = String(holeState.maxBet);
+          }
+          
+          // Set banker double
+          const bankerDoubleBtn = document.getElementById(`banker_bdouble_h${h}`);
+          if (bankerDoubleBtn && holeState.bankerDouble) {
+            bankerDoubleBtn.dataset.active = 'true';
+            bankerDoubleBtn.style.background = 'var(--accent)';
+            bankerDoubleBtn.style.color = 'var(--bg)';
+            bankerDoubleBtn.style.borderColor = 'var(--accent)';
+          } else if (bankerDoubleBtn) {
+            bankerDoubleBtn.dataset.active = 'false';
+            bankerDoubleBtn.style.background = 'var(--panel)';
+            bankerDoubleBtn.style.color = 'var(--muted)';
+            bankerDoubleBtn.style.borderColor = 'var(--line)';
+          }
+          
+          // Set player bets
+          if (holeState.bets && Array.isArray(holeState.bets)) {
+            holeState.bets.forEach(bet => {
+              const betInput = document.getElementById(`banker_bet_p${bet.player}_h${h}`);
+              if (betInput) {
+                betInput.value = String(bet.amount || 0);
+              }
+              
+              const doubleBtn = document.getElementById(`banker_pdouble_p${bet.player}_h${h}`);
+              if (doubleBtn) {
+                if (bet.doubled) {
+                  doubleBtn.dataset.active = 'true';
+                  doubleBtn.style.background = 'var(--accent)';
+                  doubleBtn.style.color = 'var(--bg)';
+                  doubleBtn.style.borderColor = 'var(--accent)';
+                } else {
+                  doubleBtn.dataset.active = 'false';
+                  doubleBtn.style.background = 'var(--panel)';
+                  doubleBtn.style.color = 'var(--muted)';
+                  doubleBtn.style.borderColor = 'var(--line)';
+                }
+              }
+            });
+          }
+        });
+        
+        // Update calculations after state is restored
+        this.update();
+      }, 150);
+    },
+    
+    /**
+     * Clear all banker game data
+     */
+    clearAll() {
+      if (!confirm('Clear all Banker game data? This cannot be undone.')) {
+        return;
+      }
+      
+      for (let h = 1; h <= 18; h++) {
+        // Reset banker selection
+        const bankerSelect = document.getElementById(`banker_select_h${h}`);
+        if (bankerSelect) {
+          bankerSelect.value = '-1';
+          bankerSelect.dispatchEvent(new Event('change'));
+        }
+        
+        // Reset max bet
+        const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
+        if (maxBetInput) {
+          maxBetInput.value = '10';
+        }
+        
+        // Reset banker double
+        const bankerDoubleBtn = document.getElementById(`banker_bdouble_h${h}`);
+        if (bankerDoubleBtn) {
+          bankerDoubleBtn.dataset.active = 'false';
+          bankerDoubleBtn.style.background = 'var(--panel)';
+          bankerDoubleBtn.style.color = 'var(--muted)';
+          bankerDoubleBtn.style.borderColor = 'var(--line)';
+        }
+        
+        // Reset all player bets
+        const playerCount = getPlayerCount();
+        for (let p = 0; p < playerCount; p++) {
+          const betInput = document.getElementById(`banker_bet_p${p}_h${h}`);
+          if (betInput) {
+            betInput.value = '0';
+          }
+          
+          const doubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          if (doubleBtn) {
+            doubleBtn.dataset.active = 'false';
+            doubleBtn.style.background = 'var(--panel)';
+            doubleBtn.style.color = 'var(--muted)';
+            doubleBtn.style.borderColor = 'var(--line)';
+          }
+        }
+      }
+      
+      this.update();
+      
+      if (typeof window.saveDebounced === 'function') {
+        window.saveDebounced();
+      }
+      
+      if (typeof window.announce === 'function') {
+        window.announce('Banker game cleared.');
+      }
+    },
+    
+    /**
      * Compute Banker results for all holes
      * @returns {Object} Banker game results
      */

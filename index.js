@@ -1357,7 +1357,8 @@
           open: $(ids.vegasSection).classList.contains("open") 
         },
         banker: { 
-          open: $(ids.bankerSection).classList.contains("open") 
+          open: $(ids.bankerSection).classList.contains("open"),
+          state: (typeof window.Banker?.getState === 'function') ? window.Banker.getState() : null
         },
         skins: { 
           mode: document.getElementById('skinsModeNet')?.checked ? 'net' : 'gross',
@@ -1510,6 +1511,11 @@
         // Games default to closed - only open if previously saved as open
         // if(s.vegas?.open) games_open("vegas");
         // if(s.banker?.open) games_open("banker");
+        
+        // Restore Banker state
+        if(s.banker?.state && typeof window.Banker?.setState === 'function') {
+          window.Banker.setState(s.banker.state);
+        };
 
         // Restore Skins options
         if(s.skins?.mode != null) {
