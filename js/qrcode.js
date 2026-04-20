@@ -470,29 +470,53 @@
 
           if (mode === 'replace') {
             console.log('[QR Import] REPLACE mode - clearing all existing players');
-            // REPLACE MODE: Clear existing and set to exact count
+            // REPLACE MODE: Clear existing data and adjust row count
             const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
             console.log('[QR Import] Current rows before clear:', currentRows);
             
-            // Remove all existing players using correct API
-            while (document.querySelectorAll('#scorecardFixed .player-row').length > 0) {
-              if (window.GolfApp?.api?.removePlayer) {
-                window.GolfApp.api.removePlayer();
-              } else {
-                console.error('[QR Import] GolfApp.api.removePlayer not found!');
-                break;
-              }
-            }
+            // Clear all existing player data (names, handicaps, scores)
+            document.querySelectorAll('.player-row').forEach(r => {
+              const nameInput = r.querySelector('.name-edit');
+              const chInput = r.querySelector('.ch-input');
+              const scoreInputs = r.querySelectorAll('input.score-input');
+              
+              if (nameInput) nameInput.value = '';
+              if (chInput) chInput.value = '0';
+              scoreInputs.forEach(inp => {
+                inp.value = '';
+                inp.classList.remove('invalid', 'receives-stroke');
+                inp.removeAttribute('data-strokes');
+                inp.removeAttribute('title');
+              });
+            });
             
-            console.log('[QR Import] Adding', playerCount, 'new rows');
-            // Add exact number needed using correct API
-            for (let i = 0; i < playerCount; i++) {
-              if (window.GolfApp?.api?.addPlayer) {
-                window.GolfApp.api.addPlayer();
-              } else {
-                console.error('[QR Import] GolfApp.api.addPlayer not found!');
+            // Adjust player count to match import
+            if (currentRows < playerCount) {
+              // Need to add more rows
+              const toAdd = playerCount - currentRows;
+              console.log('[QR Import] Adding', toAdd, 'new rows');
+              for (let i = 0; i < toAdd; i++) {
+                if (window.GolfApp?.api?.addPlayer) {
+                  window.GolfApp.api.addPlayer();
+                } else {
+                  console.error('[QR Import] GolfApp.api.addPlayer not found!');
+                }
+              }
+            } else if (currentRows > playerCount) {
+              // Need to remove rows (but leave at least 1)
+              const toRemove = Math.min(currentRows - playerCount, currentRows - 1);
+              console.log('[QR Import] Removing', toRemove, 'extra rows');
+              for (let i = 0; i < toRemove; i++) {
+                if (window.GolfApp?.api?.removePlayer) {
+                  window.GolfApp.api.removePlayer();
+                } else {
+                  console.error('[QR Import] GolfApp.api.removePlayer not found!');
+                  break;
+                }
               }
             }
+            console.log('[QR Import] Row adjustment complete, current count:', 
+                        document.querySelectorAll('#scorecardFixed .player-row').length);
             
             console.log('[QR Import] Waiting for DOM update...');
             // CRITICAL FIX: Wait for DOM to update before populating rows
