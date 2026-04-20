@@ -309,26 +309,99 @@
         if (!resultCell) return;
         
         if (hole.error) {
-          resultCell.textContent = hole.error;
-          resultCell.style.fontSize = '11px';
+          resultCell.innerHTML = `<span style="color: var(--muted); font-size: 10px;">${hole.error}</span>`;
           return;
         }
         
         if (hole.bets.length === 0) {
-          resultCell.textContent = 'No bets';
-          resultCell.style.fontSize = '11px';
+          resultCell.innerHTML = '<span style="color: var(--muted); font-size: 10px;">No bets</span>';
           return;
         }
         
-        // Show results per bet
+        // Show detailed results per bet
+        const bankerName = names[hole.banker]?.substring(0, 8) || `P${hole.banker + 1}`;
+        
         const results = hole.bets.map(bet => {
           const playerName = names[bet.player]?.substring(0, 8) || `P${bet.player + 1}`;
-          const sign = bet.payout >= 0 ? '+' : '';
-          return `${playerName}: ${sign}$${bet.payout.toFixed(0)}`;
-        }).join(', ');
+          
+          const resultContainer = document.createElement('div');
+          resultContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; margin-bottom: 2px; border-radius: 3px; font-size: 10px;';
+          
+          // Color code based on outcome
+          if (bet.winner === bet.player) {
+            // Player won
+            resultContainer.style.background = 'rgba(104, 211, 145, 0.15)';
+            resultContainer.style.borderLeft = '2px solid var(--accent)';
+          } else if (bet.winner === hole.banker) {
+            // Banker won
+            resultContainer.style.background = 'rgba(255, 107, 107, 0.15)';
+            resultContainer.style.borderLeft = '2px solid var(--danger)';
+          } else {
+            // Tie
+            resultContainer.style.background = 'rgba(255, 180, 84, 0.1)';
+            resultContainer.style.borderLeft = '2px solid var(--warn)';
+          }
+          
+          const playerInfo = document.createElement('span');
+          playerInfo.style.cssText = 'font-weight: 500;';
+          playerInfo.textContent = playerName;
+          
+          const scoreInfo = document.createElement('span');
+          scoreInfo.style.cssText = 'font-size: 9px; color: var(--muted);';
+          scoreInfo.textContent = `${bet.playerNet} v ${bet.bankerNet}`;
+          
+          const payoutInfo = document.createElement('span');
+          payoutInfo.style.cssText = 'font-weight: 600; font-size: 11px;';
+          
+          if (bet.payout > 0) {
+            payoutInfo.style.color = 'var(--accent)';
+            payoutInfo.textContent = `+$${bet.payout.toFixed(0)}`;
+          } else if (bet.payout < 0) {
+            payoutInfo.style.color = 'var(--danger)';
+            payoutInfo.textContent = `-$${Math.abs(bet.payout).toFixed(0)}`;
+          } else {
+            payoutInfo.style.color = 'var(--warn)';
+            payoutInfo.textContent = 'PUSH';
+          }
+          
+          const multiplierInfo = document.createElement('span');
+          multiplierInfo.style.cssText = 'font-size: 8px; color: var(--muted); margin-left: 2px;';
+          if (bet.multiplier > 1) {
+            multiplierInfo.textContent = `(${bet.multiplier}×)`;
+          }
+          
+          resultContainer.appendChild(playerInfo);
+          
+          const rightSide = document.createElement('div');
+          rightSide.style.cssText = 'display: flex; gap: 4px; align-items: center;';
+          rightSide.appendChild(scoreInfo);
+          rightSide.appendChild(payoutInfo);
+          rightSide.appendChild(multiplierInfo);
+          
+          resultContainer.appendChild(rightSide);
+          
+          return resultContainer;
+        });
         
-        resultCell.textContent = results;
-        resultCell.style.fontSize = '10px';
+        resultCell.innerHTML = '';
+        results.forEach(result => resultCell.appendChild(result));
+        
+        // Add banker total for this hole
+        const bankerTotal = hole.bets.reduce((sum, bet) => sum - bet.payout, 0);
+        if (bankerTotal !== 0) {
+          const bankerSummary = document.createElement('div');
+          bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 10px; font-weight: 600;';
+          
+          if (bankerTotal > 0) {
+            bankerSummary.style.color = 'var(--accent)';
+            bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 11px;">+$${bankerTotal.toFixed(0)}</span>`;
+          } else {
+            bankerSummary.style.color = 'var(--danger)';
+            bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 11px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
+          }
+          
+          resultCell.appendChild(bankerSummary);
+        }
       });
     },
 
@@ -458,14 +531,18 @@
         for (let p = 0; p < playerCount; p++) {
           if (p === bankerIdx) continue;
           
-          const playerName = (names[p] || `P${p + 1}`).substring(0, 6);
+          const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
           
           const container = document.createElement('div');
-          container.style.cssText = 'display: flex; gap: 4px; align-items: center; margin-bottom: 2px;';
+          container.style.cssText = 'display: flex; gap: 6px; align-items: center; margin-bottom: 4px; padding: 3px; background: rgba(255,255,255,0.03); border-radius: 4px;';
           
           const label = document.createElement('span');
           label.textContent = `${playerName}:`;
-          label.style.cssText = 'min-width: 45px; font-size: 10px;';
+          label.style.cssText = 'min-width: 55px; font-size: 11px; font-weight: 500;';
+          
+          const dollarSign = document.createElement('span');
+          dollarSign.textContent = '$';
+          dollarSign.style.cssText = 'font-size: 11px; color: var(--accent);';
           
           const betInput = document.createElement('input');
           betInput.id = `banker_bet_p${p}_h${h}`;
@@ -473,7 +550,8 @@
           betInput.min = '0';
           betInput.step = '1';
           betInput.value = '0';
-          betInput.style.cssText = 'width: 45px; padding: 2px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 3px; text-align: center; font-size: 11px;';
+          betInput.placeholder = '0';
+          betInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
           betInput.addEventListener('input', () => {
             this.update();
             if (typeof window.saveDebounced === 'function') {
@@ -484,8 +562,8 @@
           const doubleCheck = document.createElement('input');
           doubleCheck.id = `banker_pdouble_p${p}_h${h}`;
           doubleCheck.type = 'checkbox';
-          doubleCheck.title = 'Player doubles';
-          doubleCheck.style.cssText = 'cursor: pointer;';
+          doubleCheck.title = 'Player doubles their bet';
+          doubleCheck.style.cssText = 'cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);';
           doubleCheck.addEventListener('change', () => {
             this.update();
             if (typeof window.saveDebounced === 'function') {
@@ -495,9 +573,10 @@
           
           const doubleLabel = document.createElement('span');
           doubleLabel.textContent = '2×';
-          doubleLabel.style.cssText = 'font-size: 9px; color: var(--muted);';
+          doubleLabel.style.cssText = 'font-size: 10px; color: var(--accent); font-weight: 600;';
           
           container.appendChild(label);
+          container.appendChild(dollarSign);
           container.appendChild(betInput);
           container.appendChild(doubleCheck);
           container.appendChild(doubleLabel);
