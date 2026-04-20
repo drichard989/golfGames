@@ -470,6 +470,25 @@
         maxBetInput.value = '10';
         maxBetInput.style.cssText = 'width: 60px; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; text-align: center;';
         maxBetInput.addEventListener('input', () => {
+          // Re-validate all player bets for this hole when max bet changes
+          const maxBet = Number(maxBetInput.value) || 0;
+          const betsTd = document.getElementById(`banker_bets_h${h}`);
+          if (betsTd) {
+            const betInputs = betsTd.querySelectorAll('input[type="number"]');
+            betInputs.forEach(betInput => {
+              const playerBet = Number(betInput.value) || 0;
+              if (playerBet > maxBet && maxBet > 0) {
+                betInput.style.borderColor = 'var(--danger)';
+                betInput.style.borderWidth = '2px';
+                betInput.title = `Bet exceeds max of $${maxBet}`;
+              } else {
+                betInput.style.borderColor = 'var(--accent)';
+                betInput.style.borderWidth = '1px';
+                betInput.title = '';
+              }
+            });
+          }
+          
           this.update();
           if (typeof window.saveDebounced === 'function') {
             window.saveDebounced();
@@ -585,6 +604,21 @@
           betInput.placeholder = '0';
           betInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
           betInput.addEventListener('input', () => {
+            // Validate bet against max bet
+            const maxBetInput = document.getElementById(`banker_max_h${h}`);
+            const maxBet = maxBetInput ? Number(maxBetInput.value) : 0;
+            const playerBet = Number(betInput.value) || 0;
+            
+            if (playerBet > maxBet && maxBet > 0) {
+              betInput.style.borderColor = 'var(--danger)';
+              betInput.style.borderWidth = '2px';
+              betInput.title = `Bet exceeds max of $${maxBet}`;
+            } else {
+              betInput.style.borderColor = 'var(--accent)';
+              betInput.style.borderWidth = '1px';
+              betInput.title = '';
+            }
+            
             this.update();
             if (typeof window.saveDebounced === 'function') {
               window.saveDebounced();
