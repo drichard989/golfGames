@@ -516,7 +516,9 @@ tr:last-child td {
 .ch-input::-webkit-outer-spin-button,
 .ch-input::-webkit-inner-spin-button,
 #skinsBuyIn::-webkit-outer-spin-button,
-#skinsBuyIn::-webkit-inner-spin-button {
+#skinsBuyIn::-webkit-inner-spin-button,
+.banker-table input[type="number"]::-webkit-outer-spin-button,
+.banker-table input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
