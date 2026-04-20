@@ -1661,9 +1661,11 @@
       const gameConfig = {
         vegas: { section: ids.vegasSection, toggle: ids.toggleVegas, init: null },
         banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => {
-          // Only init on first open, subsequent opens just show the section
-          if (!window.Banker?._initialized) {
-            window.Banker?.init();
+          // Always call init - it handles whether to rebuild internally
+          if (window.Banker) {
+            window.Banker.init();
+          } else {
+            console.error('[Banker] Banker module not loaded');
           }
         }},
         skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: null },
