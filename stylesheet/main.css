@@ -523,6 +523,11 @@ tr:last-child td {
   margin: 0;
 }
 
+.banker-table input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 .ch-input {
   width: var(--table-ch-width);
 }
