@@ -675,19 +675,10 @@
               if (window.Scorecard?.build?.syncRowHeights) {
                 window.Scorecard.build.syncRowHeights();
               }
-            });
-            
-            // Recalculate all game modules
-            if (window.AppManager?.recalcGames) {
-              window.AppManager.recalcGames();
-            }
-            
-            // Update player count display
-            if (window.Scorecard?.player?.updateCountDisplay) {
-              window.Scorecard.player.updateCountDisplay();
-            }
-            
-            // Sync player overlay if needed
+        
+        // Clear the import flag now that all operations are complete
+        window._qrImportInProgress = false;
+        console.log('[QR Import] Import complete, flag cleared');
             if (window.Scorecard?.player?.syncOverlay) {
               window.Scorecard.player.syncOverlay();
             }
