@@ -398,7 +398,7 @@
           
           if (bankerTotal > 0) {
             bankerSummary.style.color = 'var(--accent)';
-            bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 11px;">+$${bankerTotal.toFixed(0)}</span>`;
+            bankerSummary.innerHTML = `${bankerName} wins: <span style="font-size: 11px;">+$${bankerTotal.toFixed(0)}</span>`;
           } else {
             bankerSummary.style.color = 'var(--danger)';
             bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 11px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
