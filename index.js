@@ -1660,7 +1660,12 @@
     try {
       const gameConfig = {
         vegas: { section: ids.vegasSection, toggle: ids.toggleVegas, init: null },
-        banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => window.Banker?.init() },
+        banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => {
+          // Only init on first open, subsequent opens just show the section
+          if (!window.Banker?._initialized) {
+            window.Banker?.init();
+          }
+        }},
         skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: null },
         junk: { section: ids.junkSection, toggle: 'toggleJunk', init: () => window.Junk?.init() },
         hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init() }

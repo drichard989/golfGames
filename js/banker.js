@@ -153,6 +153,8 @@
   // =============================================================================
 
   const Banker = {
+    _initialized: false,
+    
     /**
      * Get current banker game state for saving
      * @returns {Object} Complete banker game state
@@ -946,24 +948,48 @@
      * Initialize Banker game
      */
     init() {
-      this.buildTable();
-      this.rebuildFooter();
-      this.updateBetInputs();
-      this.refreshPlayerNames();
-      this.update();
-      
-      // Listen for score/name changes
-      document.addEventListener('input', (e) => {
-        const t = e.target;
-        if (t.classList?.contains('score-input') || 
-            t.classList?.contains('ch-input') ||
-            t.classList?.contains('name-edit')) {
-          if (t.classList.contains('name-edit')) {
-            this.refreshPlayerNames();
+      // Only do full init once
+      if (!this._initialized) {
+        this.buildTable();
+        this.rebuildFooter();
+        this.updateBetInputs();
+        this.refreshPlayerNames();
+        this.update();
+        
+        // Listen for score/name changes
+        document.addEventListener('input', (e) => {
+          const t = e.target;
+          if (t.classList?.contains('score-input') || 
+              t.classList?.contains('ch-input') ||
+              t.classList?.contains('name-edit')) {
+            if (t.classList.contains('name-edit')) {
+              this.refreshPlayerNames();
+            }
+            this.update();
           }
-          this.update();
-        }
-      }, { passive: true });
+        }, { passive: true });
+        
+        this._initialized = true;
+        
+        // After initial build, restore saved state if available
+        setTimeout(() => {
+          const savedState = localStorage.getItem('golf_scorecard_v5');
+          if (savedState) {
+            try {
+              const state = JSON.parse(savedState);
+              if (state.banker?.state) {
+                this.setState(state.banker.state);
+              }
+            } catch (e) {
+              console.error('[Banker] Failed to restore state on init:', e);
+            }
+          }
+        }, 200);
+      } else {
+        // On subsequent opens, just refresh the UI without clearing data
+        this.updateBetInputs();
+        this.update();
+      }
     },
 
     /**
