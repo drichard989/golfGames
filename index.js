@@ -1591,9 +1591,18 @@
      * Clear all fields (names, handicaps, and scores)
      */
     clearAll() {
-      $$(".player-row").forEach(r => { 
-        $(".name-edit", r).value = "";
-        $(".ch-input", r).value = "0";
+      // Clear names and handicaps from fixed table
+      const fixedRows = $$("#scorecardFixed .player-row");
+      fixedRows.forEach(r => {
+        const nameInput = $(".name-edit", r);
+        const chInput = $(".ch-input", r);
+        if (nameInput) nameInput.value = "";
+        if (chInput) chInput.value = "0";
+      });
+      
+      // Clear scores from scrollable table
+      const scoreRows = $$("#scorecard .player-row");
+      scoreRows.forEach(r => {
         $$("input.score-input", r).forEach(i => {
           i.value = "";
           i.classList.remove("invalid");
@@ -1602,6 +1611,7 @@
           i.removeAttribute("title");
         });
       });
+      
       Scorecard.calc.recalcAll(); 
       Scorecard.player.syncOverlay();
       window.Vegas?.renderTeamControls(); 
