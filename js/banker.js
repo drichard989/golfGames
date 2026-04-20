@@ -632,7 +632,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         const bankerSelect = document.createElement('select');
         bankerSelect.id = `banker_h${h}`;
         bankerSelect.className = 'banker-select';
-        bankerSelect.style.cssText = 'width: 100%; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;';
+        bankerSelect.style.cssText = 'width: 100%; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; font-weight: 500;';
         
         // Add default option
         const defaultOption = document.createElement('option');
@@ -672,6 +672,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         const maxBetInput = document.createElement('input');
         maxBetInput.id = `banker_maxbet_h${h}`;
         maxBetInput.type = 'number';
+        maxBetInput.inputMode = 'numeric';
         maxBetInput.min = '0';
         maxBetInput.step = '1';
         maxBetInput.value = '10';
@@ -808,6 +809,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const betInput = document.createElement('input');
           betInput.id = `banker_bet_p${p}_h${h}`;
           betInput.type = 'number';
+          betInput.inputMode = 'numeric';
           betInput.min = '0';
           betInput.step = '1';
           betInput.value = '0';
