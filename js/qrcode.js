@@ -69,7 +69,7 @@
   /**
    * Compress scorecard data for QR code or URL
    * Returns a compact JSON string
-   * Only includes players that have a name OR at least one score
+   * Only includes players that have a name (ignores orphaned score rows)
    */
   function compressData() {
     const players = Array.from(document.querySelectorAll('.player-row'))
@@ -80,13 +80,13 @@
         return { n: name, c: ch, s: scores };
       })
       .filter(p => {
-        // Only include players with a name OR at least one score
+        // Only include players with a name (ignore rows with scores but no name)
         const hasName = p.n.trim().length > 0;
-        const hasScores = p.s.some(score => score && score.trim().length > 0);
-        return hasName || hasScores;
+        return hasName;
       });
 
-    console.log('[QR Export] Filtered to', players.length, 'players with data (excluded blank rows)');
+    console.log('[QR Export] Filtered to', players.length, 'players with names (excluded', 
+                Array.from(document.querySelectorAll('.player-row')).length - players.length, 'blank rows)');
 
     const course = window.ACTIVE_COURSE || 'manito';
 
