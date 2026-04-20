@@ -228,10 +228,14 @@
           
           const playerNet = netScores[p];
           
-          // Calculate payout
+          // Calculate payout - use 3× on par 3s, 2× otherwise
+          const holePar = getPar(h);
+          const isPar3 = holePar === 3;
+          const baseMultiplier = isPar3 ? 3 : 2;
+          
           let multiplier = 1;
-          if (playerDouble) multiplier *= 2;
-          if (bankerDouble) multiplier *= 2;
+          if (playerDouble) multiplier *= baseMultiplier;
+          if (bankerDouble) multiplier *= baseMultiplier;
           
           const basePayout = betAmount * multiplier;
           
@@ -480,12 +484,18 @@
         betsTd.style.cssText = 'padding: 4px; font-size: 11px;';
         tr.appendChild(betsTd);
         
-        // Banker Double checkbox
+        // Banker Double/Triple checkbox
         const bankerDoubleTd = document.createElement('td');
         const bankerDoubleCheck = document.createElement('input');
         bankerDoubleCheck.id = `banker_double_h${h}`;
         bankerDoubleCheck.type = 'checkbox';
         bankerDoubleCheck.style.cssText = 'cursor: pointer;';
+        
+        // Set title based on par
+        const holePar = getPar(h - 1);
+        const isPar3 = holePar === 3;
+        bankerDoubleCheck.title = isPar3 ? 'Banker triples all bets (Par 3)' : 'Banker doubles all bets';
+        
         bankerDoubleCheck.addEventListener('change', () => {
           this.update();
           if (typeof window.saveDebounced === 'function') {
@@ -528,6 +538,12 @@
         // Create bet inputs for each non-banker player
         const betInputs = [];
         
+        // Check if this is a par 3 hole
+        const holePar = getPar(h - 1);
+        const isPar3 = holePar === 3;
+        const multiplierText = isPar3 ? '3×' : '2×';
+        const checkboxTitle = isPar3 ? 'Player triples their bet (Par 3)' : 'Player doubles their bet';
+        
         for (let p = 0; p < playerCount; p++) {
           if (p === bankerIdx) continue;
           
@@ -562,7 +578,7 @@
           const doubleCheck = document.createElement('input');
           doubleCheck.id = `banker_pdouble_p${p}_h${h}`;
           doubleCheck.type = 'checkbox';
-          doubleCheck.title = 'Player doubles their bet';
+          doubleCheck.title = checkboxTitle;
           doubleCheck.style.cssText = 'cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);';
           doubleCheck.addEventListener('change', () => {
             this.update();
@@ -572,7 +588,7 @@
           });
           
           const doubleLabel = document.createElement('span');
-          doubleLabel.textContent = '2×';
+          doubleLabel.textContent = multiplierText;
           doubleLabel.style.cssText = 'font-size: 10px; color: var(--accent); font-weight: 600;';
           
           container.appendChild(label);
