@@ -462,13 +462,22 @@
         
         // Max Bet
         const maxBetTd = document.createElement('td');
+        
+        // Create container with label like player bets
+        const maxBetContainer = document.createElement('div');
+        maxBetContainer.style.cssText = 'display: flex; gap: 6px; align-items: center; padding: 3px; background: rgba(255,255,255,0.03); border-radius: 4px;';
+        
+        const dollarSign = document.createElement('span');
+        dollarSign.textContent = '$';
+        dollarSign.style.cssText = 'font-size: 11px; color: var(--accent);';
+        
         const maxBetInput = document.createElement('input');
         maxBetInput.id = `banker_maxbet_h${h}`;
         maxBetInput.type = 'number';
         maxBetInput.min = '0';
         maxBetInput.step = '1';
         maxBetInput.value = '10';
-        maxBetInput.style.cssText = 'width: 60px; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; text-align: center;';
+        maxBetInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
         maxBetInput.addEventListener('input', () => {
           // Re-validate all player bets for this hole when max bet changes
           const maxBet = Number(maxBetInput.value) || 0;
@@ -494,7 +503,10 @@
             window.saveDebounced();
           }
         });
-        maxBetTd.appendChild(maxBetInput);
+        
+        maxBetContainer.appendChild(dollarSign);
+        maxBetContainer.appendChild(maxBetInput);
+        maxBetTd.appendChild(maxBetContainer);
         tr.appendChild(maxBetTd);
         
         // Bets column (will be populated dynamically)
