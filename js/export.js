@@ -1333,6 +1333,17 @@ input[type="text"] {
       rows.push([playerName, ch, ...scores]);
     });
     
+    // Get Banker game data if present
+    let bankerData = null;
+    const bankerSection = document.getElementById('bankerSection');
+    if (bankerSection && window.Banker && typeof window.Banker.getState === 'function') {
+      try {
+        bankerData = window.Banker.getState();
+      } catch (error) {
+        console.warn('[Export] Failed to get Banker state:', error);
+      }
+    }
+    
     // Build CSV with proper escaping for names with commas
     const escapeCsvValue = (val) => {
       const str = String(val);
@@ -1344,6 +1355,25 @@ input[type="text"] {
     
     let csv = headers.join(",") + "\n";
     csv += rows.map(row => row.map(escapeCsvValue).join(",")).join("\n");
+    
+    // Append Banker data if present
+    if (bankerData && bankerData.holes && bankerData.holes.length > 0) {
+      csv += "\n\n# Banker Game Data\n";
+      csv += "# Format: hole,banker,maxBet,bankerDouble,playerBets\n";
+      csv += "# playerBets format: playerIndex:amount:doubled|...\n";
+      
+      bankerData.holes.forEach((hole, idx) => {
+        if (hole.banker >= 0 || hole.bets.some(b => b.amount > 0)) {
+          const h = idx + 1;
+          const betsStr = hole.bets
+            .filter(b => b.amount > 0)
+            .map(b => `${b.player}:${b.amount}:${b.doubled ? '1' : '0'}`)
+            .join('|');
+          
+          csv += `BANKER,${h},${hole.banker},${hole.maxBet},${hole.bankerDouble ? '1' : '0'},${betsStr}\n`;
+        }
+      });
+    }
     
     const blob = new Blob([csv], {type:"text/csv"});
     const a = document.createElement("a");

@@ -1863,7 +1863,19 @@
     const missing = required.filter(k => !(k in hmap));
     if (missing.length) { alert("CSV is missing columns: " + missing.join(", ")); return; }
 
-    const rows = data.slice(1).filter(r => r.some(x => x && x !== "")).slice(0, 99);
+    // Separate player data from Banker data
+    const playerRows = [];
+    const bankerRows = [];
+    
+    data.slice(1).forEach(r => {
+      if (r[0] === 'BANKER') {
+        bankerRows.push(r);
+      } else if (r.some(x => x && x !== "")) {
+        playerRows.push(r);
+      }
+    });
+    
+    const rows = playerRows.slice(0, 99);
     if (!rows.length) { alert("No data rows found under the header."); return; }
 
     // Create custom dialog for mode selection
@@ -2066,6 +2078,60 @@
     // Update stroke highlights with new handicaps
     if(typeof window.updateStrokeHighlights === 'function') {
       window.updateStrokeHighlights();
+    }
+    
+    // Import Banker data if present
+    if (bankerRows.length > 0 && window.Banker && typeof window.Banker.setState === 'function') {
+      try {
+        const bankerState = { holes: [] };
+        
+        // Initialize all 18 holes with default values
+        for (let h = 0; h < 18; h++) {
+          bankerState.holes.push({
+            banker: -1,
+            maxBet: 10,
+            bankerDouble: false,
+            bets: []
+          });
+        }
+        
+        // Parse Banker rows and populate state
+        bankerRows.forEach(row => {
+          // Format: BANKER,hole,banker,maxBet,bankerDouble,playerBets
+          const hole = Number(row[1]) - 1; // Convert to 0-based index
+          if (hole >= 0 && hole < 18) {
+            bankerState.holes[hole].banker = Number(row[2]);
+            bankerState.holes[hole].maxBet = Number(row[3]);
+            bankerState.holes[hole].bankerDouble = row[4] === '1';
+            
+            // Parse player bets (format: playerIndex:amount:doubled|...)
+            if (row[5]) {
+              const betStrings = row[5].split('|');
+              betStrings.forEach(betStr => {
+                const [playerIdx, amount, doubled] = betStr.split(':');
+                bankerState.holes[hole].bets.push({
+                  player: Number(playerIdx),
+                  amount: Number(amount),
+                  doubled: doubled === '1'
+                });
+              });
+            }
+          }
+        });
+        
+        // Ensure Banker section is initialized
+        if (typeof window.Banker.init === 'function') {
+          window.Banker.init();
+        }
+        
+        // Set the state after a short delay to ensure DOM is ready
+        setTimeout(() => {
+          window.Banker.setState(bankerState);
+          console.log('[CSV Import] Banker data restored:', bankerState);
+        }, 200);
+      } catch (error) {
+        console.error('[CSV Import] Failed to restore Banker data:', error);
+      }
     }
     
     // Force recalculate all games
