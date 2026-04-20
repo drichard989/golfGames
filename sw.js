@@ -14,7 +14,6 @@ const FILES_TO_CACHE = [
   '/js/skins.js',
   '/js/junk.js',
   '/js/hilo.js',
-  '/js/wolf.js',
   '/js/export.js',
   '/js/qrcode.js',
   '/stylesheet/main.css'
