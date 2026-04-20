@@ -186,9 +186,9 @@
         const maxBetInput = document.getElementById(`banker_maxbet_h${holeNum}`);
         const maxBet = maxBetInput ? Number(maxBetInput.value) || 0 : 0;
         
-        // Get banker double
-        const bankerDoubleCheck = document.getElementById(`banker_double_h${holeNum}`);
-        const bankerDouble = bankerDoubleCheck?.checked || false;
+        // Get banker double/triple button
+        const bankerDoubleBtn = document.getElementById(`banker_double_h${holeNum}`);
+        const bankerDouble = bankerDoubleBtn?.dataset.active === 'true';
         
         // Get net scores for all players
         const netScores = [];
@@ -223,8 +223,8 @@
           
           if (betAmount === 0) continue;
           
-          const playerDoubleCheck = document.getElementById(`banker_pdouble_p${p}_h${holeNum}`);
-          const playerDouble = playerDoubleCheck?.checked || false;
+          const playerDoubleBtn = document.getElementById(`banker_pdouble_p${p}_h${holeNum}`);
+          const playerDouble = playerDoubleBtn?.dataset.active === 'true';
           
           const playerNet = netScores[p];
           
@@ -484,25 +484,41 @@
         betsTd.style.cssText = 'padding: 4px; font-size: 11px;';
         tr.appendChild(betsTd);
         
-        // Banker Double/Triple checkbox
+        // Banker Double/Triple button
         const bankerDoubleTd = document.createElement('td');
-        const bankerDoubleCheck = document.createElement('input');
-        bankerDoubleCheck.id = `banker_double_h${h}`;
-        bankerDoubleCheck.type = 'checkbox';
-        bankerDoubleCheck.style.cssText = 'cursor: pointer;';
+        const bankerDoubleBtn = document.createElement('button');
+        bankerDoubleBtn.id = `banker_double_h${h}`;
+        bankerDoubleBtn.type = 'button';
+        bankerDoubleBtn.dataset.active = 'false';
         
-        // Set title based on par
+        // Set text and title based on par
         const holePar = getPar(h - 1);
         const isPar3 = holePar === 3;
-        bankerDoubleCheck.title = isPar3 ? 'Banker triples all bets (Par 3)' : 'Banker doubles all bets';
+        const multiplierText = isPar3 ? '3×' : '2×';
+        bankerDoubleBtn.textContent = multiplierText;
+        bankerDoubleBtn.title = isPar3 ? 'Banker triples all bets (Par 3)' : 'Banker doubles all bets';
+        bankerDoubleBtn.style.cssText = 'padding: 8px 12px; min-width: 44px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;';
         
-        bankerDoubleCheck.addEventListener('change', () => {
+        bankerDoubleBtn.addEventListener('click', () => {
+          const isActive = bankerDoubleBtn.dataset.active === 'true';
+          bankerDoubleBtn.dataset.active = isActive ? 'false' : 'true';
+          
+          if (bankerDoubleBtn.dataset.active === 'true') {
+            bankerDoubleBtn.style.background = 'var(--accent)';
+            bankerDoubleBtn.style.color = 'var(--bg)';
+            bankerDoubleBtn.style.borderColor = 'var(--accent)';
+          } else {
+            bankerDoubleBtn.style.background = 'var(--panel)';
+            bankerDoubleBtn.style.color = 'var(--muted)';
+            bankerDoubleBtn.style.borderColor = 'var(--line)';
+          }
+          
           this.update();
           if (typeof window.saveDebounced === 'function') {
             window.saveDebounced();
           }
         });
-        bankerDoubleTd.appendChild(bankerDoubleCheck);
+        bankerDoubleTd.appendChild(bankerDoubleBtn);
         tr.appendChild(bankerDoubleTd);
         
         // Result column
@@ -575,27 +591,38 @@
             }
           });
           
-          const doubleCheck = document.createElement('input');
-          doubleCheck.id = `banker_pdouble_p${p}_h${h}`;
-          doubleCheck.type = 'checkbox';
-          doubleCheck.title = checkboxTitle;
-          doubleCheck.style.cssText = 'cursor: pointer; width: 16px; height: 16px; accent-color: var(--accent);';
-          doubleCheck.addEventListener('change', () => {
+          const doubleBtn = document.createElement('button');
+          doubleBtn.id = `banker_pdouble_p${p}_h${h}`;
+          doubleBtn.type = 'button';
+          doubleBtn.textContent = multiplierText;
+          doubleBtn.title = checkboxTitle;
+          doubleBtn.dataset.active = 'false';
+          doubleBtn.style.cssText = 'padding: 6px 10px; min-width: 40px; min-height: 32px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s;';
+          
+          doubleBtn.addEventListener('click', () => {
+            const isActive = doubleBtn.dataset.active === 'true';
+            doubleBtn.dataset.active = isActive ? 'false' : 'true';
+            
+            if (doubleBtn.dataset.active === 'true') {
+              doubleBtn.style.background = 'var(--accent)';
+              doubleBtn.style.color = 'var(--bg)';
+              doubleBtn.style.borderColor = 'var(--accent)';
+            } else {
+              doubleBtn.style.background = 'var(--panel)';
+              doubleBtn.style.color = 'var(--muted)';
+              doubleBtn.style.borderColor = 'var(--line)';
+            }
+            
             this.update();
             if (typeof window.saveDebounced === 'function') {
               window.saveDebounced();
             }
           });
           
-          const doubleLabel = document.createElement('span');
-          doubleLabel.textContent = multiplierText;
-          doubleLabel.style.cssText = 'font-size: 10px; color: var(--accent); font-weight: 600;';
-          
           container.appendChild(label);
           container.appendChild(dollarSign);
           container.appendChild(betInput);
-          container.appendChild(doubleCheck);
-          container.appendChild(doubleLabel);
+          container.appendChild(doubleBtn);
           
           betInputs.push(container);
         }
