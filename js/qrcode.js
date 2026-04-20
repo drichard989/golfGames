@@ -533,15 +533,22 @@
             // ADD MODE: Append to existing players
             const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
             console.log('[QR Import] Current row count:', currentRows);
+            console.log('[QR Import] DEBUG - window.PLAYERS before:', window.PLAYERS);
+            console.log('[QR Import] DEBUG - window.Scorecard.player.add:', typeof window.Scorecard?.player?.add);
             
             console.log('[QR Import] Adding', playerCount, 'new rows');
             // Add new player rows
             for (let i = 0; i < playerCount; i++) {
+              console.log(`[QR Import] ADD - Iteration ${i}: Calling Scorecard.player.add...`);
               if (window.Scorecard?.player?.add) {
                 window.Scorecard.player.add();
+                console.log(`[QR Import] ADD - Iteration ${i}: PLAYERS now:`, window.PLAYERS);
+              } else {
+                console.error('[QR Import] ADD - window.Scorecard.player.add not found!');
               }
             }
             
+            console.log('[QR Import] DEBUG - window.PLAYERS after:', window.PLAYERS);
             console.log('[QR Import] Waiting for DOM update...');
             // CRITICAL FIX: Wait for DOM to update before populating rows
             // Use requestAnimationFrame to ensure rows are fully rendered
