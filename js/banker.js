@@ -540,7 +540,7 @@
           }
           
           const playerInfo = document.createElement('span');
-          playerInfo.style.cssText = 'font-weight: 500;';
+          playerInfo.style.cssText = 'font-weight: 500; font-size: 14px;';
           playerInfo.textContent = playerName;
           
           const scoreInfo = document.createElement('span');
@@ -587,7 +587,7 @@
         const bankerTotal = hole.bets.reduce((sum, bet) => sum - bet.payout, 0);
         if (bankerTotal !== 0) {
           const bankerSummary = document.createElement('div');
-          bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 600;';
+          bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 15px; font-weight: 600;';
           
           if (bankerTotal > 0) {
             bankerSummary.style.color = 'var(--accent)';
@@ -792,7 +792,7 @@
       container.style.cssText = 'display: flex; gap: 4px; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;';
           const label = document.createElement('span');
           label.textContent = `${playerName}:`;
-          label.style.cssText = 'min-width: 55px; font-size: 11px; font-weight: 500;';
+          label.style.cssText = 'min-width: 55px; font-size: 14px; font-weight: 500;';
           
           const dollarSign = document.createElement('span');
           dollarSign.textContent = '$';
