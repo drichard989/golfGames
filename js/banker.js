@@ -242,7 +242,8 @@
           }
           
           // Set banker double
-      const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
+          const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
+          if (holeState.bankerDoubled && bankerDoubleBtn) {
             bankerDoubleBtn.dataset.active = 'true';
             bankerDoubleBtn.style.background = 'var(--accent)';
             bankerDoubleBtn.style.color = 'var(--bg)';
