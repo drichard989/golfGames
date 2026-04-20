@@ -1864,19 +1864,43 @@
     if (missing.length) { alert("CSV is missing columns: " + missing.join(", ")); return; }
 
     // Separate player data from Banker data
+    // Banker data appears after a blank line and comment: "# Banker Game Data"
     const playerRows = [];
     const bankerRows = [];
+    let inBankerSection = false;
     
     data.slice(1).forEach(r => {
-      if (r[0] === 'BANKER') {
+      // Check if we're entering the Banker section
+      const firstCell = String(r[0] || '').trim();
+      
+      // Skip blank rows and comment rows
+      if (!firstCell || firstCell.startsWith('#')) {
+        if (firstCell.toLowerCase().includes('banker')) {
+          inBankerSection = true;
+        }
+        return;
+      }
+      
+      // Check if this is the Banker header row
+      if (firstCell.toLowerCase() === 'hole' && r[1] && String(r[1]).toLowerCase().includes('banker')) {
+        inBankerSection = true;
+        return;
+      }
+      
+      // If we're in the Banker section and this row has a numeric hole number
+      if (inBankerSection && /^\d+$/.test(firstCell)) {
         bankerRows.push(r);
       } else if (r.some(x => x && x !== "")) {
+        // Regular player row
         playerRows.push(r);
       }
     });
     
     const rows = playerRows.slice(0, 99);
     if (!rows.length) { alert("No data rows found under the header."); return; }
+    
+    // Debug: Log what we found
+    console.log(`[CSV Import] Found ${playerRows.length} player rows and ${bankerRows.length} banker rows`);
 
     // Create custom dialog for mode selection
     const dialog = document.createElement('div');
