@@ -534,17 +534,17 @@
             const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
             console.log('[QR Import] Current row count:', currentRows);
             console.log('[QR Import] DEBUG - window.PLAYERS before:', window.PLAYERS);
-            console.log('[QR Import] DEBUG - window.Scorecard.player.add:', typeof window.Scorecard?.player?.add);
+            console.log('[QR Import] DEBUG - window.GolfApp.api.addPlayer:', typeof window.GolfApp?.api?.addPlayer);
             
             console.log('[QR Import] Adding', playerCount, 'new rows');
-            // Add new player rows
+            // Add new player rows using correct API
             for (let i = 0; i < playerCount; i++) {
-              console.log(`[QR Import] ADD - Iteration ${i}: Calling Scorecard.player.add...`);
-              if (window.Scorecard?.player?.add) {
-                window.Scorecard.player.add();
+              console.log(`[QR Import] ADD - Iteration ${i}: Calling GolfApp.api.addPlayer...`);
+              if (window.GolfApp?.api?.addPlayer) {
+                window.GolfApp.api.addPlayer();
                 console.log(`[QR Import] ADD - Iteration ${i}: PLAYERS now:`, window.PLAYERS);
               } else {
-                console.error('[QR Import] ADD - window.Scorecard.player.add not found!');
+                console.error('[QR Import] ADD - GolfApp.api.addPlayer not found!');
               }
             }
             
