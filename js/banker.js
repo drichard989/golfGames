@@ -506,12 +506,12 @@
         if (!resultCell) return;
         
         if (hole.error) {
-          resultCell.innerHTML = `<span style="color: var(--muted); font-size: 10px;">${hole.error}</span>`;
+          resultCell.innerHTML = `<span style="color: var(--muted); font-size: 12px;">${hole.error}</span>`;
           return;
         }
         
         if (hole.bets.length === 0) {
-          resultCell.innerHTML = '<span style="color: var(--muted); font-size: 10px;">No bets</span>';
+          resultCell.innerHTML = '<span style="color: var(--muted); font-size: 12px;">No bets</span>';
           return;
         }
         
@@ -522,7 +522,7 @@
           const playerName = names[bet.player]?.substring(0, 8) || `P${bet.player + 1}`;
           
           const resultContainer = document.createElement('div');
-          resultContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; margin-bottom: 2px; border-radius: 3px; font-size: 10px;';
+          resultContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; margin-bottom: 2px; border-radius: 3px; font-size: 12px;';
           
           // Color code based on outcome
           if (bet.winner === bet.player) {
@@ -544,11 +544,11 @@
           playerInfo.textContent = playerName;
           
           const scoreInfo = document.createElement('span');
-          scoreInfo.style.cssText = 'font-size: 9px; color: var(--muted);';
+          scoreInfo.style.cssText = 'font-size: 11px; color: var(--muted);';
           scoreInfo.textContent = `${bet.playerNet} v ${bet.bankerNet}`;
           
           const payoutInfo = document.createElement('span');
-          payoutInfo.style.cssText = 'font-weight: 600; font-size: 11px;';
+          payoutInfo.style.cssText = 'font-weight: 600; font-size: 13px;';
           
           if (bet.payout > 0) {
             payoutInfo.style.color = 'var(--accent)';
@@ -562,7 +562,7 @@
           }
           
           const multiplierInfo = document.createElement('span');
-          multiplierInfo.style.cssText = 'font-size: 8px; color: var(--muted); margin-left: 2px;';
+          multiplierInfo.style.cssText = 'font-size: 10px; color: var(--muted); margin-left: 2px;';
           if (bet.multiplier > 1) {
             multiplierInfo.textContent = `(${bet.multiplier}×)`;
           }
@@ -587,14 +587,14 @@
         const bankerTotal = hole.bets.reduce((sum, bet) => sum - bet.payout, 0);
         if (bankerTotal !== 0) {
           const bankerSummary = document.createElement('div');
-          bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 10px; font-weight: 600;';
+          bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 12px; font-weight: 600;';
           
           if (bankerTotal > 0) {
             bankerSummary.style.color = 'var(--accent)';
-            bankerSummary.innerHTML = `${bankerName} wins: <span style="font-size: 11px;">+$${bankerTotal.toFixed(0)}</span>`;
+            bankerSummary.innerHTML = `${bankerName} wins: <span style="font-size: 13px;">+$${bankerTotal.toFixed(0)}</span>`;
           } else {
             bankerSummary.style.color = 'var(--danger)';
-            bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 11px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
+            bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
           }
           
           resultCell.appendChild(bankerSummary);
@@ -658,8 +658,7 @@
         
         // Create container with label like player bets
         const maxBetContainer = document.createElement('div');
-        maxBetContainer.style.cssText = 'display: flex; gap: 6px; align-items: center; padding: 3px; background: rgba(255,255,255,0.03); border-radius: 4px;';
-        
+    maxBetContainer.style.cssText = 'display: flex; gap: 4px; align-items: center; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;';
         const dollarSign = document.createElement('span');
         dollarSign.textContent = '$';
         dollarSign.style.cssText = 'font-size: 11px; color: var(--accent);';
@@ -790,8 +789,7 @@
           const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
           
           const container = document.createElement('div');
-          container.style.cssText = 'display: flex; gap: 6px; align-items: center; margin-bottom: 4px; padding: 3px; background: rgba(255,255,255,0.03); border-radius: 4px;';
-          
+      container.style.cssText = 'display: flex; gap: 4px; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;';
           const label = document.createElement('span');
           label.textContent = `${playerName}:`;
           label.style.cssText = 'min-width: 55px; font-size: 11px; font-weight: 500;';
@@ -836,7 +834,7 @@
           doubleBtn.textContent = multiplierText;
           doubleBtn.title = checkboxTitle;
           doubleBtn.dataset.active = 'false';
-          doubleBtn.style.cssText = 'padding: 6px 10px; min-width: 40px; min-height: 32px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s;';
+          doubleBtn.style.cssText = 'padding: 4px 8px; min-width: 40px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s;';
           
           doubleBtn.addEventListener('click', () => {
             const isActive = doubleBtn.dataset.active === 'true';
