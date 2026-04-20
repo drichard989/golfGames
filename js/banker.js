@@ -154,6 +154,7 @@
 
   const Banker = {
     _initialized: false,
+    _pendingState: null,  // Store state for restoration after init
     
     /**
      * Get current banker game state for saving
@@ -222,6 +223,16 @@
     setState(state) {
       if (!state || !state.holes) return;
       
+      // Check if table is built (test if banker select exists)
+      const testElement = document.getElementById('banker_select_h1');
+      if (!testElement) {
+        // Table not built yet, store for later
+        console.log('[Banker] Table not built, storing state for later restoration');
+        this._pendingState = state;
+        return;
+      }
+      
+      console.log('[Banker] Restoring state to DOM');
       // Delay to ensure DOM is ready
       setTimeout(() => {
         state.holes.forEach((holeState, idx) => {
@@ -1010,20 +1021,30 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         this._initialized = true;
         
-        // After initial build, restore saved state if available
-        setTimeout(() => {
-          const savedState = localStorage.getItem('golf_scorecard_v5');
-          if (savedState) {
-            try {
-              const state = JSON.parse(savedState);
-              if (state.banker?.state) {
-                this.setState(state.banker.state);
+        // Check if there's a pending state to restore (from page load)
+        if (this._pendingState) {
+          console.log('[Banker] Applying pending state from page load');
+          // Apply immediately after table is built
+          setTimeout(() => {
+            this.setState(this._pendingState);
+            this._pendingState = null;
+          }, 100);
+        } else {
+          // After initial build, restore saved state if available
+          setTimeout(() => {
+            const savedState = localStorage.getItem('golf_scorecard_v5');
+            if (savedState) {
+              try {
+                const state = JSON.parse(savedState);
+                if (state.banker?.state) {
+                  this.setState(state.banker.state);
+                }
+              } catch (e) {
+                console.error('[Banker] Failed to restore state on init:', e);
               }
-            } catch (e) {
-              console.error('[Banker] Failed to restore state on init:', e);
             }
-          }
-        }, 200);
+          }, 200);
+        }
       } else {
         // On subsequent opens, just refresh the UI without clearing data
         this.updateBetInputs();
