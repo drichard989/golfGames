@@ -729,7 +729,7 @@ tfoot td {
 .junk-table th,
 .junk-table td {
   border-bottom: 1px solid var(--line);
-  padding: var(--space-xs) var(--space-sm);
+  padding: 4px 6px;
   text-align: center;
   white-space: nowrap;
 }
@@ -1219,7 +1219,7 @@ input[type="text"] {
   --panel-alt: #f8fafc;
   --ink: #1a1c1f;
   --muted: #5a5f66;
-  --accent: #dc3545;
+  --accent: #28a745;
   --line: #d3d7dc;
   --shadow: rgba(0, 0, 0, .08);
 }
@@ -1249,18 +1249,18 @@ input[type="text"] {
 
 /* Light theme stroke highlighting */
 :root[data-theme="light"] .score-input.receives-stroke {
-  border: 2px solid #dc3545;
-  box-shadow: 0 0 0 1px #dc3545;
+  border: 2px solid #28a745;
+  box-shadow: 0 0 0 1px #28a745;
 }
 
 :root[data-theme="light"] .score-input.receives-stroke[data-strokes="2"] {
-  border: 2px solid #dc3545;
-  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545;
+  border: 2px solid #28a745;
+  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #28a745;
 }
 
 :root[data-theme="light"] .score-input.receives-stroke[data-strokes="3"] {
-  border: 2px solid #dc3545;
-  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545, 0 0 0 12px #ffffff, 0 0 0 14px #dc3545;
+  border: 2px solid #28a745;
+  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #28a745, 0 0 0 12px #ffffff, 0 0 0 14px #28a745;
 }
 
 /* Light theme input fixes */
