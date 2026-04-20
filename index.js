@@ -1662,7 +1662,9 @@
         vegas: { section: ids.vegasSection, toggle: ids.toggleVegas, init: null },
         banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => {
           // Always call init - it handles whether to rebuild internally
+          console.log('[games_open] Opening Banker, window.Banker exists:', !!window.Banker);
           if (window.Banker) {
+            console.log('[games_open] Calling Banker.init()');
             window.Banker.init();
           } else {
             console.error('[Banker] Banker module not loaded');

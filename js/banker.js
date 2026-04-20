@@ -605,10 +605,16 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
      * Build the Banker table
      */
     buildTable() {
+      console.log('[Banker] buildTable() called');
       const tbody = document.getElementById('bankerBody');
-      if (!tbody) return;
+      console.log('[Banker] tbody element:', tbody);
+      if (!tbody) {
+        console.error('[Banker] bankerBody tbody not found!');
+        return;
+      }
       
       tbody.innerHTML = '';
+      console.log('[Banker] Building table for', getPlayerCount(), 'players');
       const playerCount = getPlayerCount();
       const names = getPlayerNames();
       
@@ -752,6 +758,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         tbody.appendChild(tr);
       }
+      console.log('[Banker] buildTable completed - added 18 rows');
     },
 
     /**
@@ -945,8 +952,15 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
      * Initialize Banker game
      */
     init() {
+      console.log('[Banker] init() called, _initialized:', this._initialized);
+      
+      // Check if tbody exists
+      const tbody = document.getElementById('bankerBody');
+      console.log('[Banker] tbody found:', !!tbody);
+      
       // Only do full init once
       if (!this._initialized) {
+        console.log('[Banker] Running full initialization...');
         this.buildTable();
         this.rebuildFooter();
         this.updateBetInputs();
@@ -1013,4 +1027,5 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
   };
 
   window.Banker = Banker;
+  console.log('[Banker] Module loaded and exported to window.Banker');
 })();
