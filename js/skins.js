@@ -233,7 +233,7 @@
     /**
      * Compute skins outcome for all holes and players
      * @param {{carry:boolean, half:boolean, buyIn:number, useNet:boolean}} opts
-     * @returns {{totals:number[], holesWon:string[][], winnings:number[], pot:number, totalSkins:number, activePlayers:number}}
+     * @returns {{totals:number[], holesWon:string[][], holesWithCarryover:Set[], winnings:number[], pot:number, totalSkins:number, activePlayers:number}}
      */
     compute(opts) {
       const { carry, half, buyIn, useNet } = opts;
@@ -241,6 +241,7 @@
       const HOLES = getHoleCount();
       const totals = Array(playerCount).fill(0);
       const holesWon = Array(playerCount).fill(null).map(() => []);
+      const holesWithCarryover = Array(playerCount).fill(null).map(() => new Set());
       let pot = 1;
 
       console.log('[Skins.compute] Starting with useNet:', useNet, 'half:', half);
@@ -269,6 +270,10 @@
         const w = winners[0];
         totals[w] += pot;
         holesWon[w].push(String(h + 1));
+        // Track if this hole had carryover (pot > 1)
+        if (pot > 1) {
+          holesWithCarryover[w].add(String(h + 1));
+        }
         pot = 1;
       }
 
@@ -289,21 +294,30 @@
         return (skinCount / totalSkins) * moneyPot;
       });
 
-      return { totals, holesWon, winnings, pot: moneyPot, totalSkins, activePlayers };
+      return { totals, holesWon, holesWithCarryover, winnings, pot: moneyPot, totalSkins, activePlayers };
     },
 
     /**
      * Render computed skins results into the DOM
-     * @param {{totals:number[], holesWon:string[][], winnings:number[]}} data
+     * @param {{totals:number[], holesWon:string[][], holesWithCarryover:Set[], winnings:number[]}} data
      */
     render(data) {
-      const { totals, holesWon, winnings } = data;
+      const { totals, holesWon, holesWithCarryover, winnings } = data;
       const playerCount = totals.length;
       for (let p = 0; p < playerCount; p++) {
         const holesCell = document.getElementById('skinsHoles' + p);
         const totCell = document.getElementById('skinsTotal' + p);
         const winCell = document.getElementById('skinsWinnings' + p);
-        if (holesCell) holesCell.textContent = (holesWon[p] || []).join(', ');
+        
+        // Format holes with carryover indicator (*)
+        if (holesCell && holesWon[p]) {
+          const carryoverSet = holesWithCarryover[p] || new Set();
+          const formattedHoles = holesWon[p].map(hole => {
+            return carryoverSet.has(hole) ? `${hole}*` : hole;
+          });
+          holesCell.textContent = formattedHoles.join(', ');
+        }
+        
         if (totCell) totCell.textContent = String(totals[p] || 0);
         if (winCell) {
           const amount = winnings[p] || 0;
