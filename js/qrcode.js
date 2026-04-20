@@ -668,34 +668,54 @@
 
           // Helper function to perform all post-import updates
           function performPostImportUpdates() {
+            console.log('[QR Import] Starting post-import updates...');
+            
             // Recalculate everything - full recalc of scorecard AND all games
-            if (window.Scorecard?.calc?.recalcAll) {
+            if (window.GolfApp?.scorecard?.calc?.recalcAll) {
+              console.log('[QR Import] Calling GolfApp.scorecard.calc.recalcAll()');
+              window.GolfApp.scorecard.calc.recalcAll();
+            } else if (window.Scorecard?.calc?.recalcAll) {
+              console.log('[QR Import] Calling legacy Scorecard.calc.recalcAll()');
               window.Scorecard.calc.recalcAll();
+            }
+            
+            // Recalculate all game modules
+            if (window.GolfApp?.api?.recalculateEverything) {
+              console.log('[QR Import] Calling GolfApp.api.recalculateEverything()');
+              window.GolfApp.api.recalculateEverything();
+            } else if (window.AppManager?.recalcGames) {
+              console.log('[QR Import] Calling AppManager.recalcGames()');
+              window.AppManager.recalcGames();
             }
             
             // Use another requestAnimationFrame to ensure recalc completes before highlighting
             requestAnimationFrame(() => {
               // Update stroke highlights (after recalc completes)
-              if (window.Scorecard?.calc?.applyStrokeHighlighting) {
+              if (window.GolfApp?.scorecard?.calc?.applyStrokeHighlighting) {
+                console.log('[QR Import] Applying stroke highlighting');
+                window.GolfApp.scorecard.calc.applyStrokeHighlighting();
+              } else if (window.Scorecard?.calc?.applyStrokeHighlighting) {
                 window.Scorecard.calc.applyStrokeHighlighting();
               } else if (window.updateStrokeHighlights) {
                 window.updateStrokeHighlights();
               }
               
               // Sync row heights between fixed and scrollable tables
-              if (window.Scorecard?.build?.syncRowHeights) {
+              if (window.GolfApp?.scorecard?.build?.syncRowHeights) {
+                window.GolfApp.scorecard.build.syncRowHeights();
+              } else if (window.Scorecard?.build?.syncRowHeights) {
                 window.Scorecard.build.syncRowHeights();
               }
               
               // Clear the import flag now that all operations are complete
               window._qrImportInProgress = false;
-              console.log('[QR Import] Import complete, flag cleared');
+              console.log('[QR Import] Import complete, all calculations updated!');
+              
+              // Show success message
+              if (window.GolfApp?.errorHandler?.success) {
+                window.GolfApp.errorHandler.success('Scorecard imported successfully!');
+              }
             });
-          }
-          
-          // Recalculate all game modules
-          if (window.AppManager?.recalcGames) {
-            window.AppManager.recalcGames();
           }
           
           // Update player count display
