@@ -233,7 +233,7 @@
     /**
      * Compute skins outcome for all holes and players
      * @param {{carry:boolean, half:boolean, buyIn:number, useNet:boolean}} opts
-     * @returns {{totals:number[], holesWon:string[][], holesWithCarryover:Set[], winnings:number[], pot:number, totalSkins:number, activePlayers:number}}
+     * @returns {{totals:number[], holesWon:string[][], carryoverHoles:Map[], winnings:number[], totalSkins:number}}
      */
     compute(opts) {
       const { carry, half, buyIn, useNet } = opts;
@@ -241,8 +241,9 @@
       const HOLES = getHoleCount();
       const totals = Array(playerCount).fill(0);
       const holesWon = Array(playerCount).fill(null).map(() => []);
-      const holesWithCarryover = Array(playerCount).fill(null).map(() => new Set());
+      const carryoverHoles = Array(playerCount).fill(null).map(() => new Map());
       let pot = 1;
+      let carryoverFromHoles = []; // Track which holes contribute to current pot
 
       console.log('[Skins.compute] Starting with useNet:', useNet, 'half:', half);
 
@@ -258,62 +259,60 @@
         
         const filled = scores.map((n, p) => ({ n, p })).filter(x => x.n > 0);
         if (filled.length < 2) {
-          if (carry) pot++;
+          if (carry) {
+            pot++;
+            carryoverFromHoles.push(h + 1); // Add this hole to carryover list
+          }
           continue;
         }
         const min = Math.min(...filled.map(x => x.n));
         const winners = filled.filter(x => x.n === min).map(x => x.p);
         if (winners.length !== 1) {
-          if (carry) pot++;
+          if (carry) {
+            pot++;
+            carryoverFromHoles.push(h + 1); // Add this hole to carryover list
+          }
           continue;
         }
         const w = winners[0];
         totals[w] += pot;
         holesWon[w].push(String(h + 1));
-        // Track if this hole had carryover (pot > 1)
-        if (pot > 1) {
-          holesWithCarryover[w].add(String(h + 1));
+        // Track which holes were carried over to this winning hole
+        if (carryoverFromHoles.length > 0) {
+          carryoverHoles[w].set(String(h + 1), [...carryoverFromHoles]);
         }
         pot = 1;
+        carryoverFromHoles = []; // Reset carryover list
       }
 
-      // Count active players (those with at least one score)
-      const activePlayers = Array.from({ length: playerCount }, (_, p) => p)
-        .filter(p => {
-          for (let h = 0; h < HOLES; h++) {
-            if (getGross(p, h) > 0) return true;
-          }
-          return false;
-        }).length;
-
-      // Calculate dollar winnings
+      // Calculate dollar winnings (simple: skins × value per skin)
       const totalSkins = totals.reduce((sum, t) => sum + t, 0);
-      const moneyPot = buyIn * activePlayers;
-      const winnings = totals.map(skinCount => {
-        if (totalSkins === 0) return 0;
-        return (skinCount / totalSkins) * moneyPot;
-      });
+      const winnings = totals.map(skinCount => skinCount * buyIn);
 
-      return { totals, holesWon, holesWithCarryover, winnings, pot: moneyPot, totalSkins, activePlayers };
+      return { totals, holesWon, carryoverHoles, winnings, totalSkins };
     },
 
     /**
      * Render computed skins results into the DOM
-     * @param {{totals:number[], holesWon:string[][], holesWithCarryover:Set[], winnings:number[]}} data
+     * @param {{totals:number[], holesWon:string[][], carryoverHoles:Map[], winnings:number[]}} data
      */
     render(data) {
-      const { totals, holesWon, holesWithCarryover, winnings } = data;
+      const { totals, holesWon, carryoverHoles, winnings } = data;
       const playerCount = totals.length;
       for (let p = 0; p < playerCount; p++) {
         const holesCell = document.getElementById('skinsHoles' + p);
         const totCell = document.getElementById('skinsTotal' + p);
         const winCell = document.getElementById('skinsWinnings' + p);
         
-        // Format holes with carryover indicator (*)
+        // Format holes with carryover holes in curly braces
         if (holesCell && holesWon[p]) {
-          const carryoverSet = holesWithCarryover[p] || new Set();
+          const carryoverMap = carryoverHoles[p] || new Map();
           const formattedHoles = holesWon[p].map(hole => {
-            return carryoverSet.has(hole) ? `${hole}*` : hole;
+            const carriedFrom = carryoverMap.get(hole);
+            if (carriedFrom && carriedFrom.length > 0) {
+              return `${hole} {${carriedFrom.join(',')}}`;
+            }
+            return hole;
           });
           holesCell.textContent = formattedHoles.join(', ');
         }
