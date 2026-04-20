@@ -450,36 +450,43 @@
               }
             }
             
-            // Import all players starting at index 0
-            const rows = document.querySelectorAll('#scorecardFixed .player-row');
-            data.players.forEach((player, idx) => {
-              const row = rows[idx];
-              if (!row) return;
+            // CRITICAL FIX: Wait for DOM to update before populating rows
+            // Use requestAnimationFrame to ensure rows are fully rendered
+            requestAnimationFrame(() => {
+              // Import all players starting at index 0
+              const rows = document.querySelectorAll('#scorecardFixed .player-row');
+              data.players.forEach((player, idx) => {
+                const row = rows[idx];
+                if (!row) return;
 
-              const nameInput = row.querySelector('.name-edit');
-              const chInput = row.querySelector('.ch-input');
-              const scoreRow = document.querySelectorAll('#scorecard .player-row')[idx];
-              const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
+                const nameInput = row.querySelector('.name-edit');
+                const chInput = row.querySelector('.ch-input');
+                const scoreRow = document.querySelectorAll('#scorecard .player-row')[idx];
+                const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
 
-              if (nameInput) {
-                nameInput.value = player.name;
-                nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-              }
+                if (nameInput) {
+                  nameInput.value = player.name;
+                  nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                
+                if (chInput) {
+                  chInput.value = player.ch;
+                  chInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  chInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                
+                if (scoreInputs) {
+                  player.scores.forEach((score, scoreIdx) => {
+                    if (scoreInputs[scoreIdx]) {
+                      scoreInputs[scoreIdx].value = score;
+                      scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                  });
+                }
+              });
               
-              if (chInput) {
-                chInput.value = player.ch;
-                chInput.dispatchEvent(new Event('input', { bubbles: true }));
-                chInput.dispatchEvent(new Event('change', { bubbles: true }));
-              }
-              
-              if (scoreInputs) {
-                player.scores.forEach((score, scoreIdx) => {
-                  if (scoreInputs[scoreIdx]) {
-                    scoreInputs[scoreIdx].value = score;
-                    scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
-                  }
-                });
-              }
+              // CRITICAL: Trigger all updates AFTER data is populated
+              performPostImportUpdates();
             });
           } else if (mode === 'add') {
             // ADD MODE: Append to existing players
@@ -492,69 +499,94 @@
               }
             }
             
-            // Import players starting after existing ones
-            const allRows = document.querySelectorAll('#scorecardFixed .player-row');
-            data.players.forEach((player, idx) => {
-              const rowIndex = currentRows + idx;
-              const row = allRows[rowIndex];
-              if (!row) return;
+            // CRITICAL FIX: Wait for DOM to update before populating rows
+            // Use requestAnimationFrame to ensure rows are fully rendered
+            requestAnimationFrame(() => {
+              // Import players starting after existing ones
+              const allRows = document.querySelectorAll('#scorecardFixed .player-row');
+              data.players.forEach((player, idx) => {
+                const rowIndex = currentRows + idx;
+                const row = allRows[rowIndex];
+                if (!row) return;
 
-              const nameInput = row.querySelector('.name-edit');
-              const chInput = row.querySelector('.ch-input');
-              const allScoreRows = document.querySelectorAll('#scorecard .player-row');
-              const scoreRow = allScoreRows[rowIndex];
-              const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
+                const nameInput = row.querySelector('.name-edit');
+                const chInput = row.querySelector('.ch-input');
+                const allScoreRows = document.querySelectorAll('#scorecard .player-row');
+                const scoreRow = allScoreRows[rowIndex];
+                const scoreInputs = scoreRow?.querySelectorAll('input.score-input');
 
-              if (nameInput) {
-                nameInput.value = player.name;
-                nameInput.dispatchEvent(new Event('input', { bubbles: true }));
-              }
+                if (nameInput) {
+                  nameInput.value = player.name;
+                  nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                
+                if (chInput) {
+                  chInput.value = player.ch;
+                  chInput.dispatchEvent(new Event('input', { bubbles: true }));
+                  chInput.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                
+                if (scoreInputs) {
+                  player.scores.forEach((score, scoreIdx) => {
+                    if (scoreInputs[scoreIdx]) {
+                      scoreInputs[scoreIdx].value = score;
+                      scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                  });
+                }
+              });
               
-              if (chInput) {
-                chInput.value = player.ch;
-                chInput.dispatchEvent(new Event('input', { bubbles: true }));
-                chInput.dispatchEvent(new Event('change', { bubbles: true }));
-              }
-              
-              if (scoreInputs) {
-                player.scores.forEach((score, scoreIdx) => {
-                  if (scoreInputs[scoreIdx]) {
-                    scoreInputs[scoreIdx].value = score;
-                    scoreInputs[scoreIdx].dispatchEvent(new Event('input', { bubbles: true }));
-                  }
-                });
-              }
+              // CRITICAL: Trigger all updates AFTER data is populated
+              performPostImportUpdates();
             });
           }
 
-          // Recalculate everything - full recalc of scorecard AND all games
-          if (window.Scorecard?.calc?.recalcAll) {
-            window.Scorecard.calc.recalcAll();
-          }
-          
-          // Update stroke highlights (this might be separate from recalcAll)
-          if (window.updateStrokeHighlights) {
-            window.updateStrokeHighlights();
-          }
-          
-          // Recalculate all game modules
-          if (window.AppManager?.recalcGames) {
-            window.AppManager.recalcGames();
-          }
-          
-          // Update player count display
-          if (window.Scorecard?.player?.updateCountDisplay) {
-            window.Scorecard.player.updateCountDisplay();
-          }
-          
-          // Sync player overlay if needed
-          if (window.Scorecard?.player?.syncOverlay) {
-            window.Scorecard.player.syncOverlay();
-          }
+          // Helper function to perform all post-import updates
+          function performPostImportUpdates() {
+            // Recalculate everything - full recalc of scorecard AND all games
+            if (window.Scorecard?.calc?.recalcAll) {
+              window.Scorecard.calc.recalcAll();
+            }
+            
+            // Use another requestAnimationFrame to ensure recalc completes before highlighting
+            requestAnimationFrame(() => {
+              // Update stroke highlights (after recalc completes)
+              if (window.Scorecard?.calc?.applyStrokeHighlighting) {
+                window.Scorecard.calc.applyStrokeHighlighting();
+              } else if (window.updateStrokeHighlights) {
+                window.updateStrokeHighlights();
+              }
+              
+              // Sync row heights between fixed and scrollable tables
+              if (window.Scorecard?.build?.syncRowHeights) {
+                window.Scorecard.build.syncRowHeights();
+              }
+            });
+            
+            // Recalculate all game modules
+            if (window.AppManager?.recalcGames) {
+              window.AppManager.recalcGames();
+            }
+            
+            // Update player count display
+            if (window.Scorecard?.player?.updateCountDisplay) {
+              window.Scorecard.player.updateCountDisplay();
+            }
+            
+            // Sync player overlay if needed
+            if (window.Scorecard?.player?.syncOverlay) {
+              window.Scorecard.player.syncOverlay();
+            }
 
-          // Save to localStorage
-          if (window.Storage?.save) {
-            window.Storage.save();
+            // Save to localStorage
+            if (window.Storage?.save) {
+              window.Storage.save();
+            }
+            
+            const finalCount = document.querySelectorAll('#scorecardFixed .player-row').length;
+            if (typeof window.announce === 'function') {
+              window.announce(`Scorecard imported! ${finalCount} player${finalCount !== 1 ? 's' : ''} total.`);
+            }
           }
 
           const finalCount = document.querySelectorAll('#scorecardFixed .player-row').length;
