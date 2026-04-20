@@ -770,6 +770,22 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
       const playerCount = getPlayerCount();
       const names = getPlayerNames();
       
+      // Save current values before rebuilding inputs
+      const savedValues = {};
+      for (let h = 1; h <= 18; h++) {
+        savedValues[h] = {};
+        for (let p = 0; p < playerCount; p++) {
+          const betInput = document.getElementById(`banker_bet_p${p}_h${h}`);
+          const doubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          if (betInput) {
+            savedValues[h][p] = {
+              bet: betInput.value || '0',
+              doubled: doubleBtn?.dataset.active === 'true'
+            };
+          }
+        }
+      }
+      
       for (let h = 1; h <= 18; h++) {
         const betsTd = document.getElementById(`banker_bets_h${h}`);
         if (!betsTd) continue;
@@ -812,7 +828,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           betInput.inputMode = 'numeric';
           betInput.min = '0';
           betInput.step = '1';
-          betInput.value = '0';
+          // Restore saved value or default to '0'
+          betInput.value = savedValues[h][p]?.bet || '0';
           betInput.placeholder = '0';
           betInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
           betInput.addEventListener('input', () => {
@@ -842,8 +859,16 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           doubleBtn.type = 'button';
           doubleBtn.textContent = multiplierText;
           doubleBtn.title = checkboxTitle;
-          doubleBtn.dataset.active = 'false';
+          // Restore saved doubled state
+          doubleBtn.dataset.active = savedValues[h][p]?.doubled ? 'true' : 'false';
           doubleBtn.style.cssText = 'padding: 4px 8px; min-width: 40px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s;';
+          
+          // Apply saved doubled state styling immediately
+          if (doubleBtn.dataset.active === 'true') {
+            doubleBtn.style.background = 'var(--accent)';
+            doubleBtn.style.color = 'var(--bg)';
+            doubleBtn.style.borderColor = 'var(--accent)';
+          }
           
           doubleBtn.addEventListener('click', () => {
             const isActive = doubleBtn.dataset.active === 'true';
