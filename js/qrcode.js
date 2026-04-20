@@ -410,19 +410,28 @@
    */
   function importData(jsonString) {
     try {
+      console.log('[QR Import] Starting import, raw data:', jsonString.substring(0, 50) + '...');
       const data = decompressData(jsonString);
+      console.log('[QR Import] Decompressed data:', data);
 
       const playerCount = data.players.length;
       const courseName = window.COURSES?.[data.course]?.name || data.course;
       const currentRowCount = document.querySelectorAll('#scorecardFixed .player-row').length;
+      console.log('[QR Import] Player count:', playerCount, 'Current rows:', currentRowCount);
       
       // Show import options modal
       showImportModal(playerCount, courseName, currentRowCount, (mode) => {
-        if (!mode) return; // User cancelled
+        console.log('[QR Import] Modal callback received, mode:', mode);
+        if (!mode) {
+          console.log('[QR Import] Import cancelled by user');
+          return; // User cancelled
+        }
         
         try {
+          console.log('[QR Import] Processing import in mode:', mode);
           // Switch course if needed
           if (data.course !== window.ACTIVE_COURSE) {
+            console.log('[QR Import] Switching course from', window.ACTIVE_COURSE, 'to', data.course);
             const courseSelect = document.getElementById('courseSelect');
             if (courseSelect) {
               courseSelect.value = data.course;
@@ -431,8 +440,10 @@
           }
 
           if (mode === 'replace') {
+            console.log('[QR Import] REPLACE mode - clearing all existing players');
             // REPLACE MODE: Clear existing and set to exact count
             const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
+            console.log('[QR Import] Current rows before clear:', currentRows);
             
             // Remove all existing players
             while (document.querySelectorAll('#scorecardFixed .player-row').length > 0) {
@@ -443,6 +454,7 @@
               }
             }
             
+            console.log('[QR Import] Adding', playerCount, 'new rows');
             // Add exact number needed
             for (let i = 0; i < playerCount; i++) {
               if (window.Scorecard?.player?.add) {
@@ -450,14 +462,21 @@
               }
             }
             
+            console.log('[QR Import] Waiting for DOM update...');
             // CRITICAL FIX: Wait for DOM to update before populating rows
             // Use requestAnimationFrame to ensure rows are fully rendered
             requestAnimationFrame(() => {
+              console.log('[QR Import] DOM updated, populating data...');
               // Import all players starting at index 0
               const rows = document.querySelectorAll('#scorecardFixed .player-row');
+              console.log('[QR Import] Found', rows.length, 'rows after add');
               data.players.forEach((player, idx) => {
+                console.log('[QR Import] Populating player', idx, ':', player.name);
                 const row = rows[idx];
-                if (!row) return;
+                if (!row) {
+                  console.warn('[QR Import] Row', idx, 'not found!');
+                  return;
+                }
 
                 const nameInput = row.querySelector('.name-edit');
                 const chInput = row.querySelector('.ch-input');
@@ -485,13 +504,17 @@
                 }
               });
               
+              console.log('[QR Import] Data populated, triggering post-import updates...');
               // CRITICAL: Trigger all updates AFTER data is populated
               performPostImportUpdates();
             });
           } else if (mode === 'add') {
+            console.log('[QR Import] ADD mode - appending to existing players');
             // ADD MODE: Append to existing players
             const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
+            console.log('[QR Import] Current row count:', currentRows);
             
+            console.log('[QR Import] Adding', playerCount, 'new rows');
             // Add new player rows
             for (let i = 0; i < playerCount; i++) {
               if (window.Scorecard?.player?.add) {
@@ -499,15 +522,22 @@
               }
             }
             
+            console.log('[QR Import] Waiting for DOM update...');
             // CRITICAL FIX: Wait for DOM to update before populating rows
             // Use requestAnimationFrame to ensure rows are fully rendered
             requestAnimationFrame(() => {
+              console.log('[QR Import] DOM updated, populating data...');
               // Import players starting after existing ones
               const allRows = document.querySelectorAll('#scorecardFixed .player-row');
+              console.log('[QR Import] Total rows after add:', allRows.length);
               data.players.forEach((player, idx) => {
                 const rowIndex = currentRows + idx;
+                console.log('[QR Import] Populating player', idx, 'at row index', rowIndex, ':', player.name);
                 const row = allRows[rowIndex];
-                if (!row) return;
+                if (!row) {
+                  console.warn('[QR Import] Row', rowIndex, 'not found!');
+                  return;
+                }
 
                 const nameInput = row.querySelector('.name-edit');
                 const chInput = row.querySelector('.ch-input');
@@ -536,6 +566,7 @@
                 }
               });
               
+              console.log('[QR Import] Data populated, triggering post-import updates...');
               // CRITICAL: Trigger all updates AFTER data is populated
               performPostImportUpdates();
             });
