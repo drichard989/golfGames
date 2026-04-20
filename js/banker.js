@@ -173,8 +173,8 @@
         };
         
         // Get banker selection
-        const bankerSelect = document.getElementById(`banker_select_h${h}`);
-        if (bankerSelect) {
+      const bankerSelect = document.getElementById(`banker_h${h}`);
+      if (bankerSelect) {
           holeState.banker = Number(bankerSelect.value);
         }
         
@@ -185,8 +185,8 @@
         }
         
         // Get banker double
-        const bankerDoubleBtn = document.getElementById(`banker_bdouble_h${h}`);
-        if (bankerDoubleBtn) {
+      const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
+      if (bankerDoubleBtn) {
           holeState.bankerDouble = bankerDoubleBtn.dataset.active === 'true';
         }
         
@@ -242,8 +242,7 @@
           }
           
           // Set banker double
-          const bankerDoubleBtn = document.getElementById(`banker_bdouble_h${h}`);
-          if (bankerDoubleBtn && holeState.bankerDouble) {
+      const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             bankerDoubleBtn.dataset.active = 'true';
             bankerDoubleBtn.style.background = 'var(--accent)';
             bankerDoubleBtn.style.color = 'var(--bg)';
@@ -296,7 +295,7 @@
       
       for (let h = 1; h <= 18; h++) {
         // Reset banker selection
-        const bankerSelect = document.getElementById(`banker_select_h${h}`);
+        const bankerSelect = document.getElementById(`banker_h${h}`);
         if (bankerSelect) {
           bankerSelect.value = '-1';
           bankerSelect.dispatchEvent(new Event('change'));
@@ -309,7 +308,7 @@
         }
         
         // Reset banker double
-        const bankerDoubleBtn = document.getElementById(`banker_bdouble_h${h}`);
+const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         if (bankerDoubleBtn) {
           bankerDoubleBtn.dataset.active = 'false';
           bankerDoubleBtn.style.background = 'var(--panel)';

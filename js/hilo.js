@@ -141,10 +141,12 @@
     let strokesGiven = diff;
     
     if (diff > 0) {
-      // Find worst player on team with more strokes
-      if (teamAStrokes > teamBStrokes) {
+      // Strokes go TO the team with LOWER combined handicap (applied to their worst player)
+      if (teamAStrokes < teamBStrokes) {
+        // Team A has lower total, so Team A's worst player gets strokes
         strokePlayer = handicaps[teamA[0]] > handicaps[teamA[1]] ? teamA[0] : teamA[1];
       } else {
+        // Team B has lower total, so Team B's worst player gets strokes
         strokePlayer = handicaps[teamB[0]] > handicaps[teamB[1]] ? teamB[0] : teamB[1];
       }
     }
