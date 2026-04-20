@@ -478,7 +478,7 @@
   
   /**
    * Central manager to coordinate recalculations across all game modes
-   * Ensures Vegas, Skins, and Junk stay in sync when scores change
+   * Ensures Vegas, Skins, Junk, Hi-Lo, and Banker stay in sync when scores change
    */
   const AppManager = {
     recalcGames(){
@@ -486,6 +486,7 @@
       try{ window.Skins?.update(); }catch(e){ /* skins may not be open yet */ }
       try{ window.Junk?.update(); }catch(e){ /* junk may not be open yet */ }
       try{ window.HiLo?.update(); }catch(e){ /* hilo may not be open yet */ }
+      try{ window.Banker?.update(); }catch(e){ /* banker may not be open yet */ }
     }
   };
   try{ window.AppManager = AppManager; }catch{}
@@ -2049,6 +2050,7 @@
       window.Skins?.refreshForPlayerChange();
       window.Junk?.refreshForPlayerChange();
       window.HiLo?.update();
+      window.Banker?.refreshForPlayerChange();
     }, 100);
     
     Storage.save();
@@ -2576,6 +2578,7 @@
       AppManager.recalcGames();
       window.Skins?.refreshForPlayerChange();
       window.Junk?.refreshForPlayerChange();
+      window.Banker?.refreshForPlayerChange();
     }, 0);
   }
 
