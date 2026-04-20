@@ -448,20 +448,23 @@
             const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
             console.log('[QR Import] Current rows before clear:', currentRows);
             
-            // Remove all existing players
+            // Remove all existing players using correct API
             while (document.querySelectorAll('#scorecardFixed .player-row').length > 0) {
-              if (window.Scorecard?.player?.remove) {
-                window.Scorecard.player.remove();
+              if (window.GolfApp?.api?.removePlayer) {
+                window.GolfApp.api.removePlayer();
               } else {
+                console.error('[QR Import] GolfApp.api.removePlayer not found!');
                 break;
               }
             }
             
             console.log('[QR Import] Adding', playerCount, 'new rows');
-            // Add exact number needed
+            // Add exact number needed using correct API
             for (let i = 0; i < playerCount; i++) {
-              if (window.Scorecard?.player?.add) {
-                window.Scorecard.player.add();
+              if (window.GolfApp?.api?.addPlayer) {
+                window.GolfApp.api.addPlayer();
+              } else {
+                console.error('[QR Import] GolfApp.api.addPlayer not found!');
               }
             }
             
@@ -529,38 +532,63 @@
               performPostImportUpdates();
             });
           } else if (mode === 'add') {
-            console.log('[QR Import] ADD mode - appending to existing players');
-            // ADD MODE: Append to existing players
-            const currentRows = document.querySelectorAll('#scorecardFixed .player-row').length;
-            console.log('[QR Import] Current row count:', currentRows);
-            console.log('[QR Import] DEBUG - window.PLAYERS before:', window.PLAYERS);
-            console.log('[QR Import] DEBUG - window.GolfApp.api.addPlayer:', typeof window.GolfApp?.api?.addPlayer);
+            console.log('[QR Import] ADD mode - filling blank players or appending');
+            // ADD MODE: Fill blank players first, then add more if needed
+            const allRows = document.querySelectorAll('#scorecardFixed .player-row');
             
-            console.log('[QR Import] Adding', playerCount, 'new rows');
-            // Add new player rows using correct API
-            for (let i = 0; i < playerCount; i++) {
-              console.log(`[QR Import] ADD - Iteration ${i}: Calling GolfApp.api.addPlayer...`);
-              if (window.GolfApp?.api?.addPlayer) {
-                window.GolfApp.api.addPlayer();
-                console.log(`[QR Import] ADD - Iteration ${i}: PLAYERS now:`, window.PLAYERS);
-              } else {
-                console.error('[QR Import] ADD - GolfApp.api.addPlayer not found!');
+            // Count how many players are blank (empty name)
+            let blankCount = 0;
+            let firstBlankIndex = -1;
+            allRows.forEach((row, idx) => {
+              const nameInput = row.querySelector('.name-edit');
+              const hasName = nameInput?.value?.trim();
+              if (!hasName) {
+                blankCount++;
+                if (firstBlankIndex === -1) firstBlankIndex = idx;
               }
+            });
+            
+            console.log('[QR Import] Current rows:', allRows.length, 'Blank:', blankCount, 'First blank at:', firstBlankIndex);
+            console.log('[QR Import] Need to import:', playerCount, 'players');
+            
+            // Calculate how many new rows to add
+            const rowsToAdd = Math.max(0, playerCount - blankCount);
+            
+            if (rowsToAdd > 0) {
+              console.log('[QR Import] Adding', rowsToAdd, 'new rows (using', blankCount, 'existing blanks)');
+              for (let i = 0; i < rowsToAdd; i++) {
+                if (window.GolfApp?.api?.addPlayer) {
+                  window.GolfApp.api.addPlayer();
+                } else {
+                  console.error('[QR Import] GolfApp.api.addPlayer not found!');
+                }
+              }
+            } else {
+              console.log('[QR Import] Using existing blank rows, no new rows needed');
             }
             
-            console.log('[QR Import] DEBUG - window.PLAYERS after:', window.PLAYERS);
             console.log('[QR Import] Waiting for DOM update...');
             // CRITICAL FIX: Wait for DOM to update before populating rows
             // Use requestAnimationFrame to ensure rows are fully rendered
             requestAnimationFrame(() => {
               console.log('[QR Import] DOM updated, populating data...');
-              // Import players starting after existing ones
-              const allRows = document.querySelectorAll('#scorecardFixed .player-row');
-              console.log('[QR Import] Total rows after add:', allRows.length);
+              
+              // Find first blank player to start importing
+              const allRowsNow = document.querySelectorAll('#scorecardFixed .player-row');
+              let startIndex = 0;
+              for (let i = 0; i < allRowsNow.length; i++) {
+                const nameInput = allRowsNow[i].querySelector('.name-edit');
+                if (!nameInput?.value?.trim()) {
+                  startIndex = i;
+                  break;
+                }
+              }
+              
+              console.log('[QR Import] Total rows:', allRowsNow.length, 'Starting import at index:', startIndex);
               data.players.forEach((player, idx) => {
-                const rowIndex = currentRows + idx;
+                const rowIndex = startIndex + idx;
                 console.log('[QR Import] Populating player', idx, 'at row index', rowIndex, ':', player.name);
-                const row = allRows[rowIndex];
+                const row = allRowsNow[rowIndex];
                 if (!row) {
                   console.warn('[QR Import] Row', rowIndex, 'not found!');
                   return;
