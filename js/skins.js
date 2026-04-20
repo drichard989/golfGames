@@ -289,8 +289,12 @@
       const totalSkins = totals.reduce((sum, t) => sum + t, 0);
       const grossWinnings = totals.map(skinCount => skinCount * buyIn);
       
+      // Calculate buy-in per player (total pot divided by number of players)
+      const totalPot = totalSkins * buyIn;
+      const buyInPerPlayer = totalPot / playerCount;
+      
       // Calculate net winnings (what each player won/lost after paying buy-in)
-      const netWinnings = grossWinnings.map(gross => gross - buyIn);
+      const netWinnings = grossWinnings.map(gross => gross - buyInPerPlayer);
 
       return { totals, holesWon, carryoverHoles, winnings: netWinnings, totalSkins };
     },
