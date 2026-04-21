@@ -1858,6 +1858,18 @@
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
 
+    // Banker bet rows use computed inline layout widths; rebuild after font changes
+    try {
+      if (window.Banker?.updateBetInputs) {
+        window.Banker.updateBetInputs();
+      }
+      if (window.Banker?.update) {
+        window.Banker.update();
+      }
+    } catch (error) {
+      console.warn('[FontSize] banker refresh failed:', error);
+    }
+
     // Font size changes alter row heights; re-sync fixed/scroll tables
     requestAnimationFrame(() => {
       try {
@@ -1870,6 +1882,12 @@
     // Second pass after layout settles (mobile browsers can lag one frame)
     setTimeout(() => {
       try {
+        if (window.Banker?.updateBetInputs) {
+          window.Banker.updateBetInputs();
+        }
+        if (window.Banker?.update) {
+          window.Banker.update();
+        }
         Scorecard.build.syncRowHeights(true);
       } catch (error) {
         console.warn('[FontSize] delayed syncRowHeights failed:', error);
