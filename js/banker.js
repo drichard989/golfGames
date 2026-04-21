@@ -590,7 +590,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const scoreInfo = document.createElement('span');
           scoreInfo.style.cssText = 'font-size: 11px; color: var(--muted);';
-          scoreInfo.textContent = `${bet.playerNet} v ${bet.bankerNet}`;
+          scoreInfo.textContent = `${bet.playerScore} v ${bet.bankerScore}`;
           
           const payoutInfo = document.createElement('span');
           payoutInfo.style.cssText = 'font-weight: 600; font-size: 13px;';
