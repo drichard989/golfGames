@@ -1339,6 +1339,7 @@
           version: this.CURRENT_VERSION,
         course: ACTIVE_COURSE,
         advanceDirection: Config.ADVANCE_DIRECTION,
+        handicapMode: document.querySelector('input[name="handicapMode"]:checked')?.value || 'playOffLow',
         players: scoreRows.map((row, idx) => {
           const fixedRow = fixedRows[idx];
           const scoreInputs = $$("input.score-input", row);
@@ -1461,6 +1462,16 @@
             } else if (Config.ADVANCE_DIRECTION === 'disabled') {
               label.textContent = 'Advance: ✕ Disabled';
             }
+          }
+        }
+        
+        // Restore handicap mode
+        if(s.handicapMode) {
+          const modeId = 'handicapMode' + s.handicapMode.charAt(0).toUpperCase() + s.handicapMode.slice(1);
+          const modeRadio = document.getElementById(modeId);
+          if(modeRadio) {
+            modeRadio.checked = true;
+            // Stroke highlighting will be applied after data is loaded (line 1506)
           }
         }
         

@@ -546,6 +546,10 @@
         document.addEventListener('change', function(e) {
           if(e.target && e.target.name === 'handicapMode') {
             updateStrokeHighlights();
+            // Save mode selection to localStorage
+            if(typeof window.saveDebounced === 'function') {
+              window.saveDebounced();
+            }
           }
         });
         
