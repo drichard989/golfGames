@@ -683,9 +683,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const scoreInfo = document.createElement('span');
           scoreInfo.style.cssText = 'font-size: 11px; color: var(--muted);';
           
-          // Only show (net) when net differs from gross
-          const playerScore = bet.playerGross === bet.playerNet ? `${bet.playerGross}` : `${bet.playerGross} (${bet.playerNet})`;
-          const bankerScore = bet.bankerGross === bet.bankerNet ? `${bet.bankerGross}` : `${bet.bankerGross} (${bet.bankerNet})`;
+          // Only show net details when net differs from gross
+          const formatScoreWithNet = (gross, net) => gross === net ? `${gross}` : `${gross} (Net ${net})`;
+          const playerScore = formatScoreWithNet(bet.playerGross, bet.playerNet);
+          const bankerScore = formatScoreWithNet(bet.bankerGross, bet.bankerNet);
           scoreInfo.textContent = `${playerScore} v ${bankerScore}`;
           
           const payoutInfo = document.createElement('span');
@@ -731,13 +732,13 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
 
         if (bankerTotal > 0) {
           bankerSummary.style.color = 'var(--accent)';
-          bankerSummary.innerHTML = `${bankerName} nets: <span style="font-size: 13px;">+$${bankerTotal.toFixed(0)}</span>`;
+          bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">+$${bankerTotal.toFixed(0)}</span>`;
         } else if (bankerTotal < 0) {
           bankerSummary.style.color = 'var(--danger)';
-          bankerSummary.innerHTML = `${bankerName} nets: <span style="font-size: 13px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
+          bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
         } else {
           bankerSummary.style.color = 'var(--warn)';
-          bankerSummary.innerHTML = `${bankerName} nets: <span style="font-size: 13px;">$0</span>`;
+          bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">$0</span>`;
         }
 
         resultCell.appendChild(bankerSummary);
