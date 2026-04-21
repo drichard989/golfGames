@@ -555,9 +555,31 @@
         });
         
         // Update on handicap mode change
+        function forceHandicapModeRefresh() {
+          try {
+            if (window.GolfApp?.scorecard?.calc) {
+              // Bypass recalc throttle for explicit mode toggles
+              window.GolfApp.scorecard.calc._lastRecalcAll = 0;
+              window.GolfApp.scorecard.calc.recalcAll();
+              window.GolfApp.scorecard.calc.applyStrokeHighlighting();
+            }
+            if (window.AppManager?.recalcGames) {
+              window.AppManager.recalcGames();
+            }
+          } catch (err) {
+            console.warn('[Highlights] forceHandicapModeRefresh failed:', err);
+          }
+
+          // Run highlight passes now and after layout settles
+          updateStrokeHighlights();
+          requestAnimationFrame(updateStrokeHighlights);
+          setTimeout(updateStrokeHighlights, 0);
+          setTimeout(updateStrokeHighlights, 80);
+        }
+
         document.addEventListener('change', function(e) {
           if(e.target && e.target.name === 'handicapMode') {
-            updateStrokeHighlights();
+            forceHandicapModeRefresh();
             // Save mode selection to localStorage
             if(typeof window.saveDebounced === 'function') {
               window.saveDebounced();
