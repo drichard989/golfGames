@@ -1,0 +1,36 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "games": {
+      "$gameId": {
+        ".read": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() != null",
+        "state": {
+          ".write": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() === 'editor'"
+        },
+        "meta": {
+          ".write": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() === 'editor'"
+        },
+        "snapshots": {
+          "$snapshotId": {
+            ".write": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() === 'editor'"
+          }
+        },
+        "members": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": false
+          }
+        },
+        "codes": {
+          ".read": false,
+          ".write": false
+        }
+      }
+    },
+    "codeMap": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
