@@ -975,14 +975,17 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         for (let p = 0; p < playerCount; p++) {
           if (p === bankerIdx) continue;
+
+          const fontSizeMode = document.documentElement.getAttribute('data-font-size') || 'medium';
+          const isLargeFont = fontSizeMode === 'large';
           
           const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
           
           const container = document.createElement('div');
-      container.style.cssText = 'display: flex; gap: 4px; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;';
+      container.style.cssText = `display: flex; gap: ${isLargeFont ? '8px' : '4px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
           // Create label with consistent structure for alignment
           const label = document.createElement('span');
-          label.style.cssText = 'display: inline-flex; align-items: center; gap: 2px; min-width: 83px; font-size: 14px; font-weight: 500;';
+          label.style.cssText = `display: inline-flex; align-items: center; gap: ${isLargeFont ? '6px' : '2px'}; min-width: ${isLargeFont ? '108px' : '83px'}; font-size: 14px; font-weight: 500;`;
           
           const nameSpan = document.createElement('span');
           nameSpan.textContent = `${playerName}:`;
@@ -993,7 +996,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           strokeContainer.className = 'banker-player-stroke-container';
           strokeContainer.dataset.player = String(p);
           strokeContainer.dataset.hole = String(h);
-          strokeContainer.style.cssText = 'display: inline-block; width: 28px; text-align: center;';
+          strokeContainer.style.cssText = `display: inline-block; width: ${isLargeFont ? '38px' : '28px'}; text-align: center;`;
           
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
           
