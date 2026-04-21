@@ -3189,6 +3189,29 @@
     if (addPlayerBtn) addPlayerBtn.addEventListener("click", addPlayer);
     if (removePlayerBtn) removePlayerBtn.addEventListener("click", removePlayer);
 
+    // Ensure font size controls exist (fallback for stale cached HTML)
+    if (!document.getElementById('fontSizeSmall') || !document.getElementById('fontSizeMedium') || !document.getElementById('fontSizeLarge')) {
+      const utilitiesControls = document.querySelector('#utilitiesSection .controls');
+      if (utilitiesControls) {
+        const control = document.createElement('div');
+        control.className = 'control';
+        control.style.gap = '8px';
+        control.style.alignItems = 'center';
+        control.innerHTML = `
+          <label style="margin-right: 4px;">Font Size</label>
+          <button id="fontSizeSmall" class="btn font-size-btn" type="button" aria-pressed="false">Small</button>
+          <button id="fontSizeMedium" class="btn font-size-btn" type="button" aria-pressed="true">Medium</button>
+          <button id="fontSizeLarge" class="btn font-size-btn" type="button" aria-pressed="false">Large</button>
+        `;
+        const csvControl = utilitiesControls.querySelector('.control');
+        if (csvControl && csvControl.parentNode === utilitiesControls) {
+          utilitiesControls.insertBefore(control, csvControl.nextSibling);
+        } else {
+          utilitiesControls.prepend(control);
+        }
+      }
+    }
+
     document.getElementById('fontSizeSmall')?.addEventListener('click', () => {
       applyFontSize('small');
       Storage.saveDebounced();
