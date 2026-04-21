@@ -585,7 +585,7 @@
   vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
   vegasTableBody:"#vegasBody", vegasTotalA:"#vegasTotalA", vegasTotalB:"#vegasTotalB", vegasPtsA:"#vegasPtsA", vegasPtsB:"#vegasPtsB",
   optUseNet:"#optUseNet", optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
-  vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB",
+  vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB", vegasNetHcpMode:"#vegasNetHcpMode",
 
     // Skins
     skinsModeGross:"#skinsModeGross", skinsModeNet:"#skinsModeNet",
@@ -3184,6 +3184,7 @@
   $(ids.optDoubleBirdie).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.optTripleEagle).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.vegasPointValue)?.addEventListener("input", ()=>{ AppManager.recalcGames(); saveDebounced(); });
+  $(ids.vegasNetHcpMode)?.addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
 
     // Banker: no UI wiring (stub only)
 
@@ -3412,16 +3413,29 @@
     }
     
     // Immediate sync during resize for responsiveness
-    if(typeof Scorecard !== 'undefined' && Scorecard.build && typeof Scorecard.build.syncRowHeights === 'function') {
+    const syncRowHeights = window.GolfApp?.scorecard?.build?.syncRowHeights;
+    if (typeof syncRowHeights === 'function') {
       resizeAnimationFrame = requestAnimationFrame(() => {
-        Scorecard.build.syncRowHeights();
+        syncRowHeights();
       });
     }
     
     // Final sync after resize completes
     resizeTimeout = setTimeout(() => {
-      if(typeof Scorecard !== 'undefined' && Scorecard.build && typeof Scorecard.build.syncRowHeights === 'function') {
-        requestAnimationFrame(() => Scorecard.build.syncRowHeights());
+      const delayedSync = window.GolfApp?.scorecard?.build?.syncRowHeights;
+      if (typeof delayedSync === 'function') {
+        requestAnimationFrame(() => delayedSync());
       }
     }, 150);
+  });
+
+  window.addEventListener('load', () => {
+    const syncRowHeights = window.GolfApp?.scorecard?.build?.syncRowHeights;
+    if (typeof syncRowHeights === 'function') {
+      requestAnimationFrame(() => syncRowHeights());
+      setTimeout(() => {
+        const delayedSync = window.GolfApp?.scorecard?.build?.syncRowHeights;
+        if (typeof delayedSync === 'function') delayedSync();
+      }, 120);
+    }
   });
