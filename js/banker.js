@@ -990,6 +990,9 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           // Add stroke indicator for NET mode - always create fixed-width container
           const strokeContainer = document.createElement('span');
+          strokeContainer.className = 'banker-player-stroke-container';
+          strokeContainer.dataset.player = String(p);
+          strokeContainer.dataset.hole = String(h);
           strokeContainer.style.cssText = 'display: inline-block; width: 28px; text-align: center;';
           
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
@@ -1113,6 +1116,36 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         betsTd.innerHTML = '';
         betInputs.forEach(input => betsTd.appendChild(input));
       }
+    },
+
+    /**
+     * Refresh inline stroke indicators beside each player bet row.
+     * This keeps badges accurate when CH or handicap mode changes.
+     */
+    refreshBetStrokeIndicators() {
+      const containers = document.querySelectorAll('.banker-player-stroke-container');
+      if (!containers.length) return;
+
+      containers.forEach((container) => {
+        const playerIdx = Number(container.dataset.player);
+        const holeNum = Number(container.dataset.hole);
+        if (!Number.isFinite(playerIdx) || !Number.isFinite(holeNum)) return;
+
+        container.innerHTML = '';
+
+        const strokeData = getStrokeDisplayData(playerIdx, holeNum - 1);
+        if (!strokeData) return;
+
+        const strokeIndicator = document.createElement('span');
+        const color = strokeData.strokes > 0 ? '#4ade80' : '#ff6b6b';
+        const borderColor = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.45)' : 'rgba(255, 107, 107, 0.45)';
+        const bgColor = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 107, 107, 0.12)';
+
+        strokeIndicator.textContent = strokeData.displayText;
+        strokeIndicator.style.cssText = `display: inline-flex; align-items: center; justify-content: center; min-width: 32px; font-size: 11px; font-weight: 700; line-height: 1.2; color: ${color}; padding: 2px 6px; border-radius: 999px; border: 1px solid ${borderColor}; background: ${bgColor};`;
+        strokeIndicator.title = strokeData.title;
+        container.appendChild(strokeIndicator);
+      });
     },
 
     /**
@@ -1278,6 +1311,15 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             }
           });
         }
+
+        // Listen for app handicap mode changes to keep banker view in sync
+        document.addEventListener('change', (e) => {
+          const t = e.target;
+          if (t && t.name === 'handicapMode') {
+            this.updateBetInputs();
+            this.update();
+          }
+        });
         
         this._initialized = true;
         
@@ -1318,6 +1360,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
     update() {
       this.refreshMultiplierLabels();
       this.updateBankerStrokeIndicators();
+      this.refreshBetStrokeIndicators();
       const data = this.compute();
       this.render(data);
     },
