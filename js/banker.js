@@ -223,6 +223,63 @@
     };
   }
 
+  /**
+   * Persist state using app-level debounced saver if available.
+   */
+  function queueSave() {
+    if (typeof window.saveDebounced === 'function') {
+      window.saveDebounced();
+    }
+  }
+
+  /**
+   * Announce a user-visible status message if available.
+   * @param {string} message
+   */
+  function announceStatus(message) {
+    if (typeof window.announce === 'function') {
+      window.announce(message);
+    }
+  }
+
+  /**
+   * Get active state from a toggle button.
+   * @param {HTMLButtonElement|null} button
+   * @returns {boolean}
+   */
+  function isToggleActive(button) {
+    return button?.dataset.active === 'true';
+  }
+
+  /**
+   * Apply visual and dataset state to a toggle-style button.
+   * @param {HTMLButtonElement|null} button
+   * @param {boolean} isActive
+   */
+  function setToggleButtonState(button, isActive) {
+    if (!button) return;
+    button.dataset.active = isActive ? 'true' : 'false';
+    if (isActive) {
+      button.style.background = 'var(--accent)';
+      button.style.color = 'var(--bg)';
+      button.style.borderColor = 'var(--accent)';
+    } else {
+      button.style.background = 'var(--panel)';
+      button.style.color = 'var(--muted)';
+      button.style.borderColor = 'var(--line)';
+    }
+  }
+
+  /**
+   * Truncate display names for compact Banker table cells.
+   * @param {string} name
+   * @param {number} maxLen
+   * @returns {string}
+   */
+  function truncateName(name, maxLen = 10) {
+    return String(name || '').substring(0, maxLen);
+  }
+
   // =============================================================================
   // BANKER MODULE
   // =============================================================================
@@ -376,17 +433,7 @@
           
           // Set banker double
           const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
-          if (holeState.bankerDouble && bankerDoubleBtn) {
-            bankerDoubleBtn.dataset.active = 'true';
-            bankerDoubleBtn.style.background = 'var(--accent)';
-            bankerDoubleBtn.style.color = 'var(--bg)';
-            bankerDoubleBtn.style.borderColor = 'var(--accent)';
-          } else if (bankerDoubleBtn) {
-            bankerDoubleBtn.dataset.active = 'false';
-            bankerDoubleBtn.style.background = 'var(--panel)';
-            bankerDoubleBtn.style.color = 'var(--muted)';
-            bankerDoubleBtn.style.borderColor = 'var(--line)';
-          }
+          setToggleButtonState(bankerDoubleBtn, !!holeState.bankerDouble);
           
           // Set player bets
           if (holeState.bets && Array.isArray(holeState.bets)) {
@@ -397,19 +444,7 @@
               }
               
               const doubleBtn = document.getElementById(`banker_pdouble_p${bet.player}_h${h}`);
-              if (doubleBtn) {
-                if (bet.doubled) {
-                  doubleBtn.dataset.active = 'true';
-                  doubleBtn.style.background = 'var(--accent)';
-                  doubleBtn.style.color = 'var(--bg)';
-                  doubleBtn.style.borderColor = 'var(--accent)';
-                } else {
-                  doubleBtn.dataset.active = 'false';
-                  doubleBtn.style.background = 'var(--panel)';
-                  doubleBtn.style.color = 'var(--muted)';
-                  doubleBtn.style.borderColor = 'var(--line)';
-                }
-              }
+              setToggleButtonState(doubleBtn, !!bet.doubled);
             });
           }
         });
@@ -444,10 +479,7 @@
         // Reset banker double
 const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         if (bankerDoubleBtn) {
-          bankerDoubleBtn.dataset.active = 'false';
-          bankerDoubleBtn.style.background = 'var(--panel)';
-          bankerDoubleBtn.style.color = 'var(--muted)';
-          bankerDoubleBtn.style.borderColor = 'var(--line)';
+          setToggleButtonState(bankerDoubleBtn, false);
         }
         
         // Reset all player bets
@@ -460,23 +492,15 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const doubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
           if (doubleBtn) {
-            doubleBtn.dataset.active = 'false';
-            doubleBtn.style.background = 'var(--panel)';
-            doubleBtn.style.color = 'var(--muted)';
-            doubleBtn.style.borderColor = 'var(--line)';
+            setToggleButtonState(doubleBtn, false);
           }
         }
       }
       
       this.update();
       
-      if (typeof window.saveDebounced === 'function') {
-        window.saveDebounced();
-      }
-      
-      if (typeof window.announce === 'function') {
-        window.announce('Banker game cleared.');
-      }
+      queueSave();
+      announceStatus('Banker game cleared.');
     },
     
     /**
@@ -514,7 +538,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Get banker double/triple button
         const bankerDoubleBtn = document.getElementById(`banker_double_h${holeNum}`);
-        const bankerDouble = bankerDoubleBtn?.dataset.active === 'true';
+        const bankerDouble = isToggleActive(bankerDoubleBtn);
         
         // Get both gross and net scores for all players (for display purposes)
         const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
@@ -557,7 +581,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           if (betAmount === 0) continue;
           
           const playerDoubleBtn = document.getElementById(`banker_pdouble_p${p}_h${holeNum}`);
-          const playerDouble = playerDoubleBtn?.dataset.active === 'true';
+          const playerDouble = isToggleActive(playerDoubleBtn);
           
           const playerScore = scores[p];
           const playerGross = grossScores[p];
@@ -664,10 +688,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         }
         
         // Show detailed results per bet
-        const bankerName = names[hole.banker]?.substring(0, 10) || `P${hole.banker + 1}`;
+        const bankerName = truncateName(names[hole.banker], 10) || `P${hole.banker + 1}`;
         
         const results = hole.bets.map(bet => {
-          const playerName = names[bet.player]?.substring(0, 10) || `P${bet.player + 1}`;
+          const playerName = truncateName(names[bet.player], 10) || `P${bet.player + 1}`;
           
           const resultContainer = document.createElement('div');
           resultContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; margin-bottom: 2px; border-radius: 3px; font-size: 12px;';
@@ -811,9 +835,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         bankerSelect.addEventListener('change', () => {
           this.updateBetInputs();
           this.update();
-          if (typeof window.saveDebounced === 'function') {
-            window.saveDebounced();
-          }
+          queueSave();
         });
         
         const bankerStrokeIndicator = document.createElement('span');
@@ -864,9 +886,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           }
           
           this.update();
-          if (typeof window.saveDebounced === 'function') {
-            window.saveDebounced();
-          }
+          queueSave();
         });
         
         maxBetContainer.appendChild(dollarSign);
@@ -896,23 +916,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         bankerDoubleBtn.style.cssText = 'padding: 8px 12px; min-width: 44px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;';
         
         bankerDoubleBtn.addEventListener('click', () => {
-          const isActive = bankerDoubleBtn.dataset.active === 'true';
-          bankerDoubleBtn.dataset.active = isActive ? 'false' : 'true';
-          
-          if (bankerDoubleBtn.dataset.active === 'true') {
-            bankerDoubleBtn.style.background = 'var(--accent)';
-            bankerDoubleBtn.style.color = 'var(--bg)';
-            bankerDoubleBtn.style.borderColor = 'var(--accent)';
-          } else {
-            bankerDoubleBtn.style.background = 'var(--panel)';
-            bankerDoubleBtn.style.color = 'var(--muted)';
-            bankerDoubleBtn.style.borderColor = 'var(--line)';
-          }
+          setToggleButtonState(bankerDoubleBtn, !isToggleActive(bankerDoubleBtn));
           
           this.update();
-          if (typeof window.saveDebounced === 'function') {
-            window.saveDebounced();
-          }
+          queueSave();
         });
         bankerDoubleTd.appendChild(bankerDoubleBtn);
         tr.appendChild(bankerDoubleTd);
@@ -987,7 +994,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const buttonColWidth = isMobile ? (isIOS ? 52 : 48) : 52;
           const nameMinWidth = isMobile ? (isAndroid ? 94 : 90) : 92;
           
-          const playerName = (names[p] || `P${p + 1}`).substring(0, 10);
+          const playerName = truncateName(names[p] || `P${p + 1}`, 10);
           
           const container = document.createElement('div');
           container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${nameMinWidth}px, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
@@ -1071,9 +1078,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             }
             
             this.update();
-            if (typeof window.saveDebounced === 'function') {
-              window.saveDebounced();
-            }
+            queueSave();
           });
           
           const doubleBtn = document.createElement('button');
@@ -1086,30 +1091,13 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           doubleBtn.style.cssText = 'width: 100%; min-width: 0; padding: 0 4px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;';
           
           // Apply saved doubled state styling immediately
-          if (doubleBtn.dataset.active === 'true') {
-            doubleBtn.style.background = 'var(--accent)';
-            doubleBtn.style.color = 'var(--bg)';
-            doubleBtn.style.borderColor = 'var(--accent)';
-          }
+          setToggleButtonState(doubleBtn, isToggleActive(doubleBtn));
           
           doubleBtn.addEventListener('click', () => {
-            const isActive = doubleBtn.dataset.active === 'true';
-            doubleBtn.dataset.active = isActive ? 'false' : 'true';
-            
-            if (doubleBtn.dataset.active === 'true') {
-              doubleBtn.style.background = 'var(--accent)';
-              doubleBtn.style.color = 'var(--bg)';
-              doubleBtn.style.borderColor = 'var(--accent)';
-            } else {
-              doubleBtn.style.background = 'var(--panel)';
-              doubleBtn.style.color = 'var(--muted)';
-              doubleBtn.style.borderColor = 'var(--line)';
-            }
+            setToggleButtonState(doubleBtn, !isToggleActive(doubleBtn));
             
             this.update();
-            if (typeof window.saveDebounced === 'function') {
-              window.saveDebounced();
-            }
+            queueSave();
           });
           
           container.appendChild(nameSpan);
@@ -1307,16 +1295,12 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           modeGross.addEventListener('change', () => {
             this.updateBetInputs(); // Refresh to show/hide stroke indicators
             this.update();
-            if (typeof window.saveDebounced === 'function') {
-              window.saveDebounced();
-            }
+            queueSave();
           });
           modeNet.addEventListener('change', () => {
             this.updateBetInputs(); // Refresh to show/hide stroke indicators
             this.update();
-            if (typeof window.saveDebounced === 'function') {
-              window.saveDebounced();
-            }
+            queueSave();
           });
         }
 
