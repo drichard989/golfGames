@@ -272,6 +272,35 @@
     return String(name || '').substring(0, maxLen);
   }
 
+  /**
+   * Compute responsive Banker bet-row layout values.
+   * @returns {{isLargeFont:boolean,isMobile:boolean,nameMinWidth:number,strokeColWidth:number,inputColWidth:number,buttonColWidth:number,columnGap:string}}
+   */
+  function getBetRowLayoutConfig() {
+    const fontSizeMode = document.documentElement.getAttribute('data-font-size') || 'medium';
+    const isLargeFont = fontSizeMode === 'large';
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const ua = navigator.userAgent || '';
+    const isAndroid = /Android/i.test(ua);
+    const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+
+    const strokeColWidth = isLargeFont ? (isMobile ? 40 : 42) : (isMobile ? 34 : 36);
+    const inputColWidth = isMobile ? (isAndroid ? 48 : 50) : 60;
+    const buttonColWidth = isMobile ? (isIOS ? 52 : 48) : 52;
+    const nameMinWidth = isMobile ? (isAndroid ? 94 : 90) : 92;
+    const columnGap = isMobile ? '4px' : '6px';
+
+    return {
+      isLargeFont,
+      isMobile,
+      nameMinWidth,
+      strokeColWidth,
+      inputColWidth,
+      buttonColWidth,
+      columnGap
+    };
+  }
+
   // =============================================================================
   // BANKER MODULE
   // =============================================================================
@@ -972,16 +1001,13 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         for (let p = 0; p < playerCount; p++) {
           if (p === bankerIdx) continue;
 
-          const fontSizeMode = document.documentElement.getAttribute('data-font-size') || 'medium';
-          const isLargeFont = fontSizeMode === 'large';
-          const isMobile = window.matchMedia('(max-width: 768px)').matches;
-          const ua = navigator.userAgent || '';
-          const isAndroid = /Android/i.test(ua);
-          const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
-          const strokeColWidth = isLargeFont ? (isMobile ? 40 : 42) : (isMobile ? 34 : 36);
-          const inputColWidth = isMobile ? (isAndroid ? 48 : 50) : 60;
-          const buttonColWidth = isMobile ? (isIOS ? 52 : 48) : 52;
-          const nameMinWidth = isMobile ? (isAndroid ? 94 : 90) : 92;
+          const {
+            nameMinWidth,
+            strokeColWidth,
+            inputColWidth,
+            buttonColWidth,
+            columnGap
+          } = getBetRowLayoutConfig();
           
           const playerName = truncateName(names[p] || `P${p + 1}`, 10);
           
@@ -989,7 +1015,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           container.className = 'banker-player-bet-row';
           container.style.display = 'grid';
           container.style.gridTemplateColumns = `minmax(${nameMinWidth}px, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px`;
-          container.style.columnGap = isMobile ? '4px' : '6px';
+          container.style.columnGap = columnGap;
 
           // Player name column
           const nameSpan = document.createElement('span');
