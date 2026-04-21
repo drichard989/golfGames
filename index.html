@@ -75,7 +75,7 @@
         </div>
       </div>
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
-      <p class="small">If a player is a + handicap, enter it as a negative number (e.g., -2).</p>
+      <p class="small">If a player is a + handicap, enter it with a leading plus sign (e.g., +2).</p>
       <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Full Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
     </header>
 
@@ -424,7 +424,9 @@
           const chs = [];
           fixedRows.forEach(function(row) {
             const chInput = row.querySelector('.ch-input');
-            const val = chInput && chInput.value !== '' ? parseFloat(chInput.value) : null;
+            const val = chInput && chInput.value !== ''
+              ? (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : parseFloat(chInput.value))
+              : null;
             chs.push(val !== null && !isNaN(val) ? val : null);
           });
           

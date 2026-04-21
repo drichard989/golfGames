@@ -151,7 +151,7 @@
         const playerRows = Array.from(document.querySelectorAll('.player-row'));
         const chs = playerRows.map(r => {
           const chInput = r.querySelector('.ch-input');
-          const v = Number(chInput?.value);
+          const v = typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value);
           return Number.isFinite(v) ? v : 0;
         });
         const minCH = Math.min(...chs);
@@ -437,7 +437,7 @@
         const playerRows = Array.from(document.querySelectorAll('.player-row'));
         const chs = playerRows.map(r => {
           const chInput = r.querySelector('.ch-input');
-          const v = Number(chInput?.value);
+          const v = typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value);
           return Number.isFinite(v) ? v : 0;
         });
         const minCH = Math.min(...chs);

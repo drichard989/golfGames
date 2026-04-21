@@ -62,7 +62,7 @@
       const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
       playerRows.forEach(row => {
         const chInput = row.querySelector('.ch-input');
-        const ch = Number(chInput?.value) || 0;
+        const ch = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
         handicaps.push(ch);
       });
       return handicaps;
@@ -177,7 +177,7 @@
     if (playerIdx >= playerRows.length) return gross;
     
     const chInput = playerRows[playerIdx].querySelector('.ch-input');
-    const rawCH = Number(chInput?.value) || 0;
+    const rawCH = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
     
     // Calculate strokes based on raw CH
     const strokes = strokesOnHoleRawCH(rawCH, holeIdx);
@@ -202,7 +202,7 @@
     if (playerIdx < 0 || playerIdx >= playerRows.length) return null;
 
     const chInput = playerRows[playerIdx].querySelector('.ch-input');
-    const rawCH = Number(chInput?.value) || 0;
+    const rawCH = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
     if (rawCH === 0) return null;
 
     const strokes = strokesOnHoleRawCH(rawCH, holeIdx);
@@ -986,7 +986,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
             if (p < playerRows.length) {
               const chInput = playerRows[p].querySelector('.ch-input');
-              const rawCH = Number(chInput?.value) || 0;
+              const rawCH = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
               
               if (rawCH !== 0) {
                 // Calculate strokes for this hole (h is 1-18, function expects 0-17)

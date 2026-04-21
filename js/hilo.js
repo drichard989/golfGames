@@ -55,7 +55,7 @@
       const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
       playerRows.forEach(row => {
         const chInput = row.querySelector('.ch-input');
-        const ch = Number(chInput?.value) || 0;
+        const ch = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
         handicaps.push(ch);
       });
       return handicaps;
