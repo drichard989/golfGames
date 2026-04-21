@@ -259,15 +259,7 @@
   function setToggleButtonState(button, isActive) {
     if (!button) return;
     button.dataset.active = isActive ? 'true' : 'false';
-    if (isActive) {
-      button.style.background = 'var(--accent)';
-      button.style.color = 'var(--bg)';
-      button.style.borderColor = 'var(--accent)';
-    } else {
-      button.style.background = 'var(--panel)';
-      button.style.color = 'var(--muted)';
-      button.style.borderColor = 'var(--line)';
-    }
+    button.classList.toggle('is-active', !!isActive);
   }
 
   /**
@@ -694,29 +686,26 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const playerName = truncateName(names[bet.player], 10) || `P${bet.player + 1}`;
           
           const resultContainer = document.createElement('div');
-          resultContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; margin-bottom: 2px; border-radius: 3px; font-size: 12px;';
+          resultContainer.className = 'banker-result-row';
           
           // Color code based on outcome
           if (bet.winner === bet.player) {
             // Player won
-            resultContainer.style.background = 'rgba(104, 211, 145, 0.15)';
-            resultContainer.style.borderLeft = '2px solid var(--accent)';
+            resultContainer.classList.add('is-player-win');
           } else if (bet.winner === hole.banker) {
             // Banker won
-            resultContainer.style.background = 'rgba(255, 107, 107, 0.15)';
-            resultContainer.style.borderLeft = '2px solid var(--danger)';
+            resultContainer.classList.add('is-banker-win');
           } else {
             // Tie
-            resultContainer.style.background = 'rgba(255, 180, 84, 0.1)';
-            resultContainer.style.borderLeft = '2px solid var(--warn)';
+            resultContainer.classList.add('is-tie');
           }
           
           const playerInfo = document.createElement('span');
-          playerInfo.style.cssText = 'font-weight: 500; font-size: 14px; margin-right: 6px;';
+          playerInfo.className = 'banker-result-name';
           playerInfo.textContent = `${playerName}: `;
           
           const scoreInfo = document.createElement('span');
-          scoreInfo.style.cssText = 'font-size: 11px; color: var(--muted);';
+          scoreInfo.className = 'banker-result-score';
           
           // Only show net details when net differs from gross
           const formatScoreWithNet = (gross, net) => gross === net ? `${gross}` : `${gross} (Net ${net})`;
@@ -725,7 +714,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           scoreInfo.textContent = `${playerScore} v ${bankerScore}`;
           
           const payoutInfo = document.createElement('span');
-          payoutInfo.style.cssText = 'font-weight: 600; font-size: 13px;';
+          payoutInfo.className = 'banker-result-payout';
           
           if (bet.payout > 0) {
             payoutInfo.style.color = 'var(--accent)';
@@ -739,7 +728,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           }
           
           const multiplierInfo = document.createElement('span');
-          multiplierInfo.style.cssText = 'font-size: 10px; color: var(--muted); margin-left: 2px;';
+          multiplierInfo.className = 'banker-result-mult';
           if (bet.multiplier > 1) {
             multiplierInfo.textContent = `(${bet.multiplier}×)`;
           }
@@ -747,7 +736,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           resultContainer.appendChild(playerInfo);
           
           const rightSide = document.createElement('div');
-          rightSide.style.cssText = 'display: flex; gap: 4px; align-items: center;';
+          rightSide.className = 'banker-result-right';
           rightSide.appendChild(scoreInfo);
           rightSide.appendChild(payoutInfo);
           rightSide.appendChild(multiplierInfo);
@@ -763,7 +752,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         // Add banker total for this hole
         const bankerTotal = hole.bets.reduce((sum, bet) => sum - bet.payout, 0);
         const bankerSummary = document.createElement('div');
-        bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 15px; font-weight: 600;';
+        bankerSummary.className = 'banker-result-summary';
 
         if (bankerTotal > 0) {
           bankerSummary.style.color = 'var(--accent)';
@@ -808,10 +797,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Banker select
         const bankerTd = document.createElement('td');
-        bankerTd.style.cssText = 'padding: 4px;';
+        bankerTd.className = 'banker-cell-pad';
 
         const bankerWrap = document.createElement('div');
-        bankerWrap.style.cssText = 'display: flex; flex-direction: row; gap: 6px; align-items: center;';
+        bankerWrap.className = 'banker-inline-wrap';
 
         const bankerSelect = document.createElement('select');
         bankerSelect.id = `banker_h${h}`;
@@ -840,7 +829,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         const bankerStrokeIndicator = document.createElement('span');
         bankerStrokeIndicator.id = `banker_strokes_h${h}`;
-        bankerStrokeIndicator.style.cssText = 'display: none; flex: 0 0 auto; min-width: 32px; justify-content: center; padding: 2px 6px; border: 1px solid transparent; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.2;';
+        bankerStrokeIndicator.className = 'banker-stroke-indicator';
 
         bankerWrap.appendChild(bankerSelect);
         bankerWrap.appendChild(bankerStrokeIndicator);
@@ -852,10 +841,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Create container with label like player bets
         const maxBetContainer = document.createElement('div');
-    maxBetContainer.style.cssText = 'display: flex; gap: 4px; align-items: center; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;';
+        maxBetContainer.className = 'banker-money-box';
         const dollarSign = document.createElement('span');
         dollarSign.textContent = '$';
-        dollarSign.style.cssText = 'font-size: 11px; color: var(--accent);';
+        dollarSign.className = 'banker-dollar';
         
         const maxBetInput = document.createElement('input');
         maxBetInput.id = `banker_maxbet_h${h}`;
@@ -864,7 +853,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         maxBetInput.min = '0';
         maxBetInput.step = '1';
         maxBetInput.value = '10';
-        maxBetInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
+        maxBetInput.className = 'banker-number-input banker-maxbet-input';
         maxBetInput.addEventListener('input', () => {
           // Re-validate all player bets for this hole when max bet changes
           const maxBet = Number(maxBetInput.value) || 0;
@@ -897,7 +886,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         // Bets column (will be populated dynamically)
         const betsTd = document.createElement('td');
         betsTd.id = `banker_bets_h${h}`;
-        betsTd.style.cssText = 'padding: 4px; font-size: 11px; overflow: hidden; overflow-x: clip;';
+        betsTd.className = 'banker-bets-cell';
         tr.appendChild(betsTd);
         
         // Banker Double/Triple button
@@ -906,6 +895,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         bankerDoubleBtn.id = `banker_double_h${h}`;
         bankerDoubleBtn.type = 'button';
         bankerDoubleBtn.dataset.active = 'false';
+        bankerDoubleBtn.className = 'banker-toggle-btn banker-hole-toggle';
         
         // Set text and title based on par
         const holePar = getPar(h - 1);
@@ -913,7 +903,6 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         const multiplierText = isPar3 ? '3×' : '2×';
         bankerDoubleBtn.textContent = multiplierText;
         bankerDoubleBtn.title = isPar3 ? 'Banker triples all bets (Par 3)' : 'Banker doubles all bets';
-        bankerDoubleBtn.style.cssText = 'padding: 8px 12px; min-width: 44px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s;';
         
         bankerDoubleBtn.addEventListener('click', () => {
           setToggleButtonState(bankerDoubleBtn, !isToggleActive(bankerDoubleBtn));
@@ -927,7 +916,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         // Result column
         const resultTd = document.createElement('td');
         resultTd.id = `banker_result_h${h}`;
-        resultTd.style.cssText = 'font-size: 11px; padding: 4px;';
+        resultTd.className = 'banker-result-cell';
         resultTd.textContent = '—';
         tr.appendChild(resultTd);
         
@@ -997,19 +986,21 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const playerName = truncateName(names[p] || `P${p + 1}`, 10);
           
           const container = document.createElement('div');
-          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${nameMinWidth}px, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
+          container.className = 'banker-player-bet-row';
+          container.style.display = 'grid';
+          container.style.gridTemplateColumns = `minmax(${nameMinWidth}px, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px`;
+          container.style.columnGap = isMobile ? '4px' : '6px';
 
           // Player name column
           const nameSpan = document.createElement('span');
           nameSpan.textContent = `${playerName}:`;
-          nameSpan.style.cssText = 'display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 500;';
+          nameSpan.className = 'banker-player-name';
           
           // Add stroke indicator for NET mode - always create fixed-width container
           const strokeContainer = document.createElement('span');
-          strokeContainer.className = 'banker-player-stroke-container';
+          strokeContainer.className = 'banker-player-stroke-container banker-stroke-slot';
           strokeContainer.dataset.player = String(p);
           strokeContainer.dataset.hole = String(h);
-          strokeContainer.style.cssText = 'display: inline-flex; justify-content: center; align-items: center; width: 100%; text-align: center; overflow: hidden;';
           
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
           
@@ -1049,7 +1040,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const dollarSign = document.createElement('span');
           dollarSign.textContent = '$';
-          dollarSign.style.cssText = 'font-size: 11px; color: var(--accent); text-align: center;';
+          dollarSign.className = 'banker-dollar';
           
           const betInput = document.createElement('input');
           betInput.id = `banker_bet_p${p}_h${h}`;
@@ -1060,7 +1051,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           // Restore saved value or default to empty
           betInput.value = savedValues[h][p]?.bet || '';
           betInput.placeholder = '0';
-          betInput.style.cssText = 'width: 100%; min-width: 0; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
+          betInput.className = 'banker-number-input banker-bet-input';
           betInput.addEventListener('input', () => {
             // Validate bet against max bet
             const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
@@ -1088,7 +1079,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           doubleBtn.title = checkboxTitle;
           // Restore saved doubled state
           doubleBtn.dataset.active = savedValues[h][p]?.doubled ? 'true' : 'false';
-          doubleBtn.style.cssText = 'width: 100%; min-width: 0; padding: 0 4px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;';
+          doubleBtn.className = 'banker-toggle-btn banker-player-toggle';
           
           // Apply saved doubled state styling immediately
           setToggleButtonState(doubleBtn, isToggleActive(doubleBtn));
