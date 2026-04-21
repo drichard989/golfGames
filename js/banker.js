@@ -604,7 +604,11 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const scoreInfo = document.createElement('span');
           scoreInfo.style.cssText = 'font-size: 11px; color: var(--muted);';
-          scoreInfo.textContent = `${bet.playerGross} (${bet.playerNet}) v ${bet.bankerGross} (${bet.bankerNet})`;
+          
+          // Only show (net) when net differs from gross
+          const playerScore = bet.playerGross === bet.playerNet ? `${bet.playerGross}` : `${bet.playerGross} (${bet.playerNet})`;
+          const bankerScore = bet.bankerGross === bet.bankerNet ? `${bet.bankerGross}` : `${bet.bankerGross} (${bet.bankerNet})`;
+          scoreInfo.textContent = `${playerScore} v ${bankerScore}`;
           
           const payoutInfo = document.createElement('span');
           payoutInfo.style.cssText = 'font-weight: 600; font-size: 13px;';
@@ -893,6 +897,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
                 const strokes = strokesOnHoleRawCH(rawCH, h - 1);
                 
                 if (strokes !== 0) {
+                  // Create fixed-width container for stroke indicator to maintain alignment
+                  const strokeContainer = document.createElement('span');
+                  strokeContainer.style.cssText = 'display: inline-block; width: 28px; text-align: center; margin-left: 2px;';
+                  
                   const strokeIndicator = document.createElement('span');
                   
                   // Format display:
@@ -901,14 +909,25 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
                   const displayText = strokes > 0 ? `-${strokes}` : `+${Math.abs(strokes)}`;
                   const color = strokes > 0 ? '#4ade80' : '#ff6b6b';
                   
-                  strokeIndicator.textContent = ` ${displayText}`;
-                  strokeIndicator.style.cssText = `font-size: 10px; font-weight: 700; color: ${color}; padding: 0 4px; border-radius: 3px; background: rgba(255,255,255,0.05); margin-left: 2px;`;
+                  strokeIndicator.textContent = displayText;
+                  strokeIndicator.style.cssText = `font-size: 10px; font-weight: 700; color: ${color}; padding: 0 4px; border-radius: 3px; background: rgba(255,255,255,0.05);`;
                   strokeIndicator.title = strokes > 0 
                     ? `Receives ${strokes} stroke${strokes > 1 ? 's' : ''} on this hole` 
                     : `Gives ${Math.abs(strokes)} stroke${Math.abs(strokes) > 1 ? 's' : ''} on this hole (plus handicap)`;
                   
-                  label.appendChild(strokeIndicator);
+                  strokeContainer.appendChild(strokeIndicator);
+                  label.appendChild(strokeContainer);
+                } else {
+                  // Add empty fixed-width space to maintain alignment when no strokes
+                  const spacer = document.createElement('span');
+                  spacer.style.cssText = 'display: inline-block; width: 28px;';
+                  label.appendChild(spacer);
                 }
+              } else {
+                // Add empty fixed-width space to maintain alignment when CH is 0
+                const spacer = document.createElement('span');
+                spacer.style.cssText = 'display: inline-block; width: 28px;';
+                label.appendChild(spacer);
               }
             }
           }
