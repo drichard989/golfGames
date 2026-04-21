@@ -878,11 +878,18 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const container = document.createElement('div');
       container.style.cssText = 'display: flex; gap: 4px; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;';
+          // Create label with consistent structure for alignment
           const label = document.createElement('span');
-          label.textContent = `${playerName}:`;
-          label.style.cssText = 'min-width: 55px; font-size: 14px; font-weight: 500;';
+          label.style.cssText = 'display: inline-flex; align-items: center; gap: 2px; min-width: 83px; font-size: 14px; font-weight: 500;';
           
-          // Add stroke indicator for NET mode
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = `${playerName}:`;
+          label.appendChild(nameSpan);
+          
+          // Add stroke indicator for NET mode - always create fixed-width container
+          const strokeContainer = document.createElement('span');
+          strokeContainer.style.cssText = 'display: inline-block; width: 28px; text-align: center;';
+          
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
           
           if (useNet) {
@@ -897,10 +904,6 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
                 const strokes = strokesOnHoleRawCH(rawCH, h - 1);
                 
                 if (strokes !== 0) {
-                  // Create fixed-width container for stroke indicator to maintain alignment
-                  const strokeContainer = document.createElement('span');
-                  strokeContainer.style.cssText = 'display: inline-block; width: 28px; text-align: center; margin-left: 2px;';
-                  
                   const strokeIndicator = document.createElement('span');
                   
                   // Format display:
@@ -916,21 +919,12 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
                     : `Gives ${Math.abs(strokes)} stroke${Math.abs(strokes) > 1 ? 's' : ''} on this hole (plus handicap)`;
                   
                   strokeContainer.appendChild(strokeIndicator);
-                  label.appendChild(strokeContainer);
-                } else {
-                  // Add empty fixed-width space to maintain alignment when no strokes
-                  const spacer = document.createElement('span');
-                  spacer.style.cssText = 'display: inline-block; width: 28px;';
-                  label.appendChild(spacer);
                 }
-              } else {
-                // Add empty fixed-width space to maintain alignment when CH is 0
-                const spacer = document.createElement('span');
-                spacer.style.cssText = 'display: inline-block; width: 28px;';
-                label.appendChild(spacer);
               }
             }
           }
+          
+          label.appendChild(strokeContainer);
           
           const dollarSign = document.createElement('span');
           dollarSign.textContent = '$';
