@@ -30,36 +30,34 @@
           </select>
         </div>
         <button id="utilitiesToggle" class="btn">⚙️ Utilities</button>
-        <button id="saveBtn" class="btn">💾 Save</button>
-        <button id="refreshAllBtn" class="btn" title="Recalculate all games and totals">🔄 Recalculate Everything</button>
-        <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
         <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
       </div>
       <div class="controls" style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
         <button id="addPlayerBtn" class="btn">+ Add Player</button>
-        <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
-        <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
         <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
-      </div>
-      <div class="controls" style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
-        <div class="control" style="display: flex; gap: 16px; align-items: center;">
-          <label style="font-size: 14px; color: var(--muted); margin-right: 8px;">Handicap Mode:</label>
-          <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
-            <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
-            Gross
-          </label>
-          <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
-            <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
-            Play Off Low
-          </label>
-          <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
-            <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
-            Full Handicap
-          </label>
-        </div>
       </div>
       <div id="utilitiesSection" class="utilities-section">
         <div class="controls">
+          <button id="saveBtn" class="btn">💾 Save</button>
+          <button id="refreshAllBtn" class="btn" title="Recalculate all games and totals">🔄 Recalculate Everything</button>
+          <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
+          <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
+          <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
+          <div class="control" style="display: flex; gap: 16px; align-items: center;">
+            <label style="font-size: 14px; color: var(--muted); margin-right: 8px;">Handicap Mode:</label>
+            <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
+              <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
+              Gross
+            </label>
+            <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
+              <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
+              Play Off Low
+            </label>
+            <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
+              <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
+              Full Handicap
+            </label>
+          </div>
           <div class="control">
             <label for="csvInput">CSV</label>
             <input id="csvInput" type="file" accept=".csv" />
@@ -213,10 +211,10 @@
           <label class="radio">
             <input type="checkbox" id="optUseNet" /> Use Net (NDB) </label>
           <br />
-          <label class="radio">
+          <label class="radio vegas-opt-flag">
             <input type="checkbox" id="optDoubleBirdie" checked /> Double on Birdie (winner) </label>
           <br />
-          <label class="radio">
+          <label class="radio vegas-opt-flag">
             <input type="checkbox" id="optTripleEagle" checked /> Triple on Eagle (winner) </label>
           <br />
           <label class="radio" title="Dollar value per Vegas point">
@@ -230,8 +228,8 @@
           <thead>
             <tr>
               <th>Hole</th>
-              <th>Team A</th>
-              <th>Team B</th>
+              <th id="vegasColA">Team A</th>
+              <th id="vegasColB">Team B</th>
               <th>Mult</th>
               <th>Pts (A)</th>
               <th>Pts (B)</th>

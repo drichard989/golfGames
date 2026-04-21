@@ -154,6 +154,8 @@
   const ids = {
     vegasTeams: '#vegasTeams',
     vegasTeamWarning: '#vegasTeamWarning',
+    vegasColA: '#vegasColA',
+    vegasColB: '#vegasColB',
     vegasTotalA: '#vegasTotalA',
     vegasTotalB: '#vegasTotalB',
     vegasPtsA: '#vegasPtsA',
@@ -165,6 +167,45 @@
     optTripleEagle: '#optTripleEagle',
     vegasPointValue: '#vegasPointValue'
   };
+
+  function applyVegasTone(el, value) {
+    if (!el) return;
+    el.classList.remove('vegas-tone-positive', 'vegas-tone-negative', 'vegas-tone-neutral');
+    if (!Number.isFinite(value)) return;
+    if (value > 0) el.classList.add('vegas-tone-positive');
+    else if (value < 0) el.classList.add('vegas-tone-negative');
+    else el.classList.add('vegas-tone-neutral');
+  }
+
+  function renderTeamColumnLabels(data) {
+    const colA = $(ids.vegasColA);
+    const colB = $(ids.vegasColB);
+    if (!colA || !colB) return;
+
+    // Only swap labels to names in standard 4-player mode
+    if (data?.rotation || getPlayers() !== 4) {
+      colA.textContent = 'Team A';
+      colB.textContent = 'Team B';
+      return;
+    }
+
+    const teams = vegas_getTeamAssignments();
+    if (!teams || teams.A.length !== 2 || teams.B.length !== 2) {
+      colA.textContent = 'Team A';
+      colB.textContent = 'Team B';
+      return;
+    }
+
+    const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
+      const v = input?.value?.trim();
+      return v || `Player ${i + 1}`;
+    });
+
+    const fmtTeam = (team) => `(${names[team[0]] || `P${team[0] + 1}`} + ${names[team[1]] || `P${team[1] + 1}`})`;
+
+    colA.textContent = fmtTeam(teams.A);
+    colB.textContent = fmtTeam(teams.B);
+  }
 
   // =============================================================================
   // VEGAS GAME LOGIC
@@ -338,6 +379,7 @@ const Vegas = {
    */
   render(data){
     const warn=$(ids.vegasTeamWarning);
+    renderTeamColumnLabels(data);
     
     if(!data.valid){
       if(warn) warn.hidden=false;
@@ -361,10 +403,14 @@ const Vegas = {
       if(tb) tb.textContent="—";
       if(pa) pa.textContent="—";
       if(pb) pb.textContent="—";
+      applyVegasTone(pa, NaN);
+      applyVegasTone(pb, NaN);
       const da = $(ids.vegasDollarA);
       const db = $(ids.vegasDollarB);
       if(da) da.textContent = '—';
       if(db) db.textContent = '—';
+      applyVegasTone(da, NaN);
+      applyVegasTone(db, NaN);
       return;
     }
     if(warn) warn.hidden=true;
@@ -395,8 +441,10 @@ const Vegas = {
       if(m) m.textContent=(hole.mult==='—')?'—':String(hole.mult);
       const ptsA = hole.holePtsA;
       if(p) p.textContent=ptsA? (ptsA>0?`+${ptsA}`:`${ptsA}`) : "—";
+      applyVegasTone(p, Number(ptsA) || 0);
       const ptsB = -ptsA;
       if(pb) pb.textContent=ptsB? (ptsB>0?`+${ptsB}`:`${ptsB}`) : "—";
+      applyVegasTone(pb, Number(ptsB) || 0);
     });
 
     // Show individual player points in rotation mode
@@ -414,13 +462,17 @@ const Vegas = {
       const pb = $(ids.vegasPtsB);
       if(pa) pa.textContent = playerLines;
       if(pb) pb.textContent = "—";
+      applyVegasTone(pa, NaN);
+      applyVegasTone(pb, NaN);
     } else {
       const ptsA = data.ptsA;
       const pa = $(ids.vegasPtsA);
       if(pa) pa.textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
+      applyVegasTone(pa, Number(ptsA) || 0);
       const ptsB = data.ptsB;
       const pb = $(ids.vegasPtsB);
       if(pb) pb.textContent = ptsB===0? "0" : (ptsB>0? `+${ptsB}`:`${ptsB}`);
+      applyVegasTone(pb, Number(ptsB) || 0);
     }
 
     const fmt = v => {
@@ -447,6 +499,8 @@ const Vegas = {
       const db = $(ids.vegasDollarB);
       if(da) da.textContent = netLines;
       if(db) db.textContent = "—";
+      applyVegasTone(da, NaN);
+      applyVegasTone(db, NaN);
       
       // Show game breakdown
       const breakdownRow = document.getElementById('vegasGameBreakdown');
@@ -467,6 +521,8 @@ const Vegas = {
       const db = $(ids.vegasDollarB);
       if(da) da.textContent = fmt(data.dollarsA);
       if(db) db.textContent = fmt(data.dollarsB);
+      applyVegasTone(da, Number(data.dollarsA) || 0);
+      applyVegasTone(db, Number(data.dollarsB) || 0);
       
       // Hide game breakdown in non-rotation mode
       const breakdownRow = document.getElementById('vegasGameBreakdown');
