@@ -670,6 +670,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         // Hole number
         const holeTd = document.createElement('td');
         holeTd.textContent = h;
+        holeTd.style.fontSize = '17px';
         tr.appendChild(holeTd);
         
         // Banker select
@@ -908,8 +909,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           betInput.inputMode = 'numeric';
           betInput.min = '0';
           betInput.step = '1';
-          // Restore saved value or default to '0'
-          betInput.value = savedValues[h][p]?.bet || '0';
+          // Restore saved value or default to empty
+          betInput.value = savedValues[h][p]?.bet || '';
           betInput.placeholder = '0';
           betInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
           betInput.addEventListener('input', () => {
@@ -1072,19 +1073,29 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         this.buildTable();
         this.rebuildFooter();
         this.updateBetInputs();
+        // Refresh names multiple times to ensure they're loaded from scorecard
         this.refreshPlayerNames();
+        setTimeout(() => this.refreshPlayerNames(), 100);
+        setTimeout(() => this.refreshPlayerNames(), 300);
         this.update();
         
-        // Listen for score/name changes
+        // Listen for score/name/CH changes - refresh names aggressively
         document.addEventListener('input', (e) => {
           const t = e.target;
           if (t.classList?.contains('score-input') || 
               t.classList?.contains('ch-input') ||
               t.classList?.contains('name-edit')) {
-            if (t.classList.contains('name-edit')) {
-              this.refreshPlayerNames();
-            }
+            // Always refresh names on any input change to catch updates quickly
+            this.refreshPlayerNames();
             this.update();
+          }
+        }, { passive: true });
+        
+        // Also listen for blur events to catch pasted values
+        document.addEventListener('blur', (e) => {
+          const t = e.target;
+          if (t.classList?.contains('name-edit')) {
+            this.refreshPlayerNames();
           }
         }, { passive: true });
         
