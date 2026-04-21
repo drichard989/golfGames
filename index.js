@@ -1363,8 +1363,164 @@
   const Storage = {
     KEY: Config.STORAGE_KEY,
     CURRENT_VERSION: 5,
+    SYNC_SCHEMA_VERSION: 1,
     saveTimer: null,
     _isLoading: false,
+
+    getNowTs() {
+      return Date.now();
+    },
+
+    getPlayerId(existingState, idx) {
+      const fromLegacy = existingState?.players?.[idx]?.id;
+      if (fromLegacy) return fromLegacy;
+      const fromSync = existingState?.sync?.game?.scorecard?.players?.[idx]?.id;
+      if (fromSync) return fromSync;
+      return `player-${idx + 1}`;
+    },
+
+    buildPlayers(scoreRows, fixedRows, existingState) {
+      return scoreRows.map((row, idx) => {
+        const fixedRow = fixedRows[idx];
+        const scoreInputs = $$("input.score-input", row);
+        const scores = scoreInputs.map(i => i.value || "");
+        return {
+          id: this.getPlayerId(existingState, idx),
+          name: fixedRow ? $(".name-edit", fixedRow).value || "" : "",
+          ch: fixedRow ? $(".ch-input", fixedRow).value || "" : "",
+          scores
+        };
+      });
+    },
+
+    buildSharedSyncGame(players, existingState) {
+      const now = this.getNowTs();
+      const createdAt = existingState?.sync?.game?.meta?.createdAt || now;
+      const priorRevision = Number(existingState?.sync?.game?.meta?.revision) || 0;
+
+      return {
+        meta: {
+          schemaVersion: this.SYNC_SCHEMA_VERSION,
+          createdAt,
+          updatedAt: now,
+          updatedBy: 'local-client',
+          revision: priorRevision + 1
+        },
+        scorecard: {
+          course: ACTIVE_COURSE,
+          handicapMode: document.querySelector('input[name="handicapMode"]:checked')?.value || 'playOffLow',
+          players: players.map((p) => ({
+            id: p.id,
+            name: p.name,
+            ch: p.ch,
+            scores: Array.isArray(p.scores) ? p.scores : []
+          }))
+        },
+        games: {
+          vegas: {
+            teams: window.Vegas?.getTeamAssignments() || null,
+            opts: window.Vegas?.getOptions() || {}
+          },
+          banker: {
+            state: (typeof window.Banker?.getState === 'function')
+              ? (window.Banker.getState() ?? existingState?.banker?.state ?? null)
+              : (existingState?.banker?.state ?? null)
+          },
+          skins: {
+            mode: document.getElementById('skinsModeNet')?.checked ? 'net' : 'gross',
+            buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
+            carry: document.getElementById('skinsCarry')?.checked ?? true,
+            half: document.getElementById('skinsHalf')?.checked ?? false
+          },
+          junk: {
+            useNet: document.getElementById('junkUseNet')?.checked ?? false,
+            achievements: (() => {
+              const hasRenderedAchievementInputs = document.querySelectorAll('#junkTable input.junk-ach').length > 0;
+              if (typeof window.Junk?.getAchievementState === 'function' && hasRenderedAchievementInputs) {
+                return window.Junk.getAchievementState();
+              }
+              return existingState?.junk?.achievements ?? [];
+            })()
+          },
+          hilo: {
+            unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10
+          }
+        }
+      };
+    },
+
+    buildLocalUiState() {
+      return {
+        sections: {
+          vegas: $(ids.vegasSection)?.classList.contains("open") || false,
+          banker: $(ids.bankerSection)?.classList.contains("open") || false,
+          skins: $(ids.skinsSection)?.classList.contains("open") || false,
+          junk: $(ids.junkSection)?.classList.contains("open") || false,
+          hilo: $(ids.hiloSection)?.classList.contains("open") || false
+        },
+        fontSize: Config.FONT_SIZE || 'medium',
+        advanceDirection: Config.ADVANCE_DIRECTION || 'down'
+      };
+    },
+
+    normalizeLoadedState(rawState) {
+      if (!rawState || !rawState.sync?.game) {
+        return rawState;
+      }
+
+      const syncGame = rawState.sync.game;
+      const scorecard = syncGame.scorecard || {};
+      const games = syncGame.games || {};
+      const localUi = rawState.localUi || {};
+
+      const normalizedPlayers = Array.isArray(scorecard.players)
+        ? scorecard.players.map((p, idx) => ({
+            id: p?.id || `player-${idx + 1}`,
+            name: p?.name || '',
+            ch: p?.ch || '',
+            scores: Array.isArray(p?.scores) ? p.scores : []
+          }))
+        : (rawState.players || []);
+
+      return {
+        ...rawState,
+        course: scorecard.course || rawState.course,
+        handicapMode: scorecard.handicapMode || rawState.handicapMode,
+        players: normalizedPlayers,
+        advanceDirection: localUi.advanceDirection || rawState.advanceDirection,
+        fontSize: localUi.fontSize || rawState.fontSize,
+        vegas: {
+          ...(rawState.vegas || {}),
+          teams: games.vegas?.teams ?? rawState.vegas?.teams,
+          opts: games.vegas?.opts ?? rawState.vegas?.opts,
+          open: localUi.sections?.vegas ?? rawState.vegas?.open
+        },
+        banker: {
+          ...(rawState.banker || {}),
+          state: games.banker?.state ?? rawState.banker?.state,
+          open: localUi.sections?.banker ?? rawState.banker?.open
+        },
+        skins: {
+          ...(rawState.skins || {}),
+          mode: games.skins?.mode ?? rawState.skins?.mode,
+          buyIn: games.skins?.buyIn ?? rawState.skins?.buyIn,
+          carry: games.skins?.carry ?? rawState.skins?.carry,
+          half: games.skins?.half ?? rawState.skins?.half,
+          open: localUi.sections?.skins ?? rawState.skins?.open
+        },
+        junk: {
+          ...(rawState.junk || {}),
+          useNet: games.junk?.useNet ?? rawState.junk?.useNet,
+          achievements: games.junk?.achievements ?? rawState.junk?.achievements,
+          open: localUi.sections?.junk ?? rawState.junk?.open
+        },
+        hilo: {
+          ...(rawState.hilo || {}),
+          unitValue: games.hilo?.unitValue ?? rawState.hilo?.unitValue,
+          open: localUi.sections?.hilo ?? rawState.hilo?.open
+        }
+      };
+    },
     
     /**
      * Migration functions for each version upgrade
@@ -1460,23 +1616,16 @@
           existingState = null;
         }
         
+        const players = this.buildPlayers(scoreRows, fixedRows, existingState);
+        const syncGame = this.buildSharedSyncGame(players, existingState);
+        const localUiState = this.buildLocalUiState();
+
         const state = {
           version: this.CURRENT_VERSION,
         course: ACTIVE_COURSE,
         advanceDirection: Config.ADVANCE_DIRECTION,
         handicapMode: document.querySelector('input[name="handicapMode"]:checked')?.value || 'playOffLow',
-        players: scoreRows.map((row, idx) => {
-          const fixedRow = fixedRows[idx];
-          const scoreInputs = $$("input.score-input", row);
-          const scores = scoreInputs.map(i => i.value);
-          const playerData = {
-            name: fixedRow ? $(".name-edit", fixedRow).value || "" : "",
-            ch: fixedRow ? $(".ch-input", fixedRow).value || "" : "",
-            scores: scores
-          };
-          console.log(`[Storage] Player ${idx}:`, playerData.name, 'CH:', playerData.ch, 'Scores:', scores);
-          return playerData;
-        }),
+        players: players,
         vegas: { 
           teams: window.Vegas?.getTeamAssignments(), 
           opts: window.Vegas?.getOptions(), 
@@ -1511,6 +1660,11 @@
           unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10,
           open: $(ids.hiloSection)?.classList.contains("open")
         },
+        sync: {
+          schemaVersion: this.SYNC_SCHEMA_VERSION,
+          game: syncGame
+        },
+        localUi: localUiState,
         fontSize: Config.FONT_SIZE || 'medium',
           savedAt: Date.now(),
         };
@@ -1548,6 +1702,64 @@
       clearTimeout(this.saveTimer);
       this.saveTimer = setTimeout(() => this.save(), TIMING.RECALC_DEBOUNCE_MS);
     },
+
+    /**
+     * Get current canonical sync game state from local storage.
+     * Ensures latest local edits are materialized first.
+     * @returns {Object|null}
+     */
+    getSyncGameState() {
+      try {
+        this.save();
+        const raw = localStorage.getItem(this.KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return parsed?.sync?.game || null;
+      } catch (error) {
+        console.error('[Storage] getSyncGameState failed:', error);
+        return null;
+      }
+    },
+
+    /**
+     * Apply a canonical sync game state from cloud into local storage + UI.
+     * Keeps local UI preferences while replacing shared game data.
+     * @param {Object} syncGame
+     * @param {string} source - optional source marker for logging
+     * @returns {boolean}
+     */
+    applySyncGameState(syncGame, source = 'remote') {
+      try {
+        if (!syncGame || typeof syncGame !== 'object') return false;
+
+        let existing = {};
+        try {
+          const raw = localStorage.getItem(this.KEY);
+          existing = raw ? JSON.parse(raw) : {};
+        } catch {
+          existing = {};
+        }
+
+        const merged = {
+          ...existing,
+          version: this.CURRENT_VERSION,
+          sync: {
+            schemaVersion: this.SYNC_SCHEMA_VERSION,
+            game: syncGame
+          },
+          savedAt: Date.now()
+        };
+
+        const normalized = this.normalizeLoadedState(merged);
+        localStorage.setItem(this.KEY, JSON.stringify(normalized));
+        this.load();
+        console.log(`[Storage] Applied sync state from ${source}`);
+        return true;
+      } catch (error) {
+        console.error('[Storage] applySyncGameState failed:', error);
+        return false;
+      }
+    },
     
     /**
      * Load saved game state from localStorage
@@ -1574,7 +1786,7 @@
           this._isLoading = false;
           return false;
         }
-        const s = JSON.parse(raw);
+        const s = this.normalizeLoadedState(JSON.parse(raw));
         
         // Restore course selection
         if(s.course && COURSES[s.course]){

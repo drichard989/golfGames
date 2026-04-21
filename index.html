@@ -76,6 +76,16 @@
           <button id="scanQRBtn" class="btn">📸 Scan QR Code</button>
           <button id="resetBtn" class="btn">Reset Scores</button>
           <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
+          <div class="control cloud-control" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 320px;">
+            <div style="display:flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
+              <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" style="min-width: 180px;" />
+              <button id="cloudJoinBtn" class="btn" type="button">Join</button>
+              <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
+            </div>
+            <div id="cloudStatus" class="small" style="margin:0;">Cloud: not connected</div>
+            <div id="cloudCodes" class="small" style="margin:0; display:none;"></div>
+          </div>
         </div>
       </div>
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
@@ -386,6 +396,13 @@
     <script src="js/hilo.js" defer></script>
     <script src="js/skins.js" defer></script>
     <script src="js/junk.js" defer></script>
+    <!-- Firebase (compat SDK for no-build setup) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js" defer></script>
+    <script src="js/firebase-config.js" defer></script>
+    <script src="js/cloudsync.js" defer></script>
     <!-- Inline bootstrap to verify scripts run -->
     <script>
       console.log('[golfGames] inline bootstrap script loaded');
