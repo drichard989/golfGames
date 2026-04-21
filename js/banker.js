@@ -1104,6 +1104,35 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
     },
 
     /**
+     * Refresh 2×/3× labels and tooltips for all hole buttons after course/par changes.
+     */
+    refreshMultiplierLabels() {
+      const playerCount = getPlayerCount();
+
+      for (let h = 1; h <= 18; h++) {
+        const holePar = getPar(h - 1);
+        const isPar3 = holePar === 3;
+        const multiplierText = isPar3 ? '3×' : '2×';
+
+        // Banker double/triple button
+        const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
+        if (bankerDoubleBtn) {
+          bankerDoubleBtn.textContent = multiplierText;
+          bankerDoubleBtn.title = isPar3 ? 'Banker triples all bets (Par 3)' : 'Banker doubles all bets';
+        }
+
+        // Player double/triple buttons already rendered in Bets column
+        for (let p = 0; p < playerCount; p++) {
+          const playerDoubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          if (playerDoubleBtn) {
+            playerDoubleBtn.textContent = multiplierText;
+            playerDoubleBtn.title = isPar3 ? 'Player triples their bet (Par 3)' : 'Player doubles their bet';
+          }
+        }
+      }
+    },
+
+    /**
      * Refresh player names in headers
      */
     refreshPlayerNames() {
@@ -1275,6 +1304,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
      * Update calculations
      */
     update() {
+      this.refreshMultiplierLabels();
       this.updateBankerStrokeIndicators();
       const data = this.compute();
       this.render(data);
