@@ -688,8 +688,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           }
           
           const playerInfo = document.createElement('span');
-          playerInfo.style.cssText = 'font-weight: 500; font-size: 14px;';
-          playerInfo.textContent = playerName;
+          playerInfo.style.cssText = 'font-weight: 500; font-size: 14px; margin-right: 6px;';
+          playerInfo.textContent = `${playerName}: `;
           
           const scoreInfo = document.createElement('span');
           scoreInfo.style.cssText = 'font-size: 11px; color: var(--muted);';
