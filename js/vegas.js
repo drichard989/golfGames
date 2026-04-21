@@ -100,19 +100,30 @@
     }
   };
 
-  const getNetNDB = (p, h) => {
-    // Get adjusted handicaps
-    const playerRows = document.querySelectorAll('.player-row');
-    const chs = [];
-    playerRows.forEach(row => {
+  const getFixedPlayerRows = () => Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+
+  const getActualHandicaps = () => {
+    return getFixedPlayerRows().map((row) => {
       const chInput = row.querySelector('.ch-input');
       const val = chInput?.value || '';
-      chs.push(val === '' ? null : (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : parseFloat(val)));
+      return val === ''
+        ? null
+        : (typeof window.getActualHandicapValue === 'function'
+            ? window.getActualHandicapValue(chInput)
+            : parseFloat(val));
     });
-    const validCHs = chs.filter(ch => ch !== null);
-    if (validCHs.length === 0) return getGross(p, h);
+  };
+
+  const getAdjustedCHs = () => {
+    const chs = getActualHandicaps();
+    const validCHs = chs.filter((ch) => ch !== null && Number.isFinite(ch));
+    if (validCHs.length === 0) return chs.map(() => 0);
     const minCH = Math.min(...validCHs);
-    const adjustedCHs = chs.map(ch => ch !== null ? ch - minCH : 0);
+    return chs.map((ch) => (ch !== null && Number.isFinite(ch) ? ch - minCH : 0));
+  };
+
+  const getNetNDB = (p, h) => {
+    const adjustedCHs = getAdjustedCHs();
     
     const gross = getGross(p, h);
     if (!gross) return 0;
