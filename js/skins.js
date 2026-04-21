@@ -36,6 +36,8 @@
 (() => {
   'use strict';
 
+  let skinsListenersBound = false;
+
   // =============================================================================
   // HELPER FUNCTIONS
   // =============================================================================
@@ -439,79 +441,83 @@
     
     updateSkins();
 
-    // Recompute on mode change (gross/net radio buttons)
-    document.getElementById('skinsModeGross')?.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        // Clear and disable Half-Pops when Gross is selected
-        const halfEl = document.getElementById('skinsHalf');
-        if (halfEl) {
-          const wasChecked = halfEl.checked;
-          halfEl.checked = false;
-          halfEl.disabled = true;
-          
-          // If half-pop was enabled, we need to force a recalc
-          // since unchecking programmatically doesn't trigger change event
-          if (wasChecked) {
-            // Force immediate recalculation
-            updateSkins();
-          }
-        }
-        // Always recalculate when switching to GROSS
-        updateSkins();
-      }
-      if (typeof window.saveDebounced === 'function') {
-        window.saveDebounced();
-      }
-    });
-    document.getElementById('skinsModeNet')?.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        // Enable Half-Pops when Net is selected
-        const halfEl = document.getElementById('skinsHalf');
-        if (halfEl) {
-          halfEl.disabled = false;
-        }
-        // Force recalculation after state change
-        updateSkins();
-      }
-      if (typeof window.saveDebounced === 'function') {
-        window.saveDebounced();
-      }
-    });
-    
-    // Recompute on option change
-    document.getElementById('skinsCarry')?.addEventListener('change', () => {
-      updateSkins();
-      if (typeof window.saveDebounced === 'function') {
-        window.saveDebounced();
-      }
-    });
-    document.getElementById('skinsHalf')?.addEventListener('change', () => {
-      updateSkins();
-      if (typeof window.saveDebounced === 'function') {
-        window.saveDebounced();
-      }
-    });
-    document.getElementById('skinsBuyIn')?.addEventListener('input', () => {
-      updateSkins();
-      // Call saveDebounced if available
-      if (typeof window.saveDebounced === 'function') {
-        window.saveDebounced();
-      }
-    });
+    if (!skinsListenersBound) {
+      skinsListenersBound = true;
 
-    // Recompute on any score/par/ch input
-    document.addEventListener('input', (e) => {
-      const t = e.target;
-      if (!(t instanceof HTMLElement)) return;
-      if (t.classList?.contains('score-input') || 
-          t.classList?.contains('ch-input') || 
-          t.closest('#scorecard')) {
+      // Recompute on mode change (gross/net radio buttons)
+      document.getElementById('skinsModeGross')?.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          // Clear and disable Half-Pops when Gross is selected
+          const halfEl = document.getElementById('skinsHalf');
+          if (halfEl) {
+            const wasChecked = halfEl.checked;
+            halfEl.checked = false;
+            halfEl.disabled = true;
+            
+            // If half-pop was enabled, we need to force a recalc
+            // since unchecking programmatically doesn't trigger change event
+            if (wasChecked) {
+              // Force immediate recalculation
+              updateSkins();
+            }
+          }
+          // Always recalculate when switching to GROSS
+          updateSkins();
+        }
+        if (typeof window.saveDebounced === 'function') {
+          window.saveDebounced();
+        }
+      });
+      document.getElementById('skinsModeNet')?.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          // Enable Half-Pops when Net is selected
+          const halfEl = document.getElementById('skinsHalf');
+          if (halfEl) {
+            halfEl.disabled = false;
+          }
+          // Force recalculation after state change
+          updateSkins();
+        }
+        if (typeof window.saveDebounced === 'function') {
+          window.saveDebounced();
+        }
+      });
+      
+      // Recompute on option change
+      document.getElementById('skinsCarry')?.addEventListener('change', () => {
         updateSkins();
-      }
-      if (t.classList?.contains('name-edit')) {
-        refreshSkinsHeaderNames();
-      }
-    }, { passive: true });
+        if (typeof window.saveDebounced === 'function') {
+          window.saveDebounced();
+        }
+      });
+      document.getElementById('skinsHalf')?.addEventListener('change', () => {
+        updateSkins();
+        if (typeof window.saveDebounced === 'function') {
+          window.saveDebounced();
+        }
+      });
+      document.getElementById('skinsBuyIn')?.addEventListener('input', () => {
+        updateSkins();
+        // Call saveDebounced if available
+        if (typeof window.saveDebounced === 'function') {
+          window.saveDebounced();
+        }
+      });
+
+      // Recompute on any score/par/ch input
+      document.addEventListener('input', (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        if (t.classList?.contains('score-input') || 
+            t.classList?.contains('ch-input') || 
+            t.closest('#scorecard')) {
+          updateSkins();
+        }
+        if (t.classList?.contains('name-edit')) {
+          refreshSkinsHeaderNames();
+        }
+      }, { passive: true });
+    }
   }
 
   // =============================================================================

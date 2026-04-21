@@ -44,6 +44,8 @@
   'use strict';
   
   const HOLES = 18;
+  let junkCoreListenersBound = false;
+  let junkAchievementListenersBound = false;
   
   // Access game constants with fallbacks
   const getJunkConstants = () => {
@@ -120,6 +122,24 @@
     }
   }
 
+  function getFixedPlayerRows() {
+    return Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+  }
+
+  function getAdjustedCHs() {
+    const chs = getFixedPlayerRows().map((row) => {
+      const chInput = row.querySelector('.ch-input');
+      const v = typeof window.getActualHandicapValue === 'function'
+        ? window.getActualHandicapValue(chInput)
+        : Number(chInput?.value);
+      return Number.isFinite(v) ? v : 0;
+    });
+
+    if (!chs.length) return [];
+    const minCH = Math.min(...chs);
+    return chs.map((ch) => ch - minCH);
+  }
+
   function dotsFor(score, par){
     if(!Number.isFinite(score) || !Number.isFinite(par)) return 0;
     const POINTS = getJunkConstants().POINTS;
@@ -148,14 +168,7 @@
       // Calculate adjusted handicaps inline if using NET
       let adjCHs = Array(playerCount).fill(0);
       if(useNet){
-        const playerRows = Array.from(document.querySelectorAll('.player-row'));
-        const chs = playerRows.map(r => {
-          const chInput = r.querySelector('.ch-input');
-          const v = typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value);
-          return Number.isFinite(v) ? v : 0;
-        });
-        const minCH = Math.min(...chs);
-        adjCHs = chs.map(ch => ch - minCH); // play off low
+        adjCHs = getAdjustedCHs();
       }
       
       // Get HCPMEN from global scope (defined in index.js)
@@ -434,14 +447,8 @@
       
       // If NET mode, calculate net score
       if(useNet) {
-        const playerRows = Array.from(document.querySelectorAll('.player-row'));
-        const chs = playerRows.map(r => {
-          const chInput = r.querySelector('.ch-input');
-          const v = typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value);
-          return Number.isFinite(v) ? v : 0;
-        });
-        const minCH = Math.min(...chs);
-        const adjCH = chs[p] - minCH;
+        const adjustedCHs = getAdjustedCHs();
+        const adjCH = adjustedCHs[p] || 0;
         const HCPMEN = window.HCPMEN || Array(18).fill(0);
         const holeHcp = HCPMEN[h-1] || 1;
         
@@ -514,6 +521,9 @@
     enhanceJunkCells();
     updateJunkTotalsWeighted();
 
+    if (junkAchievementListenersBound) return;
+    junkAchievementListenersBound = true;
+
     // Update totals on score/par/name changes
     document.addEventListener('input', (e)=>{
       const t = e.target;
@@ -553,31 +563,35 @@
     rebuildJunkTableHeader();
     buildJunkTable();
     
-    // Add event listener for NET scoring toggle
-    const junkUseNet = document.getElementById('junkUseNet');
-    if(junkUseNet){
-      junkUseNet.addEventListener('change', ()=> {
-        updateJunk();
-        if (typeof window.saveDebounced === 'function') {
-          window.saveDebounced();
-        }
-      });
-    }
-    
     refreshJunkHeaderNames();
     updateJunk();
     
     // Initialize achievements UI after table is built
     setTimeout(() => initJunkAchievements(), 0);
 
-    // Listen for score/par/name changes
-    document.addEventListener('input', (e)=>{
-      const t = e.target;
-      if(t.classList?.contains('score-input') || t.closest('#parRow') || t.classList?.contains('name-edit')){
-        if(t.classList?.contains('name-edit')) refreshJunkHeaderNames();
-        updateJunk();
+    if (!junkCoreListenersBound) {
+      junkCoreListenersBound = true;
+
+      // Add event listener for NET scoring toggle
+      const junkUseNet = document.getElementById('junkUseNet');
+      if(junkUseNet){
+        junkUseNet.addEventListener('change', ()=> {
+          updateJunk();
+          if (typeof window.saveDebounced === 'function') {
+            window.saveDebounced();
+          }
+        });
       }
-    }, { passive: true });
+
+      // Listen for score/par/name changes
+      document.addEventListener('input', (e)=>{
+        const t = e.target;
+        if(t.classList?.contains('score-input') || t.closest('#parRow') || t.classList?.contains('name-edit')){
+          if(t.classList?.contains('name-edit')) refreshJunkHeaderNames();
+          updateJunk();
+        }
+      }, { passive: true });
+    }
   }
 
   // =============================================================================
