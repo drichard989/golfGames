@@ -135,14 +135,47 @@
   }
 
   /**
-   * Calculate net score for a player on a hole
+   * Calculate strokes on a hole based on RAW course handicap (not play-off-low)
+   * Used for Banker NET mode where each player uses their full handicap independently
+   */
+  function strokesOnHoleRawCH(rawCH, holeIdx) {
+    if (rawCH === 0) return 0;
+    
+    const holeHcp = getHCPIndex(holeIdx);
+    if (!holeHcp) return 0;
+    
+    // For plus handicaps (negative CH), calculate how many strokes they GIVE
+    if (rawCH < 0) {
+      const absCH = Math.abs(rawCH);
+      const base = Math.floor(absCH / 18);
+      const rem = absCH % 18;
+      const strokes = base + (holeHcp <= rem ? 1 : 0);
+      return -strokes; // Negative = they give strokes (adds to their score)
+    }
+    
+    // For regular handicaps, calculate strokes received
+    const base = Math.floor(rawCH / 18);
+    const rem = rawCH % 18;
+    return base + (holeHcp <= rem ? 1 : 0);
+  }
+
+  /**
+   * Calculate net score for a player on a hole using FULL handicap (not play-off-low)
+   * This is used for Banker NET mode scoring
    */
   function getNetScore(playerIdx, holeIdx) {
     const gross = getGross(playerIdx, holeIdx);
     if (gross === 0) return 0;
     
-    const adjCHs = getAdjustedCHs();
-    const strokes = strokesOnHole(adjCHs[playerIdx], holeIdx);
+    // Get player's raw CH (not adjusted/play-off-low)
+    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+    if (playerIdx >= playerRows.length) return gross;
+    
+    const chInput = playerRows[playerIdx].querySelector('.ch-input');
+    const rawCH = Number(chInput?.value) || 0;
+    
+    // Calculate strokes based on raw CH
+    const strokes = strokesOnHoleRawCH(rawCH, holeIdx);
     
     // Net = gross - strokes (if + handicap, strokes are negative so they add)
     return gross - strokes;
@@ -394,14 +427,15 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         const bankerDoubleBtn = document.getElementById(`banker_double_h${holeNum}`);
         const bankerDouble = bankerDoubleBtn?.dataset.active === 'true';
         
-        // Get net scores for all players
-        const netScores = [];
+        // Get scores for all players based on mode (gross or net)
+        const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
+        const scores = [];
         let allScoresEntered = true;
         
         for (let p = 0; p < playerCount; p++) {
-          const net = getNetScore(p, h);
-          netScores.push(net);
-          if (net === 0) allScoresEntered = false;
+          const score = useNet ? getNetScore(p, h) : getGross(p, h);
+          scores.push(score);
+          if (score === 0) allScoresEntered = false;
         }
         
         if (!allScoresEntered) {
@@ -417,7 +451,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Process bets for each player (except banker)
         const bets = [];
-        const bankerNet = netScores[bankerIdx];
+        const bankerScore = scores[bankerIdx];
         
         for (let p = 0; p < playerCount; p++) {
           if (p === bankerIdx) continue;
@@ -430,7 +464,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const playerDoubleBtn = document.getElementById(`banker_pdouble_p${p}_h${holeNum}`);
           const playerDouble = playerDoubleBtn?.dataset.active === 'true';
           
-          const playerNet = netScores[p];
+          const playerScore = scores[p];
           
           // Calculate payout - use 3× on par 3s, 2× otherwise
           const holePar = getPar(h);
@@ -446,13 +480,13 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           let winner = null;
           let payout = 0;
           
-          if (playerNet < bankerNet) {
+          if (playerScore < bankerScore) {
             // Player wins
             winner = p;
             payout = basePayout;
             playerTotals[p] += payout;
             playerTotals[bankerIdx] -= payout;
-          } else if (playerNet > bankerNet) {
+          } else if (playerScore > bankerScore) {
             // Banker wins
             winner = bankerIdx;
             payout = -basePayout;
@@ -465,8 +499,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             player: p,
             betAmount: betAmount,
             playerDouble: playerDouble,
-            playerNet: playerNet,
-            bankerNet: bankerNet,
+            playerScore: playerScore,
+            bankerScore: bankerScore,
             winner: winner,
             payout: payout,
             multiplier: multiplier
