@@ -114,16 +114,21 @@
     });
   };
 
-  const getAdjustedCHs = () => {
+  const getAdjustedCHs = (netHcpMode = 'playOffLow') => {
     const chs = getActualHandicaps();
     const validCHs = chs.filter((ch) => ch !== null && Number.isFinite(ch));
     if (validCHs.length === 0) return chs.map(() => 0);
+
+    if (netHcpMode === 'fullHandicap') {
+      return chs.map((ch) => (ch !== null && Number.isFinite(ch) ? ch : 0));
+    }
+
     const minCH = Math.min(...validCHs);
     return chs.map((ch) => (ch !== null && Number.isFinite(ch) ? ch - minCH : 0));
   };
 
-  const getNetNDB = (p, h) => {
-    const adjustedCHs = getAdjustedCHs();
+  const getNetNDB = (p, h, netHcpMode = 'playOffLow') => {
+    const adjustedCHs = getAdjustedCHs(netHcpMode);
     
     const gross = getGross(p, h);
     if (!gross) return 0;
@@ -163,6 +168,7 @@
     vegasDollarA: '#vegasDollarA',
     vegasDollarB: '#vegasDollarB',
     optUseNet: '#optUseNet',
+    vegasNetHcpMode: '#vegasNetHcpMode',
     optDoubleBirdie: '#optDoubleBirdie',
     optTripleEagle: '#optTripleEagle',
     vegasPointValue: '#vegasPointValue'
@@ -239,15 +245,15 @@ const Vegas = {
           B: otherPlayers
         };
         
-        const pairA = this._teamPair(teamsThisHole.A,h,opts.useNet);
-        const pairB = this._teamPair(teamsThisHole.B,h,opts.useNet);
+        const pairA = this._teamPair(teamsThisHole.A,h,opts.useNet,opts.netHcpMode);
+        const pairB = this._teamPair(teamsThisHole.B,h,opts.useNet,opts.netHcpMode);
         if(!pairA || !pairB){
           perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0, ghostPartner: playerWithGhost});
           continue;
         }
 
-        const aBE = this._teamHasBirdieOrEagle(teamsThisHole.A,h,opts.useNet);
-        const bBE = this._teamHasBirdieOrEagle(teamsThisHole.B,h,opts.useNet);
+        const aBE = this._teamHasBirdieOrEagle(teamsThisHole.A,h,opts.useNet,opts.netHcpMode);
+        const bBE = this._teamHasBirdieOrEagle(teamsThisHole.B,h,opts.useNet,opts.netHcpMode);
 
         const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
         const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
@@ -310,8 +316,8 @@ const Vegas = {
     let ptsA=0;
 
     for(let h=0;h<getHoles();h++){
-      const pairA = this._teamPair(teams.A,h,opts.useNet);
-      const pairB = this._teamPair(teams.B,h,opts.useNet);
+      const pairA = this._teamPair(teams.A,h,opts.useNet,opts.netHcpMode);
+      const pairB = this._teamPair(teams.B,h,opts.useNet,opts.netHcpMode);
       if(!pairA || !pairB){
         perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0});
         continue;
@@ -327,7 +333,7 @@ const Vegas = {
 
       // Check if LOSER made birdie/eagle
       const loserTeam = teams[loser];
-      const loserBE = this._teamHasBirdieOrEagle(loserTeam, h, opts.useNet);
+      const loserBE = this._teamHasBirdieOrEagle(loserTeam, h, opts.useNet, opts.netHcpMode);
 
       // If loser made birdie+, flip WINNER's digits
       if(loserBE.birdie || loserBE.eagle) {
@@ -535,7 +541,7 @@ const Vegas = {
     if(tb) tb.textContent=data.totalB||"—";
   },
   // Internal helpers
-  _teamPair(players, holeIdx, useNet) {
+  _teamPair(players, holeIdx, useNet, netHcpMode = 'playOffLow') {
     const vals = players.map(p => {
       // Check if this is a ghost (position >= getPlayers())
       if(p >= getPlayers()) {
@@ -550,14 +556,14 @@ const Vegas = {
         }
         return null;
       }
-      return useNet ? getNetNDB(p, holeIdx) : getGross(p, holeIdx);
+      return useNet ? getNetNDB(p, holeIdx, netHcpMode) : getGross(p, holeIdx);
     }).filter(v => Number.isFinite(v) && v > 0);
     if (vals.length < 2) return null;
     vals.sort((a,b)=>a-b);
     return [vals[0], vals[1]];
   },
   _pairToString(pair){ return `${pair[0]}${pair[1]}`; },
-  _teamHasBirdieOrEagle(players,h,useNet){
+  _teamHasBirdieOrEagle(players,h,useNet,netHcpMode = 'playOffLow'){
     const best=Math.min(...players.map(p=>{
       // Check if this is a ghost
       if(p >= getPlayers()) {
@@ -571,7 +577,7 @@ const Vegas = {
         }
         return Infinity;
       }
-      return (useNet?getNetNDB(p,h):getGross(p,h))||Infinity;
+      return (useNet ? getNetNDB(p, h, netHcpMode) : getGross(p, h)) || Infinity;
     }));
     if(!Number.isFinite(best)) return {birdie:false,eagle:false};
     const par = getPar(h);
@@ -579,7 +585,7 @@ const Vegas = {
     return {birdie:toPar<=-1, eagle:toPar<=-2};
   },
   _multiplierForWinner(winnerPlayers,h,useNet,opts){
-    const {birdie,eagle}=this._teamHasBirdieOrEagle(winnerPlayers,h,useNet); let m=1;
+    const {birdie,eagle}=this._teamHasBirdieOrEagle(winnerPlayers,h,useNet,opts.netHcpMode); let m=1;
     if(opts.tripleEagle && eagle) m=Math.max(m,3);
     if(opts.doubleBirdie && birdie) m=Math.max(m,2);
     return m;
@@ -699,8 +705,8 @@ function vegas_setTeamAssignments(t){
     if(ghostCheck) ghostCheck.checked = true;
   });
 }
-function vegas_getOptions(){ return { useNet:$(ids.optUseNet)?.checked||false, doubleBirdie:$(ids.optDoubleBirdie)?.checked||false, tripleEagle:$(ids.optTripleEagle)?.checked||false, pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value)||0) }; }
-function vegas_setOptions(o){ if('useNet'in o) $(ids.optUseNet).checked=!!o.useNet; if('doubleBirdie'in o) $(ids.optDoubleBirdie).checked=!!o.doubleBirdie; if('tripleEagle'in o) $(ids.optTripleEagle).checked=!!o.tripleEagle; if('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue; }
+function vegas_getOptions(){ return { useNet:$(ids.optUseNet)?.checked||false, netHcpMode:$(ids.vegasNetHcpMode)?.value||'playOffLow', doubleBirdie:$(ids.optDoubleBirdie)?.checked||false, tripleEagle:$(ids.optTripleEagle)?.checked||false, pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value)||0) }; }
+function vegas_setOptions(o){ if('useNet'in o) $(ids.optUseNet).checked=!!o.useNet; if('netHcpMode' in o && $(ids.vegasNetHcpMode)) $(ids.vegasNetHcpMode).value = o.netHcpMode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow'; if('doubleBirdie'in o) $(ids.optDoubleBirdie).checked=!!o.doubleBirdie; if('tripleEagle'in o) $(ids.optTripleEagle).checked=!!o.tripleEagle; if('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue; }
 
 function vegas_recalc(){
   const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();

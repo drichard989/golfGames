@@ -210,6 +210,13 @@
           <div class="team-pill">Options</div>
           <label class="radio">
             <input type="checkbox" id="optUseNet" /> Use Net (NDB) </label>
+          <div class="control" style="margin-top: 8px; padding: 8px; display: flex; gap: 8px; align-items: center;">
+            <label for="vegasNetHcpMode" style="margin: 0; text-transform: none; letter-spacing: normal;">NET Handicap:</label>
+            <select id="vegasNetHcpMode" style="padding: 6px 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
+              <option value="playOffLow" selected>Play Off Low</option>
+              <option value="fullHandicap">Full Handicap</option>
+            </select>
+          </div>
           <br />
           <label class="radio vegas-opt-flag">
             <input type="checkbox" id="optDoubleBirdie" checked /> Double on Birdie (winner) </label>
