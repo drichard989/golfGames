@@ -843,6 +843,7 @@
        */
       totalsRow(){
         const totalsRow=$(ids.totalsRow);
+        if(!totalsRow) return;
         for(let h=1;h<=HOLES;h++){
           const td=document.createElement("td"); 
           td.className="subtle"; 
@@ -1086,11 +1087,17 @@
        * Recalculate totals row showing sum of all player scores per hole
        */
       recalcTotalsRow(){
+        const totalsRowEl = $(ids.totalsRow);
+        if(!totalsRowEl) return;
+
         for(let h=1;h<=HOLES;h++){
           const ph=$$(`input.score-input[data-hole="${h}"]`).map(i=>Number(i.value)||0), t=sum(ph);
-          $(`[data-hole-total="${h}"]`).textContent = t? String(t) : "—";
+          const holeTotalEl = $(`[data-hole-total="${h}"]`);
+          if(holeTotalEl) {
+            holeTotalEl.textContent = t? String(t) : "—";
+          }
         }
-        const tds=$(ids.totalsRow).querySelectorAll("td"), base=LEADING_FIXED_COLS+HOLES;
+        const tds=totalsRowEl.querySelectorAll("td"), base=LEADING_FIXED_COLS+HOLES;
         const OUT=$$("#scorecard .player-row").map(r=>{ 
           const s=r.querySelectorAll("td.split"); 
           return Number(s[0]?.textContent)||0; 
@@ -1100,9 +1107,9 @@
           return Number(s[1]?.textContent)||0; 
         }).reduce((a,b)=>a+b,0);
         const TOT=$$("#scorecard .player-row").map(r=>Number($(".total",r)?.textContent)||0).reduce((a,b)=>a+b,0);
-        tds[base+0].textContent=OUT||"—"; 
-        tds[base+1].textContent=INN||"—"; 
-        tds[base+2].textContent=TOT||"—";
+        if(tds[base+0]) tds[base+0].textContent=OUT||"—"; 
+        if(tds[base+1]) tds[base+1].textContent=INN||"—"; 
+        if(tds[base+2]) tds[base+2].textContent=TOT||"—";
       },
 
       /**
