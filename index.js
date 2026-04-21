@@ -884,7 +884,7 @@
           const absCH = Math.abs(adjCH);
           const base = Math.floor(absCH / 18);
           const rem = absCH % 18;
-          const givesStroke = holeHcp <= rem;
+          const givesStroke = holeHcp >= (19 - rem);
           return -(base + (givesStroke ? 1 : 0)); // Return negative strokes
         }
         

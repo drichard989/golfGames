@@ -518,7 +518,7 @@
                   const absCH = Math.abs(rawCH);
                   const fullStrokes = Math.floor(absCH / 18);
                   const remainingStrokes = absCH % 18;
-                  const getsStroke = remainingStrokes >= holeHCP;
+                  const getsStroke = holeHCP >= (19 - remainingStrokes);
                   totalStrokes = -(fullStrokes + (getsStroke ? 1 : 0));
                 }
                 
