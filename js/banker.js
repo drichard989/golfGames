@@ -877,7 +877,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         // Bets column (will be populated dynamically)
         const betsTd = document.createElement('td');
         betsTd.id = `banker_bets_h${h}`;
-        betsTd.style.cssText = 'padding: 4px; font-size: 11px; overflow: hidden;';
+        betsTd.style.cssText = 'padding: 4px; font-size: 11px; overflow: hidden; overflow-x: clip;';
         tr.appendChild(betsTd);
         
         // Banker Double/Triple button
@@ -979,11 +979,14 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const fontSizeMode = document.documentElement.getAttribute('data-font-size') || 'medium';
           const isLargeFont = fontSizeMode === 'large';
           const isMobile = window.matchMedia('(max-width: 768px)').matches;
+          const strokeColWidth = isLargeFont ? (isMobile ? 40 : 42) : (isMobile ? 34 : 36);
+          const inputColWidth = isMobile ? 54 : 60;
+          const buttonColWidth = isMobile ? 48 : 52;
           
           const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
           
           const container = document.createElement('div');
-          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '74px' : '92px'}, 1fr) ${isLargeFont ? (isMobile ? '36px' : '40px') : (isMobile ? '30px' : '32px')} 12px ${isMobile ? '52px' : '58px'} ${isMobile ? '36px' : '42px'}; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
+          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '64px' : '92px'}, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
 
           // Player name column
           const nameSpan = document.createElement('span');
@@ -995,7 +998,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           strokeContainer.className = 'banker-player-stroke-container';
           strokeContainer.dataset.player = String(p);
           strokeContainer.dataset.hole = String(h);
-          strokeContainer.style.cssText = 'display: inline-flex; justify-content: center; align-items: center; width: 100%; text-align: center;';
+          strokeContainer.style.cssText = 'display: inline-flex; justify-content: center; align-items: center; width: 100%; text-align: center; overflow: hidden;';
           
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
           
@@ -1022,7 +1025,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
                   const bgColor = strokes > 0 ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 107, 107, 0.12)';
                   
                   strokeIndicator.textContent = displayText;
-                  strokeIndicator.style.cssText = `display: inline-flex; align-items: center; justify-content: center; min-width: 32px; font-size: 11px; font-weight: 700; line-height: 1.2; color: ${color}; padding: 2px 6px; border-radius: 999px; border: 1px solid ${borderColor}; background: ${bgColor};`;
+                  strokeIndicator.style.cssText = `display: inline-flex; align-items: center; justify-content: center; max-width: 100%; min-width: 0; font-size: 11px; font-weight: 700; line-height: 1.2; color: ${color}; padding: 2px 6px; border-radius: 999px; border: 1px solid ${borderColor}; background: ${bgColor}; white-space: nowrap;`;
                   strokeIndicator.title = strokes > 0 
                     ? `Receives ${strokes} stroke${strokes > 1 ? 's' : ''} on this hole` 
                     : `Gives ${Math.abs(strokes)} stroke${Math.abs(strokes) > 1 ? 's' : ''} on this hole (plus handicap)`;
@@ -1076,7 +1079,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           doubleBtn.title = checkboxTitle;
           // Restore saved doubled state
           doubleBtn.dataset.active = savedValues[h][p]?.doubled ? 'true' : 'false';
-          doubleBtn.style.cssText = 'width: 100%; min-width: 0; padding: 4px 8px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s;';
+          doubleBtn.style.cssText = 'width: 100%; min-width: 0; padding: 0 4px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;';
           
           // Apply saved doubled state styling immediately
           if (doubleBtn.dataset.active === 'true') {
