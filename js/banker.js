@@ -427,14 +427,20 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         const bankerDoubleBtn = document.getElementById(`banker_double_h${holeNum}`);
         const bankerDouble = bankerDoubleBtn?.dataset.active === 'true';
         
-        // Get scores for all players based on mode (gross or net)
+        // Get both gross and net scores for all players (for display purposes)
         const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
         const scores = [];
+        const grossScores = [];
+        const netScores = [];
         let allScoresEntered = true;
         
         for (let p = 0; p < playerCount; p++) {
-          const score = useNet ? getNetScore(p, h) : getGross(p, h);
+          const gross = getGross(p, h);
+          const net = getNetScore(p, h);
+          const score = useNet ? net : gross;
           scores.push(score);
+          grossScores.push(gross);
+          netScores.push(net);
           if (score === 0) allScoresEntered = false;
         }
         
@@ -465,6 +471,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const playerDouble = playerDoubleBtn?.dataset.active === 'true';
           
           const playerScore = scores[p];
+          const playerGross = grossScores[p];
+          const playerNet = netScores[p];
+          const bankerGross = grossScores[bankerIdx];
+          const bankerNet = netScores[bankerIdx];
           
           // Calculate payout - use 3× on par 3s, 2× otherwise
           const holePar = getPar(h);
@@ -500,7 +510,11 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             betAmount: betAmount,
             playerDouble: playerDouble,
             playerScore: playerScore,
+            playerGross: playerGross,
+            playerNet: playerNet,
             bankerScore: bankerScore,
+            bankerGross: bankerGross,
+            bankerNet: bankerNet,
             winner: winner,
             payout: payout,
             multiplier: multiplier
@@ -590,7 +604,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const scoreInfo = document.createElement('span');
           scoreInfo.style.cssText = 'font-size: 11px; color: var(--muted);';
-          scoreInfo.textContent = `${bet.playerScore} v ${bet.bankerScore}`;
+          scoreInfo.textContent = `${bet.playerGross} (${bet.playerNet}) v ${bet.bankerGross} (${bet.bankerNet})`;
           
           const payoutInfo = document.createElement('span');
           payoutInfo.style.cssText = 'font-weight: 600; font-size: 13px;';

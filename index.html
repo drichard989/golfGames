@@ -41,6 +41,23 @@
         <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
         <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
       </div>
+      <div class="controls" style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
+        <div class="control" style="display: flex; gap: 16px; align-items: center;">
+          <label style="font-size: 14px; color: var(--muted); margin-right: 8px;">Handicap Mode:</label>
+          <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
+            <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
+            Gross
+          </label>
+          <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
+            <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
+            Play Off Low
+          </label>
+          <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
+            <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
+            Full Handicap
+          </label>
+        </div>
+      </div>
       <div id="utilitiesSection" class="utilities-section">
         <div class="controls">
           <div class="control">
@@ -59,6 +76,7 @@
       </div>
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
       <p class="small">If a player is a + handicap, enter it as a negative number (e.g., -2).</p>
+      <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Full Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
     </header>
 
     <p class="small" id="parBadge" aria-live="polite"></p>
@@ -382,6 +400,11 @@
             console.error('[Highlights] HCPMEN not loaded - course data missing!');
             return; // Don't highlight if no course data
           }
+          
+          // Get selected handicap mode
+          const modeRadio = document.querySelector('input[name="handicapMode"]:checked');
+          const mode = modeRadio ? modeRadio.value : 'playOffLow';
+          
           setTimeout(function() {
             const playerRows = document.querySelectorAll('.player-row');
             if(!playerRows.length) return;
@@ -394,52 +417,134 @@
               chs.push(val !== null && !isNaN(val) ? val : null);
             });
             
-            // Calculate adjusted CHs (play off low) - only consider players with entered CHs
-            const validCHs = chs.filter(function(ch) { return ch !== null; });
-            if(validCHs.length === 0) return;
-            
-            const minCH = Math.min.apply(null, validCHs);
-            const adjustedCHs = chs.map(function(ch) { return ch !== null ? ch - minCH : 0; });
-            
-            // Update each player's score inputs
-            playerRows.forEach(function(row, playerIdx) {
-              const adjustedCH = adjustedCHs[playerIdx];
-              const scoreInputs = row.querySelectorAll('.score-input');
-              
-              // Only highlight if this player has a CH entered
-              if(chs[playerIdx] === null) {
+            // Mode 1: GROSS - no stroke indicators
+            if (mode === 'gross') {
+              playerRows.forEach(function(row) {
+                const scoreInputs = row.querySelectorAll('.score-input');
                 scoreInputs.forEach(function(input) {
-                  input.classList.remove('receives-stroke');
-                  input.removeAttribute('title');
-                });
-                return;
-              }
-              
-              scoreInputs.forEach(function(input, holeIdx) {
-                const holeHCP = HCPMEN[holeIdx];
-                // Correct formula: player gets stroke if their adjusted CH >= hole's HCP index
-                const fullStrokes = Math.floor(adjustedCH / 18);
-                const remainingStrokes = adjustedCH % 18;
-                const getsStroke = remainingStrokes >= holeHCP;
-                const totalStrokes = fullStrokes + (getsStroke ? 1 : 0);
-                
-                if(totalStrokes > 0) {
-                  input.classList.add('receives-stroke');
-                  input.setAttribute('data-strokes', totalStrokes);
-                  input.setAttribute('title', 'Receives ' + totalStrokes + ' stroke(s)');
-                } else {
-                  input.classList.remove('receives-stroke');
+                  input.classList.remove('receives-stroke', 'gives-stroke');
                   input.removeAttribute('data-strokes');
                   input.removeAttribute('title');
-                }
+                });
               });
-            });
+              return;
+            }
+            
+            // Mode 2: Play Off Low (current behavior)
+            if (mode === 'playOffLow') {
+              const validCHs = chs.filter(function(ch) { return ch !== null; });
+              if(validCHs.length === 0) return;
+              
+              const minCH = Math.min.apply(null, validCHs);
+              const adjustedCHs = chs.map(function(ch) { return ch !== null ? ch - minCH : 0; });
+              
+              // Update each player's score inputs
+              playerRows.forEach(function(row, playerIdx) {
+                const adjustedCH = adjustedCHs[playerIdx];
+                const scoreInputs = row.querySelectorAll('.score-input');
+                
+                // Only highlight if this player has a CH entered
+                if(chs[playerIdx] === null) {
+                  scoreInputs.forEach(function(input) {
+                    input.classList.remove('receives-stroke', 'gives-stroke');
+                    input.removeAttribute('title');
+                  });
+                  return;
+                }
+                
+                scoreInputs.forEach(function(input, holeIdx) {
+                  const holeHCP = HCPMEN[holeIdx];
+                  // Correct formula: player gets stroke if their adjusted CH >= hole's HCP index
+                  const fullStrokes = Math.floor(adjustedCH / 18);
+                  const remainingStrokes = adjustedCH % 18;
+                  const getsStroke = remainingStrokes >= holeHCP;
+                  const totalStrokes = fullStrokes + (getsStroke ? 1 : 0);
+                  
+                  // Remove both classes first
+                  input.classList.remove('receives-stroke', 'gives-stroke');
+                  
+                  if(totalStrokes > 0) {
+                    input.classList.add('receives-stroke');
+                    input.setAttribute('data-strokes', totalStrokes);
+                    input.setAttribute('title', 'Receives ' + totalStrokes + ' stroke(s)');
+                  } else {
+                    input.removeAttribute('data-strokes');
+                    input.removeAttribute('title');
+                  }
+                });
+              });
+              return;
+            }
+            
+            // Mode 3: Full Handicap - everyone gets their full CH
+            if (mode === 'fullHandicap') {
+              playerRows.forEach(function(row, playerIdx) {
+                const rawCH = chs[playerIdx];
+                const scoreInputs = row.querySelectorAll('.score-input');
+                
+                // Only highlight if this player has a CH entered
+                if(rawCH === null) {
+                  scoreInputs.forEach(function(input) {
+                    input.classList.remove('receives-stroke', 'gives-stroke');
+                    input.removeAttribute('title');
+                  });
+                  return;
+                }
+                
+                scoreInputs.forEach(function(input, holeIdx) {
+                  const holeHCP = HCPMEN[holeIdx];
+                  
+                  // Calculate strokes on this hole based on raw CH
+                  let totalStrokes = 0;
+                  if (rawCH > 0) {
+                    // Normal handicap - receives strokes (subtract from gross)
+                    const fullStrokes = Math.floor(rawCH / 18);
+                    const remainingStrokes = rawCH % 18;
+                    const getsStroke = remainingStrokes >= holeHCP;
+                    totalStrokes = fullStrokes + (getsStroke ? 1 : 0);
+                  } else if (rawCH < 0) {
+                    // Plus handicap - gives strokes (add to gross)
+                    const absCH = Math.abs(rawCH);
+                    const fullStrokes = Math.floor(absCH / 18);
+                    const remainingStrokes = absCH % 18;
+                    const getsStroke = remainingStrokes >= holeHCP;
+                    totalStrokes = -(fullStrokes + (getsStroke ? 1 : 0));
+                  }
+                  
+                  // Remove both classes first
+                  input.classList.remove('receives-stroke', 'gives-stroke');
+                  
+                  if(totalStrokes > 0) {
+                    // Receiving strokes - green highlight
+                    input.classList.add('receives-stroke');
+                    input.setAttribute('data-strokes', totalStrokes);
+                    input.setAttribute('title', 'Receives ' + totalStrokes + ' stroke(s)');
+                  } else if(totalStrokes < 0) {
+                    // Giving strokes (plus handicap) - red highlight
+                    input.classList.add('gives-stroke');
+                    input.setAttribute('data-strokes', Math.abs(totalStrokes));
+                    input.setAttribute('title', 'Gives ' + Math.abs(totalStrokes) + ' stroke(s) (plus handicap)');
+                  } else {
+                    input.removeAttribute('data-strokes');
+                    input.removeAttribute('title');
+                  }
+                });
+              });
+              return;
+            }
           }, 100);
         }
         
         // Update on CH input changes and score input changes
         document.addEventListener('input', function(e) {
           if(e.target && e.target.classList && (e.target.classList.contains('ch-input') || e.target.classList.contains('score-input'))) {
+            updateStrokeHighlights();
+          }
+        });
+        
+        // Update on handicap mode change
+        document.addEventListener('change', function(e) {
+          if(e.target && e.target.name === 'handicapMode') {
             updateStrokeHighlights();
           }
         });
