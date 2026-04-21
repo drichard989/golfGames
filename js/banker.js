@@ -979,11 +979,14 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const fontSizeMode = document.documentElement.getAttribute('data-font-size') || 'medium';
           const isLargeFont = fontSizeMode === 'large';
           const isMobile = window.matchMedia('(max-width: 768px)').matches;
+          const ua = navigator.userAgent || '';
+          const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
+          const iosGapBoost = isIOS ? 4 : 0;
           
           const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
           
           const container = document.createElement('div');
-          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '84px' : '92px'}, 1fr) 12px ${isMobile ? '52px' : '58px'} ${isMobile ? '36px' : '42px'}; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
+          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '84px' : '92px'}, 1fr) 12px ${isMobile ? '52px' : '58px'} ${isMobile ? '36px' : '42px'}; column-gap: ${(isMobile ? 4 : 6) + iosGapBoost}px; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
           // Create label with consistent structure for alignment
           const label = document.createElement('span');
           label.style.cssText = `display: inline-flex; align-items: center; gap: ${isLargeFont ? '8px' : '4px'}; width: 100%; font-size: 14px; font-weight: 500; overflow: hidden; white-space: nowrap;`;
@@ -997,7 +1000,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           strokeContainer.className = 'banker-player-stroke-container';
           strokeContainer.dataset.player = String(p);
           strokeContainer.dataset.hole = String(h);
-          strokeContainer.style.cssText = `display: inline-block; width: ${isLargeFont ? (isMobile ? '34px' : '38px') : (isMobile ? '28px' : '30px')}; text-align: center; margin-right: ${isMobile ? '2px' : '2px'};`;
+          strokeContainer.style.cssText = `display: inline-block; width: ${isLargeFont ? (isMobile ? '34px' : '38px') : (isMobile ? '28px' : '30px')}; text-align: center; margin-right: ${(isMobile ? 2 : 2) + iosGapBoost}px;`;
           
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
           
