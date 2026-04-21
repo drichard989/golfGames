@@ -774,12 +774,12 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         bankerTd.style.cssText = 'padding: 4px;';
 
         const bankerWrap = document.createElement('div');
-        bankerWrap.style.cssText = 'display: flex; flex-direction: column; gap: 4px; align-items: stretch;';
+        bankerWrap.style.cssText = 'display: flex; flex-direction: row; gap: 6px; align-items: center;';
 
         const bankerSelect = document.createElement('select');
         bankerSelect.id = `banker_h${h}`;
         bankerSelect.className = 'banker-select';
-        bankerSelect.style.cssText = 'width: 100%; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; font-weight: 500;';
+        bankerSelect.style.cssText = 'flex: 1 1 auto; min-width: 0; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; font-weight: 500;';
         
         // Add default option
         const defaultOption = document.createElement('option');
@@ -805,7 +805,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         const bankerStrokeIndicator = document.createElement('span');
         bankerStrokeIndicator.id = `banker_strokes_h${h}`;
-        bankerStrokeIndicator.style.cssText = 'display: none; align-self: flex-start; min-width: 32px; justify-content: center; padding: 2px 6px; border: 1px solid transparent; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.2;';
+        bankerStrokeIndicator.style.cssText = 'display: none; flex: 0 0 auto; min-width: 32px; justify-content: center; padding: 2px 6px; border: 1px solid transparent; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.2;';
 
         bankerWrap.appendChild(bankerSelect);
         bankerWrap.appendChild(bankerStrokeIndicator);
@@ -1000,9 +1000,11 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
                   // Negative strokes = giving strokes via plus handicap (add to gross, show as +1, +2, etc.)
                   const displayText = strokes > 0 ? `-${strokes}` : `+${Math.abs(strokes)}`;
                   const color = strokes > 0 ? '#4ade80' : '#ff6b6b';
+                  const borderColor = strokes > 0 ? 'rgba(74, 222, 128, 0.45)' : 'rgba(255, 107, 107, 0.45)';
+                  const bgColor = strokes > 0 ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 107, 107, 0.12)';
                   
                   strokeIndicator.textContent = displayText;
-                  strokeIndicator.style.cssText = `font-size: 10px; font-weight: 700; color: ${color}; padding: 0 4px; border-radius: 3px; background: rgba(255,255,255,0.05);`;
+                  strokeIndicator.style.cssText = `display: inline-flex; align-items: center; justify-content: center; min-width: 32px; font-size: 11px; font-weight: 700; line-height: 1.2; color: ${color}; padding: 2px 6px; border-radius: 999px; border: 1px solid ${borderColor}; background: ${bgColor};`;
                   strokeIndicator.title = strokes > 0 
                     ? `Receives ${strokes} stroke${strokes > 1 ? 's' : ''} on this hole` 
                     : `Gives ${Math.abs(strokes)} stroke${Math.abs(strokes) > 1 ? 's' : ''} on this hole (plus handicap)`;
