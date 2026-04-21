@@ -863,6 +863,41 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           label.textContent = `${playerName}:`;
           label.style.cssText = 'min-width: 55px; font-size: 14px; font-weight: 500;';
           
+          // Add stroke indicator for NET mode
+          const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
+          
+          if (useNet) {
+            // Get player's raw CH from DOM
+            const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+            if (p < playerRows.length) {
+              const chInput = playerRows[p].querySelector('.ch-input');
+              const rawCH = Number(chInput?.value) || 0;
+              
+              if (rawCH !== 0) {
+                // Calculate strokes for this hole (h is 1-18, function expects 0-17)
+                const strokes = strokesOnHoleRawCH(rawCH, h - 1);
+                
+                if (strokes !== 0) {
+                  const strokeIndicator = document.createElement('span');
+                  
+                  // Format display:
+                  // Positive strokes = receiving strokes (subtract from gross, show as -1, -2, etc.)
+                  // Negative strokes = giving strokes via plus handicap (add to gross, show as +1, +2, etc.)
+                  const displayText = strokes > 0 ? `-${strokes}` : `+${Math.abs(strokes)}`;
+                  const color = strokes > 0 ? '#4ade80' : '#ff6b6b';
+                  
+                  strokeIndicator.textContent = ` ${displayText}`;
+                  strokeIndicator.style.cssText = `font-size: 10px; font-weight: 700; color: ${color}; padding: 0 4px; border-radius: 3px; background: rgba(255,255,255,0.05); margin-left: 2px;`;
+                  strokeIndicator.title = strokes > 0 
+                    ? `Receives ${strokes} stroke${strokes > 1 ? 's' : ''} on this hole` 
+                    : `Gives ${Math.abs(strokes)} stroke${Math.abs(strokes) > 1 ? 's' : ''} on this hole (plus handicap)`;
+                  
+                  label.appendChild(strokeIndicator);
+                }
+              }
+            }
+          }
+          
           const dollarSign = document.createElement('span');
           dollarSign.textContent = '$';
           dollarSign.style.cssText = 'font-size: 11px; color: var(--accent);';
@@ -1052,6 +1087,26 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             this.update();
           }
         }, { passive: true });
+        
+        // Listen for NET/GROSS mode changes
+        const modeGross = document.getElementById('bankerModeGross');
+        const modeNet = document.getElementById('bankerModeNet');
+        if (modeGross && modeNet) {
+          modeGross.addEventListener('change', () => {
+            this.updateBetInputs(); // Refresh to show/hide stroke indicators
+            this.update();
+            if (typeof window.saveDebounced === 'function') {
+              window.saveDebounced();
+            }
+          });
+          modeNet.addEventListener('change', () => {
+            this.updateBetInputs(); // Refresh to show/hide stroke indicators
+            this.update();
+            if (typeof window.saveDebounced === 'function') {
+              window.saveDebounced();
+            }
+          });
+        }
         
         this._initialized = true;
         
