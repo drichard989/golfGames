@@ -65,11 +65,29 @@
   --text-xl: 16px;
   --text-2xl: 18px;
   --text-3xl: clamp(18px, 3.5vw, 28px);
+
+    /* Font scaling controls
+      Medium (default): descriptive +1px, data/non-descriptive +3px */
+    --font-descriptive-adjust: 1px;
+    --font-data-adjust: 3px;
+    --font-size-step: 0px;
   
   /* Table dimensions */
   --table-cell-width: 48px;
   --table-input-width: 44px;
   --table-ch-width: 60px;
+}
+
+:root[data-font-size="small"] {
+  --font-size-step: -1px;
+}
+
+:root[data-font-size="medium"] {
+  --font-size-step: 0px;
+}
+
+:root[data-font-size="large"] {
+  --font-size-step: 2px;
 }
 
 /* ---- Base / Resets ---- */
@@ -231,6 +249,85 @@ h1 {
 
 .theme-toggle:hover {
   filter: brightness(1.08);
+}
+
+.font-size-btn.active {
+  border-color: var(--accent);
+  color: var(--bg);
+  background: var(--accent);
+}
+
+/* ---- Global font scaling ---- */
+/* Descriptive text: +1px at medium */
+.small,
+.note,
+.meta,
+.pill,
+.warn,
+.control label,
+.junk-ach-labels,
+#saveStatus,
+#playerCountDisplay {
+  font-size: calc(var(--text-sm) + var(--font-descriptive-adjust) + var(--font-size-step));
+}
+
+h1 {
+  font-size: calc(var(--text-3xl) + var(--font-descriptive-adjust) + var(--font-size-step));
+}
+
+.small {
+  font-size: calc(var(--text-xs) + var(--font-descriptive-adjust) + var(--font-size-step));
+}
+
+.control label {
+  font-size: calc(var(--text-base) + var(--font-descriptive-adjust) + var(--font-size-step));
+}
+
+/* Data / non-descriptive text: +3px at medium */
+th,
+td,
+.btn,
+.theme-toggle,
+.game-toggle,
+.name-edit,
+.score-input,
+.ch-input,
+.par-row input,
+.hcp-row input,
+select,
+input[type="number"],
+input[type="text"] {
+  font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
+}
+
+.btn,
+.theme-toggle,
+.game-toggle {
+  font-size: calc(var(--text-lg) + var(--font-data-adjust) + var(--font-size-step));
+}
+
+.name-edit {
+  font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step));
+}
+
+.score-input,
+.ch-input,
+.par-row input,
+.hcp-row input,
+input[type="number"],
+input[type="text"] {
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+}
+
+/* Banker table uses many inline font sizes; enforce scaling there */
+#bankerTable th,
+#bankerTable td,
+#bankerTable input,
+#bankerTable select,
+#bankerTable button,
+#bankerTable span,
+#bankerTable div {
+  font-size: calc(12px + var(--font-data-adjust) + var(--font-size-step)) !important;
 }
 
 /* ---- Utilities Section ---- */

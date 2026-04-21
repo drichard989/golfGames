@@ -147,6 +147,7 @@
     activeCourse: 'manito',
     pars: null,
     hcpMen: null,
+    FONT_SIZE: 'medium',
     
     // Initialize with default course
     init() {
@@ -593,6 +594,7 @@
     skinsSummary:"#skinsSummary",
 // CSV
     csvInput:"#csvInput", dlTemplateBtn:"#dlTemplateBtn",
+  fontSizeSmall:"#fontSizeSmall", fontSizeMedium:"#fontSizeMedium", fontSizeLarge:"#fontSizeLarge",
   };
 
   // =============================================================================
@@ -1509,6 +1511,7 @@
           unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10,
           open: $(ids.hiloSection)?.classList.contains("open")
         },
+        fontSize: Config.FONT_SIZE || 'medium',
           savedAt: Date.now(),
         };
         
@@ -1605,6 +1608,11 @@
             modeRadio.checked = true;
             // Stroke highlighting will be applied after data is loaded (line 1506)
           }
+        }
+
+        // Restore font size
+        if (s.fontSize) {
+          applyFontSize(s.fontSize);
         }
         
         // CRITICAL: Explicitly query each table to avoid ambiguity
@@ -1823,6 +1831,32 @@
     setTimeout(() => {
       el.style.opacity = "0.75";
     }, 1200); 
+  }
+
+  /**
+   * Apply app font size mode and keep utility buttons in sync.
+   * @param {'small'|'medium'|'large'} size
+   */
+  function applyFontSize(size = 'medium') {
+    const validSizes = ['small', 'medium', 'large'];
+    const resolvedSize = validSizes.includes(size) ? size : 'medium';
+
+    Config.FONT_SIZE = resolvedSize;
+    document.documentElement.setAttribute('data-font-size', resolvedSize);
+
+    const buttons = {
+      small: document.getElementById('fontSizeSmall'),
+      medium: document.getElementById('fontSizeMedium'),
+      large: document.getElementById('fontSizeLarge')
+    };
+
+    validSizes.forEach((key) => {
+      const btn = buttons[key];
+      if (!btn) return;
+      const active = key === resolvedSize;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+    });
   }
   
   // Expose announce globally for external modules
@@ -3154,6 +3188,20 @@
     const removePlayerBtn = document.getElementById('removePlayerBtn');
     if (addPlayerBtn) addPlayerBtn.addEventListener("click", addPlayer);
     if (removePlayerBtn) removePlayerBtn.addEventListener("click", removePlayer);
+
+    document.getElementById('fontSizeSmall')?.addEventListener('click', () => {
+      applyFontSize('small');
+      Storage.saveDebounced();
+    });
+    document.getElementById('fontSizeMedium')?.addEventListener('click', () => {
+      applyFontSize('medium');
+      Storage.saveDebounced();
+    });
+    document.getElementById('fontSizeLarge')?.addEventListener('click', () => {
+      applyFontSize('large');
+      Storage.saveDebounced();
+    });
+    applyFontSize(Config.FONT_SIZE);
     
     Scorecard.player.updateCountDisplay();
 
