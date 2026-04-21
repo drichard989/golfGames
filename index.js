@@ -1696,6 +1696,7 @@
         Utils.announce(`Restored saved card (${savedDate}).`);
       } catch(err) {
         console.error('[Storage] Load failed:', err);
+        this._isLoading = false;
         Utils.announce("Load failed!");
       }
     },

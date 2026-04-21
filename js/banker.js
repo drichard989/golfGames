@@ -335,7 +335,7 @@
       if (!state || !state.holes) return;
       
       // Check if table is built (test if banker select exists)
-      const testElement = document.getElementById('banker_select_h1');
+      const testElement = document.getElementById('banker_h1');
       if (!testElement) {
         // Table not built yet, store for later
         console.log('[Banker] Table not built, storing state for later restoration');
@@ -350,7 +350,7 @@
           const h = idx + 1;
           
           // Set banker selection
-          const bankerSelect = document.getElementById(`banker_select_h${h}`);
+          const bankerSelect = document.getElementById(`banker_h${h}`);
           if (bankerSelect && holeState.banker !== undefined) {
             bankerSelect.value = String(holeState.banker);
             // Trigger change event to update bet inputs
@@ -365,7 +365,7 @@
           
           // Set banker double
           const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
-          if (holeState.bankerDoubled && bankerDoubleBtn) {
+          if (holeState.bankerDouble && bankerDoubleBtn) {
             bankerDoubleBtn.dataset.active = 'true';
             bankerDoubleBtn.style.background = 'var(--accent)';
             bankerDoubleBtn.style.color = 'var(--bg)';

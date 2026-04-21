@@ -614,9 +614,23 @@ function vegas_setTeamAssignments(t){
     const a=$(`input[name="vegasTeam_${i}"][value="A"]`), b=$(`input[name="vegasTeam_${i}"][value="B"]`); 
     if(!a||!b) continue; 
     a.checked=false; b.checked=false; 
+
+    // Reset ghost checkbox state; it will be re-enabled if this position is in saved teams
+    const ghostCheck = document.getElementById(`vegasGhost_${i}`);
+    if(ghostCheck) ghostCheck.checked = false;
   }
-  t.A?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="A"]`); if(r) r.checked=true; });
-  t.B?.forEach(i=>{ const r=$(`input[name="vegasTeam_${i}"][value="B"]`); if(r) r.checked=true; });
+  t.A?.forEach(i=>{
+    const r=$(`input[name="vegasTeam_${i}"][value="A"]`);
+    if(r) r.checked=true;
+    const ghostCheck = document.getElementById(`vegasGhost_${i}`);
+    if(ghostCheck) ghostCheck.checked = true;
+  });
+  t.B?.forEach(i=>{
+    const r=$(`input[name="vegasTeam_${i}"][value="B"]`);
+    if(r) r.checked=true;
+    const ghostCheck = document.getElementById(`vegasGhost_${i}`);
+    if(ghostCheck) ghostCheck.checked = true;
+  });
 }
 function vegas_getOptions(){ return { useNet:$(ids.optUseNet)?.checked||false, doubleBirdie:$(ids.optDoubleBirdie)?.checked||false, tripleEagle:$(ids.optTripleEagle)?.checked||false, pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value)||0) }; }
 function vegas_setOptions(o){ if('useNet'in o) $(ids.optUseNet).checked=!!o.useNet; if('doubleBirdie'in o) $(ids.optDoubleBirdie).checked=!!o.doubleBirdie; if('tripleEagle'in o) $(ids.optTripleEagle).checked=!!o.tripleEagle; if('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue; }
