@@ -126,12 +126,17 @@
     if (adjCH === 0) return 0;
     
     const holeHcp = getHCPIndex(holeIdx);
-    const base = Math.floor(Math.abs(adjCH) / 18);
-    const rem = Math.abs(adjCH) % 18;
+    const absCH = Math.abs(adjCH);
+    const base = Math.floor(absCH / 18);
+    const rem = absCH % 18;
+
+    if (adjCH < 0) {
+      const strokes = base + (holeHcp >= (19 - rem) ? 1 : 0);
+      return -strokes;
+    }
+
     const strokes = base + (holeHcp <= rem ? 1 : 0);
-    
-    // Return negative if this is a plus handicap (they give strokes)
-    return adjCH < 0 ? -strokes : strokes;
+    return strokes;
   }
 
   /**
@@ -149,7 +154,7 @@
       const absCH = Math.abs(rawCH);
       const base = Math.floor(absCH / 18);
       const rem = absCH % 18;
-      const strokes = base + (holeHcp <= rem ? 1 : 0);
+      const strokes = base + (holeHcp >= (19 - rem) ? 1 : 0);
       return -strokes; // Negative = they give strokes (adds to their score)
     }
     
