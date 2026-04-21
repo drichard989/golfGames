@@ -838,30 +838,60 @@
           const v = Number(chInput?.value);
           return Number.isFinite(v) ? v : 0; 
         });
+        
+        // Check current handicap mode
+        const modeRadio = document.querySelector('input[name="handicapMode"]:checked');
+        const mode = modeRadio ? modeRadio.value : 'playOffLow';
+        
+        // Mode 1: GROSS - no adjustments (return all zeros)
+        if (mode === 'gross') {
+          return chs.map(() => 0);
+        }
+        
+        // Mode 3: FULL HANDICAP - return raw CHs (no play off low)
+        if (mode === 'fullHandicap') {
+          return chs; // Each player uses their full raw CH
+        }
+        
+        // Mode 2: PLAY OFF LOW (default)
         const minCH = Math.min(...chs);
         return chs.map(ch => ch - minCH); // play off low
       },
 
       /**
        * Calculate strokes received on a specific hole
-       * @param {number} adjCH - Adjusted course handicap
+       * @param {number} adjCH - Adjusted course handicap (can be negative for plus handicaps in full mode)
        * @param {number} holeIdx - Zero-based hole index
-       * @returns {number} Number of strokes on this hole
+       * @returns {number} Number of strokes on this hole (negative for plus handicaps)
        */
       strokesOnHole(adjCH, holeIdx){
-        if(adjCH<=0) return 0;
-        
         // Defensive check: ensure Config.hcpMen is initialized
         if(!Config.hcpMen || !Array.isArray(Config.hcpMen) || Config.hcpMen.length === 0) {
           console.error('[strokesOnHole] Config.hcpMen not initialized!', Config.hcpMen);
           return 0;
         }
         
-        const base=Math.floor(adjCH/18), rem=adjCH%18;
         const holeHcp = Config.hcpMen[holeIdx];
         
         // Defensive check: ensure holeHcp is a valid number
         if(typeof holeHcp !== 'number' || !Number.isFinite(holeHcp)) {
+          console.error(`[strokesOnHole] Invalid holeHcp at index ${holeIdx}:`, holeHcp, 'Config.hcpMen:', Config.hcpMen);
+          return 0;
+        }
+        
+        // Handle plus handicaps (negative adjCH) - player gives strokes back
+        if(adjCH < 0) {
+          const absCH = Math.abs(adjCH);
+          const base = Math.floor(absCH / 18);
+          const rem = absCH % 18;
+          const givesStroke = holeHcp <= rem;
+          return -(base + (givesStroke ? 1 : 0)); // Return negative strokes
+        }
+        
+        // Handle zero or positive handicap
+        if(adjCH <= 0) return 0;
+        
+        const base=Math.floor(adjCH/18), rem=adjCH%18;
           console.error(`[strokesOnHole] Invalid holeHcp at index ${holeIdx}:`, holeHcp, 'Config.hcpMen:', Config.hcpMen);
           return 0;
         }
