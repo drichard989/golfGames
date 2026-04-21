@@ -181,6 +181,43 @@
     return gross - strokes;
   }
 
+  /**
+   * Get stroke display data for a player on a hole in Banker NET mode.
+   * Positive strokes mean the player receives strokes.
+   * Negative strokes mean the player gives strokes as a plus handicap.
+   * @param {number} playerIdx - Zero-based player index
+   * @param {number} holeIdx - Zero-based hole index
+   * @returns {{strokes:number, displayText:string, title:string}|null}
+   */
+  function getStrokeDisplayData(playerIdx, holeIdx) {
+    const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
+    if (!useNet) return null;
+
+    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+    if (playerIdx < 0 || playerIdx >= playerRows.length) return null;
+
+    const chInput = playerRows[playerIdx].querySelector('.ch-input');
+    const rawCH = Number(chInput?.value) || 0;
+    if (rawCH === 0) return null;
+
+    const strokes = strokesOnHoleRawCH(rawCH, holeIdx);
+    if (strokes === 0) return null;
+
+    if (strokes > 0) {
+      return {
+        strokes,
+        displayText: `-${strokes}`,
+        title: `Receives ${strokes} stroke${strokes > 1 ? 's' : ''} on this hole`
+      };
+    }
+
+    return {
+      strokes,
+      displayText: `+${Math.abs(strokes)}`,
+      title: `Gives ${Math.abs(strokes)} stroke${Math.abs(strokes) > 1 ? 's' : ''} on this hole (plus handicap)`
+    };
+  }
+
   // =============================================================================
   // BANKER MODULE
   // =============================================================================
@@ -188,6 +225,42 @@
   const Banker = {
     _initialized: false,
     _pendingState: null,  // Store state for restoration after init
+
+    /**
+     * Refresh banker stroke badges for all holes.
+     */
+    updateBankerStrokeIndicators() {
+      const playerCount = getPlayerCount();
+
+      for (let h = 1; h <= 18; h++) {
+        const indicator = document.getElementById(`banker_strokes_h${h}`);
+        const bankerSelect = document.getElementById(`banker_h${h}`);
+        if (!indicator || !bankerSelect) continue;
+
+        const bankerIdx = Number(bankerSelect.value);
+        if (bankerIdx < 0 || bankerIdx >= playerCount) {
+          indicator.textContent = '';
+          indicator.style.display = 'none';
+          indicator.removeAttribute('title');
+          continue;
+        }
+
+        const strokeData = getStrokeDisplayData(bankerIdx, h - 1);
+        if (!strokeData) {
+          indicator.textContent = '';
+          indicator.style.display = 'none';
+          indicator.removeAttribute('title');
+          continue;
+        }
+
+        indicator.textContent = strokeData.displayText;
+        indicator.title = strokeData.title;
+        indicator.style.display = 'inline-flex';
+        indicator.style.color = strokeData.strokes > 0 ? '#4ade80' : '#ff6b6b';
+        indicator.style.borderColor = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.45)' : 'rgba(255, 107, 107, 0.45)';
+        indicator.style.background = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 107, 107, 0.12)';
+      }
+    },
     
     /**
      * Get current banker game state for saving
@@ -693,6 +766,11 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Banker select
         const bankerTd = document.createElement('td');
+        bankerTd.style.cssText = 'padding: 4px;';
+
+        const bankerWrap = document.createElement('div');
+        bankerWrap.style.cssText = 'display: flex; flex-direction: column; gap: 4px; align-items: stretch;';
+
         const bankerSelect = document.createElement('select');
         bankerSelect.id = `banker_h${h}`;
         bankerSelect.className = 'banker-select';
@@ -720,7 +798,13 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           }
         });
         
-        bankerTd.appendChild(bankerSelect);
+        const bankerStrokeIndicator = document.createElement('span');
+        bankerStrokeIndicator.id = `banker_strokes_h${h}`;
+        bankerStrokeIndicator.style.cssText = 'display: none; align-self: flex-start; min-width: 32px; justify-content: center; padding: 2px 6px; border: 1px solid transparent; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1.2;';
+
+        bankerWrap.appendChild(bankerSelect);
+        bankerWrap.appendChild(bankerStrokeIndicator);
+        bankerTd.appendChild(bankerWrap);
         tr.appendChild(bankerTd);
         
         // Max Bet
@@ -1183,6 +1267,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
      * Update calculations
      */
     update() {
+      this.updateBankerStrokeIndicators();
       const data = this.compute();
       this.render(data);
     },
