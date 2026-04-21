@@ -497,7 +497,7 @@ td {
   flex: 1;
   min-width: 0;
   max-width: none;
-  font-size: 12px;
+  font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step));
   padding: 6px 3px;
   background: transparent;
   border: none;
@@ -507,7 +507,7 @@ td {
 
 #scorecardFixed .ch-input {
   width: 49px;
-  font-size: 12px;
+  font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
   padding: 6px 3px;
   text-align: center;
 }
