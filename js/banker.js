@@ -978,14 +978,16 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
 
           const fontSizeMode = document.documentElement.getAttribute('data-font-size') || 'medium';
           const isLargeFont = fontSizeMode === 'large';
+          const isMobile = window.matchMedia('(max-width: 768px)').matches;
+          const labelWidth = isLargeFont ? (isMobile ? 132 : 112) : (isMobile ? 112 : 88);
           
           const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
           
           const container = document.createElement('div');
-      container.style.cssText = `display: flex; gap: ${isLargeFont ? '8px' : '4px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
+      container.style.cssText = `display: grid; grid-template-columns: ${labelWidth}px 14px 58px 42px; column-gap: ${isMobile ? '8px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
           // Create label with consistent structure for alignment
           const label = document.createElement('span');
-          label.style.cssText = `display: inline-flex; align-items: center; gap: ${isLargeFont ? '6px' : '2px'}; min-width: ${isLargeFont ? '108px' : '83px'}; font-size: 14px; font-weight: 500;`;
+          label.style.cssText = `display: inline-flex; align-items: center; gap: ${isLargeFont ? '8px' : '4px'}; width: 100%; font-size: 14px; font-weight: 500; overflow: hidden; white-space: nowrap;`;
           
           const nameSpan = document.createElement('span');
           nameSpan.textContent = `${playerName}:`;
@@ -996,7 +998,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           strokeContainer.className = 'banker-player-stroke-container';
           strokeContainer.dataset.player = String(p);
           strokeContainer.dataset.hole = String(h);
-          strokeContainer.style.cssText = `display: inline-block; width: ${isLargeFont ? '38px' : '28px'}; text-align: center;`;
+          strokeContainer.style.cssText = `display: inline-block; width: ${isLargeFont ? (isMobile ? '46px' : '40px') : (isMobile ? '38px' : '30px')}; text-align: center; margin-right: ${isMobile ? '4px' : '2px'};`;
           
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
           
@@ -1038,7 +1040,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const dollarSign = document.createElement('span');
           dollarSign.textContent = '$';
-          dollarSign.style.cssText = 'font-size: 11px; color: var(--accent);';
+          dollarSign.style.cssText = 'font-size: 11px; color: var(--accent); text-align: center;';
           
           const betInput = document.createElement('input');
           betInput.id = `banker_bet_p${p}_h${h}`;
@@ -1049,7 +1051,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           // Restore saved value or default to empty
           betInput.value = savedValues[h][p]?.bet || '';
           betInput.placeholder = '0';
-          betInput.style.cssText = 'width: 55px; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
+          betInput.style.cssText = 'width: 100%; min-width: 0; padding: 4px; background: var(--bg); color: var(--ink); border: 1px solid var(--accent); border-radius: 4px; text-align: center; font-size: 12px; font-weight: 600;';
           betInput.addEventListener('input', () => {
             // Validate bet against max bet
             const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
@@ -1079,7 +1081,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           doubleBtn.title = checkboxTitle;
           // Restore saved doubled state
           doubleBtn.dataset.active = savedValues[h][p]?.doubled ? 'true' : 'false';
-          doubleBtn.style.cssText = 'padding: 4px 8px; min-width: 40px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s;';
+          doubleBtn.style.cssText = 'width: 100%; min-width: 0; padding: 4px 8px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s;';
           
           // Apply saved doubled state styling immediately
           if (doubleBtn.dataset.active === 'true') {
