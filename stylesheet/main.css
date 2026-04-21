@@ -79,15 +79,15 @@
 }
 
 :root[data-font-size="small"] {
-  --font-size-step: -1px;
+  --font-size-step: -3px;
 }
 
 :root[data-font-size="medium"] {
-  --font-size-step: 0px;
+  --font-size-step: 2px;
 }
 
 :root[data-font-size="large"] {
-  --font-size-step: 2px;
+  --font-size-step: 6px;
 }
 
 /* ---- Base / Resets ---- */
