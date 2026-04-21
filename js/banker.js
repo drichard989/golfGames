@@ -979,14 +979,18 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const fontSizeMode = document.documentElement.getAttribute('data-font-size') || 'medium';
           const isLargeFont = fontSizeMode === 'large';
           const isMobile = window.matchMedia('(max-width: 768px)').matches;
+          const ua = navigator.userAgent || '';
+          const isAndroid = /Android/i.test(ua);
+          const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
           const strokeColWidth = isLargeFont ? (isMobile ? 40 : 42) : (isMobile ? 34 : 36);
-          const inputColWidth = isMobile ? 54 : 60;
-          const buttonColWidth = isMobile ? 48 : 52;
+          const inputColWidth = isMobile ? (isAndroid ? 50 : 52) : 60;
+          const buttonColWidth = isMobile ? (isIOS ? 52 : 48) : 52;
+          const nameMinWidth = isMobile ? (isAndroid ? 76 : 64) : 92;
           
-          const playerName = (names[p] || `P${p + 1}`).substring(0, 10);
+          const playerName = names[p] || `P${p + 1}`;
           
           const container = document.createElement('div');
-          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '64px' : '92px'}, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
+          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${nameMinWidth}px, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
 
           // Player name column
           const nameSpan = document.createElement('span');
@@ -1079,7 +1083,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           doubleBtn.title = checkboxTitle;
           // Restore saved doubled state
           doubleBtn.dataset.active = savedValues[h][p]?.doubled ? 'true' : 'false';
-          doubleBtn.style.cssText = 'width: 100%; min-width: 0; padding: 0 4px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; overflow: hidden;';
+          doubleBtn.style.cssText = 'width: 100%; min-width: 0; padding: 0 4px; min-height: 44px; border: 2px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap;';
           
           // Apply saved doubled state styling immediately
           if (doubleBtn.dataset.active === 'true') {
