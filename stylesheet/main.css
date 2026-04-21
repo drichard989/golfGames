@@ -438,7 +438,7 @@ td {
   max-width: 105px;
   width: 105px;
   background-color: var(--panel);
-  font-size: 12px;
+  font-size: calc(var(--text-sm) + var(--font-data-adjust) + var(--font-size-step));
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -450,7 +450,7 @@ td {
   width: 55px;
   padding: var(--space-xs) 3px;
   background-color: var(--panel);
-  font-size: 12px;
+  font-size: calc(var(--text-sm) + var(--font-data-adjust) + var(--font-size-step));
 }
 
 /* Name cell container with delete button */
@@ -497,7 +497,8 @@ td {
   flex: 1;
   min-width: 0;
   max-width: none;
-  font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step)) !important;
+  line-height: 1.2;
   padding: 6px 3px;
   background: transparent;
   border: none;
