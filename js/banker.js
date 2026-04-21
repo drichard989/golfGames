@@ -664,10 +664,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         }
         
         // Show detailed results per bet
-        const bankerName = names[hole.banker]?.substring(0, 8) || `P${hole.banker + 1}`;
+        const bankerName = names[hole.banker]?.substring(0, 10) || `P${hole.banker + 1}`;
         
         const results = hole.bets.map(bet => {
-          const playerName = names[bet.player]?.substring(0, 8) || `P${bet.player + 1}`;
+          const playerName = names[bet.player]?.substring(0, 10) || `P${bet.player + 1}`;
           
           const resultContainer = document.createElement('div');
           resultContainer.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 2px 4px; margin-bottom: 2px; border-radius: 3px; font-size: 12px;';
@@ -983,7 +983,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const inputColWidth = isMobile ? 54 : 60;
           const buttonColWidth = isMobile ? 48 : 52;
           
-          const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
+          const playerName = (names[p] || `P${p + 1}`).substring(0, 10);
           
           const container = document.createElement('div');
           container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '64px' : '92px'}, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
