@@ -1449,6 +1449,14 @@
           console.warn('[Storage] No player rows found, skipping save');
           return false;
         }
+
+        let existingState = null;
+        try {
+          const existingRaw = localStorage.getItem(this.KEY);
+          existingState = existingRaw ? JSON.parse(existingRaw) : null;
+        } catch {
+          existingState = null;
+        }
         
         const state = {
           version: this.CURRENT_VERSION,
@@ -1474,7 +1482,10 @@
         },
         banker: { 
           open: $(ids.bankerSection).classList.contains("open"),
-          state: (typeof window.Banker?.getState === 'function') ? window.Banker.getState() : null
+          state: (() => {
+            const current = (typeof window.Banker?.getState === 'function') ? window.Banker.getState() : null;
+            return current ?? existingState?.banker?.state ?? null;
+          })()
         },
         skins: { 
           mode: document.getElementById('skinsModeNet')?.checked ? 'net' : 'gross',
@@ -1486,7 +1497,13 @@
         junk: {
           useNet: document.getElementById('junkUseNet')?.checked ?? false,
           open: $(ids.junkSection)?.classList.contains("open"),
-          achievements: (typeof window.Junk?.getAchievementState === 'function') ? window.Junk.getAchievementState() : []
+          achievements: (() => {
+            const hasRenderedAchievementInputs = document.querySelectorAll('#junkTable input.junk-ach').length > 0;
+            if (typeof window.Junk?.getAchievementState === 'function' && hasRenderedAchievementInputs) {
+              return window.Junk.getAchievementState();
+            }
+            return existingState?.junk?.achievements ?? [];
+          })()
         },
         hilo: {
           unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10,
@@ -1634,9 +1651,6 @@
         window.Vegas?.renderTeamControls();
         if(s.vegas?.teams) window.Vegas?.setTeamAssignments(s.vegas.teams);
         if(s.vegas?.opts) window.Vegas?.setOptions(s.vegas.opts);
-        // Games default to closed - only open if previously saved as open
-        // if(s.vegas?.open) games_open("vegas");
-        // if(s.banker?.open) games_open("banker");
         
         // Restore Banker state
         if(s.banker?.state && typeof window.Banker?.setState === 'function') {
@@ -1687,7 +1701,40 @@
           const unitValueEl = document.getElementById('hiloUnitValue');
           if(unitValueEl) unitValueEl.value = s.hilo.unitValue;
         }
-        // if(s.hilo?.open) games_open("hilo");
+
+        // Restore open/closed game sections exactly as saved
+        const setGameOpenState = (sectionId, toggleId, shouldOpen) => {
+          const sec = document.getElementById(sectionId);
+          const btn = document.getElementById(toggleId);
+          if (!sec) return;
+          sec.classList.toggle('open', !!shouldOpen);
+          sec.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+          if (btn) btn.classList.toggle('active', !!shouldOpen);
+        };
+
+        setGameOpenState('vegasSection', 'toggleVegas', !!s.vegas?.open);
+        setGameOpenState('bankerSection', 'toggleBanker', !!s.banker?.open);
+        setGameOpenState('skinsSection', 'toggleSkins', !!s.skins?.open);
+        setGameOpenState('junkSection', 'toggleJunk', !!s.junk?.open);
+        setGameOpenState('hiloSection', 'toggleHilo', !!s.hilo?.open);
+
+        // Initialize modules for sections that were saved open
+        if (s.vegas?.open) {
+          window.Vegas?.renderTable?.();
+          window.Vegas?.renderTeamControls?.();
+        }
+        if (s.banker?.open) {
+          window.Banker?.init?.();
+        }
+        if (s.skins?.open) {
+          window.Skins?.init?.();
+        }
+        if (s.junk?.open) {
+          window.Junk?.init?.();
+        }
+        if (s.hilo?.open) {
+          window.HiLo?.init?.();
+        }
 
         // Recalculate all games with restored data
         AppManager.recalcGames();
@@ -3120,10 +3167,21 @@
     }
     
     // Force save before page unload to prevent data loss
-    window.addEventListener('beforeunload', () => {
+    const flushSave = () => {
       // Clear any pending debounced save and save immediately
       clearTimeout(Storage.saveTimer);
       Storage.save();
+    };
+
+    window.addEventListener('beforeunload', flushSave);
+
+    // More reliable on mobile Safari / PWA lifecycle transitions
+    window.addEventListener('pagehide', flushSave);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'hidden') {
+        flushSave();
+      }
     });
     
     // Log initialization complete

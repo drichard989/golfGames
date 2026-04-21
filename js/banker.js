@@ -272,6 +272,17 @@
      * @returns {Object} Complete banker game state
      */
     getState() {
+      // If UI isn't built yet, return pending restored state (if any)
+      // instead of overwriting saved data with empty defaults.
+      if (!this._initialized) {
+        return this._pendingState || null;
+      }
+
+      const testElement = document.getElementById('banker_h1');
+      if (!testElement) {
+        return this._pendingState || null;
+      }
+
       const state = {
         holes: []
       };
