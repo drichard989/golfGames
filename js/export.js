@@ -452,6 +452,22 @@ td:nth-child(12) {
   box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent);
 }
 
+/* Plus Handicap - Gives Strokes (Red) */
+.score-input.gives-stroke {
+  border: 2px solid var(--danger);
+  box-shadow: 0 0 0 1px var(--danger);
+}
+
+.score-input.gives-stroke[data-strokes="2"] {
+  border: 2px solid var(--danger);
+  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--danger);
+}
+
+.score-input.gives-stroke[data-strokes="3"] {
+  border: 2px solid var(--danger);
+  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--danger), 0 0 0 12px var(--bg), 0 0 0 14px var(--danger);
+}
+
 .total,
 .to-par,
 .split,
@@ -1159,6 +1175,22 @@ input[type="text"] {
 }
 
 :root[data-theme="light"] .score-input.receives-stroke[data-strokes="3"] {
+  border: 2px solid #dc3545;
+  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545, 0 0 0 12px #ffffff, 0 0 0 14px #dc3545;
+}
+
+/* Light theme - Plus Handicap */
+:root[data-theme="light"] .score-input.gives-stroke {
+  border: 2px solid #dc3545;
+  box-shadow: 0 0 0 1px #dc3545;
+}
+
+:root[data-theme="light"] .score-input.gives-stroke[data-strokes="2"] {
+  border: 2px solid #dc3545;
+  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545;
+}
+
+:root[data-theme="light"] .score-input.gives-stroke[data-strokes="3"] {
   border: 2px solid #dc3545;
   box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545, 0 0 0 12px #ffffff, 0 0 0 14px #dc3545;
 }
