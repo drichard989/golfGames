@@ -366,6 +366,84 @@
   const $$ = Utils.$$;
   const sum = Utils.sum;
   const clampInt = Utils.clampInt;
+
+  function parseDisplayedHandicap(value) {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+
+    const normalized = raw.replace(/\s+/g, '');
+    if (normalized === '+' || normalized === '-') return null;
+
+    const isPlusDisplay = normalized.startsWith('+');
+    const parsed = Number(normalized);
+    if (!Number.isFinite(parsed)) return null;
+
+    const actual = isPlusDisplay ? -Math.abs(parsed) : Math.trunc(parsed);
+    return clampInt(actual, LIMITS.MIN_HANDICAP, LIMITS.MAX_HANDICAP);
+  }
+
+  function formatDisplayedHandicap(value) {
+    const actual = typeof value === 'number' ? value : parseDisplayedHandicap(value);
+    if (actual === null || !Number.isFinite(actual)) return '';
+    if (actual < 0) return `+${Math.abs(actual)}`;
+    return String(actual);
+  }
+
+  function getActualHandicapValue(chInput) {
+    if (!chInput) return 0;
+
+    const dataValue = chInput.dataset.actualValue;
+    if (dataValue !== undefined && dataValue !== '') {
+      const parsedData = Number(dataValue);
+      if (Number.isFinite(parsedData)) return parsedData;
+    }
+
+    const parsed = parseDisplayedHandicap(chInput.value);
+    return parsed === null ? 0 : parsed;
+  }
+
+  function setHandicapInputValue(chInput, value) {
+    if (!chInput) return;
+
+    if (value === '' || value === null || value === undefined) {
+      chInput.value = '';
+      chInput.dataset.actualValue = '';
+      return;
+    }
+
+    const actual = parseDisplayedHandicap(value);
+    if (actual === null) {
+      chInput.value = '';
+      chInput.dataset.actualValue = '';
+      return;
+    }
+
+    chInput.dataset.actualValue = String(actual);
+    chInput.value = formatDisplayedHandicap(actual);
+  }
+
+  function syncHandicapInput(chInput) {
+    if (!chInput) return false;
+
+    const raw = String(chInput.value ?? '').trim();
+    if (raw === '' || raw === '+' || raw === '-') {
+      chInput.dataset.actualValue = '';
+      return false;
+    }
+
+    const actual = parseDisplayedHandicap(raw);
+    if (actual === null) {
+      chInput.dataset.actualValue = '';
+      return false;
+    }
+
+    chInput.dataset.actualValue = String(actual);
+    chInput.value = formatDisplayedHandicap(actual);
+    return true;
+  }
+
+  window.getActualHandicapValue = getActualHandicapValue;
+  window.setHandicapInputValue = setHandicapInputValue;
   
   // =============================================================================
   // ERROR NOTIFICATION SYSTEM
@@ -646,22 +724,25 @@
           const chTd=document.createElement("td");
           
           const chInput=document.createElement("input"); 
-          chInput.type="number"; 
-          chInput.inputMode="decimal"; 
+          chInput.type="text"; 
+          chInput.inputMode="text"; 
           chInput.className="ch-input"; 
           chInput.value="0"; 
-          chInput.min="-20"; 
-          chInput.max="54"; 
-          chInput.step="1"; 
+          chInput.pattern="[+-]?[0-9]*";
           chInput.autocomplete="off";
           
           chInput.addEventListener("input", () => { 
-            if(chInput.value !== "") {
-              const clamped = clampInt(chInput.value, LIMITS.MIN_HANDICAP, LIMITS.MAX_HANDICAP);
-              if(String(clamped) !== chInput.value) {
-                chInput.value = clamped;
-                return; // Let the new input event handle the recalc
+            const raw = String(chInput.value ?? '').trim();
+            if (!syncHandicapInput(chInput)) {
+              if (raw === '') {
+                Scorecard.calc.recalcAll(); 
+                AppManager.recalcGames();
+                if (!Storage._isLoading) {
+                  Scorecard.calc.applyStrokeHighlighting();
+                }
+                Storage.saveDebounced(); 
               }
+              return;
             }
             Scorecard.calc.recalcAll(); 
             AppManager.recalcGames();
@@ -835,7 +916,7 @@
         const fixedRows = $$("#scorecardFixed .player-row");
         const chs = fixedRows.map(r => { 
           const chInput = $(".ch-input", r);
-          const v = Number(chInput?.value);
+          const v = getActualHandicapValue(chInput);
           return Number.isFinite(v) ? v : 0; 
         });
         
@@ -1523,7 +1604,7 @@
           if(!r || !fixedR) return;
           
           $(".name-edit", fixedR).value = p.name || "";
-          $(".ch-input", fixedR).value = (p.ch !== undefined && p.ch !== null && p.ch !== "") ? p.ch : "0";
+          setHandicapInputValue($(".ch-input", fixedR), (p.ch !== undefined && p.ch !== null && p.ch !== "") ? p.ch : "0");
           
           const ins = $$("input.score-input", r);
           p.scores?.forEach((v, j) => { 
@@ -1635,7 +1716,7 @@
         const nameInput = $(".name-edit", r);
         const chInput = $(".ch-input", r);
         if (nameInput) nameInput.value = "";
-        if (chInput) chInput.value = "0";
+        if (chInput) setHandicapInputValue(chInput, "0");
       });
       
       // Clear scores from scrollable table
@@ -2035,7 +2116,7 @@
           const nameInput = fixedRow.querySelector(".name-edit");
           const chInput = fixedRow.querySelector(".ch-input");
           if (nameInput) nameInput.value = obj.player || `Player ${idx+1}`;
-          if (chInput) chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
+          if (chInput) setHandicapInputValue(chInput, (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "");
         }
         
         // Update scores in scroll table (only first 18 inputs)
@@ -2061,7 +2142,7 @@
           const nameInput = fixedRow.querySelector(".name-edit");
           const chInput = fixedRow.querySelector(".ch-input");
           if (nameInput) nameInput.value = "";
-          if (chInput) chInput.value = "";
+          if (chInput) setHandicapInputValue(chInput, "");
         }
         
         if (scrollRow) {
@@ -2117,7 +2198,7 @@
           const nameInput = fixedRow.querySelector(".name-edit");
           const chInput = fixedRow.querySelector(".ch-input");
           if (nameInput) nameInput.value = obj.player || `Player ${targetIdx+1}`;
-          if (chInput) chInput.value = (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "";
+          if (chInput) setHandicapInputValue(chInput, (obj.ch === 0 || Number.isFinite(obj.ch)) ? String(obj.ch) : "");
         }
         
         const scrollRow = scrollPlayerRows?.[targetIdx];
@@ -2362,24 +2443,22 @@
     
     // Course Handicap input (in fixed table)
     const chTd = document.createElement("td");
-    const MIN_HANDICAP = -50;
-    const MAX_HANDICAP = 60;
     const chInput = document.createElement("input");
-    chInput.type = "number";
-    chInput.inputMode = "decimal";
+    chInput.type = "text";
+    chInput.inputMode = "text";
     chInput.className = "ch-input";
     chInput.value = "0";
-    chInput.min = "-20";
-    chInput.max = "54";
-    chInput.step = "1";
+    chInput.pattern = "[+-]?[0-9]*";
     chInput.autocomplete = "off";
     chInput.addEventListener("input", () => {
-      if(chInput.value !== "") {
-        const clamped = clampInt(chInput.value, MIN_HANDICAP, MAX_HANDICAP);
-        if(String(clamped) !== chInput.value) {
-          chInput.value = clamped;
-          return; // Let the new input event handle the recalc
+      const raw = String(chInput.value ?? '').trim();
+      if (!syncHandicapInput(chInput)) {
+        if (raw === '') {
+          Scorecard.calc.recalcAll();
+          AppManager.recalcGames();
+          Storage.saveDebounced();
         }
+        return;
       }
       Scorecard.calc.recalcAll();
       AppManager.recalcGames();
@@ -2742,7 +2821,7 @@
       const scoreInputs = $$("input.score-input", lastRow);
       
       if(nameInput) nameInput.value = '';
-      if(chInput) chInput.value = '';
+      if(chInput) setHandicapInputValue(chInput, '');
       scoreInputs.forEach(inp => inp.value = '');
       
       // Recalculate to update totals without this player's data
@@ -3082,6 +3161,13 @@
       addPlayer,
       removePlayer,
       recalculateEverything
+    },
+
+    handicap: {
+      getActualValue: getActualHandicapValue,
+      setDisplayedValue: setHandicapInputValue,
+      parseDisplayedValue: parseDisplayedHandicap,
+      formatDisplayedValue: formatDisplayedHandicap
     },
     
     // Constants

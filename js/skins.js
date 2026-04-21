@@ -51,7 +51,7 @@
       playerRows.forEach(row => {
         const chInput = row.querySelector('.ch-input');
         const val = chInput?.value || '';
-        chs.push(val === '' ? null : parseFloat(val));
+        chs.push(val === '' ? null : (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : parseFloat(val)));
       });
       const validCHs = chs.filter(ch => ch !== null);
       if (validCHs.length === 0) return chs.map(() => 0);

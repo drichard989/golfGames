@@ -532,7 +532,13 @@
                 
                 // Use DECOMPRESSED property names (name, ch, scores) - not compressed (n, c, s)
                 if (nameInput) nameInput.value = player.name || '';
-                if (chInput) chInput.value = player.ch || '0';
+                if (chInput) {
+                  if (typeof window.setHandicapInputValue === 'function') {
+                    window.setHandicapInputValue(chInput, player.ch || '0');
+                  } else {
+                    chInput.value = player.ch || '0';
+                  }
+                }
                 
                 console.log('[QR Import] Setting scores for player', idx, ':', player.name, 'Score count:', player.scores?.length);
                 if (scoreInputs && player.scores) {
@@ -636,9 +642,15 @@
                 }
                 
                 if (chInput) {
-                  chInput.value = player.ch;
-                  chInput.dispatchEvent(new Event('input', { bubbles: true }));
-                  chInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  if (typeof window.setHandicapInputValue === 'function') {
+                    window.setHandicapInputValue(chInput, player.ch);
+                    chInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    chInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  } else {
+                    chInput.value = player.ch;
+                    chInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    chInput.dispatchEvent(new Event('change', { bubbles: true }));
+                  }
                 }
                 
                 // SCORE POPULATION - DETAILED DEBUG
