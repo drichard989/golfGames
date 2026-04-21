@@ -916,6 +916,22 @@ tfoot td {
   align-items: center;
 }
 
+.banker-select {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.banker-hole-cell {
+  font-size: 17px;
+}
+
 .banker-stroke-indicator {
   display: none;
   flex: 0 0 auto;
@@ -1041,6 +1057,35 @@ tfoot td {
   min-width: 0;
 }
 
+.banker-bet-input-invalid {
+  border-color: var(--danger) !important;
+  border-width: 2px !important;
+}
+
+.banker-result-muted {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.banker-result-muted-sm {
+  font-size: 10px;
+}
+
+.banker-inline-stroke-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
 .banker-result-row {
   display: flex;
   justify-content: space-between;
@@ -1082,6 +1127,18 @@ tfoot td {
   font-size: 13px;
 }
 
+.banker-payout-positive {
+  color: var(--accent);
+}
+
+.banker-payout-negative {
+  color: var(--danger);
+}
+
+.banker-payout-push {
+  color: var(--warn);
+}
+
 .banker-result-mult {
   font-size: 10px;
   color: var(--muted);
@@ -1100,6 +1157,45 @@ tfoot td {
   border-top: 1px solid var(--line);
   font-size: 15px;
   font-weight: 600;
+}
+
+.banker-result-summary-positive {
+  color: var(--accent);
+}
+
+.banker-result-summary-negative {
+  color: var(--danger);
+}
+
+.banker-result-summary-push {
+  color: var(--warn);
+}
+
+.banker-summary-value {
+  font-size: 13px;
+}
+
+.banker-footer-label {
+  text-align: left;
+  padding-left: 8px;
+}
+
+.banker-footer-player {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.banker-footer-total {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.banker-total-positive {
+  color: var(--accent);
+}
+
+.banker-total-negative {
+  color: var(--danger);
 }
 
 /* Hi-Lo hole-by-hole highlighting */

@@ -40,6 +40,19 @@
     }
   }
 
+  const DOM_IDS = {
+    bankerSelect: (hole) => `banker_h${hole}`,
+    maxBet: (hole) => `banker_maxbet_h${hole}`,
+    bankerDouble: (hole) => `banker_double_h${hole}`,
+    betsCell: (hole) => `banker_bets_h${hole}`,
+    resultCell: (hole) => `banker_result_h${hole}`,
+    bankerStroke: (hole) => `banker_strokes_h${hole}`,
+    betInput: (player, hole) => `banker_bet_p${player}_h${hole}`,
+    playerDouble: (player, hole) => `banker_pdouble_p${player}_h${hole}`,
+    totalCell: (player) => `banker_total_p${player}`,
+    footerName: (player) => `banker_name_p${player}`
+  };
+
   function getPlayerNames() {
     try {
       const names = [];
@@ -301,6 +314,198 @@
     };
   }
 
+  function sanitizeBetState(bet, playerCount) {
+    const player = Number(bet?.player);
+    if (!Number.isFinite(player) || player < 0 || player >= playerCount) return null;
+
+    return {
+      player,
+      amount: Math.max(0, Number(bet?.amount) || 0),
+      doubled: !!bet?.doubled
+    };
+  }
+
+  function sanitizeHoleState(hole, playerCount) {
+    const banker = Number(hole?.banker);
+    const maxBet = Math.max(0, Number(hole?.maxBet) || 10);
+    const bankerDouble = !!hole?.bankerDouble;
+    const sourceBets = Array.isArray(hole?.bets) ? hole.bets : [];
+    const bets = sourceBets
+      .map((bet) => sanitizeBetState(bet, playerCount))
+      .filter(Boolean);
+
+    return {
+      banker: Number.isFinite(banker) ? banker : -1,
+      maxBet,
+      bankerDouble,
+      bets
+    };
+  }
+
+  function sanitizeBankerState(state, playerCount) {
+    const safePlayerCount = Math.max(0, Number(playerCount) || 0);
+    const sourceHoles = Array.isArray(state?.holes) ? state.holes : [];
+
+    return {
+      holes: Array.from({ length: 18 }, (_, idx) =>
+        sanitizeHoleState(sourceHoles[idx], safePlayerCount)
+      )
+    };
+  }
+
+  function getStrokeTone(strokes) {
+    return strokes > 0
+      ? {
+          color: '#4ade80',
+          borderColor: 'rgba(74, 222, 128, 0.45)',
+          background: 'rgba(74, 222, 128, 0.12)'
+        }
+      : {
+          color: '#ff6b6b',
+          borderColor: 'rgba(255, 107, 107, 0.45)',
+          background: 'rgba(255, 107, 107, 0.12)'
+        };
+  }
+
+  function applyStrokeBadgeStyle(indicator, strokes) {
+    if (!indicator || !strokes) return;
+    const tone = getStrokeTone(strokes);
+    indicator.style.color = tone.color;
+    indicator.style.borderColor = tone.borderColor;
+    indicator.style.background = tone.background;
+  }
+
+  function setBetInputValidity(betInput, isInvalid, maxBet) {
+    if (!betInput) return;
+    betInput.classList.toggle('banker-bet-input-invalid', !!isInvalid);
+    betInput.title = isInvalid ? `Bet exceeds max of $${maxBet}` : '';
+  }
+
+  /**
+   * Pure Banker game engine based on provided state and scorebook.
+   * Does not read or write DOM.
+   * @param {{playerCount:number, holes:Array<{banker:number,maxBet:number,bankerDouble:boolean,bets:Array<{player:number,amount:number,doubled:boolean}>}>}} state
+   * @param {{grossByHole:number[][], netByHole:number[][], pars:number[]}} scorebook
+   * @param {boolean} useNet
+   * @returns {{holeResults:Array, playerTotals:number[]}}
+   */
+  function computeFromState(state, scorebook, useNet) {
+    const playerCount = Number(state?.playerCount) || 0;
+    const holes = Array.isArray(state?.holes) ? state.holes : [];
+    const grossByHole = Array.isArray(scorebook?.grossByHole) ? scorebook.grossByHole : [];
+    const netByHole = Array.isArray(scorebook?.netByHole) ? scorebook.netByHole : [];
+    const pars = Array.isArray(scorebook?.pars) ? scorebook.pars : [];
+
+    const holeResults = [];
+    const playerTotals = Array(playerCount).fill(0);
+
+    for (let h = 0; h < 18; h++) {
+      const holeNum = h + 1;
+      const holeState = holes[h] || { banker: -1, maxBet: 10, bankerDouble: false, bets: [] };
+      const bankerIdx = Number(holeState.banker);
+
+      if (bankerIdx < 0 || bankerIdx >= playerCount) {
+        holeResults.push({
+          hole: holeNum,
+          banker: -1,
+          bets: [],
+          winner: null,
+          error: 'No banker selected'
+        });
+        continue;
+      }
+
+      const grossScores = grossByHole[h] || [];
+      const netScores = netByHole[h] || [];
+      const scores = useNet ? netScores : grossScores;
+
+      const allScoresEntered =
+        scores.length >= playerCount && scores.slice(0, playerCount).every((s) => Number(s) > 0);
+
+      if (!allScoresEntered) {
+        holeResults.push({
+          hole: holeNum,
+          banker: bankerIdx,
+          bets: [],
+          winner: null,
+          error: 'Not all scores entered'
+        });
+        continue;
+      }
+
+      const bankerScore = scores[bankerIdx];
+      const bankerDouble = !!holeState.bankerDouble;
+      const holePar = Number(pars[h]) || 4;
+      const isPar3 = holePar === 3;
+      const baseMultiplier = isPar3 ? 3 : 2;
+
+      const resultBets = [];
+      const sourceBets = Array.isArray(holeState.bets) ? holeState.bets : [];
+
+      sourceBets.forEach((bet) => {
+        const player = Number(bet?.player);
+        const betAmount = Number(bet?.amount) || 0;
+        const playerDouble = !!bet?.doubled;
+
+        if (player === bankerIdx) return;
+        if (player < 0 || player >= playerCount) return;
+        if (betAmount <= 0) return;
+
+        const playerScore = scores[player];
+        const playerGross = grossScores[player];
+        const playerNet = netScores[player];
+        const bankerGross = grossScores[bankerIdx];
+        const bankerNet = netScores[bankerIdx];
+
+        let multiplier = 1;
+        if (playerDouble) multiplier *= baseMultiplier;
+        if (bankerDouble) multiplier *= baseMultiplier;
+
+        const basePayout = betAmount * multiplier;
+
+        let winner = null;
+        let payout = 0;
+
+        if (playerScore < bankerScore) {
+          winner = player;
+          payout = basePayout;
+          playerTotals[player] += payout;
+          playerTotals[bankerIdx] -= payout;
+        } else if (playerScore > bankerScore) {
+          winner = bankerIdx;
+          payout = -basePayout;
+          playerTotals[player] -= basePayout;
+          playerTotals[bankerIdx] += basePayout;
+        }
+
+        resultBets.push({
+          player,
+          betAmount,
+          playerDouble,
+          playerScore,
+          playerGross,
+          playerNet,
+          bankerScore,
+          bankerGross,
+          bankerNet,
+          winner,
+          payout,
+          multiplier
+        });
+      });
+
+      holeResults.push({
+        hole: holeNum,
+        banker: bankerIdx,
+        maxBet: Number(holeState.maxBet) || 0,
+        bankerDouble,
+        bets: resultBets
+      });
+    }
+
+    return { holeResults, playerTotals };
+  }
+
   // =============================================================================
   // BANKER MODULE
   // =============================================================================
@@ -316,8 +521,8 @@
       const playerCount = getPlayerCount();
 
       for (let h = 1; h <= 18; h++) {
-        const indicator = document.getElementById(`banker_strokes_h${h}`);
-        const bankerSelect = document.getElementById(`banker_h${h}`);
+        const indicator = document.getElementById(DOM_IDS.bankerStroke(h));
+        const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
         if (!indicator || !bankerSelect) continue;
 
         const bankerIdx = Number(bankerSelect.value);
@@ -339,9 +544,7 @@
         indicator.textContent = strokeData.displayText;
         indicator.title = strokeData.title;
         indicator.style.display = 'inline-flex';
-        indicator.style.color = strokeData.strokes > 0 ? '#4ade80' : '#ff6b6b';
-        indicator.style.borderColor = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.45)' : 'rgba(255, 107, 107, 0.45)';
-        indicator.style.background = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 107, 107, 0.12)';
+        applyStrokeBadgeStyle(indicator, strokeData.strokes);
       }
     },
     
@@ -356,7 +559,7 @@
         return this._pendingState || null;
       }
 
-      const testElement = document.getElementById('banker_h1');
+      const testElement = document.getElementById(DOM_IDS.bankerSelect(1));
       if (!testElement) {
         return this._pendingState || null;
       }
@@ -374,28 +577,28 @@
         };
         
         // Get banker selection
-      const bankerSelect = document.getElementById(`banker_h${h}`);
-      if (bankerSelect) {
+        const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
+        if (bankerSelect) {
           holeState.banker = Number(bankerSelect.value);
         }
         
         // Get max bet
-        const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
+        const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
         if (maxBetInput) {
           holeState.maxBet = Number(maxBetInput.value) || 10;
         }
         
         // Get banker double
-      const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
-      if (bankerDoubleBtn) {
+        const bankerDoubleBtn = document.getElementById(DOM_IDS.bankerDouble(h));
+        if (bankerDoubleBtn) {
           holeState.bankerDouble = bankerDoubleBtn.dataset.active === 'true';
         }
         
         // Get player bets
         const playerCount = getPlayerCount();
         for (let p = 0; p < playerCount; p++) {
-          const betInput = document.getElementById(`banker_bet_p${p}_h${h}`);
-          const doubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          const betInput = document.getElementById(DOM_IDS.betInput(p, h));
+          const doubleBtn = document.getElementById(DOM_IDS.playerDouble(p, h));
           
           if (betInput) {
             const betAmount = Number(betInput.value) || 0;
@@ -422,24 +625,27 @@
      */
     setState(state) {
       if (!state || !state.holes) return;
+
+      const playerCount = getPlayerCount();
+      const sanitizedState = sanitizeBankerState(state, playerCount);
       
       // Check if table is built (test if banker select exists)
-      const testElement = document.getElementById('banker_h1');
+      const testElement = document.getElementById(DOM_IDS.bankerSelect(1));
       if (!testElement) {
         // Table not built yet, store for later
         console.log('[Banker] Table not built, storing state for later restoration');
-        this._pendingState = state;
+        this._pendingState = sanitizedState;
         return;
       }
       
       console.log('[Banker] Restoring state to DOM');
       // Delay to ensure DOM is ready
       setTimeout(() => {
-        state.holes.forEach((holeState, idx) => {
+        sanitizedState.holes.forEach((holeState, idx) => {
           const h = idx + 1;
           
           // Set banker selection
-          const bankerSelect = document.getElementById(`banker_h${h}`);
+          const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
           if (bankerSelect && holeState.banker !== undefined) {
             bankerSelect.value = String(holeState.banker);
             // Trigger change event to update bet inputs
@@ -447,24 +653,24 @@
           }
           
           // Set max bet
-          const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
+          const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
           if (maxBetInput && holeState.maxBet !== undefined) {
             maxBetInput.value = String(holeState.maxBet);
           }
           
           // Set banker double
-          const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
+          const bankerDoubleBtn = document.getElementById(DOM_IDS.bankerDouble(h));
           setToggleButtonState(bankerDoubleBtn, !!holeState.bankerDouble);
           
           // Set player bets
           if (holeState.bets && Array.isArray(holeState.bets)) {
             holeState.bets.forEach(bet => {
-              const betInput = document.getElementById(`banker_bet_p${bet.player}_h${h}`);
+              const betInput = document.getElementById(DOM_IDS.betInput(bet.player, h));
               if (betInput) {
                 betInput.value = String(bet.amount || 0);
               }
               
-              const doubleBtn = document.getElementById(`banker_pdouble_p${bet.player}_h${h}`);
+              const doubleBtn = document.getElementById(DOM_IDS.playerDouble(bet.player, h));
               setToggleButtonState(doubleBtn, !!bet.doubled);
             });
           }
@@ -485,20 +691,20 @@
       
       for (let h = 1; h <= 18; h++) {
         // Reset banker selection
-        const bankerSelect = document.getElementById(`banker_h${h}`);
+        const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
         if (bankerSelect) {
           bankerSelect.value = '-1';
           bankerSelect.dispatchEvent(new Event('change'));
         }
         
         // Reset max bet
-        const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
+        const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
         if (maxBetInput) {
           maxBetInput.value = '10';
         }
         
         // Reset banker double
-const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
+  const bankerDoubleBtn = document.getElementById(DOM_IDS.bankerDouble(h));
         if (bankerDoubleBtn) {
           setToggleButtonState(bankerDoubleBtn, false);
         }
@@ -506,12 +712,12 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         // Reset all player bets
         const playerCount = getPlayerCount();
         for (let p = 0; p < playerCount; p++) {
-          const betInput = document.getElementById(`banker_bet_p${p}_h${h}`);
+          const betInput = document.getElementById(DOM_IDS.betInput(p, h));
           if (betInput) {
             betInput.value = '0';
           }
           
-          const doubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          const doubleBtn = document.getElementById(DOM_IDS.playerDouble(p, h));
           if (doubleBtn) {
             setToggleButtonState(doubleBtn, false);
           }
@@ -530,141 +736,31 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
      */
     compute() {
       const playerCount = getPlayerCount();
-      const holes = 18;
-      
-      const holeResults = [];
-      const playerTotals = Array(playerCount).fill(0);
-      
-      for (let h = 0; h < holes; h++) {
-        const holeNum = h + 1;
-        
-        // Get banker for this hole
-        const bankerSelect = document.getElementById(`banker_h${holeNum}`);
-        const bankerIdx = bankerSelect ? Number(bankerSelect.value) : -1;
-        
-        if (bankerIdx < 0 || bankerIdx >= playerCount) {
-          holeResults.push({
-            hole: holeNum,
-            banker: -1,
-            bets: [],
-            winner: null,
-            error: 'No banker selected'
-          });
-          continue;
-        }
-        
-        // Get max bet
-        const maxBetInput = document.getElementById(`banker_maxbet_h${holeNum}`);
-        const maxBet = maxBetInput ? Number(maxBetInput.value) || 0 : 0;
-        
-        // Get banker double/triple button
-        const bankerDoubleBtn = document.getElementById(`banker_double_h${holeNum}`);
-        const bankerDouble = isToggleActive(bankerDoubleBtn);
-        
-        // Get both gross and net scores for all players (for display purposes)
-        const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
-        const scores = [];
+      const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
+
+      const sourceState = sanitizeBankerState(this.getState() || { holes: [] }, playerCount);
+
+      const grossByHole = [];
+      const netByHole = [];
+      const pars = [];
+
+      for (let h = 0; h < 18; h++) {
         const grossScores = [];
         const netScores = [];
-        let allScoresEntered = true;
-        
         for (let p = 0; p < playerCount; p++) {
-          const gross = getGross(p, h);
-          const net = getNetScore(p, h);
-          const score = useNet ? net : gross;
-          scores.push(score);
-          grossScores.push(gross);
-          netScores.push(net);
-          if (score === 0) allScoresEntered = false;
+          grossScores.push(getGross(p, h));
+          netScores.push(getNetScore(p, h));
         }
-        
-        if (!allScoresEntered) {
-          holeResults.push({
-            hole: holeNum,
-            banker: bankerIdx,
-            bets: [],
-            winner: null,
-            error: 'Not all scores entered'
-          });
-          continue;
-        }
-        
-        // Process bets for each player (except banker)
-        const bets = [];
-        const bankerScore = scores[bankerIdx];
-        
-        for (let p = 0; p < playerCount; p++) {
-          if (p === bankerIdx) continue;
-          
-          const betInput = document.getElementById(`banker_bet_p${p}_h${holeNum}`);
-          const betAmount = betInput ? Number(betInput.value) || 0 : 0;
-          
-          if (betAmount === 0) continue;
-          
-          const playerDoubleBtn = document.getElementById(`banker_pdouble_p${p}_h${holeNum}`);
-          const playerDouble = isToggleActive(playerDoubleBtn);
-          
-          const playerScore = scores[p];
-          const playerGross = grossScores[p];
-          const playerNet = netScores[p];
-          const bankerGross = grossScores[bankerIdx];
-          const bankerNet = netScores[bankerIdx];
-          
-          // Calculate payout - use 3× on par 3s, 2× otherwise
-          const holePar = getPar(h);
-          const isPar3 = holePar === 3;
-          const baseMultiplier = isPar3 ? 3 : 2;
-          
-          let multiplier = 1;
-          if (playerDouble) multiplier *= baseMultiplier;
-          if (bankerDouble) multiplier *= baseMultiplier;
-          
-          const basePayout = betAmount * multiplier;
-          
-          let winner = null;
-          let payout = 0;
-          
-          if (playerScore < bankerScore) {
-            // Player wins
-            winner = p;
-            payout = basePayout;
-            playerTotals[p] += payout;
-            playerTotals[bankerIdx] -= payout;
-          } else if (playerScore > bankerScore) {
-            // Banker wins
-            winner = bankerIdx;
-            payout = -basePayout;
-            playerTotals[p] -= basePayout;
-            playerTotals[bankerIdx] += basePayout;
-          }
-          // If tied, no payout
-          
-          bets.push({
-            player: p,
-            betAmount: betAmount,
-            playerDouble: playerDouble,
-            playerScore: playerScore,
-            playerGross: playerGross,
-            playerNet: playerNet,
-            bankerScore: bankerScore,
-            bankerGross: bankerGross,
-            bankerNet: bankerNet,
-            winner: winner,
-            payout: payout,
-            multiplier: multiplier
-          });
-        }
-        
-        holeResults.push({
-          hole: holeNum,
-          banker: bankerIdx,
-          maxBet: maxBet,
-          bankerDouble: bankerDouble,
-          bets: bets
-        });
+        grossByHole.push(grossScores);
+        netByHole.push(netScores);
+        pars.push(getPar(h));
       }
-      
-      return { holeResults, playerTotals };
+
+      return computeFromState(
+        { playerCount, holes: sourceState.holes },
+        { grossByHole, netByHole, pars },
+        useNet
+      );
     },
 
     /**
@@ -677,34 +773,36 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
       
       // Update totals footer
       for (let p = 0; p < playerCount; p++) {
-        const totalCell = document.getElementById(`banker_total_p${p}`);
+        const totalCell = document.getElementById(DOM_IDS.totalCell(p));
         if (totalCell) {
           const total = playerTotals[p] || 0;
           totalCell.textContent = total >= 0 ? `+$${total.toFixed(2)}` : `-$${Math.abs(total).toFixed(2)}`;
-          
-          // Color code
-          if (total > 0) {
-            totalCell.style.color = 'var(--accent)';
-          } else if (total < 0) {
-            totalCell.style.color = 'var(--danger)';
-          } else {
-            totalCell.style.color = '';
-          }
+          totalCell.classList.remove('banker-total-positive', 'banker-total-negative');
+          if (total > 0) totalCell.classList.add('banker-total-positive');
+          if (total < 0) totalCell.classList.add('banker-total-negative');
         }
       }
       
       // Update hole results
       holeResults.forEach(hole => {
-        const resultCell = document.getElementById(`banker_result_h${hole.hole}`);
+        const resultCell = document.getElementById(DOM_IDS.resultCell(hole.hole));
         if (!resultCell) return;
         
         if (hole.error) {
-          resultCell.innerHTML = `<span style="color: var(--muted); font-size: 12px;">${hole.error}</span>`;
+          resultCell.innerHTML = '';
+          const errorMsg = document.createElement('span');
+          errorMsg.className = 'banker-result-muted';
+          errorMsg.textContent = hole.error;
+          resultCell.appendChild(errorMsg);
           return;
         }
         
         if (hole.bets.length === 0) {
-          resultCell.innerHTML = '<span style="color: var(--muted); font-size: 12px;">No bets</span>';
+          resultCell.innerHTML = '';
+          const noBets = document.createElement('span');
+          noBets.className = 'banker-result-muted';
+          noBets.textContent = 'No bets';
+          resultCell.appendChild(noBets);
           return;
         }
         
@@ -744,15 +842,16 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           
           const payoutInfo = document.createElement('span');
           payoutInfo.className = 'banker-result-payout';
+          payoutInfo.classList.remove('banker-payout-positive', 'banker-payout-negative', 'banker-payout-push');
           
           if (bet.payout > 0) {
-            payoutInfo.style.color = 'var(--accent)';
+            payoutInfo.classList.add('banker-payout-positive');
             payoutInfo.textContent = `+$${bet.payout.toFixed(0)}`;
           } else if (bet.payout < 0) {
-            payoutInfo.style.color = 'var(--danger)';
+            payoutInfo.classList.add('banker-payout-negative');
             payoutInfo.textContent = `-$${Math.abs(bet.payout).toFixed(0)}`;
           } else {
-            payoutInfo.style.color = 'var(--warn)';
+            payoutInfo.classList.add('banker-payout-push');
             payoutInfo.textContent = 'PUSH';
           }
           
@@ -783,16 +882,29 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         const bankerSummary = document.createElement('div');
         bankerSummary.className = 'banker-result-summary';
 
-        if (bankerTotal > 0) {
-          bankerSummary.style.color = 'var(--accent)';
-          bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">+$${bankerTotal.toFixed(0)}</span>`;
-        } else if (bankerTotal < 0) {
-          bankerSummary.style.color = 'var(--danger)';
-          bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
-        } else {
-          bankerSummary.style.color = 'var(--warn)';
-          bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">$0</span>`;
-        }
+        bankerSummary.classList.remove(
+          'banker-result-summary-positive',
+          'banker-result-summary-negative',
+          'banker-result-summary-push'
+        );
+        if (bankerTotal > 0) bankerSummary.classList.add('banker-result-summary-positive');
+        if (bankerTotal < 0) bankerSummary.classList.add('banker-result-summary-negative');
+        if (bankerTotal === 0) bankerSummary.classList.add('banker-result-summary-push');
+
+        const summaryLabel = document.createElement('span');
+        summaryLabel.textContent = `${bankerName}: `;
+
+        const summaryValue = document.createElement('span');
+        summaryValue.className = 'banker-summary-value';
+        summaryValue.textContent =
+          bankerTotal > 0
+            ? `+$${bankerTotal.toFixed(0)}`
+            : bankerTotal < 0
+              ? `-$${Math.abs(bankerTotal).toFixed(0)}`
+              : '$0';
+
+        bankerSummary.appendChild(summaryLabel);
+        bankerSummary.appendChild(summaryValue);
 
         resultCell.appendChild(bankerSummary);
       });
@@ -820,8 +932,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Hole number
         const holeTd = document.createElement('td');
+        holeTd.className = 'banker-hole-cell';
         holeTd.textContent = h;
-        holeTd.style.fontSize = '17px';
         tr.appendChild(holeTd);
         
         // Banker select
@@ -832,9 +944,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         bankerWrap.className = 'banker-inline-wrap';
 
         const bankerSelect = document.createElement('select');
-        bankerSelect.id = `banker_h${h}`;
+        bankerSelect.id = DOM_IDS.bankerSelect(h);
         bankerSelect.className = 'banker-select';
-        bankerSelect.style.cssText = 'flex: 1 1 auto; min-width: 0; padding: 4px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px; font-size: 14px; font-weight: 500;';
         
         // Add default option
         const defaultOption = document.createElement('option');
@@ -857,7 +968,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         });
         
         const bankerStrokeIndicator = document.createElement('span');
-        bankerStrokeIndicator.id = `banker_strokes_h${h}`;
+        bankerStrokeIndicator.id = DOM_IDS.bankerStroke(h);
         bankerStrokeIndicator.className = 'banker-stroke-indicator';
 
         bankerWrap.appendChild(bankerSelect);
@@ -876,7 +987,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         dollarSign.className = 'banker-dollar';
         
         const maxBetInput = document.createElement('input');
-        maxBetInput.id = `banker_maxbet_h${h}`;
+        maxBetInput.id = DOM_IDS.maxBet(h);
         maxBetInput.type = 'number';
         maxBetInput.inputMode = 'numeric';
         maxBetInput.min = '0';
@@ -886,19 +997,15 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         maxBetInput.addEventListener('input', () => {
           // Re-validate all player bets for this hole when max bet changes
           const maxBet = Number(maxBetInput.value) || 0;
-          const betsTd = document.getElementById(`banker_bets_h${h}`);
+          const betsTd = document.getElementById(DOM_IDS.betsCell(h));
           if (betsTd) {
             const betInputs = betsTd.querySelectorAll('input[type="number"]');
             betInputs.forEach(betInput => {
               const playerBet = Number(betInput.value) || 0;
               if (playerBet > maxBet && maxBet > 0) {
-                betInput.style.borderColor = 'var(--danger)';
-                betInput.style.borderWidth = '2px';
-                betInput.title = `Bet exceeds max of $${maxBet}`;
+                setBetInputValidity(betInput, true, maxBet);
               } else {
-                betInput.style.borderColor = 'var(--accent)';
-                betInput.style.borderWidth = '1px';
-                betInput.title = '';
+                setBetInputValidity(betInput, false, maxBet);
               }
             });
           }
@@ -914,14 +1021,14 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Bets column (will be populated dynamically)
         const betsTd = document.createElement('td');
-        betsTd.id = `banker_bets_h${h}`;
+        betsTd.id = DOM_IDS.betsCell(h);
         betsTd.className = 'banker-bets-cell';
         tr.appendChild(betsTd);
         
         // Banker Double/Triple button
         const bankerDoubleTd = document.createElement('td');
         const bankerDoubleBtn = document.createElement('button');
-        bankerDoubleBtn.id = `banker_double_h${h}`;
+        bankerDoubleBtn.id = DOM_IDS.bankerDouble(h);
         bankerDoubleBtn.type = 'button';
         bankerDoubleBtn.dataset.active = 'false';
         bankerDoubleBtn.className = 'banker-toggle-btn banker-hole-toggle';
@@ -944,7 +1051,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Result column
         const resultTd = document.createElement('td');
-        resultTd.id = `banker_result_h${h}`;
+        resultTd.id = DOM_IDS.resultCell(h);
         resultTd.className = 'banker-result-cell';
         resultTd.textContent = '—';
         tr.appendChild(resultTd);
@@ -966,8 +1073,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
       for (let h = 1; h <= 18; h++) {
         savedValues[h] = {};
         for (let p = 0; p < playerCount; p++) {
-          const betInput = document.getElementById(`banker_bet_p${p}_h${h}`);
-          const doubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          const betInput = document.getElementById(DOM_IDS.betInput(p, h));
+          const doubleBtn = document.getElementById(DOM_IDS.playerDouble(p, h));
           if (betInput) {
             savedValues[h][p] = {
               bet: betInput.value || '0',
@@ -978,14 +1085,18 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
       }
       
       for (let h = 1; h <= 18; h++) {
-        const betsTd = document.getElementById(`banker_bets_h${h}`);
+        const betsTd = document.getElementById(DOM_IDS.betsCell(h));
         if (!betsTd) continue;
         
-        const bankerSelect = document.getElementById(`banker_h${h}`);
+        const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
         const bankerIdx = bankerSelect ? Number(bankerSelect.value) : -1;
         
         if (bankerIdx < 0 || bankerIdx >= playerCount) {
-          betsTd.innerHTML = '<span style="color: var(--muted); font-size: 10px;">Select banker</span>';
+          betsTd.innerHTML = '';
+          const selectMsg = document.createElement('span');
+          selectMsg.className = 'banker-result-muted banker-result-muted-sm';
+          selectMsg.textContent = 'Select banker';
+          betsTd.appendChild(selectMsg);
           continue;
         }
         
@@ -1048,12 +1159,10 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
                   // Positive strokes = receiving strokes (subtract from gross, show as -1, -2, etc.)
                   // Negative strokes = giving strokes via plus handicap (add to gross, show as +1, +2, etc.)
                   const displayText = strokes > 0 ? `-${strokes}` : `+${Math.abs(strokes)}`;
-                  const color = strokes > 0 ? '#4ade80' : '#ff6b6b';
-                  const borderColor = strokes > 0 ? 'rgba(74, 222, 128, 0.45)' : 'rgba(255, 107, 107, 0.45)';
-                  const bgColor = strokes > 0 ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 107, 107, 0.12)';
                   
                   strokeIndicator.textContent = displayText;
-                  strokeIndicator.style.cssText = `display: inline-flex; align-items: center; justify-content: center; max-width: 100%; min-width: 0; font-size: 11px; font-weight: 700; line-height: 1.2; color: ${color}; padding: 2px 6px; border-radius: 999px; border: 1px solid ${borderColor}; background: ${bgColor}; white-space: nowrap;`;
+                  strokeIndicator.className = 'banker-inline-stroke-pill';
+                  applyStrokeBadgeStyle(strokeIndicator, strokes);
                   strokeIndicator.title = strokes > 0 
                     ? `Receives ${strokes} stroke${strokes > 1 ? 's' : ''} on this hole` 
                     : `Gives ${Math.abs(strokes)} stroke${Math.abs(strokes) > 1 ? 's' : ''} on this hole (plus handicap)`;
@@ -1069,7 +1178,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           dollarSign.className = 'banker-dollar';
           
           const betInput = document.createElement('input');
-          betInput.id = `banker_bet_p${p}_h${h}`;
+          betInput.id = DOM_IDS.betInput(p, h);
           betInput.type = 'number';
           betInput.inputMode = 'numeric';
           betInput.min = '0';
@@ -1080,18 +1189,14 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           betInput.className = 'banker-number-input banker-bet-input';
           betInput.addEventListener('input', () => {
             // Validate bet against max bet
-            const maxBetInput = document.getElementById(`banker_maxbet_h${h}`);
+            const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
             const maxBet = maxBetInput ? Number(maxBetInput.value) : 0;
             const playerBet = Number(betInput.value) || 0;
             
             if (playerBet > maxBet && maxBet > 0) {
-              betInput.style.borderColor = 'var(--danger)';
-              betInput.style.borderWidth = '2px';
-              betInput.title = `Bet exceeds max of $${maxBet}`;
+              setBetInputValidity(betInput, true, maxBet);
             } else {
-              betInput.style.borderColor = 'var(--accent)';
-              betInput.style.borderWidth = '1px';
-              betInput.title = '';
+              setBetInputValidity(betInput, false, maxBet);
             }
             
             this.update();
@@ -1099,7 +1204,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           });
           
           const doubleBtn = document.createElement('button');
-          doubleBtn.id = `banker_pdouble_p${p}_h${h}`;
+          doubleBtn.id = DOM_IDS.playerDouble(p, h);
           doubleBtn.type = 'button';
           doubleBtn.textContent = multiplierText;
           doubleBtn.title = checkboxTitle;
@@ -1150,12 +1255,9 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         if (!strokeData) return;
 
         const strokeIndicator = document.createElement('span');
-        const color = strokeData.strokes > 0 ? '#4ade80' : '#ff6b6b';
-        const borderColor = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.45)' : 'rgba(255, 107, 107, 0.45)';
-        const bgColor = strokeData.strokes > 0 ? 'rgba(74, 222, 128, 0.12)' : 'rgba(255, 107, 107, 0.12)';
-
         strokeIndicator.textContent = strokeData.displayText;
-        strokeIndicator.style.cssText = `display: inline-flex; align-items: center; justify-content: center; min-width: 32px; font-size: 11px; font-weight: 700; line-height: 1.2; color: ${color}; padding: 2px 6px; border-radius: 999px; border: 1px solid ${borderColor}; background: ${bgColor};`;
+        strokeIndicator.className = 'banker-inline-stroke-pill';
+        applyStrokeBadgeStyle(strokeIndicator, strokeData.strokes);
         strokeIndicator.title = strokeData.title;
         container.appendChild(strokeIndicator);
       });
@@ -1173,7 +1275,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         const multiplierText = isPar3 ? '3×' : '2×';
 
         // Banker double/triple button
-        const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
+        const bankerDoubleBtn = document.getElementById(DOM_IDS.bankerDouble(h));
         if (bankerDoubleBtn) {
           bankerDoubleBtn.textContent = multiplierText;
           bankerDoubleBtn.title = isPar3 ? 'Banker triples all bets (Par 3)' : 'Banker doubles all bets';
@@ -1181,7 +1283,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
 
         // Player double/triple buttons already rendered in Bets column
         for (let p = 0; p < playerCount; p++) {
-          const playerDoubleBtn = document.getElementById(`banker_pdouble_p${p}_h${h}`);
+          const playerDoubleBtn = document.getElementById(DOM_IDS.playerDouble(p, h));
           if (playerDoubleBtn) {
             playerDoubleBtn.textContent = multiplierText;
             playerDoubleBtn.title = isPar3 ? 'Player triples their bet (Par 3)' : 'Player doubles their bet';
@@ -1199,7 +1301,7 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
       
       // Update footer header
       for (let p = 0; p < playerCount; p++) {
-        const headerCell = document.getElementById(`banker_name_p${p}`);
+        const headerCell = document.getElementById(DOM_IDS.footerName(p));
         if (headerCell) {
           headerCell.textContent = names[p] || `P${p + 1}`;
         }
@@ -1231,14 +1333,14 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
       
       const playerLabelTd = document.createElement('td');
       playerLabelTd.textContent = 'Player';
-      playerLabelTd.style.cssText = 'text-align: left; padding-left: 8px;';
+      playerLabelTd.className = 'banker-footer-label';
       playerTotalsRow.appendChild(playerLabelTd);
       
       for (let p = 0; p < playerCount; p++) {
         const nameTd = document.createElement('td');
-        nameTd.id = `banker_name_p${p}`;
+        nameTd.id = DOM_IDS.footerName(p);
         nameTd.textContent = names[p] || `P${p + 1}`;
-        nameTd.style.cssText = 'font-size: 11px; font-weight: 600;';
+        nameTd.className = 'banker-footer-player';
         playerTotalsRow.appendChild(nameTd);
       }
       
@@ -1249,14 +1351,14 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
       
       const amountLabelTd = document.createElement('td');
       amountLabelTd.textContent = 'Net';
-      amountLabelTd.style.cssText = 'text-align: left; padding-left: 8px;';
+      amountLabelTd.className = 'banker-footer-label';
       amountsRow.appendChild(amountLabelTd);
       
       for (let p = 0; p < playerCount; p++) {
         const totalTd = document.createElement('td');
-        totalTd.id = `banker_total_p${p}`;
+        totalTd.id = DOM_IDS.totalCell(p);
         totalTd.textContent = '$0.00';
-        totalTd.style.cssText = 'font-weight: 700; font-size: 13px;';
+        totalTd.className = 'banker-footer-total';
         amountsRow.appendChild(totalTd);
       }
       
