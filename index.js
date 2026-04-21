@@ -1857,6 +1857,24 @@
       btn.classList.toggle('active', active);
       btn.setAttribute('aria-pressed', active ? 'true' : 'false');
     });
+
+    // Font size changes alter row heights; re-sync fixed/scroll tables
+    requestAnimationFrame(() => {
+      try {
+        Scorecard.build.syncRowHeights(true);
+      } catch (error) {
+        console.warn('[FontSize] syncRowHeights failed:', error);
+      }
+    });
+
+    // Second pass after layout settles (mobile browsers can lag one frame)
+    setTimeout(() => {
+      try {
+        Scorecard.build.syncRowHeights(true);
+      } catch (error) {
+        console.warn('[FontSize] delayed syncRowHeights failed:', error);
+      }
+    }, 120);
   }
   
   // Expose announce globally for external modules
