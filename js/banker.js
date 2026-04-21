@@ -983,11 +983,11 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const isAndroid = /Android/i.test(ua);
           const isIOS = /iPad|iPhone|iPod/.test(ua) || (/Macintosh/.test(ua) && 'ontouchend' in document);
           const strokeColWidth = isLargeFont ? (isMobile ? 40 : 42) : (isMobile ? 34 : 36);
-          const inputColWidth = isMobile ? (isAndroid ? 50 : 52) : 60;
+          const inputColWidth = isMobile ? (isAndroid ? 48 : 50) : 60;
           const buttonColWidth = isMobile ? (isIOS ? 52 : 48) : 52;
-          const nameMinWidth = isMobile ? (isAndroid ? 76 : 64) : 92;
+          const nameMinWidth = isMobile ? (isAndroid ? 94 : 90) : 92;
           
-          const playerName = names[p] || `P${p + 1}`;
+          const playerName = (names[p] || `P${p + 1}`).substring(0, 10);
           
           const container = document.createElement('div');
           container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${nameMinWidth}px, 1fr) ${strokeColWidth}px 14px ${inputColWidth}px ${buttonColWidth}px; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
