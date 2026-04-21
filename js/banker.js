@@ -983,21 +983,19 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
           const playerName = (names[p] || `P${p + 1}`).substring(0, 8);
           
           const container = document.createElement('div');
-          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '84px' : '92px'}, 1fr) 12px ${isMobile ? '52px' : '58px'} ${isMobile ? '36px' : '42px'}; column-gap: ${isMobile ? '5px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
-          // Create label with consistent structure for alignment
-          const label = document.createElement('span');
-          label.style.cssText = `display: inline-flex; align-items: center; gap: ${isLargeFont ? '8px' : '4px'}; width: 100%; font-size: 14px; font-weight: 500; overflow: hidden; white-space: nowrap;`;
-          
+          container.style.cssText = `display: grid; width: 100%; box-sizing: border-box; grid-template-columns: minmax(${isMobile ? '74px' : '92px'}, 1fr) ${isLargeFont ? (isMobile ? '36px' : '40px') : (isMobile ? '30px' : '32px')} 12px ${isMobile ? '52px' : '58px'} ${isMobile ? '36px' : '42px'}; column-gap: ${isMobile ? '4px' : '6px'}; align-items: center; margin-bottom: 2px; padding: 2px; background: rgba(255,255,255,0.03); border-radius: 4px;`;
+
+          // Player name column
           const nameSpan = document.createElement('span');
           nameSpan.textContent = `${playerName}:`;
-          label.appendChild(nameSpan);
+          nameSpan.style.cssText = 'display: block; width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; font-weight: 500;';
           
           // Add stroke indicator for NET mode - always create fixed-width container
           const strokeContainer = document.createElement('span');
           strokeContainer.className = 'banker-player-stroke-container';
           strokeContainer.dataset.player = String(p);
           strokeContainer.dataset.hole = String(h);
-          strokeContainer.style.cssText = `display: inline-block; width: ${isLargeFont ? (isMobile ? '34px' : '38px') : (isMobile ? '28px' : '30px')}; text-align: center; margin-right: ${isMobile ? '2px' : '3px'};`;
+          strokeContainer.style.cssText = 'display: inline-flex; justify-content: center; align-items: center; width: 100%; text-align: center;';
           
           const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
           
@@ -1034,8 +1032,6 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
               }
             }
           }
-          
-          label.appendChild(strokeContainer);
           
           const dollarSign = document.createElement('span');
           dollarSign.textContent = '$';
@@ -1109,7 +1105,8 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
             }
           });
           
-          container.appendChild(label);
+          container.appendChild(nameSpan);
+          container.appendChild(strokeContainer);
           container.appendChild(dollarSign);
           container.appendChild(betInput);
           container.appendChild(doubleBtn);
