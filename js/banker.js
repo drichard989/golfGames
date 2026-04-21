@@ -726,20 +726,21 @@ const bankerDoubleBtn = document.getElementById(`banker_double_h${h}`);
         
         // Add banker total for this hole
         const bankerTotal = hole.bets.reduce((sum, bet) => sum - bet.payout, 0);
-        if (bankerTotal !== 0) {
-          const bankerSummary = document.createElement('div');
-          bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 15px; font-weight: 600;';
-          
-          if (bankerTotal > 0) {
-            bankerSummary.style.color = 'var(--accent)';
-            bankerSummary.innerHTML = `${bankerName} wins: <span style="font-size: 13px;">+$${bankerTotal.toFixed(0)}</span>`;
-          } else {
-            bankerSummary.style.color = 'var(--danger)';
-            bankerSummary.innerHTML = `${bankerName}: <span style="font-size: 13px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
-          }
-          
-          resultCell.appendChild(bankerSummary);
+        const bankerSummary = document.createElement('div');
+        bankerSummary.style.cssText = 'margin-top: 3px; padding-top: 3px; border-top: 1px solid var(--line); font-size: 15px; font-weight: 600;';
+
+        if (bankerTotal > 0) {
+          bankerSummary.style.color = 'var(--accent)';
+          bankerSummary.innerHTML = `${bankerName} nets: <span style="font-size: 13px;">+$${bankerTotal.toFixed(0)}</span>`;
+        } else if (bankerTotal < 0) {
+          bankerSummary.style.color = 'var(--danger)';
+          bankerSummary.innerHTML = `${bankerName} nets: <span style="font-size: 13px;">-$${Math.abs(bankerTotal).toFixed(0)}</span>`;
+        } else {
+          bankerSummary.style.color = 'var(--warn)';
+          bankerSummary.innerHTML = `${bankerName} nets: <span style="font-size: 13px;">$0</span>`;
         }
+
+        resultCell.appendChild(bankerSummary);
       });
     },
 
