@@ -891,12 +891,9 @@
         // Handle zero or positive handicap
         if(adjCH <= 0) return 0;
         
-        const base=Math.floor(adjCH/18), rem=adjCH%18;
-          console.error(`[strokesOnHole] Invalid holeHcp at index ${holeIdx}:`, holeHcp, 'Config.hcpMen:', Config.hcpMen);
-          return 0;
-        }
-        
-        return base+(holeHcp<=rem?1:0);
+        const base = Math.floor(adjCH / 18);
+        const rem = adjCH % 18;
+        return base + (holeHcp <= rem ? 1 : 0);
       },
 
       /**

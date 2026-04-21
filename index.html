@@ -397,8 +397,9 @@
           // Use global HCPMEN (updated when course changes)
           const HCPMEN = window.HCPMEN;
           if (!HCPMEN || !Array.isArray(HCPMEN)) {
-            console.error('[Highlights] HCPMEN not loaded - course data missing!');
-            return; // Don't highlight if no course data
+            // Config might not be initialized yet - this is normal during page load
+            console.log('[Highlights] Waiting for course data to load...');
+            return; // Don't highlight if no course data yet
           }
           
           // Get selected handicap mode
