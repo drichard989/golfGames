@@ -261,11 +261,23 @@
       <h2>🏦 Banker</h2>
       <div class="banker-controls">
         <div class="control-box">
+          <div class="pill">Scoring Mode</div>
+          <label class="radio">
+            <input type="radio" name="bankerMode" id="bankerModeGross" value="gross" />
+            Gross (raw scores)
+          </label>
+          <br />
+          <label class="radio">
+            <input type="radio" name="bankerMode" id="bankerModeNet" value="net" checked />
+            Net (with handicaps)
+          </label>
+        </div>
+        <div class="control-box">
           <div class="pill">How It Works</div>
           <p class="small" style="margin: 0; line-height: 1.4;">
             One player is the <strong>Banker</strong> per hole. Banker sets max bet. 
             Other players bet (min to max). Players can double after hitting. 
-            Banker can double all bets after hitting. Lower NET score wins.
+            Banker can double all bets after hitting. Lower score wins.
           </p>
         </div>
         <div class="control-box">
@@ -274,7 +286,8 @@
           <div class="small">Max Bet: Highest amount other players can bet</div>
           <div class="small">Bets: Each player's bet amount + double option (2×)</div>
           <div class="small">Banker 2×: Banker doubles all outstanding bets</div>
-          <div class="small">NET scoring: Everyone gets their handicap strokes (+ handicaps add strokes)</div>
+          <div class="small"><strong>Gross:</strong> Raw scores without handicap adjustment</div>
+          <div class="small"><strong>Net:</strong> Scores adjusted by each player's full handicap (+ handicaps add strokes)</div>
         </div>
         <div class="control-box">
           <button id="clearBankerBtn" class="btn" onclick="window.Banker?.clearAll()" title="Clear all banker game data">Clear Banker Game</button>
