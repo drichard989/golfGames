@@ -22,7 +22,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v2.4.8</h1>
+        <h1>Manito Golf Games v2.4.9</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
@@ -43,6 +43,15 @@
           <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
         </div>
 
+        <div class="utilities-row utilities-row-settings" style="margin-top: 8px;">
+          <div class="control utilities-control font-size-control">
+            <label>Font Size</label>
+            <button id="fontSizeSmall" class="btn font-size-btn" type="button" aria-pressed="false">Small</button>
+            <button id="fontSizeMedium" class="btn font-size-btn" type="button" aria-pressed="true">Medium</button>
+            <button id="fontSizeLarge" class="btn font-size-btn" type="button" aria-pressed="false">Large</button>
+          </div>
+        </div>
+
         <button type="button" class="btn game-options-toggle utilities-toggle-btn" id="utilitiesToggle" aria-expanded="false">⚙️ Utilities</button>
         <div id="utilitiesSection" class="utilities-section" hidden>
         <div class="controls utilities-grid">
@@ -52,15 +61,6 @@
             <button id="clearEverythingBtn" class="btn" style="background: var(--danger); color: white;">Clear Everything</button>
             <button id="resetBtn" class="btn">Reset Scores</button>
             <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
-          </div>
-
-          <div class="utilities-row utilities-row-settings">
-            <div class="control utilities-control font-size-control">
-              <label>Font Size</label>
-              <button id="fontSizeSmall" class="btn font-size-btn" type="button" aria-pressed="false">Small</button>
-              <button id="fontSizeMedium" class="btn font-size-btn" type="button" aria-pressed="true">Medium</button>
-              <button id="fontSizeLarge" class="btn font-size-btn" type="button" aria-pressed="false">Large</button>
-            </div>
           </div>
 
           <div class="utilities-row utilities-row-export">

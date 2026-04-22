@@ -139,10 +139,11 @@
     const viewBtn = EL.viewCodeBadgeBtn();
 
     if (createBtn) {
-      const isEditorLive = state.session?.role === 'editor';
-      createBtn.disabled = isEditorLive;
-      createBtn.textContent = isEditorLive ? 'Live' : 'Go Live';
-      createBtn.title = isEditorLive ? 'Already in a live editor session' : 'Create live session';
+      const isLive = !!state.session;
+      createBtn.hidden = isLive;
+      createBtn.disabled = false;
+      createBtn.textContent = 'Go Live';
+      createBtn.title = 'Create live session';
     }
 
     if (qrBtn) {
@@ -192,6 +193,70 @@
     if (typeof window.announce === 'function') {
       window.announce(`${label} code copied.`);
     }
+  }
+
+  async function chooseQrShareMode() {
+    const isEditor = state.session?.role === 'editor' || !state.session;
+
+    return new Promise((resolve) => {
+      const dialog = document.createElement('div');
+      dialog.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10050;padding:16px;';
+      dialog.setAttribute('role', 'dialog');
+      dialog.setAttribute('aria-modal', 'true');
+
+      const box = document.createElement('div');
+      box.style.cssText = 'background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+
+      const title = document.createElement('h3');
+      title.textContent = 'Share QR Type';
+      title.style.cssText = 'margin:0 0 10px 0;color:var(--ink);font-size:18px;';
+
+      const msg = document.createElement('p');
+      msg.textContent = 'Choose whether this QR opens view-only or edit access.';
+      msg.style.cssText = 'margin:0 0 14px 0;color:var(--muted);font-size:14px;line-height:1.4;';
+
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+
+      const viewBtn = document.createElement('button');
+      viewBtn.type = 'button';
+      viewBtn.className = 'btn';
+      viewBtn.textContent = 'View-only QR';
+      viewBtn.style.cssText = 'flex:1 1 120px;';
+
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'btn';
+      editBtn.textContent = 'Edit QR';
+      editBtn.style.cssText = 'flex:1 1 120px;';
+      editBtn.disabled = !isEditor;
+      if (!isEditor) {
+        editBtn.title = 'Edit QR is only available for editor sessions';
+      }
+
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'btn';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.style.cssText = 'flex:1 1 120px;';
+
+      const close = (choice) => {
+        dialog.remove();
+        resolve(choice);
+      };
+
+      viewBtn.addEventListener('click', () => close('view'));
+      editBtn.addEventListener('click', () => close('edit'));
+      cancelBtn.addEventListener('click', () => close(null));
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) close(null);
+      });
+
+      row.append(viewBtn, editBtn, cancelBtn);
+      box.append(title, msg, row);
+      dialog.appendChild(box);
+      document.body.appendChild(dialog);
+    });
   }
 
   function showJoinSuccessToast(role) {
@@ -1366,7 +1431,15 @@
       withCloudOp('create session (badge)', 'Cloud: creating session...', createSession));
 
     EL.qrBadgeBtn()?.addEventListener('click',
-      withCloudOp('share QR (badge)', 'Cloud: preparing live QR...', generateLiveViewQrCode));
+      withCloudOp('share QR (badge)', null, async () => {
+        const mode = await chooseQrShareMode();
+        if (!mode) return;
+        if (mode === 'edit') {
+          await generateLiveEditQrCode();
+        } else {
+          await generateLiveViewQrCode();
+        }
+      }));
 
     EL.editCodeBadgeBtn()?.addEventListener('click',
       withCloudOp('copy edit code (badge)', null, () => copySessionCodeToClipboard('edit')));
