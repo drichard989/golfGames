@@ -318,22 +318,30 @@
     // Update team display
     const teamAEl = document.getElementById('hiloTeamA');
     const teamBEl = document.getElementById('hiloTeamB');
+    const colAEl = document.getElementById('hiloColA');
+    const colBEl = document.getElementById('hiloColB');
     
     if (error) {
       if (teamAEl) teamAEl.textContent = error;
       if (teamBEl) teamBEl.textContent = '';
+      if (colAEl) colAEl.textContent = 'Team A';
+      if (colBEl) colBEl.textContent = 'Team B';
       document.getElementById('hiloResultsBody').innerHTML = '';
       return;
     }
     
+    const teamALabel = `${names[teamA[0]]} + ${names[teamA[1]]}`;
+    const teamBLabel = `${names[teamB[0]]} + ${names[teamB[1]]}`;
     const strokeInfo = strokePlayer >= 0 ? ` (${names[strokePlayer]} gets ${strokesGiven} strokes)` : '';
     
     if (teamAEl) {
-      teamAEl.textContent = `Team A: ${names[teamA[0]]} + ${names[teamA[1]]}`;
+      teamAEl.textContent = `Team A: ${teamALabel}`;
     }
     if (teamBEl) {
-      teamBEl.textContent = `Team B: ${names[teamB[0]]} + ${names[teamB[1]]}${strokeInfo}`;
+      teamBEl.textContent = `Team B: ${teamBLabel}${strokeInfo}`;
     }
+    if (colAEl) colAEl.textContent = teamALabel;
+    if (colBEl) colBEl.textContent = teamBLabel;
     
     // Build table with all games and presses
     let tableHtml = '';

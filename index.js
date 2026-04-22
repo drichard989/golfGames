@@ -1471,7 +1471,17 @@
             half: document.getElementById('skinsHalf')?.checked ?? false
           },
           junk: {
-            useNet: document.getElementById('junkUseNet')?.checked ?? false,
+            mode: (() => {
+              const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
+              if (selected) return selected;
+              return (document.getElementById('junkUseNet')?.checked ?? false) ? 'net' : 'gross';
+            })(),
+            useNet: (() => {
+              const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
+              if (selected) return selected === 'net';
+              return document.getElementById('junkUseNet')?.checked ?? false;
+            })(),
+            netHcpMode: document.querySelector('input[name="junkNetHcpMode"]:checked')?.value || 'playOffLow',
             achievements: (() => {
               if (typeof window.Junk?.getAchievementState === 'function') {
                 return window.Junk.getAchievementState();
@@ -1560,7 +1570,13 @@
         },
         junk: {
           ...(rawState.junk || {}),
-          useNet: games.junk?.useNet ?? rawState.junk?.useNet,
+          mode: games.junk?.mode
+            ?? rawState.junk?.mode
+            ?? ((games.junk?.useNet ?? rawState.junk?.useNet) ? 'net' : 'gross'),
+          useNet: games.junk?.useNet
+            ?? rawState.junk?.useNet
+            ?? ((games.junk?.mode ?? rawState.junk?.mode) === 'net'),
+          netHcpMode: games.junk?.netHcpMode ?? rawState.junk?.netHcpMode ?? 'playOffLow',
           achievements: games.junk?.achievements ?? rawState.junk?.achievements,
           open: localUi.sections?.junk ?? rawState.junk?.open
         },
@@ -1696,7 +1712,17 @@
           open: $(ids.skinsSection)?.classList.contains("open") 
         },
         junk: {
-          useNet: document.getElementById('junkUseNet')?.checked ?? false,
+          mode: (() => {
+            const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
+            if (selected) return selected;
+            return (document.getElementById('junkUseNet')?.checked ?? false) ? 'net' : 'gross';
+          })(),
+          useNet: (() => {
+            const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
+            if (selected) return selected === 'net';
+            return document.getElementById('junkUseNet')?.checked ?? false;
+          })(),
+          netHcpMode: document.querySelector('input[name="junkNetHcpMode"]:checked')?.value || 'playOffLow',
           open: $(ids.junkSection)?.classList.contains("open"),
           achievements: (() => {
             if (typeof window.Junk?.getAchievementState === 'function') {
@@ -1851,8 +1877,16 @@
         if (skinsCarry) skinsCarry.checked = true;
         if (skinsHalf) skinsHalf.checked = false;
 
-        const junkUseNet = document.getElementById('junkUseNet');
-        if (junkUseNet) junkUseNet.checked = false;
+        const junkModeGross = document.getElementById('junkScoreModeGross');
+        const junkModeNet = document.getElementById('junkScoreModeNet');
+        const junkNetPlayOffLow = document.getElementById('junkNetHcpModePlayOffLow');
+        const junkNetFullHandicap = document.getElementById('junkNetHcpModeFullHandicap');
+        const junkNetWrap = document.getElementById('junkNetHcpModeWrap');
+        if (junkModeGross) junkModeGross.checked = true;
+        if (junkModeNet) junkModeNet.checked = false;
+        if (junkNetPlayOffLow) junkNetPlayOffLow.checked = true;
+        if (junkNetFullHandicap) junkNetFullHandicap.checked = false;
+        if (junkNetWrap) junkNetWrap.style.display = 'none';
         document.querySelectorAll('#junkTable input.junk-ach').forEach((checkbox) => {
           checkbox.checked = false;
         });
@@ -2064,10 +2098,19 @@
         // if(s.skins?.open) games_open("skins");
         
         // Restore Junk options
-        if(s.junk?.useNet != null) {
-          const useNetEl = document.getElementById('junkUseNet');
-          if(useNetEl) useNetEl.checked = s.junk.useNet;
-        }
+        const junkMode = s.junk?.mode || (s.junk?.useNet ? 'net' : 'gross');
+        const junkNetHcpMode = s.junk?.netHcpMode || 'playOffLow';
+        const junkModeGross = document.getElementById('junkScoreModeGross');
+        const junkModeNet = document.getElementById('junkScoreModeNet');
+        const junkNetPlayOffLow = document.getElementById('junkNetHcpModePlayOffLow');
+        const junkNetFullHandicap = document.getElementById('junkNetHcpModeFullHandicap');
+        const junkNetWrap = document.getElementById('junkNetHcpModeWrap');
+
+        if (junkModeGross) junkModeGross.checked = junkMode !== 'net';
+        if (junkModeNet) junkModeNet.checked = junkMode === 'net';
+        if (junkNetPlayOffLow) junkNetPlayOffLow.checked = junkNetHcpMode !== 'fullHandicap';
+        if (junkNetFullHandicap) junkNetFullHandicap.checked = junkNetHcpMode === 'fullHandicap';
+        if (junkNetWrap) junkNetWrap.style.display = junkMode === 'net' ? 'flex' : 'none';
         // Restore achievements even if section is closed
         if(s.junk?.achievements) {
           setTimeout(() => {
@@ -2224,8 +2267,16 @@
       };
 
       const resetJunk = () => {
-        const junkUseNet = document.getElementById('junkUseNet');
-        if (junkUseNet) junkUseNet.checked = false;
+        const junkModeGross = document.getElementById('junkScoreModeGross');
+        const junkModeNet = document.getElementById('junkScoreModeNet');
+        const junkNetPlayOffLow = document.getElementById('junkNetHcpModePlayOffLow');
+        const junkNetFullHandicap = document.getElementById('junkNetHcpModeFullHandicap');
+        const junkNetWrap = document.getElementById('junkNetHcpModeWrap');
+        if (junkModeGross) junkModeGross.checked = true;
+        if (junkModeNet) junkModeNet.checked = false;
+        if (junkNetPlayOffLow) junkNetPlayOffLow.checked = true;
+        if (junkNetFullHandicap) junkNetFullHandicap.checked = false;
+        if (junkNetWrap) junkNetWrap.style.display = 'none';
         window.Junk?.clearAllAchievements?.();
       };
 
@@ -2490,9 +2541,18 @@
   const toggleBtn = document.getElementById('utilitiesToggle');
   
   if(!section || !toggleBtn) return;
+
+  const syncUtilitiesToggleState = () => {
+    const isOpen = section.classList.contains('open');
+    toggleBtn.classList.toggle('is-open', isOpen);
+    toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  };
+
+  syncUtilitiesToggleState();
   
   toggleBtn.addEventListener('click', () => {
     section.classList.toggle('open');
+    syncUtilitiesToggleState();
   });
 })();
 

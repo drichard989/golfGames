@@ -380,9 +380,6 @@
           <div class="small"><strong>Gross:</strong> Raw scores without handicap adjustment</div>
           <div class="small"><strong>Net:</strong> Scores adjusted by each player's full handicap (+ handicaps add strokes)</div>
         </div>
-        <div class="control-box">
-          <button id="clearBankerBtn" class="btn" onclick="window.Banker?.clearAll()" title="Clear all banker game data">Clear Banker Game</button>
-        </div>
       </div>
       <p class="small">Select a banker per hole, set max bet, then enter player bets. Check 2× to double. Lower net score wins (with handicap strokes).</p>
       </div>
@@ -408,15 +405,13 @@
       <h2>Hi-Lo</h2>
       <div class="controls" style="margin: 0 0 8px 0;">
         <button id="clearHiloDataBtn" class="btn">Clear Hi-Lo Data</button>
-        <button type="button" class="btn game-options-toggle" data-target="hiloOptionsPanel" aria-controls="hiloOptionsPanel" aria-expanded="false">Hi-Lo Options</button>
+        <button type="button" class="btn game-options-toggle" data-target="hiloOptionsPanel" aria-controls="hiloOptionsPanel" aria-expanded="false">Hi-Lo Description</button>
       </div>
       <div id="hiloOptionsPanel" class="game-options-panel" hidden>
       <p class="note"><strong>How It Works:</strong> Requires exactly 4 players. Teams are auto-assigned: <strong>Team A</strong> = Lowest + Highest handicap, <strong>Team B</strong> = Middle two handicaps. Strokes are equalized by giving the difference to the worst player on the team with the lower combined handicap.</p>
       <p class="note"><strong>Scoring:</strong> Each hole awards 2 points (1 for low ball, 1 for high ball). Compare each team's lowest score for 1 point, then compare each team's highest score for 1 point. Ties = no points awarded.</p>
       <p class="note"><strong>Games:</strong> Three main games run simultaneously: <strong>Front 9</strong> (holes 1-9, worth 1 unit), <strong>Back 9</strong> (holes 10-18, worth 1 unit), <strong>Full 18</strong> (all holes, worth 2 units) = 4 total units at stake.</p>
       <p class="note"><strong>Auto-Press:</strong> When a team wins a hole 2-0 (both low and high), an automatic press starts on the next hole. Front 9 presses run through hole 9, Back 9 presses run through hole 18. Each press is worth 1 unit (Full 18 has no presses). The leading team does NOT need to approve - presses trigger automatically!</p>
-      </div>
-      
       <div class="vegas-controls">
         <div class="team-box">
           <div class="pill">Teams</div>
@@ -424,14 +419,15 @@
           <p id="hiloTeamB" style="margin: 4px 0;">Team B: —</p>
         </div>
       </div>
+      </div>
 
       <div class="vegas-wrap">
         <table class="vegas-table" id="hiloTable">
           <thead>
             <tr>
               <th>Game</th>
-              <th>Team A</th>
-              <th>Team B</th>
+              <th id="hiloColA">Team A</th>
+              <th id="hiloColB">Team B</th>
               <th>Winner</th>
             </tr>
           </thead>
@@ -470,7 +466,22 @@
         <div class="control-box">
           <div class="pill">Scoring</div>
           <label class="radio">
-            <input type="checkbox" id="junkUseNet" /> Use NET scores (apply handicaps)
+            <input type="radio" name="junkScoreMode" id="junkScoreModeGross" value="gross" checked /> Gross
+          </label>
+          <br />
+          <label class="radio">
+            <input type="radio" name="junkScoreMode" id="junkScoreModeNet" value="net" /> Net
+          </label>
+          <div id="junkNetHcpModeWrap" class="control" style="margin-top: 8px; padding: 8px; display: none; gap: 8px; align-items: center;">
+            <label class="radio" style="margin: 0; text-transform: none; letter-spacing: normal;">
+              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModePlayOffLow" value="playOffLow" checked /> Play Off Low
+            </label>
+            <label class="radio" style="margin: 0; text-transform: none; letter-spacing: normal;">
+              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModeFullHandicap" value="fullHandicap" /> Full Handicap
+            </label>
+          </div>
+          <label class="small" for="junkNetHcpModePlayOffLow" style="display: block; margin-top: 6px; text-transform: none; letter-spacing: normal; color: var(--muted);">
+            Net scoring handicap mode
           </label>
           <button id="clearJunkAchievements" class="btn" style="margin-top: 8px;">Clear All Achievements</button>
         </div>

@@ -141,6 +141,57 @@
     return chs.map((ch) => ch - minCH);
   }
 
+  function getRawCHs() {
+    return getFixedPlayerRows().map((row) => {
+      const chInput = row.querySelector('.ch-input');
+      const v = typeof window.getActualHandicapValue === 'function'
+        ? window.getActualHandicapValue(chInput)
+        : Number(chInput?.value);
+      return Number.isFinite(v) ? v : 0;
+    });
+  }
+
+  function getJunkScoringConfig() {
+    const scoreMode = document.querySelector('input[name="junkScoreMode"]:checked')?.value
+      || (document.getElementById('junkUseNet')?.checked ? 'net' : 'gross');
+    const useNet = scoreMode === 'net';
+    const netHcpMode = document.querySelector('input[name="junkNetHcpMode"]:checked')?.value || 'playOffLow';
+    return { useNet, netHcpMode };
+  }
+
+  function calcStrokesFromHandicap(handicap, holeHcp) {
+    const h = Number(handicap) || 0;
+    if (h === 0) return 0;
+
+    const abs = Math.abs(h);
+    const base = Math.floor(abs / 18);
+    const rem = abs % 18;
+    const extra = holeHcp <= rem ? 1 : 0;
+    const magnitude = base + extra;
+    return h >= 0 ? magnitude : -magnitude;
+  }
+
+  function getJunkScoreForHole(playerIdx, hole, config, cache = {}) {
+    const gross = getScore(playerIdx, hole);
+    if (!Number.isFinite(gross) || !config.useNet) return gross;
+
+    const holeHcp = (cache.HCPMEN || window.HCPMEN || Array(18).fill(1))[hole - 1] || 1;
+    const handicap = config.netHcpMode === 'fullHandicap'
+      ? ((cache.rawCHs || getRawCHs())[playerIdx] || 0)
+      : ((cache.adjustedCHs || getAdjustedCHs())[playerIdx] || 0);
+
+    const strokes = calcStrokesFromHandicap(handicap, holeHcp);
+    return gross - strokes;
+  }
+
+  function syncJunkNetModeVisibility() {
+    const wrap = document.getElementById('junkNetHcpModeWrap');
+    const show = document.getElementById('junkScoreModeNet')?.checked;
+    if (wrap) {
+      wrap.style.display = show ? 'flex' : 'none';
+    }
+  }
+
   function dotsFor(score, par){
     if(!Number.isFinite(score) || !Number.isFinite(par)) return 0;
     const POINTS = getJunkConstants().POINTS;
@@ -164,32 +215,18 @@
       const playerCount = getPlayerCount();
       const perHole = Array.from({length: HOLES}, ()=> Array(playerCount).fill(0));
       const totals = Array(playerCount).fill(0);
-      const useNet = document.getElementById('junkUseNet')?.checked || false;
-      
-      // Calculate adjusted handicaps inline if using NET
-      let adjCHs = Array(playerCount).fill(0);
-      if(useNet){
-        adjCHs = getAdjustedCHs();
-      }
-      
-      // Get HCPMEN from global scope (defined in index.js)
-      const HCPMEN = window.HCPMEN || Array(18).fill(0);
+      const config = getJunkScoringConfig();
+      const cache = {
+        HCPMEN: window.HCPMEN || Array(18).fill(1),
+        adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
+        rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+      };
       
       for(let h=1; h<=HOLES; h++){
         const par = getPar(h);
-        const holeHcp = HCPMEN[h-1];
         for(let p=0; p<playerCount; p++){
-          const score = getScore(p, h);
-          // Calculate net score if using NET scoring
-          let strokes = 0;
-          if(useNet && adjCHs[p] > 0){
-            const fullStrokes = Math.floor(adjCHs[p] / 18);
-            const remainingStrokes = adjCHs[p] % 18;
-            const getsStroke = remainingStrokes >= holeHcp;
-            strokes = fullStrokes + (getsStroke ? 1 : 0);
-          }
-          const netScore = Number.isFinite(score) ? score - strokes : score;
-          const d = dotsFor(netScore, par);
+          const scoreForDots = getJunkScoreForHole(p, h, config, cache);
+          const d = dotsFor(scoreForDots, par);
           perHole[h-1][p] = Number.isFinite(d) ? d : 0;
           totals[p] += Number.isFinite(d) ? d : 0;
         }
@@ -439,33 +476,21 @@
     const labels = [];
     
     // Add score relative to par (only if earning junk points)
-    const score = getScore(p, h);
+    const config = getJunkScoringConfig();
+    const score = getJunkScoreForHole(p, h, config, {
+      HCPMEN: window.HCPMEN || Array(18).fill(1),
+      adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
+      rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+    });
     const par = getPar(h);
-    const useNet = document.getElementById('junkUseNet')?.checked || false;
     
     if(score > 0 && par > 0) {
-      let displayScore = score;
-      
-      // If NET mode, calculate net score
-      if(useNet) {
-        const adjustedCHs = getAdjustedCHs();
-        const adjCH = adjustedCHs[p] || 0;
-        const HCPMEN = window.HCPMEN || Array(18).fill(0);
-        const holeHcp = HCPMEN[h-1] || 1;
-        
-        // Calculate strokes on this hole
-        const base = Math.floor(adjCH / 18);
-        const rem = adjCH % 18;
-        const strokes = base + (holeHcp <= rem ? 1 : 0);
-        displayScore = score - strokes;
-      }
-      
-      const diff = displayScore - par;
+      const diff = score - par;
       
       // Only show results that earn junk points
-      if(diff <= -2) labels.push(useNet ? 'Net Eagle' : 'Eagle');
-      else if(diff === -1) labels.push(useNet ? 'Net Birdie' : 'Birdie');
-      else if(diff === 0) labels.push(useNet ? 'Net Par' : 'Par');
+      if(diff <= -2) labels.push(config.useNet ? 'Net Eagle' : 'Eagle');
+      else if(diff === -1) labels.push(config.useNet ? 'Net Birdie' : 'Birdie');
+      else if(diff === 0) labels.push(config.useNet ? 'Net Par' : 'Par');
       // Don't show Bogey or worse since they don't earn junk points
     }
     
@@ -488,6 +513,13 @@
     const tbody = document.querySelector('#junkBody');
     const players = getPlayerCount();
     if(!tbody) return;
+
+    const config = getJunkScoringConfig();
+    const cache = {
+      HCPMEN: window.HCPMEN || Array(18).fill(1),
+      adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
+      rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+    };
     
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const totals = Array(players).fill(0);
@@ -496,7 +528,7 @@
       const h = holeIdx+1;
       const par = getPar(h);
       for(let p=0; p<players; p++){
-        const score = getScore(p, h);
+        const score = getJunkScoreForHole(p, h, config, cache);
         const base  = dotsFor(score, par);
         const bonus = achPoints(p, h);
         const total = base + bonus;
@@ -566,6 +598,7 @@
     
     refreshJunkHeaderNames();
     updateJunk();
+    syncJunkNetModeVisibility();
     
     // Initialize achievements UI after table is built
     setTimeout(() => initJunkAchievements(), 0);
@@ -573,16 +606,16 @@
     if (!junkCoreListenersBound) {
       junkCoreListenersBound = true;
 
-      // Add event listener for NET scoring toggle
-      const junkUseNet = document.getElementById('junkUseNet');
-      if(junkUseNet){
-        junkUseNet.addEventListener('change', ()=> {
+      const scoringModeInputs = document.querySelectorAll('input[name="junkScoreMode"], input[name="junkNetHcpMode"]');
+      scoringModeInputs.forEach((input) => {
+        input.addEventListener('change', ()=> {
+          syncJunkNetModeVisibility();
           updateJunk();
           if (typeof window.saveDebounced === 'function') {
             window.saveDebounced();
           }
         });
-      }
+      });
 
       // Listen for score/par/name changes
       document.addEventListener('input', (e)=>{

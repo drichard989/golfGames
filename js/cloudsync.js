@@ -105,7 +105,16 @@
 
   function setStatus(msg) {
     const statusEl = EL.status();
-    if (statusEl) statusEl.textContent = msg;
+    if (!statusEl) return;
+
+    statusEl.textContent = msg;
+
+    const text = String(msg || '').toLowerCase();
+    const forceOffline = /(not connected|init failed|init error|realtime error|push failed|couldn't auto-join|join failed|error|failed)/.test(text);
+    const forceOnline = /(connected \(|joined from shared link|viewing snapshot|reviewing snapshot|shared live view link|live view link copied|live view link ready|live qr ready|live edit qr ready)/.test(text);
+
+    const isLive = forceOffline ? false : (forceOnline ? true : !!state.session);
+    statusEl.setAttribute('data-live', isLive ? 'true' : 'false');
   }
 
   function showJoinSuccessToast(role) {

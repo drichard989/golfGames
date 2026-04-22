@@ -448,6 +448,25 @@ input[type="text"] {
   margin: 0;
 }
 
+#cloudStatus {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font-weight: 700;
+}
+
+#cloudStatus[data-live="true"] {
+  color: #d9ffe9;
+  background: rgba(28, 118, 67, 0.35);
+  border-color: rgba(104, 211, 145, 0.7);
+}
+
+#cloudStatus[data-live="false"] {
+  color: #ffd9d9;
+  background: rgba(128, 28, 28, 0.35);
+  border-color: rgba(255, 107, 107, 0.75);
+}
+
 .archived-tools {
   border-style: dashed;
   border-color: rgba(168, 179, 191, 0.45);
@@ -513,6 +532,11 @@ input[type="text"] {
   background: var(--panel-alt);
   border-color: var(--line);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.entry-switcher-btn.active:hover {
+  color: var(--ink);
+  background: var(--panel-alt);
 }
 
 .scorecard-fixed {
@@ -2012,6 +2036,40 @@ input[type="text"] {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
 }
 
+:root[data-theme="light"] .game-options-toggle.is-open:hover {
+  background: #0b74d1;
+  border-color: #095ba3;
+  color: #ffffff;
+}
+
+:root[data-theme="light"] .entry-switcher-btn {
+  background: #f3f5f8;
+  border-color: #cfd3d8;
+  color: #3c454d;
+}
+
+:root[data-theme="light"] .entry-switcher-btn:hover {
+  background: #e7eaed;
+  border-color: #cfd3d8;
+  color: #2d3640;
+}
+
+:root[data-theme="light"] .entry-switcher-btn.active,
+:root[data-theme="light"] .entry-switcher-btn.active:hover {
+  background: #0b74d1;
+  border-color: #095ba3;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+
+:root[data-theme="light"] #utilitiesToggle.is-open,
+:root[data-theme="light"] #utilitiesToggle.is-open:hover {
+  background: #0b74d1;
+  border-color: #095ba3;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+
 :root[data-theme="light"] .vegas-opt-flag:has(input:checked) {
   background: #0b74d1;
   border-color: #0b74d1;
@@ -2089,6 +2147,18 @@ input[type="text"] {
   background: #e0f2ff;
   border-color: #0090e0;
   color: #1a1c1f;
+}
+
+:root[data-theme="light"] #cloudStatus[data-live="true"] {
+  color: #0f5b35;
+  background: #d7f8e6;
+  border-color: #45a46f;
+}
+
+:root[data-theme="light"] #cloudStatus[data-live="false"] {
+  color: #8b1f1f;
+  background: #ffe2e2;
+  border-color: #d95c5c;
 }
 
 /* Light theme Junk "Dots" button */
