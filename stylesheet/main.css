@@ -160,11 +160,18 @@ body::before {
   height: var(--safe-top-inset);
   background: var(--bg);
   pointer-events: none;
-  z-index: 40;
+  z-index: 30;
 }
 
-/* iOS/WebKit ensure dark behind safe-area */
+/* Ensure status-bar region is filled on iOS (WebKit) and Android Chrome */
 @supports (-webkit-touch-callout: none) {
+  html,
+  body {
+    background-color: var(--bg);
+  }
+}
+
+@media (display-mode: standalone) {
   html,
   body {
     background-color: var(--bg);
@@ -196,8 +203,8 @@ header.header-collapsed {
 
 .sticky-nav-bar {
   position: sticky;
-  top: 0;
-  z-index: 31;
+  top: var(--safe-top-inset);
+  z-index: 41;
   background: var(--bg);
 }
 
