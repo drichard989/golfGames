@@ -434,9 +434,10 @@ input[type="text"] {
 }
 
 .utilities-toggle-btn.is-open {
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-bottom-color: transparent;
+  border-color: #f3c26b;
+  background: rgba(243, 194, 107, 0.24);
+  color: #ffe3b3;
+  box-shadow: inset 0 0 0 1px rgba(243, 194, 107, 0.5);
 }
 
 .utilities-section {
@@ -450,6 +451,10 @@ input[type="text"] {
 
 .utilities-section.open {
   display: block;
+}
+
+.utilities-section[hidden] {
+  display: none !important;
 }
 
 .utilities-grid {
