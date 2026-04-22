@@ -1104,6 +1104,10 @@
       const initialState = initialSnap?.val?.();
       if (initialState) {
         applyRemoteState(initialState);
+      } else if (state.session?.role === 'editor') {
+        // Seed a newly created or empty session immediately so viewers can hydrate
+        // without waiting for the next local edit/save on the host device.
+        await pushNow();
       }
     } catch (err) {
       console.warn('[CloudSync] initial state fetch failed:', err);
