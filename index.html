@@ -125,10 +125,11 @@
     <div id="viewModeScorecardBanner" class="view-mode-banner" style="display:none;" role="status" aria-live="polite">
       👁️ View Mode: This scorecard is read-only.
     </div>
-    <div class="entry-switcher" aria-label="Quick navigation between score and game entry">
-      <button id="entrySwitcherScoreBtn" class="entry-switcher-btn active" type="button">⛳ Score Entry</button>
-      <button id="entrySwitcherGamesBtn" class="entry-switcher-btn" type="button">🎮 Game Entry</button>
+    <div class="entry-switcher" role="tablist" aria-label="Switch between scorecard and games">
+      <button id="entrySwitcherScoreBtn" class="entry-switcher-btn active" type="button" role="tab" aria-selected="true" aria-controls="scoreEntryPanel">⛳ Score</button>
+      <button id="entrySwitcherGamesBtn" class="entry-switcher-btn" type="button" role="tab" aria-selected="false" aria-controls="gamesEntryPanel">🎮 Games</button>
     </div>
+    <section id="scoreEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherScoreBtn">
     <!-- SCORECARD - Dual Table Layout -->
     <div class="scorecard-container" id="main-scorecard">
       <!-- Fixed Left Column (Player Names + CH) -->
@@ -178,21 +179,23 @@
         </table>
       </div>
     </div>
+    </section>
 
+    <section id="gamesEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherGamesBtn" hidden>
     <div id="viewModeGamesBanner" class="view-mode-banner" style="display:none;" role="status" aria-live="polite">
       👁️ View Mode: You can open/close games, but game controls are read-only.
     </div>
 
     <!-- GAMES LAUNCHER -->
-    <div class="gamesbar" id="gamesLauncher">
-      <button id="toggleJunk" class="game-toggle">🗑️ Junk</button>
-      <button id="toggleSkins" class="game-toggle">💎 Skins</button>
-      <button id="toggleVegas" class="game-toggle">🎲 Vegas</button>
-      <button id="toggleHilo" class="game-toggle">🎯 Hi-Lo</button>
-      <button id="toggleBanker" class="game-toggle">🏦 Banker</button>
+    <div class="gamesbar" id="gamesLauncher" role="tablist" aria-label="Choose a golf game">
+      <button id="toggleJunk" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="junkSection">🗑️ Junk</button>
+      <button id="toggleSkins" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="skinsSection">💎 Skins</button>
+      <button id="toggleVegas" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="vegasSection">🎲 Vegas</button>
+      <button id="toggleHilo" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="hiloSection">🎯 Hi-Lo</button>
+      <button id="toggleBanker" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="bankerSection">🏦 Banker</button>
     </div>
     <!-- SKINS GAME -->
-    <section class="game-section" id="skinsSection" aria-hidden="true">
+    <section class="game-section" id="skinsSection" role="tabpanel" aria-labelledby="toggleSkins" aria-hidden="true">
       <h2>Skins</h2>
       <div class="banker-controls">
         <div class="control-box">
@@ -248,7 +251,7 @@
       </p>
     </section>
     <!-- VEGAS GAME -->
-    <section class="game-section" id="vegasSection" aria-hidden="true">
+    <section class="game-section" id="vegasSection" role="tabpanel" aria-labelledby="toggleVegas" aria-hidden="true">
       <h2>Vegas Game</h2>
       <div class="vegas-controls">
         <div class="team-box">
@@ -325,7 +328,7 @@
       <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
     </section>
     <!-- BANKER GAME -->
-    <section class="game-section" id="bankerSection" aria-hidden="true">
+    <section class="game-section" id="bankerSection" role="tabpanel" aria-labelledby="toggleBanker" aria-hidden="true">
       <h2>🏦 Banker</h2>
       <div class="banker-controls">
         <div class="control-box">
@@ -380,7 +383,7 @@
       <p class="small">Select a banker per hole, set max bet, then enter player bets. Check 2× to double. Lower net score wins (with handicap strokes).</p>
     </section>
     <!-- HI-LO GAME -->
-    <section class="game-section" id="hiloSection" aria-hidden="true">
+    <section class="game-section" id="hiloSection" role="tabpanel" aria-labelledby="toggleHilo" aria-hidden="true">
       <h2>Hi-Lo</h2>
       <p class="note"><strong>How It Works:</strong> Requires exactly 4 players. Teams are auto-assigned: <strong>Team A</strong> = Lowest + Highest handicap, <strong>Team B</strong> = Middle two handicaps. Strokes are equalized by giving the difference to the worst player on the team with the lower combined handicap.</p>
       <p class="note"><strong>Scoring:</strong> Each hole awards 2 points (1 for low ball, 1 for high ball). Compare each team's lowest score for 1 point, then compare each team's highest score for 1 point. Ties = no points awarded.</p>
@@ -428,7 +431,56 @@
         </table>
       </div>
     </section>
+    <!-- JUNK GAME -->
+    <section class="game-section" id="junkSection" role="tabpanel" aria-labelledby="toggleJunk" aria-hidden="true">
+      <h2>Junk (Dots)</h2>
+      <div class="banker-controls">
+        <div class="control-box">
+          <div class="pill">Scoring</div>
+          <label class="radio">
+            <input type="checkbox" id="junkUseNet" /> Use NET scores (apply handicaps)
+          </label>
+          <button id="clearJunkAchievements" class="btn" style="margin-top: 8px;">Clear All Achievements</button>
+        </div>
+      </div>
+      <div class="banker-wrap">
+        <table class="junk-table" id="junkTable">
+          <thead>
+            <tr>
+              <th>Hole</th>
+              <th id="junkP1">P1</th>
+              <th id="junkP2">P2</th>
+              <th id="junkP3">P3</th>
+              <th id="junkP4">P4</th>
+            </tr>
+          </thead>
+          <tbody id="junkBody"></tbody>
+          <tfoot>
+            <tr>
+              <td>
+                <strong>Totals</strong>
+              </td>
+              <td id="junkTotP1">—</td>
+              <td id="junkTotP2">—</td>
+              <td id="junkTotP3">—</td>
+              <td id="junkTotP4">—</td>
+            </tr>
+            <tr>
+              <td>
+                <strong>Net Totals</strong>
+              </td>
+              <td id="junkNetP1">—</td>
+              <td id="junkNetP2">—</td>
+              <td id="junkNetP3">—</td>
+              <td id="junkNetP4">—</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Use NET scoring to apply handicap strokes.</p>
+    </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
+    </section>
     <script src="index.js" defer></script>
     <script src="js/export.js" defer></script>
     <script src="js/vegas.js" defer></script>
@@ -656,55 +708,6 @@
         updateStrokeHighlights();
       });
     </script>
-    <!-- JUNK GAME -->
-    <section class="game-section" id="junkSection" aria-hidden="true">
-      <h2>Junk (Dots)</h2>
-      <div class="banker-controls">
-        <div class="control-box">
-          <div class="pill">Scoring</div>
-          <label class="radio">
-            <input type="checkbox" id="junkUseNet" /> Use NET scores (apply handicaps)
-          </label>
-          <button id="clearJunkAchievements" class="btn" style="margin-top: 8px;">Clear All Achievements</button>
-        </div>
-      </div>
-      <div class="banker-wrap">
-        <table class="junk-table" id="junkTable">
-          <thead>
-            <tr>
-              <th>Hole</th>
-              <th id="junkP1">P1</th>
-              <th id="junkP2">P2</th>
-              <th id="junkP3">P3</th>
-              <th id="junkP4">P4</th>
-            </tr>
-          </thead>
-          <tbody id="junkBody"></tbody>
-          <tfoot>
-            <tr>
-              <td>
-                <strong>Totals</strong>
-              </td>
-              <td id="junkTotP1">—</td>
-              <td id="junkTotP2">—</td>
-              <td id="junkTotP3">—</td>
-              <td id="junkTotP4">—</td>
-            </tr>
-            <tr>
-              <td>
-                <strong>Net Totals</strong>
-              </td>
-              <td id="junkNetP1">—</td>
-              <td id="junkNetP2">—</td>
-              <td id="junkNetP3">—</td>
-              <td id="junkNetP4">—</td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-      <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Use NET scoring to apply handicap strokes.</p>
-    </section>
-
     <!-- QR Code Libraries (must load before qrcode.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>

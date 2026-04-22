@@ -476,6 +476,10 @@ input[type="text"] {
   margin: var(--space-md) 0 24px;
 }
 
+.entry-panel[hidden] {
+  display: none !important;
+}
+
 .entry-switcher {
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
@@ -886,6 +890,12 @@ tfoot td {
   gap: var(--space-md);
   flex-wrap: wrap;
   align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.gamesbar::-webkit-scrollbar {
+  display: none;
 }
 
 .game-toggle {
@@ -899,6 +909,8 @@ tfoot td {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  white-space: nowrap;
   -webkit-tap-highlight-color: rgba(104, 211, 145, 0.1);
 }
 
@@ -1685,6 +1697,7 @@ input[type="text"] {
   .gamesbar {
     gap: 10px;
     margin: var(--space-md) var(--space-md) 0;
+    flex-wrap: nowrap;
   }
 
   .entry-switcher {
