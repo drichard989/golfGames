@@ -496,6 +496,13 @@
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
   const PRIMARY_TAB_SCROLL_POSITIONS = { score: 0, games: 0 };
+  const GAME_TAB_SCROLL_POSITIONS = {
+    junk: 0,
+    skins: 0,
+    vegas: 0,
+    hilo: 0,
+    banker: 0
+  };
   let syncRowHeightsFrame = null;
 
   function resolveTargetElement(target) {
@@ -549,6 +556,11 @@
     PRIMARY_TAB_SCROLL_POSITIONS[which] = window.scrollY || window.pageYOffset || 0;
   }
 
+  function rememberGameTabScroll(which = getActiveGameTab()) {
+    if (!GAME_TAB_ORDER.includes(which)) return;
+    GAME_TAB_SCROLL_POSITIONS[which] = window.scrollY || window.pageYOffset || 0;
+  }
+
   function restorePrimaryTabScroll(which) {
     if (which !== 'score' && which !== 'games') return;
     const top = Number(PRIMARY_TAB_SCROLL_POSITIONS[which]) || 0;
@@ -560,6 +572,14 @@
           syncRowHeights(true);
         }
       }
+    });
+  }
+
+  function restoreGameTabScroll(which) {
+    if (!GAME_TAB_ORDER.includes(which)) return;
+    const top = Number(GAME_TAB_SCROLL_POSITIONS[which]) || 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top, left: 0, behavior: 'auto' });
     });
   }
 
@@ -596,6 +616,9 @@
     if (which !== 'score' && which !== 'games') return;
 
     const currentTab = getPrimaryTab();
+    if (currentTab === 'games') {
+      rememberGameTabScroll(getActiveGameTab());
+    }
     rememberPrimaryTabScroll(currentTab);
 
     if (which === 'games' && !getActiveGameTab()) {
@@ -603,7 +626,16 @@
     }
 
     syncPrimaryTabUi(which);
-    restorePrimaryTabScroll(which);
+    if (which === 'games') {
+      const activeGame = getActiveGameTab();
+      if (activeGame) {
+        restoreGameTabScroll(activeGame);
+      } else {
+        restorePrimaryTabScroll(which);
+      }
+    } else {
+      restorePrimaryTabScroll(which);
+    }
 
     if (save) saveDebounced();
   }
@@ -631,6 +663,11 @@
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
     if (!GAME_TAB_ORDER.includes(which)) return;
 
+    const previousGame = getActiveGameTab();
+    if (previousGame) {
+      rememberGameTabScroll(previousGame);
+    }
+
     GAME_TAB_ORDER.forEach((gameKey) => {
       if (gameKey === which) {
         games_open(gameKey);
@@ -643,6 +680,10 @@
 
     if (activatePrimary) {
       syncPrimaryTabUi('games');
+    }
+
+    if (activatePrimary || getPrimaryTab() === 'games') {
+      restoreGameTabScroll(which);
     }
 
     if (save) saveDebounced();
