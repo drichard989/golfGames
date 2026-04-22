@@ -3433,7 +3433,18 @@
     gamesBtn.addEventListener('click', jumpToGamesLauncher);
 
     const throttledUpdate = Utils.throttle(updateVisibility, 120);
+
+    // 'scroll' is reliable on desktop/Android but fires late or not at all
+    // during iOS Safari momentum scrolling. touchmove covers the active-drag
+    // phase; touchend + deferred calls catch the settle after the finger lifts.
     window.addEventListener('scroll', throttledUpdate, { passive: true });
+    document.addEventListener('touchmove', throttledUpdate, { passive: true });
+    document.addEventListener('touchend', () => {
+      updateVisibility();
+      setTimeout(updateVisibility, 150);
+      setTimeout(updateVisibility, 400);
+    }, { passive: true });
+
     window.addEventListener('resize', () => {
       const rect = container.getBoundingClientRect();
       const clamped = clampFloatingPosition(rect.left, rect.top, rect.width, rect.height);
