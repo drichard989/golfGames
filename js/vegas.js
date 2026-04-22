@@ -620,27 +620,28 @@ function vegas_renderTeamControls(){
   }
   
   for(let i=0; i<realPlayers; i++){
-    const row=document.createElement("div"); row.style.display="contents";
-    const label=document.createElement("div"); label.textContent=names[i];
-    const aWrap=document.createElement("label"); aWrap.className="radio";
+    const row=document.createElement("div"); row.className="vegas-team-row";
+    const label=document.createElement("div"); label.className="vegas-team-name"; label.textContent=names[i];
+    const choices=document.createElement("div"); choices.className="vegas-team-choice-group";
+    const aWrap=document.createElement("label"); aWrap.className="vegas-choice-btn vegas-choice-radio";
     const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
     aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
-    const bWrap=document.createElement("label"); bWrap.className="radio";
+    const bWrap=document.createElement("label"); bWrap.className="vegas-choice-btn vegas-choice-radio";
     const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
     bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
-    row.append(label,aWrap,bWrap); box.appendChild(row);
+    choices.append(aWrap,bWrap);
+    row.append(label,choices); box.appendChild(row);
   }
   
   // Add ghost positions if needed
   if(needsGhosts){
     for(let i=realPlayers; i<maxPositions; i++){
-      const row=document.createElement("div"); row.style.display="contents";
-      const label=document.createElement("div"); 
+      const row=document.createElement("div"); row.className="vegas-team-row";
+      const label=document.createElement("div"); label.className="vegas-team-name";
+      const choices=document.createElement("div"); choices.className="vegas-team-choice-group";
       
       const ghostCheckWrap = document.createElement("label"); 
-      ghostCheckWrap.style.display = "flex";
-      ghostCheckWrap.style.alignItems = "center";
-      ghostCheckWrap.style.gap = "4px";
+      ghostCheckWrap.className = "vegas-choice-btn vegas-choice-ghost";
       const ghostCheck = document.createElement("input"); 
       ghostCheck.type="checkbox"; 
       ghostCheck.id=`vegasGhost_${i}`;
@@ -650,13 +651,14 @@ function vegas_renderTeamControls(){
       
       label.appendChild(ghostCheckWrap);
       
-      const aWrap=document.createElement("label"); aWrap.className="radio";
+      const aWrap=document.createElement("label"); aWrap.className="vegas-choice-btn vegas-choice-radio";
       const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
       aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
-      const bWrap=document.createElement("label"); bWrap.className="radio";
+      const bWrap=document.createElement("label"); bWrap.className="vegas-choice-btn vegas-choice-radio";
       const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
       bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
-      row.append(label,aWrap,bWrap); box.appendChild(row);
+      choices.append(aWrap,bWrap);
+      row.append(label,choices); box.appendChild(row);
     }
   }
   

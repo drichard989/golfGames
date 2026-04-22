@@ -22,7 +22,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v2.4.3</h1>
+        <h1>Manito Golf Games v2.4.4</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
@@ -235,22 +235,27 @@
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Options</div>
-          <label class="radio">
-            <input type="checkbox" id="skinsCarry" checked /> Carry over on ties
+          <label class="skins-toggle-btn" for="skinsCarry">
+            <input type="checkbox" id="skinsCarry" checked />
+            <span>Carry over on ties</span>
           </label>
         </div>
         <div class="control-box">
           <div class="pill">Scoring Mode</div>
-          <label class="radio">
-            <input type="radio" name="skinsMode" id="skinsModeGross" value="gross" checked /> Gross (raw scores)
-          </label>
-          <br />
-          <label class="radio">
-            <input type="radio" name="skinsMode" id="skinsModeNet" value="net" /> Net (with handicaps)
-          </label>
-          <div style="margin-left: 24px; margin-top: 4px;">
-            <label class="radio">
-              <input type="checkbox" id="skinsHalf" /> Half-Pops (0.5 strokes)
+          <div class="skins-mode-buttons" role="radiogroup" aria-label="Skins scoring mode">
+            <label class="skins-toggle-btn skins-mode-btn" for="skinsModeGross">
+              <input type="radio" name="skinsMode" id="skinsModeGross" value="gross" checked />
+              <span>Gross (raw scores)</span>
+            </label>
+            <label class="skins-toggle-btn skins-mode-btn" for="skinsModeNet">
+              <input type="radio" name="skinsMode" id="skinsModeNet" value="net" />
+              <span>Net (with handicaps)</span>
+            </label>
+          </div>
+          <div class="skins-half-wrap">
+            <label class="skins-toggle-btn skins-half-btn" for="skinsHalf">
+              <input type="checkbox" id="skinsHalf" />
+              <span>Half-Pops (0.5 strokes)</span>
             </label>
           </div>
         </div>
@@ -302,8 +307,10 @@
         </div>
         <div class="opts-box">
           <div class="team-pill">Options</div>
-          <label class="radio">
-            <input type="checkbox" id="optUseNet" /> Use Net (NDB) </label>
+          <label class="vegas-toggle-btn" for="optUseNet">
+            <input type="checkbox" id="optUseNet" />
+            <span>Use Net (NDB)</span>
+          </label>
           <div id="vegasNetHcpModeWrap" class="control" style="margin-top: 8px; padding: 8px; display: flex; gap: 8px; align-items: center;">
             <label for="vegasNetHcpMode" style="margin: 0; text-transform: none; letter-spacing: normal;">NET Handicap:</label>
             <select id="vegasNetHcpMode" style="padding: 6px 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
@@ -311,13 +318,16 @@
               <option value="fullHandicap">Full Handicap</option>
             </select>
           </div>
-          <br />
-          <label class="radio vegas-opt-flag">
-            <input type="checkbox" id="optDoubleBirdie" checked /> Double on Birdie (winner) </label>
-          <br />
-          <label class="radio vegas-opt-flag">
-            <input type="checkbox" id="optTripleEagle" checked /> Triple on Eagle (winner) </label>
-          <br />
+          <div class="vegas-option-buttons">
+            <label class="vegas-toggle-btn vegas-opt-flag" for="optDoubleBirdie">
+              <input type="checkbox" id="optDoubleBirdie" checked />
+              <span>Double on Birdie (winner)</span>
+            </label>
+            <label class="vegas-toggle-btn vegas-opt-flag" for="optTripleEagle">
+              <input type="checkbox" id="optTripleEagle" checked />
+              <span>Triple on Eagle (winner)</span>
+            </label>
+          </div>
           <label class="radio" title="Dollar value per Vegas point">
             $/point
             <input type="number" id="vegasPointValue" min="0" step="0.25" value="1" inputmode="decimal" autocomplete="off" class="ch-input" style="width:96px; margin-left:8px" />
@@ -492,19 +502,24 @@
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Scoring</div>
-          <label class="radio">
-            <input type="radio" name="junkScoreMode" id="junkScoreModeGross" value="gross" checked /> Gross
-          </label>
-          <br />
-          <label class="radio">
-            <input type="radio" name="junkScoreMode" id="junkScoreModeNet" value="net" /> Net
-          </label>
-          <div id="junkNetHcpModeWrap" class="control" style="margin-top: 8px; padding: 8px; display: none; gap: 8px; align-items: center;">
-            <label class="radio" style="margin: 0; text-transform: none; letter-spacing: normal;">
-              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModePlayOffLow" value="playOffLow" checked /> Play Off Low
+          <div class="junk-mode-buttons" role="radiogroup" aria-label="Junk scoring mode">
+            <label class="junk-toggle-btn" for="junkScoreModeGross">
+              <input type="radio" name="junkScoreMode" id="junkScoreModeGross" value="gross" checked />
+              <span>Gross</span>
             </label>
-            <label class="radio" style="margin: 0; text-transform: none; letter-spacing: normal;">
-              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModeFullHandicap" value="fullHandicap" /> Full Handicap
+            <label class="junk-toggle-btn" for="junkScoreModeNet">
+              <input type="radio" name="junkScoreMode" id="junkScoreModeNet" value="net" />
+              <span>Net</span>
+            </label>
+          </div>
+          <div id="junkNetHcpModeWrap" class="control" style="margin-top: 8px; padding: 8px; display: none; gap: 8px; align-items: center;">
+            <label class="junk-toggle-btn" for="junkNetHcpModePlayOffLow" style="margin: 0; text-transform: none; letter-spacing: normal;">
+              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModePlayOffLow" value="playOffLow" checked />
+              <span>Play Off Low</span>
+            </label>
+            <label class="junk-toggle-btn" for="junkNetHcpModeFullHandicap" style="margin: 0; text-transform: none; letter-spacing: normal;">
+              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModeFullHandicap" value="fullHandicap" />
+              <span>Full Handicap</span>
             </label>
           </div>
           <label class="small" for="junkNetHcpModePlayOffLow" style="display: block; margin-top: 6px; text-transform: none; letter-spacing: normal; color: var(--muted);">
