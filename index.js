@@ -1715,6 +1715,109 @@
       }
     },
 
+    syncPlayerRowCount(targetCount) {
+      const clampedTarget = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, Number(targetCount) || MIN_PLAYERS));
+
+      let scoreRows = $$("#scorecard .player-row");
+      let fixedRows = $$("#scorecardFixed .player-row");
+
+      while (scoreRows.length > clampedTarget && fixedRows.length > clampedTarget) {
+        scoreRows[scoreRows.length - 1]?.remove();
+        fixedRows[fixedRows.length - 1]?.remove();
+        scoreRows = $$("#scorecard .player-row");
+        fixedRows = $$("#scorecardFixed .player-row");
+      }
+
+      while (scoreRows.length < clampedTarget && PLAYERS < MAX_PLAYERS) {
+        addPlayer();
+        scoreRows = $$("#scorecard .player-row");
+        fixedRows = $$("#scorecardFixed .player-row");
+      }
+
+      PLAYERS = scoreRows.length;
+
+      scoreRows.forEach((row, idx) => {
+        row.dataset.player = String(idx);
+        const scoreInputs = $$("input.score-input", row);
+        scoreInputs.forEach((input) => {
+          input.dataset.player = String(idx);
+        });
+      });
+
+      fixedRows.forEach((row, idx) => {
+        row.dataset.player = String(idx);
+        const nameInput = $(".name-edit", row);
+        if (nameInput && !String(nameInput.value || '').trim()) {
+          nameInput.placeholder = `Player ${idx + 1}`;
+        }
+      });
+
+      Scorecard.player.updateCountDisplay();
+      Scorecard.player.syncOverlay();
+    },
+
+    prepareForIncomingSyncState(targetPlayerCount = MIN_PLAYERS) {
+      this.syncPlayerRowCount(targetPlayerCount);
+
+      const fixedRows = $$("#scorecardFixed .player-row");
+      fixedRows.forEach((row, idx) => {
+        const nameInput = $(".name-edit", row);
+        const chInput = $(".ch-input", row);
+        if (nameInput) {
+          nameInput.value = '';
+          nameInput.placeholder = `Player ${idx + 1}`;
+        }
+        if (chInput) {
+          setHandicapInputValue(chInput, '0');
+        }
+      });
+
+      const scoreRows = $$("#scorecard .player-row");
+      scoreRows.forEach((row) => {
+        $$("input.score-input", row).forEach((input) => {
+          input.value = '';
+          input.classList.remove('invalid');
+          input.classList.remove('receives-stroke');
+          input.removeAttribute('data-strokes');
+          input.removeAttribute('title');
+        });
+      });
+
+      const skinsModeGross = document.getElementById('skinsModeGross');
+      const skinsModeNet = document.getElementById('skinsModeNet');
+      const skinsBuyIn = document.getElementById('skinsBuyIn');
+      const skinsCarry = document.getElementById('skinsCarry');
+      const skinsHalf = document.getElementById('skinsHalf');
+      if (skinsModeGross) skinsModeGross.checked = true;
+      if (skinsModeNet) skinsModeNet.checked = false;
+      if (skinsBuyIn) skinsBuyIn.value = '10';
+      if (skinsCarry) skinsCarry.checked = true;
+      if (skinsHalf) skinsHalf.checked = false;
+
+      const junkUseNet = document.getElementById('junkUseNet');
+      if (junkUseNet) junkUseNet.checked = false;
+      document.querySelectorAll('#junkTable input.junk-ach').forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+
+      const hiloUnitValue = document.getElementById('hiloUnitValue');
+      if (hiloUnitValue) hiloUnitValue.value = '10';
+
+      window.Vegas?.setTeamAssignments?.({ A: [], B: [] });
+      window.Vegas?.setOptions?.({
+        useNet: false,
+        netHcpMode: 'playOffLow',
+        doubleBirdie: false,
+        tripleEagle: false,
+        pointValue: 0
+      });
+      window.Banker?.setState?.({ holes: [] });
+
+      Scorecard.calc.recalcAll();
+      Scorecard.player.syncOverlay();
+      recalculateEverything();
+    },
+
     /**
      * Apply a canonical sync game state from cloud into local storage + UI.
      * Keeps local UI preferences while replacing shared game data.
@@ -1790,6 +1893,9 @@
           return false;
         }
         const s = this.normalizeLoadedState(JSON.parse(raw));
+
+        const targetPlayers = Array.isArray(s.players) ? s.players.length : MIN_PLAYERS;
+        this.prepareForIncomingSyncState(targetPlayers);
         
         // Restore course selection
         if(s.course && COURSES[s.course]){
@@ -1831,19 +1937,8 @@
         }
         
         // CRITICAL: Explicitly query each table to avoid ambiguity
-        let scoreRows = $$("#scorecard .player-row");  // Scrollable table with scores
-        let fixedRows = $$("#scorecardFixed .player-row");  // Fixed table with names/CH
-        
-        // Add more players if saved data has more than current row count
-        if (s.players && s.players.length > scoreRows.length) {
-          const needed = s.players.length - scoreRows.length;
-          for (let i = 0; i < needed && PLAYERS < MAX_PLAYERS; i++) {
-            addPlayer();
-          }
-          // Refresh queries after adding rows
-          scoreRows = $$("#scorecard .player-row");
-          fixedRows = $$("#scorecardFixed .player-row");
-        }
+        const scoreRows = $$("#scorecard .player-row");  // Scrollable table with scores
+        const fixedRows = $$("#scorecardFixed .player-row");  // Fixed table with names/CH
         
         s.players?.forEach((p, i) => { 
           const r = scoreRows[i]; 
