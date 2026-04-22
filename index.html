@@ -41,6 +41,7 @@
           <div class="utilities-row utilities-row-actions">
             <button id="saveBtn" class="btn">💾 Save</button>
             <button id="refreshAllBtn" class="btn" title="Recalculate all games and totals">🔄 Recalculate Everything</button>
+            <button id="clearEverythingBtn" class="btn" style="background: var(--danger); color: white;">Clear Everything</button>
             <button id="resetBtn" class="btn">Reset Scores</button>
             <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
           </div>
@@ -114,7 +115,6 @@
     <section id="scoreEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherScoreBtn">
     <div class="controls" style="margin: 12px 16px 0; gap: 8px; align-items: flex-start;">
       <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
-      <button id="clearEverythingBtn" class="btn" style="background: var(--danger); color: white;">Clear Everything</button>
       <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
 
       <div class="control handicap-mode-control" style="flex: 1 1 520px;">
@@ -194,9 +194,15 @@
       <button id="toggleHilo" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="hiloSection">🎯 Hi-Lo</button>
       <button id="toggleBanker" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="bankerSection">🏦 Banker</button>
     </div>
+    <div class="controls" style="margin: 8px 16px 0;">
+      <button id="clearGamesDataBtn" class="btn">Clear All Game Data</button>
+    </div>
     <!-- SKINS GAME -->
     <section class="game-section" id="skinsSection" role="tabpanel" aria-labelledby="toggleSkins" aria-hidden="true">
       <h2>Skins</h2>
+      <div class="controls" style="margin: 0 0 8px 0;">
+        <button id="clearSkinsDataBtn" class="btn">Clear Skins Data</button>
+      </div>
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Options</div>
@@ -253,6 +259,9 @@
     <!-- VEGAS GAME -->
     <section class="game-section" id="vegasSection" role="tabpanel" aria-labelledby="toggleVegas" aria-hidden="true">
       <h2>Vegas Game</h2>
+      <div class="controls" style="margin: 0 0 8px 0;">
+        <button id="clearVegasDataBtn" class="btn">Clear Vegas Data</button>
+      </div>
       <div class="vegas-controls">
         <div class="team-box">
           <div class="team-pill">Assign teams (exactly two per team)</div>
@@ -330,6 +339,9 @@
     <!-- BANKER GAME -->
     <section class="game-section" id="bankerSection" role="tabpanel" aria-labelledby="toggleBanker" aria-hidden="true">
       <h2>🏦 Banker</h2>
+      <div class="controls" style="margin: 0 0 8px 0;">
+        <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
+      </div>
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Scoring Mode</div>
@@ -385,6 +397,9 @@
     <!-- HI-LO GAME -->
     <section class="game-section" id="hiloSection" role="tabpanel" aria-labelledby="toggleHilo" aria-hidden="true">
       <h2>Hi-Lo</h2>
+      <div class="controls" style="margin: 0 0 8px 0;">
+        <button id="clearHiloDataBtn" class="btn">Clear Hi-Lo Data</button>
+      </div>
       <p class="note"><strong>How It Works:</strong> Requires exactly 4 players. Teams are auto-assigned: <strong>Team A</strong> = Lowest + Highest handicap, <strong>Team B</strong> = Middle two handicaps. Strokes are equalized by giving the difference to the worst player on the team with the lower combined handicap.</p>
       <p class="note"><strong>Scoring:</strong> Each hole awards 2 points (1 for low ball, 1 for high ball). Compare each team's lowest score for 1 point, then compare each team's highest score for 1 point. Ties = no points awarded.</p>
       <p class="note"><strong>Games:</strong> Three main games run simultaneously: <strong>Front 9</strong> (holes 1-9, worth 1 unit), <strong>Back 9</strong> (holes 10-18, worth 1 unit), <strong>Full 18</strong> (all holes, worth 2 units) = 4 total units at stake.</p>
@@ -434,6 +449,9 @@
     <!-- JUNK GAME -->
     <section class="game-section" id="junkSection" role="tabpanel" aria-labelledby="toggleJunk" aria-hidden="true">
       <h2>Junk (Dots)</h2>
+      <div class="controls" style="margin: 0 0 8px 0;">
+        <button id="clearJunkDataBtn" class="btn">Clear Junk Data</button>
+      </div>
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Scoring</div>
