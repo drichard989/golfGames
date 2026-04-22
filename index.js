@@ -1930,9 +1930,7 @@
           const preferredGame = GAME_TAB_ORDER.includes(s.localUi?.activeGame)
             ? s.localUi.activeGame
             : savedOpenGame;
-          const preferredPrimaryTab = s.localUi?.primaryTab === 'games'
-            ? 'games'
-            : (savedOpenGame ? 'games' : 'score');
+          const preferredPrimaryTab = 'score';
 
           GAME_TAB_ORDER.forEach((gameKey) => games_close(gameKey));
           syncGameTabUi(null);
@@ -1948,6 +1946,9 @@
 
         // Recalculate all games with restored data
         AppManager.recalcGames();
+
+        // Sync row heights after data is restored (names/scores change cell sizes)
+        requestAnimationFrame(() => Scorecard.build.syncRowHeights(true));
         
         if (announceRestore) {
           const savedDate = new Date(s.savedAt || Date.now()).toLocaleString();
