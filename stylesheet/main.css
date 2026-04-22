@@ -519,7 +519,7 @@ input[type="text"] {
   border-radius: var(--radius-3xl);
   background: color-mix(in srgb, var(--panel) 86%, transparent);
   backdrop-filter: blur(14px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
 }
 
 .entry-switcher-btn {
