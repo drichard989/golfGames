@@ -202,7 +202,9 @@
       <h2>Skins</h2>
       <div class="controls" style="margin: 0 0 8px 0;">
         <button id="clearSkinsDataBtn" class="btn">Clear Skins Data</button>
+        <button type="button" class="btn game-options-toggle" data-target="skinsOptionsPanel" aria-controls="skinsOptionsPanel" aria-expanded="false">Skins Options</button>
       </div>
+      <div id="skinsOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Options</div>
@@ -239,6 +241,7 @@
           <div class="small"><strong>Carryover Format:</strong> Holes won with carryover show the tied holes in curly braces. Example: "4 {2,3}" means hole 4 won the pot that included holes 2 and 3.</div>
         </div>
       </div>
+      </div>
       <div class="banker-wrap">
         <table class="skins-table" id="skinsTable">
           <thead>
@@ -261,7 +264,9 @@
       <h2>Vegas Game</h2>
       <div class="controls" style="margin: 0 0 8px 0;">
         <button id="clearVegasDataBtn" class="btn">Clear Vegas Data</button>
+        <button type="button" class="btn game-options-toggle" data-target="vegasOptionsPanel" aria-controls="vegasOptionsPanel" aria-expanded="false">Vegas Options</button>
       </div>
+      <div id="vegasOptionsPanel" class="game-options-panel" hidden>
       <div class="vegas-controls">
         <div class="team-box">
           <div class="team-pill">Assign teams (exactly two per team)</div>
@@ -291,6 +296,8 @@
             <input type="number" id="vegasPointValue" min="0" step="0.25" value="1" inputmode="decimal" autocomplete="off" class="ch-input" style="width:96px; margin-left:8px" />
           </label>
         </div>
+      </div>
+      <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
       </div>
       <div class="vegas-wrap">
         <table class="vegas-table" id="vegasTable">
@@ -334,14 +341,15 @@
           </tfoot>
         </table>
       </div>
-      <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
     </section>
     <!-- BANKER GAME -->
     <section class="game-section" id="bankerSection" role="tabpanel" aria-labelledby="toggleBanker" aria-hidden="true">
       <h2>🏦 Banker</h2>
       <div class="controls" style="margin: 0 0 8px 0;">
         <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
+        <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
       </div>
+      <div id="bankerOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Scoring Mode</div>
@@ -376,6 +384,8 @@
           <button id="clearBankerBtn" class="btn" onclick="window.Banker?.clearAll()" title="Clear all banker game data">Clear Banker Game</button>
         </div>
       </div>
+      <p class="small">Select a banker per hole, set max bet, then enter player bets. Check 2× to double. Lower net score wins (with handicap strokes).</p>
+      </div>
       <div class="banker-wrap">
         <table class="banker-table" id="bankerTable">
           <thead>
@@ -392,18 +402,20 @@
           <tfoot></tfoot>
         </table>
       </div>
-      <p class="small">Select a banker per hole, set max bet, then enter player bets. Check 2× to double. Lower net score wins (with handicap strokes).</p>
     </section>
     <!-- HI-LO GAME -->
     <section class="game-section" id="hiloSection" role="tabpanel" aria-labelledby="toggleHilo" aria-hidden="true">
       <h2>Hi-Lo</h2>
       <div class="controls" style="margin: 0 0 8px 0;">
         <button id="clearHiloDataBtn" class="btn">Clear Hi-Lo Data</button>
+        <button type="button" class="btn game-options-toggle" data-target="hiloOptionsPanel" aria-controls="hiloOptionsPanel" aria-expanded="false">Hi-Lo Options</button>
       </div>
+      <div id="hiloOptionsPanel" class="game-options-panel" hidden>
       <p class="note"><strong>How It Works:</strong> Requires exactly 4 players. Teams are auto-assigned: <strong>Team A</strong> = Lowest + Highest handicap, <strong>Team B</strong> = Middle two handicaps. Strokes are equalized by giving the difference to the worst player on the team with the lower combined handicap.</p>
       <p class="note"><strong>Scoring:</strong> Each hole awards 2 points (1 for low ball, 1 for high ball). Compare each team's lowest score for 1 point, then compare each team's highest score for 1 point. Ties = no points awarded.</p>
       <p class="note"><strong>Games:</strong> Three main games run simultaneously: <strong>Front 9</strong> (holes 1-9, worth 1 unit), <strong>Back 9</strong> (holes 10-18, worth 1 unit), <strong>Full 18</strong> (all holes, worth 2 units) = 4 total units at stake.</p>
       <p class="note"><strong>Auto-Press:</strong> When a team wins a hole 2-0 (both low and high), an automatic press starts on the next hole. Front 9 presses run through hole 9, Back 9 presses run through hole 18. Each press is worth 1 unit (Full 18 has no presses). The leading team does NOT need to approve - presses trigger automatically!</p>
+      </div>
       
       <div class="vegas-controls">
         <div class="team-box">
@@ -451,7 +463,9 @@
       <h2>Junk (Dots)</h2>
       <div class="controls" style="margin: 0 0 8px 0;">
         <button id="clearJunkDataBtn" class="btn">Clear Junk Data</button>
+        <button type="button" class="btn game-options-toggle" data-target="junkOptionsPanel" aria-controls="junkOptionsPanel" aria-expanded="false">Junk Options</button>
       </div>
+      <div id="junkOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Scoring</div>
@@ -460,6 +474,8 @@
           </label>
           <button id="clearJunkAchievements" class="btn" style="margin-top: 8px;">Clear All Achievements</button>
         </div>
+      </div>
+      <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Use NET scoring to apply handicap strokes.</p>
       </div>
       <div class="banker-wrap">
         <table class="junk-table" id="junkTable">
@@ -495,7 +511,6 @@
           </tfoot>
         </table>
       </div>
-      <p class="small">Dots per hole: Eagle = 4, Birdie = 2, Par = 1, otherwise 0. Use NET scoring to apply handicap strokes.</p>
     </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     </section>
