@@ -594,19 +594,13 @@
     if (!panel || panel.hidden) return;
 
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-    const panelRect = panel.getBoundingClientRect();
     const navBar = document.querySelector('.sticky-nav-bar');
     const navBarRect = navBar?.getBoundingClientRect();
 
-    const topBoundary = navBarRect
-      ? Math.max(panelRect.top, navBarRect.bottom + 4)
-      : panelRect.top;
-
+    // Measure from the bottom of the sticky nav bar to the bottom of the viewport.
+    // This is reliable regardless of what's above (header shown/hidden, transitions).
+    const topBoundary = navBarRect ? navBarRect.bottom + 4 : 120;
     const available = Math.max(220, Math.floor(viewportHeight - topBoundary - 8));
-    // Set both height and maxHeight so the panel always fills the viewport below
-    // the tab bar. Without a fixed height, a short game section shrinks the
-    // panel to its content size — leaving no scroll range and making dragging
-    // feel broken.
     panel.style.height = `${available}px`;
     panel.style.maxHeight = `${available}px`;
   }
@@ -697,30 +691,16 @@
     // already sees the header as gone.
     const appHeader = document.querySelector('header');
     const parBadge = document.getElementById('parBadge');
-    if (which === 'games') {
-      if (headerVisible) {
-        // Auto-hide for games tab — remember it was automatic, not user-driven.
-        headerVisible = false;
-        headerAutoHiddenByGamesTab = true;
-        applyHeaderVisibility();
-      }
-    } else {
-      if (headerAutoHiddenByGamesTab) {
-        // Restore — games tab auto-hid it, user didn't choose to hide it.
-        headerVisible = true;
-        headerAutoHiddenByGamesTab = false;
-        applyHeaderVisibility();
-      }
-      // If user manually hid it (headerVisible=false, headerAutoHiddenByGamesTab=false),
-      // keep it hidden — applyHeaderVisibility already set the class.
-    }
+    // No auto-hide on tab switch — user controls visibility via Hide/Show button.
     syncHeaderCollapseBtn();
 
     syncPrimaryTabUi(which);
     if (which === 'games') {
-      // Delay one frame so the header collapse reflows before measuring.
+      // Delay one frame so layout settles before measuring.
       requestAnimationFrame(() => {
         syncGamesPanelHeight();
+        // Run again after transitions finish (header/options panels).
+        setTimeout(() => syncGamesPanelHeight(), 300);
         const activeGame = getActiveGameTab();
         if (activeGame) {
           restoreGameTabScroll(activeGame);
@@ -4236,7 +4216,13 @@
       headerAutoHiddenByGamesTab = false; // user explicitly chose — override auto behaviour
       applyHeaderVisibility();
       syncHeaderCollapseBtn();
+      // Re-measure after header transition (~220ms) so games panel fills viewport.
       requestAnimationFrame(() => syncGamesPanelHeight());
+      setTimeout(() => syncGamesPanelHeight(), 280);
+    });
+    // Re-measure whenever the header finishes its CSS transition.
+    document.querySelector('header')?.addEventListener('transitionend', () => {
+      syncGamesPanelHeight();
     });
     syncHeaderCollapseBtn();
 
