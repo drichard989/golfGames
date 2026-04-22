@@ -809,6 +809,7 @@
       rows.forEach((sourceRow) => {
         if (!sourceRow) return;
         const clone = sourceRow.cloneNode(true);
+        clone.removeAttribute('id');
         clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
         clone.querySelectorAll('input, select, textarea, button').forEach((el) => {
           el.setAttribute('tabindex', '-1');
