@@ -1192,8 +1192,7 @@ tfoot td {
   gap: var(--space-md);
   flex-wrap: wrap;
   align-items: center;
-  overflow-x: auto;
-  scrollbar-width: none;
+  overflow: visible;
 }
 
 .gamesbar::-webkit-scrollbar {
@@ -1211,14 +1210,21 @@ tfoot td {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
+  flex: 1 1 180px;
   white-space: nowrap;
   -webkit-tap-highlight-color: rgba(104, 211, 145, 0.1);
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
 }
 
 .game-toggle.active {
-  background: #14202a;
-  border-color: #224;
+  background: rgba(74, 158, 255, 0.2);
+  border-color: #4a9eff;
+  color: #d8ecff;
+  box-shadow: inset 0 0 0 1px rgba(74, 158, 255, 0.45), 0 0 0 1px rgba(74, 158, 255, 0.25);
+}
+
+.games-actions-row {
+  margin: 4px var(--space-lg) 0;
 }
 
 .game-section {
@@ -2405,7 +2411,7 @@ input[type="text"] {
   .gamesbar {
     gap: 10px;
     margin: var(--space-md) var(--space-md) 0;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
 
   .entry-switcher {
@@ -2675,9 +2681,10 @@ input[type="text"] {
 }
 
 :root[data-theme="light"] .game-toggle.active {
-  background: #e0f2ff;
-  border-color: #0090e0;
-  color: #1a1c1f;
+  background: #0b74d1;
+  border-color: #095ba3;
+  color: #ffffff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24), 0 0 0 1px rgba(11, 116, 209, 0.3);
 }
 
 :root[data-theme="light"] .game-options-toggle {
