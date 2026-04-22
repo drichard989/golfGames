@@ -605,27 +605,6 @@
     panel.style.maxHeight = `${available}px`;
   }
 
-  function syncScorecardStickyOffsets() {
-    const root = document.documentElement;
-    if (!root) return;
-
-    const stickyNav = document.querySelector('.sticky-nav-bar');
-    const stickyNavRect = stickyNav?.getBoundingClientRect();
-    const stickyTop = Math.max(0, Math.round(stickyNavRect?.bottom || 0));
-
-    const scoreHeaderRow = document.querySelector('#scorecard thead tr')
-      || document.querySelector('#scorecardFixed thead tr');
-    const parRow = document.querySelector('#scorecard .par-row')
-      || document.querySelector('#scorecardFixed .par-row');
-
-    const headerRowHeight = Math.max(36, Math.round(scoreHeaderRow?.getBoundingClientRect().height || 0));
-    const parRowHeight = Math.max(36, Math.round(parRow?.getBoundingClientRect().height || 0));
-
-    root.style.setProperty('--scorecard-sticky-top', `${stickyTop}px`);
-    root.style.setProperty('--scorecard-head-row-h', `${headerRowHeight}px`);
-    root.style.setProperty('--scorecard-par-row-h', `${parRowHeight}px`);
-  }
-
   function syncSafeTopInset() {
     const root = document.documentElement;
     if (!root) return;
@@ -720,6 +699,7 @@
     gamesBtn.setAttribute('aria-selected', !isScore ? 'true' : 'false');
     scorePanel.hidden = !isScore;
     gamesPanel.hidden = isScore;
+    requestAnimationFrame(() => syncFrozenScorecardHeader());
   }
 
   function syncGameTabUi(activeGame) {
@@ -793,8 +773,102 @@
       });
     };
 
-    scrollPane.addEventListener('scroll', () => syncScrollTop(scrollPane, fixedPane), { passive: true });
+    const syncFrozenHorizontal = () => {
+      const frozenScroll = document.getElementById('scorecardFrozenScroll');
+      if (frozenScroll) {
+        frozenScroll.scrollLeft = scrollPane.scrollLeft;
+      }
+    };
+
+    scrollPane.addEventListener('scroll', () => {
+      syncScrollTop(scrollPane, fixedPane);
+      syncFrozenHorizontal();
+    }, { passive: true });
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
+  }
+
+  function syncFrozenScorecardHeader() {
+    const host = document.getElementById('scorecardFrozenHost');
+    const fixedWrap = host?.querySelector('.scorecard-frozen-fixed');
+    const scrollWrap = document.getElementById('scorecardFrozenScroll');
+    const fixedTarget = document.getElementById('scorecardFrozenFixed');
+    const scrollTarget = document.getElementById('scorecardFrozenTable');
+    const fixedPane = document.querySelector('.scorecard-fixed');
+    const scrollPane = document.querySelector('.scorecard-scroll');
+    const fixedSource = document.getElementById('scorecardFixed');
+    const scrollSource = document.getElementById('scorecard');
+    if (!host || !fixedWrap || !scrollWrap || !fixedTarget || !scrollTarget || !fixedPane || !scrollPane || !fixedSource || !scrollSource) return;
+
+    const isScore = document.body?.classList.contains('mode-score');
+    host.hidden = !isScore;
+    if (!isScore) return;
+
+    const cloneRowsInto = (rows, targetTable) => {
+      targetTable.innerHTML = '';
+      const tbody = document.createElement('tbody');
+      rows.forEach((sourceRow) => {
+        if (!sourceRow) return;
+        const clone = sourceRow.cloneNode(true);
+        clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+        clone.querySelectorAll('input, select, textarea, button').forEach((el) => {
+          el.setAttribute('tabindex', '-1');
+          el.setAttribute('aria-hidden', 'true');
+        });
+        tbody.appendChild(clone);
+      });
+      targetTable.appendChild(tbody);
+    };
+
+    const fixedSourceRows = [
+      fixedSource.querySelector('thead tr'),
+      document.getElementById('parRowFixed'),
+      document.getElementById('hcpRowFixed')
+    ];
+    const scrollSourceRows = [
+      scrollSource.querySelector('thead tr'),
+      document.getElementById('parRow'),
+      document.getElementById('hcpRow')
+    ];
+
+    cloneRowsInto(fixedSourceRows, fixedTarget);
+    cloneRowsInto(scrollSourceRows, scrollTarget);
+
+    const setCellMetrics = (sourceRows, targetTable) => {
+      const targetRows = Array.from(targetTable.querySelectorAll('tr'));
+      sourceRows.forEach((sourceRow, rowIndex) => {
+        const targetRow = targetRows[rowIndex];
+        if (!sourceRow || !targetRow) return;
+
+        const sourceCells = Array.from(sourceRow.children);
+        const targetCells = Array.from(targetRow.children);
+        const rowHeight = Math.ceil(sourceRow.getBoundingClientRect().height);
+        targetRow.style.height = `${rowHeight}px`;
+
+        sourceCells.forEach((sourceCell, cellIndex) => {
+          const targetCell = targetCells[cellIndex];
+          if (!targetCell) return;
+          const width = Math.ceil(sourceCell.getBoundingClientRect().width);
+          targetCell.style.width = `${width}px`;
+          targetCell.style.minWidth = `${width}px`;
+          targetCell.style.maxWidth = `${width}px`;
+          targetCell.style.height = `${rowHeight}px`;
+        });
+      });
+    };
+
+    setCellMetrics(fixedSourceRows, fixedTarget);
+    setCellMetrics(scrollSourceRows, scrollTarget);
+
+    const fixedWidth = Math.ceil(fixedPane.getBoundingClientRect().width);
+    fixedWrap.style.width = `${fixedWidth}px`;
+    fixedWrap.style.minWidth = `${fixedWidth}px`;
+    fixedWrap.style.maxWidth = `${fixedWidth}px`;
+
+    const scrollTableWidth = Math.ceil(scrollSource.getBoundingClientRect().width);
+    scrollTarget.style.width = `${scrollTableWidth}px`;
+    scrollTarget.style.minWidth = `${scrollTableWidth}px`;
+
+    scrollWrap.scrollLeft = scrollPane.scrollLeft;
   }
 
   function setupGamesPanelScrollSync() {
@@ -804,7 +878,7 @@
     const sync = () => {
       syncSafeTopInset();
       syncGamesPanelHeight();
-      syncScorecardStickyOffsets();
+      syncFrozenScorecardHeader();
     };
 
     sync();
@@ -1155,6 +1229,8 @@
             if (scrollRow.style.height !== nextHeight) scrollRow.style.height = nextHeight;
           }
         });
+
+        syncFrozenScorecardHeader();
         
         // Note: Stroke highlighting is managed by recalcAll() with proper timing
         // Do not call applyStrokeHighlighting() here to avoid race conditions
