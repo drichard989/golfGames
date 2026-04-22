@@ -31,6 +31,8 @@
     isApplyingRemote: false,
     isViewingSnapshot: false,
     pushTimer: null,
+    pendingRemoteState: null,
+    pendingRemoteTimer: null,
     lastSeenRevision: 0,
     lastSnapshotAt: 0,
     currentLiveState: null,
@@ -310,6 +312,55 @@
     };
   }
 
+  function isBankerInputFocused() {
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement)) return false;
+
+    if (active.classList.contains('banker-bet-input') || active.classList.contains('banker-maxbet-input')) {
+      return true;
+    }
+
+    if (typeof active.id === 'string' && active.id.startsWith('banker_')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function applyRemoteStateToUi(syncGame, revision = 0) {
+    state.isApplyingRemote = true;
+    try {
+      const ok = window.GolfApp?.storage?.applySyncGameState?.(syncGame, 'remote');
+      if (!ok) {
+        console.warn('[CloudSync] Failed to apply remote sync state');
+      }
+      state.lastSeenRevision = Math.max(state.lastSeenRevision, Number(revision) || 0);
+    } finally {
+      state.isApplyingRemote = false;
+    }
+  }
+
+  function flushPendingRemoteState() {
+    if (state.pendingRemoteTimer) {
+      clearTimeout(state.pendingRemoteTimer);
+      state.pendingRemoteTimer = null;
+    }
+
+    if (!state.pendingRemoteState || state.isViewingSnapshot) {
+      return;
+    }
+
+    if (isBankerInputFocused()) {
+      state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
+      return;
+    }
+
+    const pending = state.pendingRemoteState;
+    state.pendingRemoteState = null;
+    const revision = Number(pending?.meta?.revision) || 0;
+    applyRemoteStateToUi(pending, revision);
+  }
+
   function applyRemoteState(syncGame) {
     if (!syncGame || typeof syncGame !== 'object') return;
 
@@ -324,22 +375,22 @@
     }
 
     state.currentLiveState = syncGame;
-    state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
 
     if (state.isViewingSnapshot) {
+      state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
       setStatus(`Cloud: viewing snapshot • live updated to rev ${state.lastSeenRevision}`);
       return;
     }
 
-    state.isApplyingRemote = true;
-    try {
-      const ok = window.GolfApp?.storage?.applySyncGameState?.(syncGame, 'remote');
-      if (!ok) {
-        console.warn('[CloudSync] Failed to apply remote sync state');
+    if (state.session?.role === 'editor' && isBankerInputFocused()) {
+      state.pendingRemoteState = syncGame;
+      if (!state.pendingRemoteTimer) {
+        state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
       }
-    } finally {
-      state.isApplyingRemote = false;
+      return;
     }
+
+    applyRemoteStateToUi(syncGame, revision);
   }
 
   function bindSnapshotList(gameId) {
@@ -509,6 +560,9 @@
   async function leaveSession() {
     unbindRealtime();
     clearTimeout(state.pushTimer);
+    clearTimeout(state.pendingRemoteTimer);
+    state.pendingRemoteTimer = null;
+    state.pendingRemoteState = null;
     state.session = null;
     state.lastSeenRevision = 0;
     state.lastSnapshotAt = 0;
