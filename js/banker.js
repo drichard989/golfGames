@@ -1446,16 +1446,17 @@
         });
         
         this._initialized = true;
-        
-        // Check if there's a pending state to restore (from page load)
+
+        // Apply pending state synchronously — the table is already built at this
+        // point so there is no need to defer.  A setTimeout here creates a race
+        // where AppManager.recalcGames() fires first and renders empty results.
         if (this._pendingState) {
-          // Apply immediately after table is built
-          setTimeout(() => {
-            this.setState(this._pendingState);
-            this._pendingState = null;
-          }, 100);
+          this.setState(this._pendingState);
+          this._pendingState = null;
         } else {
-          // After initial build, restore saved state if available
+          // No pending state — try to load from localStorage as a safety net.
+          // Use a short delay so that Storage.load() (which may still be in
+          // progress when init() is called) has time to finish writing scores.
           setTimeout(() => {
             const savedState = localStorage.getItem('golf_scorecard_v5');
             if (savedState) {
@@ -1468,7 +1469,7 @@
                 console.error('[Banker] Failed to restore state on init:', e);
               }
             }
-          }, 200);
+          }, 80);
         }
       } else {
         // On subsequent opens, just refresh the UI without clearing data

@@ -2170,6 +2170,18 @@
         // Restore Banker state
         if(s.banker?.state && typeof window.Banker?.setState === 'function') {
           window.Banker.setState(s.banker.state);
+
+          // Belt-and-suspenders: if Banker was already initialized when setState
+          // ran it applied directly to the DOM, but scores may not have been
+          // written to the DOM yet (they go through a setTimeout(0) for
+          // highlighting).  Re-apply after a short delay so compute() sees
+          // the final score values.
+          const bankerStateSnapshot = s.banker.state;
+          setTimeout(() => {
+            if (window.Banker?._initialized && bankerStateSnapshot) {
+              window.Banker.setState(bankerStateSnapshot);
+            }
+          }, 160);
         };
 
         // Restore Skins options
