@@ -1852,6 +1852,7 @@
         this.load({
           applyLocalUi: false,
           announceRestore: false,
+          resetBeforeApply: false,
           source
         });
         return true;
@@ -1871,6 +1872,7 @@
       const {
         applyLocalUi = true,
         announceRestore = true,
+        resetBeforeApply = true,
         source = 'local'
       } = options || {};
       
@@ -1895,7 +1897,11 @@
         const s = this.normalizeLoadedState(JSON.parse(raw));
 
         const targetPlayers = Array.isArray(s.players) ? s.players.length : MIN_PLAYERS;
-        this.prepareForIncomingSyncState(targetPlayers);
+        if (resetBeforeApply) {
+          this.prepareForIncomingSyncState(targetPlayers);
+        } else {
+          this.syncPlayerRowCount(targetPlayers);
+        }
         
         // Restore course selection
         if(s.course && COURSES[s.course]){

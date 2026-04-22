@@ -1464,6 +1464,7 @@ tfoot td {
   text-align: center;
   line-height: 1.1;
   max-width: 90px;
+  min-height: 20px;
   word-wrap: break-word;
   margin: 0;
   padding: 0;
