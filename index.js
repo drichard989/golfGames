@@ -1495,6 +1495,17 @@
           junk: $(ids.junkSection)?.classList.contains("open") || false,
           hilo: $(ids.hiloSection)?.classList.contains("open") || false
         },
+        optionsPanels: (() => {
+          const state = {};
+          document.querySelectorAll('.game-options-toggle[data-target]').forEach((toggleBtn) => {
+            const targetId = toggleBtn.getAttribute('data-target');
+            if (!targetId) return;
+            const panel = document.getElementById(targetId);
+            if (!panel) return;
+            state[targetId] = !panel.hidden;
+          });
+          return state;
+        })(),
         primaryTab: getPrimaryTab(),
         activeGame: getActiveGameTab(),
         fontSize: Config.FONT_SIZE || 'medium',
@@ -2090,6 +2101,20 @@
           }
 
           syncPrimaryTabUi(preferredPrimaryTab);
+
+          const optionsPanels = s.localUi?.optionsPanels;
+          if (optionsPanels && typeof optionsPanels === 'object') {
+            Object.entries(optionsPanels).forEach(([targetId, isOpen]) => {
+              const panel = document.getElementById(targetId);
+              const toggleBtn = document.querySelector(`.game-options-toggle[data-target="${targetId}"]`);
+              if (!panel || !toggleBtn) return;
+
+              const open = !!isOpen;
+              panel.hidden = !open;
+              toggleBtn.classList.toggle('is-open', open);
+              toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            });
+          }
         }
 
         // Recalculate all games with restored data
@@ -3766,6 +3791,30 @@
     $(ids.toggleHilo).addEventListener("click", ()=>setGameTab("hilo"));
     $(ids.toggleSkins).addEventListener("click", ()=>setGameTab("skins"));
     document.getElementById('toggleJunk')?.addEventListener('click', () => setGameTab('junk'));
+
+    const bindGameOptionsToggles = () => {
+      const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
+      toggles.forEach((toggleBtn) => {
+        const targetId = toggleBtn.getAttribute('data-target');
+        if (!targetId) return;
+
+        const panel = document.getElementById(targetId);
+        if (!panel) return;
+
+        const syncState = (isOpen) => {
+          panel.hidden = !isOpen;
+          toggleBtn.classList.toggle('is-open', isOpen);
+          toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        };
+
+        syncState(!panel.hidden);
+        toggleBtn.addEventListener('click', () => {
+          syncState(panel.hidden);
+          Storage.saveDebounced();
+        });
+      });
+    };
+    bindGameOptionsToggles();
     
     // Clear Junk Achievements button
     document.getElementById('clearJunkAchievements')?.addEventListener('click', () => {
