@@ -788,6 +788,7 @@
   }
 
   function syncFrozenScorecardHeader() {
+    const body = document.body;
     const host = document.getElementById('scorecardFrozenHost');
     const fixedWrap = host?.querySelector('.scorecard-frozen-fixed');
     const scrollWrap = document.getElementById('scorecardFrozenScroll');
@@ -799,9 +800,15 @@
     const scrollSource = document.getElementById('scorecard');
     if (!host || !fixedWrap || !scrollWrap || !fixedTarget || !scrollTarget || !fixedPane || !scrollPane || !fixedSource || !scrollSource) return;
 
-    const isScore = document.body?.classList.contains('mode-score');
+    const isScore = body?.classList.contains('mode-score');
     host.hidden = !isScore;
-    if (!isScore) return;
+    if (!isScore) {
+      body?.classList.remove('frozen-ready');
+      return;
+    }
+
+    // Keep originals visible while measuring, then hide them once clone is synced.
+    body?.classList.remove('frozen-ready');
 
     const cloneRowsInto = (rows, targetTable) => {
       targetTable.innerHTML = '';
@@ -870,6 +877,7 @@
     scrollTarget.style.minWidth = `${scrollTableWidth}px`;
 
     scrollWrap.scrollLeft = scrollPane.scrollLeft;
+    body?.classList.add('frozen-ready');
   }
 
   function setupGamesPanelScrollSync() {
