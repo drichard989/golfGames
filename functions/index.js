@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
 
@@ -11,6 +12,8 @@ const EDIT_CODE_LENGTH = 8;
 const VIEW_CODE_LENGTH = 8;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const MAX_CODE_ATTEMPTS = 10;
+const DATA_RETENTION_DAYS = 5;
+const RETENTION_MS = DATA_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 function nowTs() {
   return Date.now();
@@ -184,3 +187,73 @@ exports.redeemGameCode = onCall({ region: REGION }, async (request) => {
     role: targetRole
   };
 });
+
+exports.cleanupOldCloudData = onSchedule(
+  {
+    region: REGION,
+    schedule: 'every 6 hours',
+    timeZone: 'Etc/UTC'
+  },
+  async () => {
+    const cutoffTs = nowTs() - RETENTION_MS;
+
+    const gamesSnap = await db.ref('games').get();
+    const games = gamesSnap.val() || {};
+
+    const updates = {};
+    let deletedGames = 0;
+    let deletedSnapshots = 0;
+    let deletedCodeMapEntries = 0;
+
+    Object.entries(games).forEach(([gameId, gameData]) => {
+      const meta = gameData?.meta || {};
+      const gameUpdatedAt = Number(meta.updatedAt) || Number(meta.createdAt) || 0;
+
+      if (gameUpdatedAt > 0 && gameUpdatedAt < cutoffTs) {
+        updates[`games/${gameId}`] = null;
+        deletedGames += 1;
+
+        const editCode = gameData?.codes?.editCode;
+        const viewCode = gameData?.codes?.viewCode;
+        if (editCode) {
+          updates[`codeMap/${String(editCode).toUpperCase()}`] = null;
+          deletedCodeMapEntries += 1;
+        }
+        if (viewCode) {
+          updates[`codeMap/${String(viewCode).toUpperCase()}`] = null;
+          deletedCodeMapEntries += 1;
+        }
+        return;
+      }
+
+      const snapshots = gameData?.snapshots || {};
+      Object.entries(snapshots).forEach(([snapshotId, snapshotData]) => {
+        const snapshotCreatedAt = Number(snapshotData?.createdAt) || Number(snapshotId) || 0;
+        if (snapshotCreatedAt > 0 && snapshotCreatedAt < cutoffTs) {
+          updates[`games/${gameId}/snapshots/${snapshotId}`] = null;
+          deletedSnapshots += 1;
+        }
+      });
+    });
+
+    if (Object.keys(updates).length > 0) {
+      await db.ref().update(updates);
+    }
+
+    logger.info('cleanupOldCloudData complete', {
+      retentionDays: DATA_RETENTION_DAYS,
+      cutoffTs,
+      deletedGames,
+      deletedSnapshots,
+      deletedCodeMapEntries
+    });
+
+    return {
+      ok: true,
+      retentionDays: DATA_RETENTION_DAYS,
+      deletedGames,
+      deletedSnapshots,
+      deletedCodeMapEntries
+    };
+  }
+);

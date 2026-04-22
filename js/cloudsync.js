@@ -9,8 +9,13 @@
     joinBtn: () => document.getElementById('cloudJoinBtn'),
     leaveBtn: () => document.getElementById('cloudLeaveBtn'),
     joinCode: () => document.getElementById('cloudJoinCode'),
+    snapshotSelect: () => document.getElementById('cloudSnapshotSelect'),
+    loadSnapshotBtn: () => document.getElementById('cloudLoadSnapshotBtn'),
+    resumeLiveBtn: () => document.getElementById('cloudResumeLiveBtn'),
+    saveSnapshotBtn: () => document.getElementById('cloudSaveSnapshotBtn'),
     status: () => document.getElementById('cloudStatus'),
-    codes: () => document.getElementById('cloudCodes')
+    codes: () => document.getElementById('cloudCodes'),
+    snapshotStatus: () => document.getElementById('cloudSnapshotStatus')
   };
 
   const state = {
@@ -22,10 +27,15 @@
     user: null,
     session: null, // { gameId, role, editCode?, viewCode? }
     unsubRef: null,
+    snapshotListRef: null,
     isApplyingRemote: false,
+    isViewingSnapshot: false,
     pushTimer: null,
     lastSeenRevision: 0,
     lastSnapshotAt: 0,
+    currentLiveState: null,
+    activeSnapshotId: '',
+    snapshots: [],
     originalSave: null
   };
 
@@ -39,6 +49,87 @@
     if (!el) return;
     el.textContent = text;
     el.style.display = visible ? '' : 'none';
+  }
+
+  function setSnapshotStatus(text, visible = false) {
+    const el = EL.snapshotStatus();
+    if (!el) return;
+    el.textContent = text;
+    el.style.display = visible ? '' : 'none';
+  }
+
+  function formatSnapshotLabel(snapshot) {
+    const createdAt = Number(snapshot?.createdAt) || 0;
+    const dateText = createdAt
+      ? new Date(createdAt).toLocaleString([], {
+          month: 'short',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: '2-digit'
+        })
+      : 'Unknown time';
+    const revision = Number(snapshot?.revision) || Number(snapshot?.state?.meta?.revision) || 0;
+    const source = snapshot?.source === 'manual-restore' ? 'restored' : snapshot?.source === 'manual-save' ? 'manual' : 'auto';
+    return revision ? `${dateText} • rev ${revision} • ${source}` : `${dateText} • ${source}`;
+  }
+
+  function getSnapshotById(snapshotId) {
+    return state.snapshots.find((snapshot) => snapshot.id === snapshotId) || null;
+  }
+
+  function renderSnapshotOptions() {
+    const selectEl = EL.snapshotSelect();
+    if (!selectEl) return;
+
+    const currentValue = state.activeSnapshotId || '';
+    selectEl.innerHTML = '';
+
+    const liveOption = document.createElement('option');
+    liveOption.value = '';
+    liveOption.textContent = 'Live current version';
+    selectEl.appendChild(liveOption);
+
+    state.snapshots.forEach((snapshot) => {
+      const option = document.createElement('option');
+      option.value = snapshot.id;
+      option.textContent = formatSnapshotLabel(snapshot);
+      selectEl.appendChild(option);
+    });
+
+    if (currentValue && getSnapshotById(currentValue)) {
+      selectEl.value = currentValue;
+    } else {
+      selectEl.value = '';
+      if (!state.isViewingSnapshot) {
+        state.activeSnapshotId = '';
+      }
+    }
+  }
+
+  function syncSnapshotButtons() {
+    const canUseSnapshots = !!state.session;
+    const canReview = canUseSnapshots && !!EL.snapshotSelect()?.value;
+    const isEditor = state.session?.role === 'editor';
+
+    const selectEl = EL.snapshotSelect();
+    if (selectEl) selectEl.disabled = !canUseSnapshots;
+
+    const loadBtn = EL.loadSnapshotBtn();
+    if (loadBtn) loadBtn.disabled = !canReview;
+
+    const resumeBtn = EL.resumeLiveBtn();
+    if (resumeBtn) resumeBtn.disabled = !canUseSnapshots || !state.isViewingSnapshot;
+
+    const saveBtn = EL.saveSnapshotBtn();
+    if (saveBtn) saveBtn.disabled = !canUseSnapshots || !state.isViewingSnapshot || !isEditor;
+  }
+
+  function resetSnapshotReviewUi() {
+    state.isViewingSnapshot = false;
+    state.activeSnapshotId = '';
+    renderSnapshotOptions();
+    setSnapshotStatus('', false);
+    syncSnapshotButtons();
   }
 
   function normalizeCode(code) {
@@ -94,6 +185,8 @@
     if (!state.session) {
       setStatus('Cloud: not connected');
       setCodesText('', false);
+      state.snapshots = [];
+      resetSnapshotReviewUi();
       return;
     }
 
@@ -108,6 +201,9 @@
     } else {
       setCodesText('', false);
     }
+
+    renderSnapshotOptions();
+    syncSnapshotButtons();
   }
 
   function unbindRealtime() {
@@ -115,6 +211,35 @@
       state.unsubRef.off();
       state.unsubRef = null;
     }
+
+    if (state.snapshotListRef) {
+      state.snapshotListRef.off();
+      state.snapshotListRef = null;
+    }
+  }
+
+  function writeSnapshot(syncGame, source = 'auto') {
+    if (!state.session || state.session.role !== 'editor' || !state.db || !syncGame) return Promise.resolve(null);
+
+    const timestamp = Date.now();
+    const snapshotPath = `games/${state.session.gameId}/snapshots/${timestamp}`;
+    const payload = {
+      createdAt: timestamp,
+      createdBy: state.user?.uid || 'unknown',
+      revision: Number(syncGame?.meta?.revision) || 0,
+      source,
+      state: syncGame
+    };
+
+    state.lastSnapshotAt = timestamp;
+
+    return Promise.all([
+      state.db.ref(snapshotPath).set(payload),
+      state.db.ref(`games/${state.session.gameId}/meta/lastSnapshotAt`).set(timestamp)
+    ]).then(() => payload).catch((err) => {
+      console.warn('[CloudSync] snapshot write failed:', err);
+      return null;
+    });
   }
 
   function maybeSnapshot(syncGame) {
@@ -122,27 +247,15 @@
     const now = Date.now();
     if (now - state.lastSnapshotAt < SNAPSHOT_INTERVAL_MS) return Promise.resolve();
 
-    const snapshotPath = `games/${state.session.gameId}/snapshots/${now}`;
-    const metaPath = `games/${state.session.gameId}/meta/lastSnapshotAt`;
-    state.lastSnapshotAt = now;
-
-    return Promise.all([
-      state.db.ref(snapshotPath).set({
-        createdAt: now,
-        createdBy: state.user?.uid || 'unknown',
-        revision: Number(syncGame?.meta?.revision) || 0,
-        state: syncGame
-      }),
-      state.db.ref(metaPath).set(now)
-    ]).catch((err) => {
-      console.warn('[CloudSync] snapshot write failed:', err);
-    });
+    return writeSnapshot(syncGame, 'auto').then(() => undefined);
   }
 
-  async function pushNow() {
+  async function pushNow(options = {}) {
     if (!state.session || state.session.role !== 'editor' || state.isApplyingRemote) return;
     const syncGame = window.GolfApp?.storage?.getSyncGameState?.();
     if (!syncGame) return;
+
+    const { forceSnapshot = false, snapshotSource = 'auto' } = options;
 
     const now = Date.now();
     const baseRevision = Number(syncGame?.meta?.revision) || 0;
@@ -163,11 +276,17 @@
     await state.db.ref(`${gameRoot}/meta/updatedBy`).set(state.user?.uid || 'local-client');
 
     state.lastSeenRevision = nextRevision;
-    await maybeSnapshot(syncGame);
+    state.currentLiveState = syncGame;
+
+    if (forceSnapshot) {
+      await writeSnapshot(syncGame, snapshotSource);
+    } else {
+      await maybeSnapshot(syncGame);
+    }
   }
 
   function queuePush(reason = 'local-change') {
-    if (!state.session || state.session.role !== 'editor') return;
+    if (!state.session || state.session.role !== 'editor' || state.isViewingSnapshot) return;
     clearTimeout(state.pushTimer);
     state.pushTimer = setTimeout(() => {
       pushNow().catch((err) => {
@@ -184,7 +303,7 @@
     state.originalSave = storage.save.bind(storage);
     storage.save = function(...args) {
       const ok = state.originalSave(...args);
-      if (ok && !state.isApplyingRemote) {
+      if (ok && !state.isApplyingRemote && !state.isViewingSnapshot) {
         queuePush('storage-save');
       }
       return ok;
@@ -204,16 +323,107 @@
       return;
     }
 
+    state.currentLiveState = syncGame;
+    state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
+
+    if (state.isViewingSnapshot) {
+      setStatus(`Cloud: viewing snapshot • live updated to rev ${state.lastSeenRevision}`);
+      return;
+    }
+
     state.isApplyingRemote = true;
     try {
       const ok = window.GolfApp?.storage?.applySyncGameState?.(syncGame, 'remote');
       if (!ok) {
         console.warn('[CloudSync] Failed to apply remote sync state');
       }
-      state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
     } finally {
       state.isApplyingRemote = false;
     }
+  }
+
+  function bindSnapshotList(gameId) {
+    if (!state.db) return;
+
+    if (state.snapshotListRef) {
+      state.snapshotListRef.off();
+      state.snapshotListRef = null;
+    }
+
+    const ref = state.db.ref(`games/${gameId}/snapshots`).limitToLast(50);
+    state.snapshotListRef = ref;
+    ref.on('value', (snap) => {
+      const value = snap.val() || {};
+      const snapshots = Object.entries(value)
+        .map(([id, snapshot]) => ({ id, ...(snapshot || {}) }))
+        .sort((a, b) => (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0));
+      state.snapshots = snapshots;
+      renderSnapshotOptions();
+      syncSnapshotButtons();
+    }, (err) => {
+      console.error('[CloudSync] snapshot list error:', err);
+    });
+  }
+
+  async function reviewSelectedSnapshot() {
+    const snapshotId = EL.snapshotSelect()?.value || '';
+    if (!snapshotId) {
+      resetSnapshotReviewUi();
+      if (state.currentLiveState) {
+        window.GolfApp?.storage?.applySyncGameState?.(state.currentLiveState, 'remote');
+      }
+      setStatus(`Cloud: connected (${state.session?.role || 'viewer'}) • Game ${state.session?.gameId}`);
+      return;
+    }
+
+    const snapshot = getSnapshotById(snapshotId);
+    if (!snapshot?.state) {
+      throw new Error('Snapshot not found');
+    }
+
+    state.isViewingSnapshot = true;
+    state.activeSnapshotId = snapshotId;
+
+    const ok = window.GolfApp?.storage?.applySyncGameState?.(snapshot.state, 'snapshot');
+    if (!ok) {
+      throw new Error('Failed to load snapshot');
+    }
+
+    setStatus(`Cloud: reviewing snapshot • Game ${state.session?.gameId}`);
+    setSnapshotStatus(`Snapshot loaded: ${formatSnapshotLabel(snapshot)}. Edits stay local until saved as current.`, true);
+    renderSnapshotOptions();
+    syncSnapshotButtons();
+  }
+
+  async function resumeLiveState() {
+    if (!state.currentLiveState) {
+      resetSnapshotReviewUi();
+      updateUiForSession();
+      return;
+    }
+
+    const ok = window.GolfApp?.storage?.applySyncGameState?.(state.currentLiveState, 'remote');
+    if (!ok) {
+      throw new Error('Failed to restore live state');
+    }
+
+    resetSnapshotReviewUi();
+    updateUiForSession();
+  }
+
+  async function saveReviewedSnapshotAsCurrent() {
+    if (!state.session || state.session.role !== 'editor') {
+      throw new Error('Editor access required');
+    }
+    if (!state.isViewingSnapshot) {
+      throw new Error('Load a snapshot first');
+    }
+
+    setStatus('Cloud: saving reviewed snapshot...');
+    await pushNow({ forceSnapshot: true, snapshotSource: 'manual-restore' });
+    resetSnapshotReviewUi();
+    updateUiForSession();
+    setSnapshotStatus('Snapshot saved as the new current live version.', true);
   }
 
   async function subscribeRealtime(gameId) {
@@ -222,6 +432,7 @@
 
     const metaSnap = await state.db.ref(`games/${gameId}/meta/lastSnapshotAt`).get().catch(() => null);
     state.lastSnapshotAt = Number(metaSnap?.val?.() ?? metaSnap?.val?.lastSnapshotAt ?? 0) || 0;
+    bindSnapshotList(gameId);
 
     const ref = state.db.ref(`games/${gameId}/state`);
     state.unsubRef = ref;
@@ -301,6 +512,8 @@
     state.session = null;
     state.lastSeenRevision = 0;
     state.lastSnapshotAt = 0;
+    state.currentLiveState = null;
+    state.snapshots = [];
     storeSession(null);
     updateUiForSession();
   }
@@ -328,6 +541,40 @@
 
     EL.leaveBtn()?.addEventListener('click', async () => {
       await leaveSession();
+    });
+
+    EL.snapshotSelect()?.addEventListener('change', () => {
+      state.activeSnapshotId = EL.snapshotSelect()?.value || '';
+      syncSnapshotButtons();
+    });
+
+    EL.loadSnapshotBtn()?.addEventListener('click', async () => {
+      try {
+        setStatus('Cloud: loading snapshot...');
+        await reviewSelectedSnapshot();
+      } catch (err) {
+        console.error('[CloudSync] snapshot review failed:', err);
+        setStatus(`Cloud: ${err.message}`);
+      }
+    });
+
+    EL.resumeLiveBtn()?.addEventListener('click', async () => {
+      try {
+        setStatus('Cloud: returning to live...');
+        await resumeLiveState();
+      } catch (err) {
+        console.error('[CloudSync] resume live failed:', err);
+        setStatus(`Cloud: ${err.message}`);
+      }
+    });
+
+    EL.saveSnapshotBtn()?.addEventListener('click', async () => {
+      try {
+        await saveReviewedSnapshotAsCurrent();
+      } catch (err) {
+        console.error('[CloudSync] save reviewed snapshot failed:', err);
+        setStatus(`Cloud: ${err.message}`);
+      }
     });
   }
 
