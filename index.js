@@ -1503,10 +1503,8 @@
           window.Junk?.update();
         }
         
-        // Update stroke highlighting with new HCPMEN
-        if(typeof window.updateStrokeHighlights === 'function'){
-          window.updateStrokeHighlights();
-        }
+        // Re-apply stroke highlighting after course handicap indexes change.
+        Scorecard.calc.applyStrokeHighlighting();
         
         Storage.saveDebounced();
       },
@@ -2394,10 +2392,8 @@
         window.Junk.clearAllAchievements();
       }
       
-      // Update stroke highlights after clearing
-      if(typeof updateStrokeHighlights === 'function') {
-        updateStrokeHighlights();
-      }
+      // Update stroke highlights after clearing.
+      Scorecard.calc.applyStrokeHighlighting();
       
       Utils.announce("All fields cleared.");
     },
@@ -3037,10 +3033,8 @@
     Scorecard.calc.recalcAll();
     Scorecard.player.syncOverlay();
     
-    // Update stroke highlights with new handicaps
-    if(typeof window.updateStrokeHighlights === 'function') {
-      window.updateStrokeHighlights();
-    }
+    // Update stroke highlights with new handicaps.
+    Scorecard.calc.applyStrokeHighlighting();
     
     // Import Banker data if present
     if (bankerRows.length > 0 && window.Banker && typeof window.Banker.setState === 'function') {

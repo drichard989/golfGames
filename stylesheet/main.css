@@ -1434,6 +1434,40 @@ tfoot td {
   color: #14532d;
 }
 
+.vegas-toggle-btn,
+.vegas-choice-btn,
+.skins-toggle-btn,
+.junk-toggle-btn {
+  position: relative;
+  gap: 0;
+}
+
+.vegas-toggle-btn input,
+.vegas-choice-btn input,
+.skins-toggle-btn input,
+.junk-toggle-btn input {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
+}
+
+.vegas-toggle-btn:has(input:focus-visible),
+.vegas-choice-btn:has(input:focus-visible),
+.skins-toggle-btn:has(input:focus-visible),
+.junk-toggle-btn:has(input:focus-visible) {
+  outline: 2px solid rgba(104, 211, 145, 0.75);
+  outline-offset: 2px;
+}
+
 @media (max-width: 720px) {
   .skins-half-wrap {
     margin-left: 0;
@@ -2221,7 +2255,7 @@ input[type="text"] {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-sm);
-  align-items: flex-start;
+  align-items: center;
 }
 
 /* par badge tighter below header */
