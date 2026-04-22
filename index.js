@@ -2680,10 +2680,14 @@
   
   if(!section || !toggleBtn) return;
 
+  const LABEL_CLOSED = '⚙️ Utilities (Closed)';
+  const LABEL_OPEN = '⚙️ Utilities (Open)';
+
   const syncUtilitiesToggleState = () => {
     const isOpen = section.classList.contains('open');
     toggleBtn.classList.toggle('is-open', isOpen);
     toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    toggleBtn.textContent = isOpen ? LABEL_OPEN : LABEL_CLOSED;
   };
 
   syncUtilitiesToggleState();
