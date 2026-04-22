@@ -3239,15 +3239,18 @@
   }
 
   function jumpToNextEmptyScore() {
-    const targetInput = getFirstPlayerNextEmptyInput();
-    if (!targetInput) {
-      announce('Player 1 has all holes filled.');
-      return;
-    }
+    const firstEmptyInput = getFirstPlayerNextEmptyInput();
+    const fallbackInput = document.querySelector('#scorecard .score-input[data-player="0"][data-hole="1"]');
+    const targetInput = firstEmptyInput || fallbackInput;
 
     const scorecard = document.getElementById('main-scorecard');
     if (scorecard) {
       scorecard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    if (!targetInput) {
+      announce('Opened scorecard.');
+      return;
     }
 
     const hole = Number(targetInput.dataset.hole) || 1;
@@ -3255,7 +3258,11 @@
       targetInput.focus();
       targetInput.select?.();
       targetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      announce(`Jumped to Player 1, Hole ${hole}.`);
+      if (firstEmptyInput) {
+        announce(`Jumped to Player 1, Hole ${hole}.`);
+      } else {
+        announce('Player 1 has all holes filled.');
+      }
     }, 140);
   }
 
@@ -3324,30 +3331,30 @@
     restorePosition();
 
     const updateVisibility = () => {
-      const scorecardVisible = isElementMostlyVisible(document.getElementById('main-scorecard'));
-      const gamesVisible = isElementMostlyVisible(document.querySelector('.gamesbar'));
+      const gamesBar = document.querySelector('.gamesbar');
+      if (!gamesBar) {
+        nextBtn.style.display = 'none';
+        gamesBtn.style.display = '';
+        return;
+      }
+
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.5);
+      const gamesTopY = gamesBar.getBoundingClientRect().top + scrollY;
+      const inGamesContext = viewportMidY >= (gamesTopY - 40);
 
       const setNextBtnLabel = (isGamesContext) => {
         nextBtn.textContent = isGamesContext ? '⛳ Scorecard' : '⛳ Next Empty';
       };
 
-      // Show the button that jumps to the opposite area to reduce clutter.
-      if (scorecardVisible && !gamesVisible) {
-        setNextBtnLabel(false);
-        nextBtn.style.display = 'none';
-        gamesBtn.style.display = '';
-      } else if (gamesVisible && !scorecardVisible) {
+      // Always show exactly one nav button based on current scroll context.
+      if (inGamesContext) {
         setNextBtnLabel(true);
         nextBtn.style.display = '';
         gamesBtn.style.display = 'none';
-      } else if (scorecardVisible && gamesVisible) {
-        setNextBtnLabel(false);
-        nextBtn.style.display = 'none';
-        gamesBtn.style.display = 'none';
       } else {
         setNextBtnLabel(false);
-        // Between sections: show both shortcuts.
-        nextBtn.style.display = '';
+        nextBtn.style.display = 'none';
         gamesBtn.style.display = '';
       }
     };
