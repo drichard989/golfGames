@@ -161,6 +161,22 @@ header {
   padding: var(--space-md) var(--space-lg) var(--space-sm);
   display: grid;
   gap: var(--space-sm);
+  /* Smooth collapse when Games tab is active */
+  transition: max-height 0.22s ease, opacity 0.18s ease, padding 0.22s ease;
+  max-height: 800px;
+  overflow: hidden;
+}
+
+header.games-active {
+  max-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#parBadge.games-active {
+  display: none;
 }
 
 h1 {
@@ -499,6 +515,28 @@ input[type="text"] {
   color: #ffd9d9;
   background: rgba(128, 28, 28, 0.35);
   border-color: rgba(255, 107, 107, 0.75);
+}
+
+/* Create Live Session button — light green accent */
+#cloudCreateBtn {
+  background: rgba(28, 118, 67, 0.28);
+  border-color: rgba(104, 211, 145, 0.55);
+  color: #d9ffe9;
+}
+
+#cloudCreateBtn:hover {
+  background: rgba(28, 118, 67, 0.42);
+  border-color: rgba(104, 211, 145, 0.8);
+}
+
+:root[data-theme="light"] #cloudCreateBtn {
+  background: rgba(34, 160, 90, 0.12);
+  border-color: rgba(34, 160, 90, 0.45);
+  color: #1a6640;
+}
+
+:root[data-theme="light"] #cloudCreateBtn:hover {
+  background: rgba(34, 160, 90, 0.22);
 }
 
 /* Compact cloud status badge in header (next to Add Player) */
