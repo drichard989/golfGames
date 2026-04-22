@@ -240,6 +240,7 @@
    * Persist state using app-level debounced saver if available.
    */
   function queueSave() {
+    if (window.Banker?._isRestoringState) return;
     if (typeof window.saveDebounced === 'function') {
       window.saveDebounced();
     }
@@ -517,6 +518,7 @@
   const Banker = {
     _initialized: false,
     _pendingState: null,  // Store state for restoration after init
+    _isRestoringState: false,
 
     /**
      * Refresh banker stroke badges for all holes.
@@ -640,47 +642,51 @@
         this._pendingState = sanitizedState;
         return;
       }
-      
-      // Delay to ensure DOM is ready
-      setTimeout(() => {
+
+      this._isRestoringState = true;
+      try {
+        // Pass 1: apply per-hole selections and static controls without dispatching events.
         sanitizedState.holes.forEach((holeState, idx) => {
           const h = idx + 1;
-          
-          // Set banker selection
+
           const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
           if (bankerSelect && holeState.banker !== undefined) {
             bankerSelect.value = String(holeState.banker);
-            // Trigger change event to update bet inputs
-            bankerSelect.dispatchEvent(new Event('change'));
           }
-          
-          // Set max bet
+
           const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
           if (maxBetInput && holeState.maxBet !== undefined) {
             maxBetInput.value = String(holeState.maxBet);
           }
-          
-          // Set banker double
+
           const bankerDoubleBtn = document.getElementById(DOM_IDS.bankerDouble(h));
           setToggleButtonState(bankerDoubleBtn, !!holeState.bankerDouble);
-          
-          // Set player bets
-          if (holeState.bets && Array.isArray(holeState.bets)) {
-            holeState.bets.forEach(bet => {
-              const betInput = document.getElementById(DOM_IDS.betInput(bet.player, h));
-              if (betInput) {
-                betInput.value = String(bet.amount || 0);
-              }
-              
-              const doubleBtn = document.getElementById(DOM_IDS.playerDouble(bet.player, h));
-              setToggleButtonState(doubleBtn, !!bet.doubled);
-            });
-          }
         });
-        
-        // Update calculations after state is restored
+
+        // Build per-player bet rows from banker selections once.
+        this.updateBetInputs();
+
+        // Pass 2: apply bet amounts and player doubles.
+        sanitizedState.holes.forEach((holeState, idx) => {
+          const h = idx + 1;
+          if (!Array.isArray(holeState.bets)) return;
+
+          holeState.bets.forEach((bet) => {
+            const betInput = document.getElementById(DOM_IDS.betInput(bet.player, h));
+            if (betInput) {
+              betInput.value = String(bet.amount || 0);
+            }
+
+            const doubleBtn = document.getElementById(DOM_IDS.playerDouble(bet.player, h));
+            setToggleButtonState(doubleBtn, !!bet.doubled);
+          });
+        });
+
+        // Final single recalculation.
         this.update();
-      }, 150);
+      } finally {
+        this._isRestoringState = false;
+      }
     },
     
     /**
