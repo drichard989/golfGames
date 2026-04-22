@@ -495,6 +495,17 @@
 
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
+  let headerManuallyCollapsed = false;
+
+  function syncHeaderCollapseBtn() {
+    const btn = document.getElementById('headerCollapseBtn');
+    if (!btn) return;
+    const isCollapsed = headerManuallyCollapsed || getPrimaryTab() === 'games';
+    btn.textContent = isCollapsed ? '▼ Show' : '▲ Hide';
+    btn.setAttribute('aria-label', isCollapsed ? 'Show header' : 'Hide header');
+    btn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+  }
+
   const PRIMARY_TAB_SCROLL_POSITIONS = { score: 0, games: 0 };
   const GAME_TAB_SCROLL_POSITIONS = {
     junk: 0,
@@ -688,7 +699,13 @@
     } else {
       appHeader?.classList.remove('games-active');
       parBadge?.classList.remove('games-active');
+      // Re-apply manual collapse if the user had hidden it while on Score tab.
+      if (headerManuallyCollapsed) {
+        appHeader?.classList.add('header-collapsed');
+        parBadge?.classList.add('header-collapsed');
+      }
     }
+    syncHeaderCollapseBtn();
 
     syncPrimaryTabUi(which);
     if (which === 'games') {
@@ -4203,6 +4220,19 @@
     const removePlayerBtn = document.getElementById('removePlayerBtn');
     if (addPlayerBtn) addPlayerBtn.addEventListener("click", addPlayer);
     if (removePlayerBtn) removePlayerBtn.addEventListener("click", removePlayer);
+
+    // Header collapse toggle
+    document.getElementById('headerCollapseBtn')?.addEventListener('click', () => {
+      const appHeader = document.querySelector('header');
+      const parBadge = document.getElementById('parBadge');
+      headerManuallyCollapsed = !headerManuallyCollapsed;
+      appHeader?.classList.toggle('header-collapsed', headerManuallyCollapsed);
+      parBadge?.classList.toggle('header-collapsed', headerManuallyCollapsed);
+      syncHeaderCollapseBtn();
+      // Recalculate games panel height after header reflows.
+      requestAnimationFrame(() => syncGamesPanelHeight());
+    });
+    syncHeaderCollapseBtn();
 
     // Ensure font size controls exist (fallback for stale cached HTML)
     if (!document.getElementById('fontSizeSmall') || !document.getElementById('fontSizeMedium') || !document.getElementById('fontSizeLarge')) {
