@@ -1896,6 +1896,16 @@ input[type="text"] {
   border-radius: var(--radius-md);
 }
 
+.header-title-row #headerOptionsToggle,
+.header-title-row .header-theme-toggle {
+  height: var(--touch-min);
+  min-height: var(--touch-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
 .cloud-utilities-divider {
   margin: var(--space-md) 0 var(--space-sm);
   border-top: 1px solid var(--line);
@@ -2142,6 +2152,12 @@ input[type="text"] {
 
   .controls {
     gap: 10px;
+  }
+
+  .header-title-row #headerOptionsToggle,
+  .header-title-row .header-theme-toggle {
+    height: var(--touch-comfortable);
+    min-height: var(--touch-comfortable);
   }
 
   .utilities-row {
