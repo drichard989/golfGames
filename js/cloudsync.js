@@ -140,10 +140,11 @@
 
     if (createBtn) {
       const isLive = !!state.session;
-      createBtn.hidden = isLive;
+      createBtn.hidden = false;
       createBtn.disabled = false;
-      createBtn.textContent = 'Go Live';
-      createBtn.title = 'Create live session';
+      createBtn.textContent = isLive ? 'Online' : 'Offline';
+      createBtn.title = isLive ? 'Leave live session' : 'Create live session';
+      createBtn.setAttribute('data-live', isLive ? 'true' : 'false');
     }
 
     if (qrBtn) {
@@ -1428,7 +1429,15 @@
     EL.leaveBtn()?.addEventListener('click', () => leaveSession());
 
     EL.createBadgeBtn()?.addEventListener('click',
-      withCloudOp('create session (badge)', 'Cloud: creating session...', createSession));
+      withCloudOp('toggle live session (badge)', null, async () => {
+        if (state.session) {
+          setStatus('Cloud: leaving session...');
+          await leaveSession();
+          return;
+        }
+        setStatus('Cloud: creating session...');
+        await createSession();
+      }));
 
     EL.qrBadgeBtn()?.addEventListener('click',
       withCloudOp('share QR (badge)', null, async () => {

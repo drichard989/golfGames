@@ -610,13 +610,37 @@
     if (!root) return;
 
     const vv = window.visualViewport;
-    const visualTop = vv ? Math.max(0, Math.round(vv.offsetTop || 0)) : 0;
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+    // visualViewport.offsetTop reflects keyboard/zoom offset, not status bar — don't use for bar height.
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua)
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone;
-    const fallbackTop = (isIOS && standalone) ? 20 : 0;
-    const safeTop = Math.max(visualTop, fallbackTop);
+    const isAndroid = /Android/.test(ua);
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
+      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
+      || window.navigator.standalone === true;
+    const portrait = (window.innerHeight || 0) >= (window.innerWidth || 0);
 
+    // Read what CSS env() resolved to; non-zero means the platform already handled it.
+    // We inject a temporary element to sample the computed value without a stored var.
+    let envTop = 0;
+    try {
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;top:env(safe-area-inset-top,0px);visibility:hidden;pointer-events:none';
+      document.documentElement.appendChild(probe);
+      envTop = Math.round(parseFloat(getComputedStyle(probe).top) || 0);
+      probe.remove();
+    } catch (_) {}
+
+    // Platform fallbacks when env(safe-area-inset-top) is 0 in standalone mode.
+    // iOS portrait: 44px typical dynamic island / notch height.
+    // Android: 24px minimum status bar; modern Android Chrome returns correct env() so fallback rarely fires.
+    let fallbackTop = 0;
+    if (standalone && envTop === 0) {
+      if (isIOS && portrait) fallbackTop = 44;
+      else if (isAndroid) fallbackTop = 24;
+    }
+
+    const safeTop = Math.max(envTop, fallbackTop);
     root.style.setProperty('--safe-top-dynamic', `${safeTop}px`);
   }
 
