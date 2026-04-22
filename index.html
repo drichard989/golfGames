@@ -21,23 +21,28 @@
     <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <header>
-      <h1>Manito Golf Games v.21 PWA</h1>
-      <div class="controls">
-        <div class="control" style="display: inline-block; margin-right: 12px;">
-          <label for="courseSelect" style="margin-right: 4px;">Course:</label>
-          <select id="courseSelect" style="padding: 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
-            <!-- Options populated dynamically from COURSES in index.js -->
-          </select>
-        </div>
-        <button id="utilitiesToggle" class="btn">⚙️ Utilities</button>
-        <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
+      <div class="header-title-row">
+        <h1>Manito Golf Games v.21 PWA</h1>
+        <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
       </div>
-      <div class="controls header-addplayer-row" style="display: flex; gap: 12px; align-items: center;">
-        <button id="addPlayerBtn" class="btn">+ Add Player</button>
-        <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
+      <div class="controls header-addplayer-row header-cloud-row" style="display: flex; gap: 12px; align-items: center;">
         <span id="cloudStatusBadge" class="cloud-status-badge" aria-live="polite" aria-label="Cloud connection status"></span>
       </div>
-      <div id="utilitiesSection" class="utilities-section">
+
+      <div id="headerOptionsPanel" class="game-options-panel header-options-panel" hidden>
+        <div class="controls header-options-controls">
+          <div class="control" style="display: inline-block; margin-right: 12px;">
+            <label for="courseSelect" style="margin-right: 4px;">Course:</label>
+            <select id="courseSelect" style="padding: 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
+              <!-- Options populated dynamically from COURSES in index.js -->
+            </select>
+          </div>
+          <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
+          <button id="utilitiesToggle" class="btn">⚙️ Utilities</button>
+          <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
+        </div>
+
+        <div id="utilitiesSection" class="utilities-section">
         <div class="controls utilities-grid">
           <div class="utilities-row utilities-row-actions">
             <button id="saveBtn" class="btn">💾 Save</button>
@@ -102,6 +107,7 @@
         <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
         <p class="small">If a player is a + handicap, enter it with a leading plus sign (e.g., +2).</p>
         <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Full Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
+        </div>
       </div>
     </header>
 
@@ -180,6 +186,9 @@
           <label class="radio"><input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" /> Full Handicap</label>
         </div>
       </div>
+    </div>
+    <div class="controls scorecard-add-player-row">
+      <button id="addPlayerBtn" class="btn">+ Add Player</button>
     </div>
     </section>
 

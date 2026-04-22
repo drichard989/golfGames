@@ -1691,6 +1691,37 @@ input[type="text"] {
   margin-top: var(--space-xs);
 }
 
+.header-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.header-title-row h1 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.header-cloud-row {
+  margin-top: 2px;
+}
+
+.header-options-panel {
+  margin-top: 2px;
+  padding: var(--space-sm) var(--space-sm) var(--space-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--panel-alt);
+}
+
+.header-options-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
 /* Scorecard Options toggle bar */
 .scorecard-options-bar {
   display: flex;
@@ -1713,6 +1744,10 @@ input[type="text"] {
   align-items: flex-start;
 }
 
+.scorecard-add-player-row {
+  padding: 0 var(--space-lg) var(--space-sm);
+}
+
 /* par badge tighter below header */
 #parBadge {
   margin: 0 var(--space-lg) 2px;
@@ -1731,6 +1766,10 @@ input[type="text"] {
 
   .header-addplayer-row {
     margin-top: 2px;
+  }
+
+  .header-options-panel {
+    padding: 6px var(--space-sm) var(--space-sm);
   }
 
   .entry-switcher {
