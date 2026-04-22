@@ -3216,6 +3216,79 @@
     }, 0);
   }
 
+  function isElementMostlyVisible(el) {
+    if (!el) return false;
+    const rect = el.getBoundingClientRect();
+    const viewportH = window.innerHeight || document.documentElement.clientHeight;
+    const visibleTop = Math.max(rect.top, 0);
+    const visibleBottom = Math.min(rect.bottom, viewportH);
+    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+    const elementHeight = Math.max(1, rect.height || 1);
+    return (visibleHeight / elementHeight) > 0.2;
+  }
+
+  function getFirstPlayerNextEmptyInput() {
+    const playerRow = document.querySelector('#scorecard .player-row[data-player="0"]') || document.querySelector('#scorecard .player-row');
+    if (!playerRow) return null;
+
+    const inputs = Array.from(playerRow.querySelectorAll('input.score-input'));
+    if (!inputs.length) return null;
+
+    const firstEmpty = inputs.find((input) => String(input.value || '').trim() === '');
+    return firstEmpty || null;
+  }
+
+  function jumpToNextEmptyScore() {
+    const targetInput = getFirstPlayerNextEmptyInput();
+    if (!targetInput) {
+      announce('Player 1 has all holes filled.');
+      return;
+    }
+
+    const scorecard = document.getElementById('main-scorecard');
+    if (scorecard) {
+      scorecard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    const hole = Number(targetInput.dataset.hole) || 1;
+    setTimeout(() => {
+      targetInput.focus();
+      targetInput.select?.();
+      targetInput.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      announce(`Jumped to Player 1, Hole ${hole}.`);
+    }, 140);
+  }
+
+  function jumpToGamesLauncher() {
+    const gamesBar = document.querySelector('.gamesbar');
+    if (!gamesBar) return;
+    gamesBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setupFloatingNavButtons() {
+    const nextBtn = document.getElementById('floatingNextScoreBtn');
+    const gamesBtn = document.getElementById('floatingGamesBtn');
+    if (!nextBtn || !gamesBtn) return;
+
+    const updateVisibility = () => {
+      const scorecardVisible = isElementMostlyVisible(document.getElementById('main-scorecard'));
+      const gamesVisible = isElementMostlyVisible(document.querySelector('.gamesbar'));
+
+      nextBtn.style.display = scorecardVisible ? '' : 'none';
+      gamesBtn.style.display = gamesVisible ? '' : 'none';
+    };
+
+    nextBtn.addEventListener('click', jumpToNextEmptyScore);
+    gamesBtn.addEventListener('click', jumpToGamesLauncher);
+
+    const throttledUpdate = Utils.throttle(updateVisibility, 120);
+    window.addEventListener('scroll', throttledUpdate, { passive: true });
+    window.addEventListener('resize', throttledUpdate);
+    document.addEventListener('visibilitychange', throttledUpdate);
+
+    updateVisibility();
+  }
+
   // =============================================================================
   // INITIALIZATION & EVENT WIRING
   // =============================================================================
@@ -3404,14 +3477,22 @@
       }
     });
 
+    const updateVegasNetModeVisibility = () => {
+      const wrap = document.getElementById('vegasNetHcpModeWrap');
+      const useNet = document.getElementById('optUseNet')?.checked;
+      if (!wrap) return;
+      wrap.style.display = useNet ? 'flex' : 'none';
+    };
+
     // Vegas UI + wiring
     window.Vegas?.renderTeamControls();
     window.Vegas?.renderTable();
-  $(ids.optUseNet).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
+  $(ids.optUseNet).addEventListener("change", ()=>{ updateVegasNetModeVisibility(); AppManager.recalcGames(); saveDebounced(); });
   $(ids.optDoubleBirdie).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.optTripleEagle).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.vegasPointValue)?.addEventListener("input", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.vegasNetHcpMode)?.addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
+  updateVegasNetModeVisibility();
 
     // Banker: no UI wiring (stub only)
 
@@ -3489,6 +3570,7 @@
       Storage.saveDebounced();
     });
     applyFontSize(Config.FONT_SIZE);
+    setupFloatingNavButtons();
     
     Scorecard.player.updateCountDisplay();
 
