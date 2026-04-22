@@ -860,7 +860,7 @@ input[type="text"] {
 }
 
 .entry-switcher {
-  position: static;
+  position: relative;
   z-index: auto;
   display: flex;
   gap: 8px;
@@ -875,10 +875,12 @@ input[type="text"] {
 
 .entry-switcher::after {
   content: "";
-  display: block;
-  width: calc(100% - 28px);
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: -10px;
   height: 1px;
-  margin: 10px auto 0;
+  pointer-events: none;
   background: linear-gradient(90deg, transparent 0%, rgba(168, 179, 191, 0.45) 22%, rgba(168, 179, 191, 0.45) 78%, transparent 100%);
 }
 
