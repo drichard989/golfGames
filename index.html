@@ -41,30 +41,12 @@
           <div class="utilities-row utilities-row-actions">
             <button id="saveBtn" class="btn">💾 Save</button>
             <button id="refreshAllBtn" class="btn" title="Recalculate all games and totals">🔄 Recalculate Everything</button>
-            <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
             <button id="resetBtn" class="btn">Reset Scores</button>
             <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
           </div>
 
           <div class="utilities-row utilities-row-settings">
-            <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
             <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
-
-            <div class="control utilities-control handicap-mode-control">
-              <label>Handicap Mode:</label>
-              <label class="radio">
-                <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
-                Gross
-              </label>
-              <label class="radio">
-                <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
-                Play Off Low
-              </label>
-              <label class="radio">
-                <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
-                Full Handicap
-              </label>
-            </div>
 
             <div class="control utilities-control font-size-control">
               <label>Font Size</label>
@@ -130,6 +112,28 @@
       <button id="entrySwitcherGamesBtn" class="entry-switcher-btn" type="button" role="tab" aria-selected="false" aria-controls="gamesEntryPanel">🎮 Games</button>
     </div>
     <section id="scoreEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherScoreBtn">
+    <div class="controls" style="margin: 12px 16px 0; gap: 8px; align-items: flex-start;">
+      <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
+      <button id="clearEverythingBtn" class="btn" style="background: var(--danger); color: white;">Clear Everything</button>
+      <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
+
+      <div class="control handicap-mode-control" style="flex: 1 1 520px;">
+        <label>Handicap Mode:</label>
+        <label class="radio">
+          <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
+          Gross
+        </label>
+        <label class="radio">
+          <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
+          Play Off Low
+        </label>
+        <label class="radio">
+          <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
+          Full Handicap
+        </label>
+      </div>
+    </div>
+
     <!-- SCORECARD - Dual Table Layout -->
     <div class="scorecard-container" id="main-scorecard">
       <!-- Fixed Left Column (Player Names + CH) -->

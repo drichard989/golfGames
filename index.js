@@ -471,7 +471,7 @@
     holesHeaderFixed:"#holesHeaderFixed",parRowFixed:"#parRowFixed",hcpRowFixed:"#hcpRowFixed",totalsRowFixed:"#totalsRowFixed",
     table:"#scorecard",
     tableFixed:"#scorecardFixed",
-    resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
+    resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",clearEverythingBtn:"#clearEverythingBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
     toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleHilo:"#toggleHilo",
@@ -2163,6 +2163,61 @@
       }
       
       Utils.announce("All fields cleared.");
+    },
+
+    /**
+     * Clear all scorecard + game data and reset game options to defaults.
+     */
+    clearEverything() {
+      this.clearAll();
+
+      // Reset primary scorecard options
+      const playOffLowRadio = document.getElementById('handicapModePlayOffLow');
+      if (playOffLowRadio) playOffLowRadio.checked = true;
+
+      Config.ADVANCE_DIRECTION = 'down';
+      const advanceLabel = document.getElementById('advanceLabel');
+      if (advanceLabel) advanceLabel.textContent = 'Advance: ↓ Down';
+
+      // Reset game options to defaults
+      window.Vegas?.setTeamAssignments?.({ A: [], B: [] });
+      window.Vegas?.setOptions?.({
+        useNet: false,
+        netHcpMode: 'playOffLow',
+        doubleBirdie: false,
+        tripleEagle: false,
+        pointValue: 0
+      });
+      window.Vegas?.renderTeamControls?.();
+
+      window.Banker?.setState?.({ holes: [] });
+
+      const skinsModeGross = document.getElementById('skinsModeGross');
+      const skinsModeNet = document.getElementById('skinsModeNet');
+      const skinsBuyIn = document.getElementById('skinsBuyIn');
+      const skinsCarry = document.getElementById('skinsCarry');
+      const skinsHalf = document.getElementById('skinsHalf');
+      if (skinsModeGross) skinsModeGross.checked = true;
+      if (skinsModeNet) skinsModeNet.checked = false;
+      if (skinsBuyIn) skinsBuyIn.value = '10';
+      if (skinsCarry) skinsCarry.checked = true;
+      if (skinsHalf) skinsHalf.checked = false;
+
+      const junkUseNet = document.getElementById('junkUseNet');
+      if (junkUseNet) junkUseNet.checked = false;
+      window.Junk?.clearAllAchievements?.();
+
+      const hiloUnitValue = document.getElementById('hiloUnitValue');
+      if (hiloUnitValue) hiloUnitValue.value = '10';
+
+      GAME_TAB_ORDER.forEach((gameKey) => games_close(gameKey));
+      syncGameTabUi(null);
+      syncPrimaryTabUi('score');
+
+      Scorecard.calc.recalcAll();
+      AppManager.recalcGames();
+      this.save();
+      Utils.announce('All scorecard and game data cleared.');
     }
   };
   
@@ -3507,6 +3562,73 @@
       }
       Storage.clearAll();
     }
+  });
+
+  $(ids.clearEverythingBtn).addEventListener("click", async () => {
+    const dialog = document.createElement('div');
+    dialog.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+    `;
+
+    const dialogBox = document.createElement('div');
+    dialogBox.style.cssText = `
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 440px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    `;
+
+    const title = document.createElement('h3');
+    const cloudSession = window.CloudSync?.getSession?.();
+    title.textContent = cloudSession ? 'Clear Everything & Leave Cloud Session?' : 'Clear Everything?';
+    title.style.cssText = 'margin: 0 0 12px 0; color: var(--ink);';
+
+    const message = document.createElement('p');
+    message.textContent = cloudSession
+      ? 'This will clear all scorecard and game data, reset game options to defaults, and disconnect you from the live cloud session. You will need to create and share a new code to go live again.'
+      : 'This will clear all scorecard and game data and reset game options to defaults. This action cannot be undone.';
+    message.style.cssText = 'margin: 0 0 20px 0; color: var(--muted);';
+
+    const btnContainer = document.createElement('div');
+    btnContainer.style.cssText = 'display: flex; gap: 12px;';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.textContent = 'Clear Everything';
+    clearBtn.className = 'btn';
+    clearBtn.style.cssText = 'flex: 1; background: var(--danger); color: white;';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.className = 'btn';
+    cancelBtn.style.cssText = 'flex: 1;';
+
+    btnContainer.append(clearBtn, cancelBtn);
+    dialogBox.append(title, message, btnContainer);
+    dialog.appendChild(dialogBox);
+    document.body.appendChild(dialog);
+
+    const confirmed = await new Promise((resolve) => {
+      clearBtn.onclick = () => { dialog.remove(); resolve(true); };
+      cancelBtn.onclick = () => { dialog.remove(); resolve(false); };
+    });
+
+    if (!confirmed) return;
+
+    if (window.CloudSync?.getSession?.()) {
+      await window.CloudSync.leaveSession?.();
+    }
+    Storage.clearEverything();
   });
   $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
   
