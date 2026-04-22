@@ -14,6 +14,8 @@
     loadSnapshotBtn: () => document.getElementById('cloudLoadSnapshotBtn'),
     resumeLiveBtn: () => document.getElementById('cloudResumeLiveBtn'),
     saveSnapshotBtn: () => document.getElementById('cloudSaveSnapshotBtn'),
+    viewModeScorecardBanner: () => document.getElementById('viewModeScorecardBanner'),
+    viewModeGamesBanner: () => document.getElementById('viewModeGamesBanner'),
     status: () => document.getElementById('cloudStatus'),
     codes: () => document.getElementById('cloudCodes'),
     snapshotStatus: () => document.getElementById('cloudSnapshotStatus')
@@ -60,6 +62,103 @@
     if (!el) return;
     el.textContent = text;
     el.style.display = visible ? '' : 'none';
+  }
+
+  function setViewModeBannersVisible(visible) {
+    const scorecardBanner = EL.viewModeScorecardBanner();
+    if (scorecardBanner) {
+      scorecardBanner.style.display = visible ? '' : 'none';
+    }
+
+    const gamesBanner = EL.viewModeGamesBanner();
+    if (gamesBanner) {
+      gamesBanner.style.display = visible ? '' : 'none';
+    }
+  }
+
+  function setViewerLockEnabled(enabled) {
+    const selectors = [
+      '#courseSelect',
+      '#addPlayerBtn',
+      '#clearAllBtn',
+      '#resetBtn',
+      '#saveBtn',
+      '#refreshAllBtn',
+      '#advanceToggle',
+      '#csvInput',
+      '#fontSizeSmall',
+      '#fontSizeMedium',
+      '#fontSizeLarge',
+      'input[name="handicapMode"]',
+      '#main-scorecard input',
+      '#main-scorecard select',
+      '#main-scorecard textarea',
+      '#vegasSection input',
+      '#vegasSection select',
+      '#vegasSection textarea',
+      '#vegasSection button',
+      '#bankerSection input',
+      '#bankerSection select',
+      '#bankerSection textarea',
+      '#bankerSection button',
+      '#skinsSection input',
+      '#skinsSection select',
+      '#skinsSection textarea',
+      '#skinsSection button',
+      '#junkSection input',
+      '#junkSection select',
+      '#junkSection textarea',
+      '#junkSection button',
+      '#hiloSection input',
+      '#hiloSection select',
+      '#hiloSection textarea',
+      '#hiloSection button'
+    ];
+
+    const nodes = Array.from(document.querySelectorAll(selectors.join(',')));
+    nodes.forEach((el) => {
+      if (!(el instanceof HTMLElement)) return;
+
+      if (enabled) {
+        if (el.dataset.cloudPrevDisabled === undefined) {
+          el.dataset.cloudPrevDisabled = el.disabled ? '1' : '0';
+        }
+        if ('readOnly' in el && el.dataset.cloudPrevReadonly === undefined) {
+          el.dataset.cloudPrevReadonly = el.readOnly ? '1' : '0';
+        }
+
+        if ('readOnly' in el) {
+          el.readOnly = true;
+        }
+        el.disabled = true;
+        el.setAttribute('aria-disabled', 'true');
+        el.classList.add('cloud-view-locked');
+        return;
+      }
+
+      if (el.dataset.cloudPrevDisabled !== undefined) {
+        el.disabled = el.dataset.cloudPrevDisabled === '1';
+        delete el.dataset.cloudPrevDisabled;
+      } else {
+        el.disabled = false;
+      }
+
+      if ('readOnly' in el && el.dataset.cloudPrevReadonly !== undefined) {
+        el.readOnly = el.dataset.cloudPrevReadonly === '1';
+        delete el.dataset.cloudPrevReadonly;
+      } else if ('readOnly' in el) {
+        el.readOnly = false;
+      }
+
+      el.removeAttribute('aria-disabled');
+      el.classList.remove('cloud-view-locked');
+    });
+  }
+
+  function syncViewerLock() {
+    const shouldLock = state.session?.role === 'viewer';
+    setViewerLockEnabled(shouldLock);
+    setViewModeBannersVisible(shouldLock);
   }
 
   function formatSnapshotLabel(snapshot) {
@@ -191,6 +290,7 @@
       setCodesText('', false);
       state.snapshots = [];
       resetSnapshotReviewUi();
+      syncViewerLock();
       return;
     }
 
@@ -208,6 +308,7 @@
 
     renderSnapshotOptions();
     syncSnapshotButtons();
+    syncViewerLock();
   }
 
   function unbindRealtime() {
@@ -350,6 +451,7 @@
       state.lastSeenRevision = Math.max(state.lastSeenRevision, Number(revision) || 0);
     } finally {
       state.isApplyingRemote = false;
+      syncViewerLock();
     }
   }
 
