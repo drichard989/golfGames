@@ -691,6 +691,8 @@
     if (!scoreBtn || !gamesBtn || !scorePanel || !gamesPanel) return;
 
     const isScore = activeTab === 'score';
+    document.body?.classList.toggle('mode-score', isScore);
+    document.body?.classList.toggle('mode-games', !isScore);
     scoreBtn.classList.toggle('active', isScore);
     gamesBtn.classList.toggle('active', !isScore);
     scoreBtn.setAttribute('aria-selected', isScore ? 'true' : 'false');

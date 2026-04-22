@@ -873,15 +873,9 @@ input[type="text"] {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
-.entry-switcher::after {
-  content: "";
-  position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: -10px;
-  height: 1px;
-  pointer-events: none;
-  background: linear-gradient(90deg, transparent 0%, rgba(168, 179, 191, 0.45) 22%, rgba(168, 179, 191, 0.45) 78%, transparent 100%);
+/* Score mode: keep sticky bar attached with no visual gap underneath */
+body.mode-score .entry-switcher {
+  margin-bottom: 0;
 }
 
 .entry-switcher-btn {
@@ -2848,10 +2842,6 @@ input[type="text"] {
   border-color: #095ba3;
   color: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
-}
-
-:root[data-theme="light"] .entry-switcher::after {
-  background: linear-gradient(90deg, transparent 0%, rgba(149, 157, 167, 0.55) 22%, rgba(149, 157, 167, 0.55) 78%, transparent 100%);
 }
 
 :root[data-theme="light"] #utilitiesToggle.is-open,
