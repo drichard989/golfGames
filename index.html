@@ -152,6 +152,12 @@
         </table>
       </div>
     </div>
+
+    <div id="floatingNavButtons" style="position: fixed; right: 16px; bottom: 18px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
+      <button id="floatingNextScoreBtn" class="btn" type="button" style="display:none; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">⛳ Next Empty</button>
+      <button id="floatingGamesBtn" class="btn" type="button" style="display:none; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">🎮 Games</button>
+    </div>
+
     <!-- GAMES LAUNCHER -->
     <div class="gamesbar">
       <button id="toggleJunk" class="game-toggle">🗑️ Junk</button>
@@ -229,7 +235,7 @@
           <div class="team-pill">Options</div>
           <label class="radio">
             <input type="checkbox" id="optUseNet" /> Use Net (NDB) </label>
-          <div class="control" style="margin-top: 8px; padding: 8px; display: flex; gap: 8px; align-items: center;">
+          <div id="vegasNetHcpModeWrap" class="control" style="margin-top: 8px; padding: 8px; display: flex; gap: 8px; align-items: center;">
             <label for="vegasNetHcpMode" style="margin: 0; text-transform: none; letter-spacing: normal;">NET Handicap:</label>
             <select id="vegasNetHcpMode" style="padding: 6px 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
               <option value="playOffLow" selected>Play Off Low</option>
