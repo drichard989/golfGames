@@ -76,6 +76,7 @@
   const state = {
     initialized: false,
     app: null,
+    appCheck: null,
     auth: null,
     db: null,
     functions: null,
@@ -1156,6 +1157,26 @@
 
       state.auth = window.firebase.auth();
       state.db = window.firebase.database();
+
+      const appCheckSiteKey = String(window.FIREBASE_APPCHECK_SITE_KEY || '').trim();
+      if (!appCheckSiteKey) {
+        setStatus('Cloud: App Check key missing');
+        setCodesText('Set FIREBASE_APPCHECK_SITE_KEY in js/firebase-config.js', true);
+        return false;
+      }
+
+      if (window.FIREBASE_APPCHECK_DEBUG_TOKEN) {
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = window.FIREBASE_APPCHECK_DEBUG_TOKEN;
+      }
+
+      if (typeof window.firebase.appCheck === 'function') {
+        state.appCheck = window.firebase.appCheck(state.app);
+        state.appCheck.activate(appCheckSiteKey, true);
+      } else {
+        setStatus('Cloud: Firebase App Check SDK missing');
+        setCodesText('Load firebase-app-check-compat.js in index.html', true);
+        return false;
+      }
 
       const region = window.FIREBASE_FUNCTIONS_REGION || 'us-central1';
       state.functions = window.firebase.functions(state.app, region);

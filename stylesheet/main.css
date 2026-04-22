@@ -247,6 +247,20 @@ h1 {
   font-weight: 600;
 }
 
+.cloud-view-locked,
+.cloud-view-locked:disabled,
+.cloud-view-locked[readonly] {
+  opacity: 1 !important;
+  filter: none !important;
+  color: var(--ink) !important;
+  -webkit-text-fill-color: var(--ink) !important;
+}
+
+.cloud-view-locked::placeholder {
+  color: var(--muted) !important;
+  opacity: 1 !important;
+}
+
 /* ---- Theme Toggle Button ---- */
 .theme-toggle {
   background: var(--panel);

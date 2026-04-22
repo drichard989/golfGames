@@ -20,3 +20,11 @@ window.FIREBASE_CONFIG = {
 
 window.FIREBASE_FUNCTIONS_REGION = 'us-central1';
 window.FIREBASE_USE_EMULATORS = false;
+
+// Required for production Cloud Functions callable access when App Check is enforced.
+// Create a reCAPTCHA v3 site key in Firebase App Check and set it here.
+window.FIREBASE_APPCHECK_SITE_KEY = '';
+
+// Optional for local debugging only:
+// set to true OR to a debug token string from browser console/App Check logs.
+window.FIREBASE_APPCHECK_DEBUG_TOKEN = false;
