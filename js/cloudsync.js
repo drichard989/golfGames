@@ -3,6 +3,7 @@
 
   const CLOUD_SESSION_KEY = 'golf_cloud_session_v1';
   const SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;
+  const BANKER_REMOTE_APPLY_GRACE_MS = 1200;
 
   const EL = {
     createBtn: () => document.getElementById('cloudCreateBtn'),
@@ -33,6 +34,7 @@
     pushTimer: null,
     pendingRemoteState: null,
     pendingRemoteTimer: null,
+    lastBankerInteractionAt: 0,
     lastSeenRevision: 0,
     lastSnapshotAt: 0,
     currentLiveState: null,
@@ -327,6 +329,17 @@
     return false;
   }
 
+  function isBankerInteractionActive() {
+    return Date.now() - state.lastBankerInteractionAt < BANKER_REMOTE_APPLY_GRACE_MS;
+  }
+
+  function markBankerInteraction(target) {
+    if (!(target instanceof HTMLElement)) return;
+    if (target.closest('#bankerSection')) {
+      state.lastBankerInteractionAt = Date.now();
+    }
+  }
+
   function applyRemoteStateToUi(syncGame, revision = 0) {
     state.isApplyingRemote = true;
     try {
@@ -350,7 +363,7 @@
       return;
     }
 
-    if (isBankerInputFocused()) {
+    if (isBankerInputFocused() || isBankerInteractionActive()) {
       state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
       return;
     }
@@ -382,7 +395,7 @@
       return;
     }
 
-    if (state.session?.role === 'editor' && isBankerInputFocused()) {
+    if (state.session?.role === 'editor' && (isBankerInputFocused() || isBankerInteractionActive())) {
       state.pendingRemoteState = syncGame;
       if (!state.pendingRemoteTimer) {
         state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
@@ -573,6 +586,9 @@
   }
 
   function bindUi() {
+    document.addEventListener('pointerdown', (e) => markBankerInteraction(e.target), true);
+    document.addEventListener('focusin', (e) => markBankerInteraction(e.target), true);
+
     EL.createBtn()?.addEventListener('click', async () => {
       try {
         setStatus('Cloud: creating session...');
