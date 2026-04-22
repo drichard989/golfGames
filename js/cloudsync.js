@@ -73,6 +73,8 @@
     'scorecardLauncherBtn'
   ]);
 
+  const VIEWER_BLOCK_CONTAINERS = '#main-scorecard, #vegasSection, #bankerSection, #skinsSection, #junkSection, #hiloSection';
+
   const state = {
     initialized: false,
     app: null,
@@ -202,6 +204,10 @@
       }
     }
 
+    if (target.closest(VIEWER_BLOCK_CONTAINERS)) {
+      return true;
+    }
+
     return !!target.closest(VIEWER_LOCK_SELECTORS.join(','));
   }
 
@@ -223,6 +229,7 @@
     document.addEventListener('input', guard, true);
     document.addEventListener('change', guard, true);
     document.addEventListener('click', guard, true);
+    document.addEventListener('keydown', guard, true);
   }
 
   function ensureViewerLockObserver() {
@@ -1077,6 +1084,7 @@
       editCode: state.session.editCode || '',
       viewCode: state.session.viewCode || ''
     });
+    window.GolfApp?.storage?.prepareForIncomingSyncState?.();
     updateUiForSession();
     await subscribeRealtime(result.gameId);
   }
