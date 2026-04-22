@@ -903,6 +903,63 @@ body.mode-score .entry-switcher {
   background: var(--panel-alt);
 }
 
+.scorecard-frozen-host {
+  display: none;
+  margin: 0;
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: var(--panel);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.scorecard-frozen-fixed {
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-right: 2px solid rgba(168, 179, 191, 0.4);
+  background: var(--panel);
+}
+
+.scorecard-frozen-scroll {
+  flex: 1 1 auto;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  background: var(--panel);
+}
+
+#scorecardFrozenFixed,
+#scorecardFrozenTable {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+}
+
+#scorecardFrozenFixed th,
+#scorecardFrozenFixed td,
+#scorecardFrozenTable th,
+#scorecardFrozenTable td {
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: var(--space-xs) 3px;
+}
+
+body.mode-score #scorecardFrozenHost {
+  display: flex;
+}
+
+body.mode-score #scorecardFixed thead tr,
+body.mode-score #parRowFixed,
+body.mode-score #hcpRowFixed,
+body.mode-score #scorecard thead tr,
+body.mode-score #parRow,
+body.mode-score #hcpRow {
+  visibility: hidden;
+}
+
 .scorecard-fixed {
   flex-shrink: 0;
   flex-grow: 0;
@@ -965,7 +1022,7 @@ table {
 
 thead th {
   position: sticky;
-  top: var(--scorecard-sticky-top, 0px);
+  top: 0;
   background: var(--panel-alt);
   z-index: var(--z-sticky-header);
 }
@@ -1101,10 +1158,7 @@ tr:last-child td {
 /* Emphasize Par and Handicap rows */
 .par-row th,
 .par-row td {
-  position: sticky;
-  top: calc(var(--scorecard-sticky-top, 0px) + var(--scorecard-head-row-h, 40px));
-  z-index: var(--z-sticky-header);
-  background: var(--panel);
+  background: transparent;
   border-left: 1px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
@@ -1113,19 +1167,11 @@ tr:last-child td {
 
 .hcp-row th,
 .hcp-row td {
-  position: sticky;
-  top: calc(var(--scorecard-sticky-top, 0px) + var(--scorecard-head-row-h, 40px) + var(--scorecard-par-row-h, 40px));
-  z-index: var(--z-sticky-header);
-  background: var(--panel);
+  background: transparent;
   border-left: 1px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
-}
-
-#scorecardFixed .par-row td,
-#scorecardFixed .hcp-row td {
-  z-index: var(--z-sticky-first-col);
 }
 
 .par-row input,
