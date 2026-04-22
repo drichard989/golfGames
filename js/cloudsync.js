@@ -4,6 +4,9 @@
   const CLOUD_SESSION_KEY = 'golf_cloud_session_v1';
   const SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;
   const BANKER_REMOTE_APPLY_GRACE_MS = 1200;
+  const PUSH_DEBOUNCE_MS = 900;
+  const MIN_PUSH_INTERVAL_MS = 1200;
+  const SNAPSHOT_LIST_LIMIT = 20;
 
   const EL = {
     createBtn: () => document.getElementById('cloudCreateBtn'),
@@ -42,7 +45,9 @@
     currentLiveState: null,
     activeSnapshotId: '',
     snapshots: [],
-    originalSave: null
+    originalSave: null,
+    lastPushAt: 0,
+    lastPushedContentHash: ''
   };
 
   function setStatus(msg) {
@@ -239,6 +244,98 @@
     return String(code || '').trim().replace(/\s+/g, '').toUpperCase();
   }
 
+  function stableStringify(value) {
+    if (value === null || typeof value !== 'object') {
+      return JSON.stringify(value);
+    }
+
+    if (Array.isArray(value)) {
+      return `[${value.map(stableStringify).join(',')}]`;
+    }
+
+    const keys = Object.keys(value).sort();
+    const parts = keys.map((key) => `${JSON.stringify(key)}:${stableStringify(value[key])}`);
+    return `{${parts.join(',')}}`;
+  }
+
+  function getComparableSyncPayload(syncGame) {
+    const game = syncGame || {};
+    return {
+      scorecard: game.scorecard || {},
+      games: game.games || {}
+    };
+  }
+
+  function getSyncContentHash(syncGame) {
+    try {
+      return stableStringify(getComparableSyncPayload(syncGame));
+    } catch {
+      return '';
+    }
+  }
+
+  function isPlainObject(value) {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+  }
+
+  function buildDiffUpdates(prevValue, nextValue, basePath, updates) {
+    if (prevValue === nextValue) return;
+
+    const prevIsArray = Array.isArray(prevValue);
+    const nextIsArray = Array.isArray(nextValue);
+    const prevIsObject = isPlainObject(prevValue);
+    const nextIsObject = isPlainObject(nextValue);
+
+    // Primitive or type-changed values: replace at this path.
+    if ((!prevIsArray && !prevIsObject && !nextIsArray && !nextIsObject) ||
+        (prevIsArray !== nextIsArray) ||
+        (prevIsObject !== nextIsObject)) {
+      if (!basePath) {
+        // Root replacement handled by caller with set().
+        return;
+      }
+      updates[basePath] = nextValue;
+      return;
+    }
+
+    if (nextIsArray) {
+      const prevArr = prevIsArray ? prevValue : [];
+      const nextArr = nextValue;
+      const maxLen = Math.max(prevArr.length, nextArr.length);
+
+      for (let i = 0; i < maxLen; i += 1) {
+        const childPath = basePath ? `${basePath}/${i}` : `${i}`;
+        if (i >= nextArr.length) {
+          updates[childPath] = null;
+          continue;
+        }
+        if (i >= prevArr.length) {
+          updates[childPath] = nextArr[i];
+          continue;
+        }
+        buildDiffUpdates(prevArr[i], nextArr[i], childPath, updates);
+      }
+      return;
+    }
+
+    const prevObj = prevIsObject ? prevValue : {};
+    const nextObj = nextValue;
+    const keySet = new Set([...Object.keys(prevObj), ...Object.keys(nextObj)]);
+
+    keySet.forEach((key) => {
+      const childPath = basePath ? `${basePath}/${key}` : key;
+      if (!(key in nextObj)) {
+        updates[childPath] = null;
+        return;
+      }
+      if (!(key in prevObj)) {
+        updates[childPath] = nextObj[key];
+        return;
+      }
+      buildDiffUpdates(prevObj[key], nextObj[key], childPath, updates);
+    });
+  }
+
   function readStoredSession() {
     try {
       const raw = localStorage.getItem(CLOUD_SESSION_KEY);
@@ -361,6 +458,10 @@
     if (!syncGame) return;
 
     const { forceSnapshot = false, snapshotSource = 'auto' } = options;
+    const contentHash = getSyncContentHash(syncGame);
+    if (!forceSnapshot && contentHash && contentHash === state.lastPushedContentHash) {
+      return;
+    }
 
     const now = Date.now();
     const baseRevision = Number(syncGame?.meta?.revision) || 0;
@@ -376,12 +477,28 @@
     };
 
     const gameRoot = `games/${state.session.gameId}`;
-    await state.db.ref(`${gameRoot}/state`).set(syncGame);
+
+    const prevSyncState = (state.currentLiveState && typeof state.currentLiveState === 'object')
+      ? state.currentLiveState
+      : null;
+
+    if (!prevSyncState) {
+      await state.db.ref(`${gameRoot}/state`).set(syncGame);
+    } else {
+      const updates = {};
+      buildDiffUpdates(prevSyncState, syncGame, '', updates);
+      if (Object.keys(updates).length > 0) {
+        await state.db.ref(`${gameRoot}/state`).update(updates);
+      }
+    }
+
     await state.db.ref(`${gameRoot}/meta/updatedAt`).set(now);
     await state.db.ref(`${gameRoot}/meta/updatedBy`).set(state.user?.uid || 'local-client');
 
     state.lastSeenRevision = nextRevision;
     state.currentLiveState = syncGame;
+    state.lastPushAt = now;
+    state.lastPushedContentHash = contentHash;
 
     if (forceSnapshot) {
       await writeSnapshot(syncGame, snapshotSource);
@@ -393,12 +510,16 @@
   function queuePush(reason = 'local-change') {
     if (!state.session || state.session.role !== 'editor' || state.isViewingSnapshot) return;
     clearTimeout(state.pushTimer);
+
+    const elapsed = Date.now() - (state.lastPushAt || 0);
+    const delay = Math.max(PUSH_DEBOUNCE_MS, MIN_PUSH_INTERVAL_MS - Math.max(0, elapsed));
+
     state.pushTimer = setTimeout(() => {
       pushNow().catch((err) => {
         console.error(`[CloudSync] push failed (${reason}):`, err);
         setStatus('Cloud: push failed (see console)');
       });
-    }, 400);
+    }, delay);
   }
 
   function patchStorageSaveHook() {
@@ -490,6 +611,7 @@
     }
 
     state.currentLiveState = syncGame;
+  state.lastPushedContentHash = getSyncContentHash(syncGame);
 
     if (state.isViewingSnapshot) {
       state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
@@ -516,7 +638,7 @@
       state.snapshotListRef = null;
     }
 
-    const ref = state.db.ref(`games/${gameId}/snapshots`).limitToLast(50);
+    const ref = state.db.ref(`games/${gameId}/snapshots`).limitToLast(SNAPSHOT_LIST_LIMIT);
     state.snapshotListRef = ref;
     ref.on('value', (snap) => {
       const value = snap.val() || {};
@@ -638,7 +760,6 @@
     storeSession({ gameId: result.gameId, role: 'editor' });
     updateUiForSession();
     await subscribeRealtime(result.gameId);
-    queuePush('session-create');
   }
 
   async function joinSessionWithCode(rawCode) {
@@ -666,10 +787,6 @@
     storeSession({ gameId: result.gameId, role: state.session.role });
     updateUiForSession();
     await subscribeRealtime(result.gameId);
-
-    if (state.session.role === 'editor') {
-      queuePush('session-join-editor');
-    }
   }
 
   async function leaveSession() {
@@ -806,10 +923,6 @@
 
     updateUiForSession();
     await subscribeRealtime(state.session.gameId);
-
-    if (state.session.role === 'editor') {
-      queuePush('session-restore');
-    }
   }
 
   async function init() {
