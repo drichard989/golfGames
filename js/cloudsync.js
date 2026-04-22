@@ -236,10 +236,18 @@
     if (state.lockObserver || typeof MutationObserver === 'undefined') return;
     if (!document.body) return;
 
+    const syncRowHeights = () => {
+      const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
+      if (typeof sync === 'function') {
+        requestAnimationFrame(() => sync(true));
+      }
+    };
+
     state.lockObserver = new MutationObserver(() => {
       if (!isViewerSession()) return;
       setViewerLockEnabled(true);
       setViewModeBannersVisible(true);
+      syncRowHeights();
     });
 
     state.lockObserver.observe(document.body, {
@@ -252,6 +260,11 @@
     const shouldLock = state.session?.role === 'viewer';
     setViewerLockEnabled(shouldLock);
     setViewModeBannersVisible(shouldLock);
+
+    const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
+    if (typeof sync === 'function') {
+      requestAnimationFrame(() => sync(true));
+    }
   }
 
   function formatSnapshotLabel(snapshot) {
