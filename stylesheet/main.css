@@ -951,13 +951,17 @@ body.mode-score #scorecardFrozenHost {
   display: flex;
 }
 
-body.mode-score #main-scorecard #scorecardFixed thead tr,
-body.mode-score #main-scorecard #parRowFixed,
-body.mode-score #main-scorecard #hcpRowFixed,
-body.mode-score #main-scorecard #scorecard thead tr,
-body.mode-score #main-scorecard #parRow,
-body.mode-score #main-scorecard #hcpRow {
+body.mode-score.frozen-ready #main-scorecard #scorecardFixed thead tr,
+body.mode-score.frozen-ready #main-scorecard #parRowFixed,
+body.mode-score.frozen-ready #main-scorecard #hcpRowFixed,
+body.mode-score.frozen-ready #main-scorecard #scorecard thead tr,
+body.mode-score.frozen-ready #main-scorecard #parRow,
+body.mode-score.frozen-ready #main-scorecard #hcpRow {
   display: none;
+}
+
+body.mode-score #main-scorecard {
+  margin-top: 0;
 }
 
 .scorecard-fixed {
