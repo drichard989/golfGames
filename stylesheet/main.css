@@ -236,6 +236,17 @@ h1 {
   color: var(--muted);
 }
 
+.view-mode-banner {
+  margin: var(--space-sm) var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 180, 84, 0.14);
+  color: var(--ink);
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
 /* ---- Theme Toggle Button ---- */
 .theme-toggle {
   background: var(--panel);
@@ -1665,6 +1676,12 @@ input[type="text"] {
   --accent: #28a745;
   --line: #d3d7dc;
   --shadow: rgba(0, 0, 0, .08);
+}
+
+:root[data-theme="light"] .view-mode-banner {
+  background: #fff2df;
+  border-color: #d97706;
+  color: #1a1c1f;
 }
 
 :root[data-theme="light"] body {

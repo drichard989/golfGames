@@ -3265,25 +3265,184 @@
     gamesBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  const FLOATING_NAV_STORAGE_KEY = 'golf_floating_nav_position_v1';
+
+  function clampFloatingPosition(left, top, width, height) {
+    const pad = 8;
+    const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportH = window.innerHeight || document.documentElement.clientHeight || 0;
+
+    const minLeft = pad;
+    const maxLeft = Math.max(pad, viewportW - width - pad);
+    const minTop = pad;
+    const maxTop = Math.max(pad, viewportH - height - pad);
+
+    return {
+      left: Math.min(maxLeft, Math.max(minLeft, left)),
+      top: Math.min(maxTop, Math.max(minTop, top))
+    };
+  }
+
+  function loadFloatingNavPosition() {
+    try {
+      const raw = localStorage.getItem(FLOATING_NAV_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Number.isFinite(parsed?.left) || !Number.isFinite(parsed?.top)) return null;
+      return { left: parsed.left, top: parsed.top };
+    } catch {
+      return null;
+    }
+  }
+
+  function saveFloatingNavPosition(left, top) {
+    try {
+      localStorage.setItem(FLOATING_NAV_STORAGE_KEY, JSON.stringify({ left, top }));
+    } catch {
+      // ignore storage write failures
+    }
+  }
+
   function setupFloatingNavButtons() {
+    const container = document.getElementById('floatingNavButtons');
     const nextBtn = document.getElementById('floatingNextScoreBtn');
     const gamesBtn = document.getElementById('floatingGamesBtn');
-    if (!nextBtn || !gamesBtn) return;
+    if (!container || !nextBtn || !gamesBtn) return;
+
+    // Restore persisted position (or keep default from markup)
+    const restorePosition = () => {
+      const savedPos = loadFloatingNavPosition();
+      if (!savedPos) return;
+      const rect = container.getBoundingClientRect();
+      const clamped = clampFloatingPosition(savedPos.left, savedPos.top, rect.width, rect.height);
+      container.style.left = `${clamped.left}px`;
+      container.style.top = `${clamped.top}px`;
+      container.style.right = 'auto';
+      container.style.bottom = 'auto';
+    };
+
+    restorePosition();
 
     const updateVisibility = () => {
       const scorecardVisible = isElementMostlyVisible(document.getElementById('main-scorecard'));
       const gamesVisible = isElementMostlyVisible(document.querySelector('.gamesbar'));
 
-      nextBtn.style.display = scorecardVisible ? '' : 'none';
-      gamesBtn.style.display = gamesVisible ? '' : 'none';
+      const setNextBtnLabel = (isGamesContext) => {
+        nextBtn.textContent = isGamesContext ? '⛳ Scorecard' : '⛳ Next Empty';
+      };
+
+      // Show the button that jumps to the opposite area to reduce clutter.
+      if (scorecardVisible && !gamesVisible) {
+        setNextBtnLabel(false);
+        nextBtn.style.display = 'none';
+        gamesBtn.style.display = '';
+      } else if (gamesVisible && !scorecardVisible) {
+        setNextBtnLabel(true);
+        nextBtn.style.display = '';
+        gamesBtn.style.display = 'none';
+      } else if (scorecardVisible && gamesVisible) {
+        setNextBtnLabel(false);
+        nextBtn.style.display = 'none';
+        gamesBtn.style.display = 'none';
+      } else {
+        setNextBtnLabel(false);
+        // Between sections: show both shortcuts.
+        nextBtn.style.display = '';
+        gamesBtn.style.display = '';
+      }
     };
+
+    // Drag support (mouse + touch + pen)
+    container.style.touchAction = 'none';
+    let drag = null;
+    let suppressClick = false;
+
+    const onPointerMove = (e) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+
+      const dx = e.clientX - drag.startX;
+      const dy = e.clientY - drag.startY;
+      const movedEnough = Math.abs(dx) > 4 || Math.abs(dy) > 4;
+      if (movedEnough) suppressClick = true;
+
+      const rect = container.getBoundingClientRect();
+      const nextLeft = drag.originLeft + dx;
+      const nextTop = drag.originTop + dy;
+      const clamped = clampFloatingPosition(nextLeft, nextTop, rect.width, rect.height);
+
+      container.style.left = `${clamped.left}px`;
+      container.style.top = `${clamped.top}px`;
+      container.style.right = 'auto';
+      container.style.bottom = 'auto';
+    };
+
+    const onPointerUp = (e) => {
+      if (!drag || e.pointerId !== drag.pointerId) return;
+      try { container.releasePointerCapture(e.pointerId); } catch {}
+
+      const rect = container.getBoundingClientRect();
+      const clamped = clampFloatingPosition(rect.left, rect.top, rect.width, rect.height);
+      container.style.left = `${clamped.left}px`;
+      container.style.top = `${clamped.top}px`;
+      container.style.right = 'auto';
+      container.style.bottom = 'auto';
+      saveFloatingNavPosition(clamped.left, clamped.top);
+
+      drag = null;
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerUp);
+      setTimeout(() => { suppressClick = false; }, 0);
+    };
+
+    container.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      const rect = container.getBoundingClientRect();
+
+      // Convert default right/bottom anchored layout to explicit left/top before dragging.
+      if (!container.style.left || container.style.right !== 'auto') {
+        container.style.left = `${rect.left}px`;
+        container.style.top = `${rect.top}px`;
+        container.style.right = 'auto';
+        container.style.bottom = 'auto';
+      }
+
+      drag = {
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startY: e.clientY,
+        originLeft: rect.left,
+        originTop: rect.top
+      };
+      suppressClick = false;
+      try { container.setPointerCapture(e.pointerId); } catch {}
+      window.addEventListener('pointermove', onPointerMove);
+      window.addEventListener('pointerup', onPointerUp);
+      window.addEventListener('pointercancel', onPointerUp);
+    });
+
+    container.addEventListener('click', (e) => {
+      if (!suppressClick) return;
+      e.preventDefault();
+      e.stopPropagation();
+      suppressClick = false;
+    }, true);
 
     nextBtn.addEventListener('click', jumpToNextEmptyScore);
     gamesBtn.addEventListener('click', jumpToGamesLauncher);
 
     const throttledUpdate = Utils.throttle(updateVisibility, 120);
     window.addEventListener('scroll', throttledUpdate, { passive: true });
-    window.addEventListener('resize', throttledUpdate);
+    window.addEventListener('resize', () => {
+      const rect = container.getBoundingClientRect();
+      const clamped = clampFloatingPosition(rect.left, rect.top, rect.width, rect.height);
+      container.style.left = `${clamped.left}px`;
+      container.style.top = `${clamped.top}px`;
+      container.style.right = 'auto';
+      container.style.bottom = 'auto';
+      saveFloatingNavPosition(clamped.left, clamped.top);
+      throttledUpdate();
+    });
     document.addEventListener('visibilitychange', throttledUpdate);
 
     updateVisibility();
