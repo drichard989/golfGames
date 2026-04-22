@@ -60,201 +60,45 @@
       • Achievements system (Hogan, Sandy, Sadaam, Pulley, Triple)
       • Weighted bonus points for achievements
       Exposed: window.Junk {init, initAchievements, refreshForPlayerChange, update}
-   
+        const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
    🔗 js/banker.js     (~1500 lines) - Banker game
       • Per-hole rotating banker selection with max-bet system
       • Player bets with individual 2× doubles, banker 2× all bets
       • Gross and Net (full handicap) scoring modes
-      • Stroke indicators per hole per player
-      • Payout table with running totals
-      Exposed: window.Banker {init, update, buildTable, getState, setState, clearAll, refreshForPlayerChange}
-   
-   🔗 js/hilo.js          (~400 lines) - Hi-Lo team game
-      • 4 players: Low+High handicap vs Middle two
-      • Team stroke differential applied to worst player on high team
-      • 3 games: Front 9 (1 unit), Back 9 (1 unit), Full 18 (2 units)
-      • Per-hole scoring: Low vs Low, High vs High (1 point each)
-      • Auto-press: 2-0 hole win creates new game for remaining holes
-      • Press games worth 1 unit each (2 units for Full 18 presses)
-      • Hole-by-hole breakdown with comparison results
-      Exposed: window.HiLo {init, update, compute, render}
-   
-   🔗 js/export.js        (~370 lines) - CSV and Email export
-      • CSV Export: Download scorecard as CSV file
-      • Email Export: Format scorecard + game results for email
-      • Includes all active game results with options
-      • Plain text formatting for email compatibility
-      Exposed: window.Export {exportCurrentScorecard, emailCurrentScorecard}
-   
-   ============================================================================
-   FILE STRUCTURE
-   ============================================================================
-   
-   /
-   ├── index.html          - Main HTML structure, styles, game sections
-   ├── index.js            - Core scorecard logic (this file)
-   ├── sw.js               - Service worker for PWA caching (v1.3.7)
-   ├── manifest.json       - PWA manifest
-   ├── js/
-   │   ├── export.js       - CSV and Email export module
-   │   ├── vegas.js        - Vegas game module
-   │   ├── skins.js        - Skins game module
-   │   ├── junk.js         - Junk game module
-   │   ├── hilo.js         - Hi-Lo game module
-   │   └── banker.js       - Banker game (full implementation)
-   ├── images/             - Icons and assets
-   └── stylesheet/         - CSS files
-   
-   ============================================================================
-*/
+      function setupEntrySwitcher() {
+        const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
+        const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
+        const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
+        if (!scoreBtn || !gamesBtn || !gamesBar) return;
 
-(() => {
-  'use strict';
-  console.log('[golfGames] index.js loaded');
-  
-  // =============================================================================
-  // 📦 CONFIG MODULE - Course Database & Constants
-  // =============================================================================
-  
-  const Config = {
-    // Scorecard configuration
-    HOLES: 18,
-    MIN_PLAYERS: 1,
-    MAX_PLAYERS: 99,
-    DEFAULT_PLAYERS: 4,
-    LEADING_FIXED_COLS: 2,
-    NDB_BUFFER: 2, // Net Double Bogey: max penalty is par + buffer + strokes
-    STORAGE_KEY: 'golf_scorecard_v5',
-    
-    // Course database
-    // ★ TO ADD A NEW COURSE:
-    // 1. Add entry with unique ID (lowercase, no spaces)
-    // 2. Provide course name (displayed in dropdown)
-    // 3. Add pars array for holes 1-18 (exactly 18 values)
-    // 4. Add handicap index (HCP) array for holes 1-18 (values 1-18)
-    //    • HCP 1 = hardest hole, HCP 18 = easiest hole
-    COURSES: {
-      'manito': {
-        name: 'Manito Country Club',
-        pars: [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4],
-        hcpMen: [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8]
-      },    
-      'dove': {
-        name: 'Dove Canyon Country Club',
-        pars: [5,4,4,3,4,4,3,4,5, 3,5,4,3,5,4,4,3,4],
-        hcpMen: [11,7,3,15,1,13,17,9,5,14,4,12,16,2,6,10,18,8]
-      }
-    },
-    
-    // Active course state (mutable)
-    activeCourse: 'manito',
-    pars: null,
-    hcpMen: null,
-    FONT_SIZE: 'medium',
-    
-    // Initialize with default course
-    init() {
-      this.pars = [...this.COURSES.manito.pars];
-      this.hcpMen = [...this.COURSES.manito.hcpMen];
-      // Expose globally for backward compatibility
-      window.PARS = this.pars;
-      window.HCPMEN = this.hcpMen;
-    },
-    
-    // Switch active course
-    switchCourse(courseId) {
-      if (!this.COURSES[courseId]) {
-        console.error(`[Config] Unknown course: ${courseId}`);
-        return false;
-      }
-      this.activeCourse = courseId;
-      this.pars = [...this.COURSES[courseId].pars];
-      this.hcpMen = [...this.COURSES[courseId].hcpMen];
-      window.PARS = this.pars;
-      window.HCPMEN = this.hcpMen;
-      return true;
-    }
-  };
-  
-  // Initialize config
-  Config.init();
-  
-  // Legacy global constants for backward compatibility
-  const HOLES = Config.HOLES;
-  let PLAYERS = Config.DEFAULT_PLAYERS;
-  const MIN_PLAYERS = Config.MIN_PLAYERS;
-  const MAX_PLAYERS = Config.MAX_PLAYERS;
-  const DEFAULT_PLAYERS = Config.DEFAULT_PLAYERS;
-  const LEADING_FIXED_COLS = Config.LEADING_FIXED_COLS;
-  const NDB_BUFFER = Config.NDB_BUFFER;
-  const COURSES = Config.COURSES;
-  let PARS = Config.pars;
-  let HCPMEN = Config.hcpMen;
-  let ACTIVE_COURSE = Config.activeCourse;
-  
-  // Expose PLAYERS globally for game modules
-  Object.defineProperty(window, 'PLAYERS', {
-    get() { return PLAYERS; },
-    set(val) { PLAYERS = val; }
-  });
-  
-  // Expose COURSES and ACTIVE_COURSE for export module
-  window.COURSES = COURSES;
-  Object.defineProperty(window, 'ACTIVE_COURSE', {
-    get() { return ACTIVE_COURSE; },
-    set(val) { ACTIVE_COURSE = val; }
-  });
+        const setActiveMode = (mode) => {
+          scoreBtn.classList.toggle('active', mode === 'score');
+          gamesBtn.classList.toggle('active', mode === 'games');
+          scoreBtn.setAttribute('aria-pressed', mode === 'score' ? 'true' : 'false');
+          gamesBtn.setAttribute('aria-pressed', mode === 'games' ? 'true' : 'false');
+        };
 
-  // =============================================================================
-  // 🔧 CONSTANTS - Magic numbers extracted for clarity
-  // =============================================================================
-  
-  const TIMING = {
-    FOCUS_DELAY_MS: 50,          // Delay before focusing next input (prevents race conditions)
-    RECALC_DEBOUNCE_MS: 300,     // Debounce delay for auto-save
-    INIT_RETRY_DELAY_MS: 150,    // Delay for game module initialization retries
-    RESIZE_DEBOUNCE_MS: 150      // Debounce delay for window resize handler
-  };
-  
-  const LIMITS = {
-    MIN_HANDICAP: -50,
-    MAX_HANDICAP: 60,
-    MIN_SCORE: 1,
-    MAX_SCORE: 20
-  };
-  
-  // Game scoring constants
-  const GAME_CONSTANTS = {
-    JUNK: {
-      POINTS: {
-        EAGLE: 4,
-        BIRDIE: 2,
-        PAR: 1,
-        BOGEY: 0
-      },
-      ACHIEVEMENTS: {
-        HOGAN: 5,
-        SANDY: 3,
-        SADAAM: 2,
-        PULLEY: 1,
-        TRIPLE: 10
-      }
-    },
-    VEGAS: {
-      MULTIPLIERS: {
-        DEFAULT: 1,
-        BIRDIE: 2,
-        EAGLE: 3
-      }
-    },
-    SKINS: {
-      DEFAULT_BUYIN: 10
-    }
-  };
-  
-  // Expose game constants globally for game modules
-  window.GAME_CONSTANTS = GAME_CONSTANTS;
+        const updateActiveMode = () => {
+          const scrollY = window.scrollY || window.pageYOffset || 0;
+          const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.45);
+          const gamesTopY = gamesBar.getBoundingClientRect().top + scrollY;
+          setActiveMode(viewportMidY >= (gamesTopY - 24) ? 'games' : 'score');
+        };
 
+        scoreBtn.addEventListener('click', () => {
+          setActiveMode('score');
+          jumpToNextEmptyScore();
+        });
+
+        gamesBtn.addEventListener('click', () => {
+          setActiveMode('games');
+          jumpToGamesLauncher();
+          announce('Opened game entry.');
+        });
+
+        window.addEventListener('scroll', updateActiveMode, { passive: true });
+        window.addEventListener('resize', updateActiveMode);
+        updateActiveMode();
   // =============================================================================
   // 📦 UTILS MODULE - DOM Helpers & Math Utilities
   // =============================================================================
@@ -3787,7 +3631,7 @@
       Storage.saveDebounced();
     });
     applyFontSize(Config.FONT_SIZE);
-    setupFloatingNavButtons();
+    setupEntrySwitcher();
     
     Scorecard.player.updateCountDisplay();
 

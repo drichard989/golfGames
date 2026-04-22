@@ -125,6 +125,10 @@
     <div id="viewModeScorecardBanner" class="view-mode-banner" style="display:none;" role="status" aria-live="polite">
       👁️ View Mode: This scorecard is read-only.
     </div>
+    <div class="entry-switcher" aria-label="Quick navigation between score and game entry">
+      <button id="entrySwitcherScoreBtn" class="entry-switcher-btn active" type="button">⛳ Score Entry</button>
+      <button id="entrySwitcherGamesBtn" class="entry-switcher-btn" type="button">🎮 Game Entry</button>
+    </div>
     <!-- SCORECARD - Dual Table Layout -->
     <div class="scorecard-container" id="main-scorecard">
       <!-- Fixed Left Column (Player Names + CH) -->
@@ -175,17 +179,12 @@
       </div>
     </div>
 
-    <div id="floatingNavButtons" style="position: fixed; right: 16px; bottom: 18px; z-index: 9999; display: flex; flex-direction: column; gap: 10px;">
-      <button id="floatingNextScoreBtn" class="btn" type="button" style="display:none; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">⛳ Next Empty</button>
-      <button id="floatingGamesBtn" class="btn" type="button" style="display:none; box-shadow: 0 8px 20px rgba(0,0,0,0.35);">🎮 Games</button>
-    </div>
-
     <div id="viewModeGamesBanner" class="view-mode-banner" style="display:none;" role="status" aria-live="polite">
       👁️ View Mode: You can open/close games, but game controls are read-only.
     </div>
 
     <!-- GAMES LAUNCHER -->
-    <div class="gamesbar">
+    <div class="gamesbar" id="gamesLauncher">
       <button id="toggleJunk" class="game-toggle">🗑️ Junk</button>
       <button id="toggleSkins" class="game-toggle">💎 Skins</button>
       <button id="toggleVegas" class="game-toggle">🎲 Vegas</button>
