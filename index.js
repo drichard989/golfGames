@@ -493,6 +493,116 @@
     fontSizeSmall:"#fontSizeSmall", fontSizeMedium:"#fontSizeMedium", fontSizeLarge:"#fontSizeLarge",
   };
 
+  const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker'];
+  const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
+
+  function resolveTargetElement(target) {
+    return typeof target === 'string'
+      ? document.getElementById(target.replace('#', ''))
+      : $(target);
+  }
+
+  function getGameConfig(which) {
+    return {
+      vegas: { section: ids.vegasSection, toggle: ids.toggleVegas, init: null },
+      banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => window.Banker?.init?.() },
+      skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: () => window.Skins?.init?.() },
+      junk: {
+        section: ids.junkSection,
+        toggle: 'toggleJunk',
+        init: () => {
+          window.Junk?.init?.();
+
+          const savedState = localStorage.getItem(Storage.KEY);
+          if (!savedState) return;
+
+          try {
+            const parsed = JSON.parse(savedState);
+            if (!parsed?.junk?.achievements) return;
+
+            setTimeout(() => {
+              if (window.Junk && typeof window.Junk.setAchievementState === 'function') {
+                window.Junk.setAchievementState(parsed.junk.achievements);
+              }
+            }, 100);
+          } catch (error) {
+            console.error('[Junk] Failed to restore achievements:', error);
+          }
+        }
+      },
+      hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init?.() }
+    }[which] || null;
+  }
+
+  function getActiveGameTab() {
+    return GAME_TAB_ORDER.find((gameKey) => resolveTargetElement(getGameConfig(gameKey)?.section)?.classList.contains('open')) || null;
+  }
+
+  function getPrimaryTab() {
+    return document.getElementById('gamesEntryPanel')?.hidden ? 'score' : 'games';
+  }
+
+  function syncPrimaryTabUi(activeTab) {
+    const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
+    const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
+    const scorePanel = document.getElementById('scoreEntryPanel');
+    const gamesPanel = document.getElementById('gamesEntryPanel');
+    if (!scoreBtn || !gamesBtn || !scorePanel || !gamesPanel) return;
+
+    const isScore = activeTab === 'score';
+    scoreBtn.classList.toggle('active', isScore);
+    gamesBtn.classList.toggle('active', !isScore);
+    scoreBtn.setAttribute('aria-selected', isScore ? 'true' : 'false');
+    gamesBtn.setAttribute('aria-selected', !isScore ? 'true' : 'false');
+    scorePanel.hidden = !isScore;
+    gamesPanel.hidden = isScore;
+  }
+
+  function syncGameTabUi(activeGame) {
+    GAME_TAB_ORDER.forEach((gameKey) => {
+      const config = getGameConfig(gameKey);
+      const toggleBtn = resolveTargetElement(config?.toggle);
+      if (!toggleBtn) return;
+
+      const isActive = activeGame === gameKey;
+      toggleBtn.classList.toggle('active', isActive);
+      toggleBtn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      toggleBtn.setAttribute('tabindex', isActive ? '0' : '-1');
+    });
+  }
+
+  function setPrimaryTab(which, { save = true } = {}) {
+    if (which !== 'score' && which !== 'games') return;
+
+    if (which === 'games' && !getActiveGameTab()) {
+      setGameTab(DEFAULT_GAME_TAB, { save: false, activatePrimary: false });
+    }
+
+    syncPrimaryTabUi(which);
+
+    if (save) saveDebounced();
+  }
+
+  function setGameTab(which, { save = true, activatePrimary = true } = {}) {
+    if (!GAME_TAB_ORDER.includes(which)) return;
+
+    GAME_TAB_ORDER.forEach((gameKey) => {
+      if (gameKey === which) {
+        games_open(gameKey);
+      } else {
+        games_close(gameKey);
+      }
+    });
+
+    syncGameTabUi(which);
+
+    if (activatePrimary) {
+      syncPrimaryTabUi('games');
+    }
+
+    if (save) saveDebounced();
+  }
+
   // =============================================================================
   // SCORECARD MODULE - Table building, calculations, and player management
   // =============================================================================
@@ -1340,6 +1450,8 @@
           junk: $(ids.junkSection)?.classList.contains("open") || false,
           hilo: $(ids.hiloSection)?.classList.contains("open") || false
         },
+        primaryTab: getPrimaryTab(),
+        activeGame: getActiveGameTab(),
         fontSize: Config.FONT_SIZE || 'medium',
         advanceDirection: Config.ADVANCE_DIRECTION || 'down'
       };
@@ -1814,39 +1926,24 @@
         }
 
         if (applyLocalUi) {
-          // Restore open/closed game sections exactly as saved
-          const setGameOpenState = (sectionId, toggleId, shouldOpen) => {
-            const sec = document.getElementById(sectionId);
-            const btn = document.getElementById(toggleId);
-            if (!sec) return;
-            sec.classList.toggle('open', !!shouldOpen);
-            sec.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
-            if (btn) btn.classList.toggle('active', !!shouldOpen);
-          };
+          const savedOpenGame = GAME_TAB_ORDER.find((gameKey) => !!s[gameKey]?.open) || null;
+          const preferredGame = GAME_TAB_ORDER.includes(s.localUi?.activeGame)
+            ? s.localUi.activeGame
+            : savedOpenGame;
+          const preferredPrimaryTab = s.localUi?.primaryTab === 'games'
+            ? 'games'
+            : (savedOpenGame ? 'games' : 'score');
 
-          setGameOpenState('vegasSection', 'toggleVegas', !!s.vegas?.open);
-          setGameOpenState('bankerSection', 'toggleBanker', !!s.banker?.open);
-          setGameOpenState('skinsSection', 'toggleSkins', !!s.skins?.open);
-          setGameOpenState('junkSection', 'toggleJunk', !!s.junk?.open);
-          setGameOpenState('hiloSection', 'toggleHilo', !!s.hilo?.open);
+          GAME_TAB_ORDER.forEach((gameKey) => games_close(gameKey));
+          syncGameTabUi(null);
 
-          // Initialize modules for sections that were saved open
-          if (s.vegas?.open) {
-            window.Vegas?.renderTable?.();
-            window.Vegas?.renderTeamControls?.();
+          if (preferredGame) {
+            setGameTab(preferredGame, { save: false, activatePrimary: false });
+          } else if (preferredPrimaryTab === 'games') {
+            setGameTab(DEFAULT_GAME_TAB, { save: false, activatePrimary: false });
           }
-          if (s.banker?.open) {
-            window.Banker?.init?.();
-          }
-          if (s.skins?.open) {
-            window.Skins?.init?.();
-          }
-          if (s.junk?.open) {
-            window.Junk?.init?.();
-          }
-          if (s.hilo?.open) {
-            window.HiLo?.init?.();
-          }
+
+          syncPrimaryTabUi(preferredPrimaryTab);
         }
 
         // Recalculate all games with restored data
@@ -2020,31 +2117,14 @@
    */
   function games_open(which){
     try {
-      const gameConfig = {
-        vegas: { section: ids.vegasSection, toggle: ids.toggleVegas, init: null },
-        banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => {
-          // Always call init - it handles whether to rebuild internally
-          console.log('[games_open] Opening Banker, window.Banker exists:', !!window.Banker);
-          if (window.Banker) {
-            console.log('[games_open] Calling Banker.init()');
-            window.Banker.init();
-          } else {
-            console.error('[Banker] Banker module not loaded');
-          }
-        }},
-        skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: null },
-        junk: { section: ids.junkSection, toggle: 'toggleJunk', init: () => window.Junk?.init() },
-        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init() }
-      };
-      
-      const config = gameConfig[which];
+      const config = getGameConfig(which);
       if (!config) {
         console.error(`[Games] Unknown game: ${which}`);
         return;
       }
-      
-      const section = typeof config.section === 'string' ? document.getElementById(config.section.replace('#', '')) : $(config.section);
-      const toggleBtn = typeof config.toggle === 'string' ? document.getElementById(config.toggle) : $(config.toggle);
+
+      const section = resolveTargetElement(config.section);
+      const toggleBtn = resolveTargetElement(config.toggle);
       
       if (!section) {
         ErrorHandler.show(`Cannot open ${which} game`, 'Game section not found in DOM');
@@ -2074,19 +2154,11 @@
    */
   function games_close(which){
     try {
-      const gameConfig = {
-        vegas: { section: ids.vegasSection, toggle: ids.toggleVegas },
-        banker: { section: ids.bankerSection, toggle: ids.toggleBanker },
-        skins: { section: ids.skinsSection, toggle: ids.toggleSkins },
-        junk: { section: ids.junkSection, toggle: 'toggleJunk' },
-        hilo: { section: ids.hiloSection, toggle: ids.toggleHilo }
-      };
-      
-      const config = gameConfig[which];
+      const config = getGameConfig(which);
       if (!config) return;
-      
-      const section = typeof config.section === 'string' ? document.getElementById(config.section.replace('#', '')) : $(config.section);
-      const toggleBtn = typeof config.toggle === 'string' ? document.getElementById(config.toggle) : $(config.toggle);
+
+      const section = resolveTargetElement(config.section);
+      const toggleBtn = resolveTargetElement(config.toggle);
       
       if (section) {
         section.classList.remove('open');
@@ -2098,14 +2170,7 @@
     }
   }
   function games_toggle(which){
-    let sec;
-    if(which==="vegas") sec = $(ids.vegasSection);
-    else if(which==="banker") sec = $(ids.bankerSection);
-    else if(which==="skins") sec = $(ids.skinsSection);
-    else if(which==="hilo") sec = $(ids.hiloSection);
-    const open = sec?.classList.contains("open");
-    open? games_close(which) : games_open(which);
-    saveDebounced();
+    setGameTab(which);
   }
 
   // Theme toggle
@@ -3154,40 +3219,21 @@
     gamesBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function setupEntrySwitcher() {
+  function setupEntryTabs() {
     const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
     const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
-    const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
-    if (!scoreBtn || !gamesBtn || !gamesBar) return;
-
-    const setActiveMode = (mode) => {
-      scoreBtn.classList.toggle('active', mode === 'score');
-      gamesBtn.classList.toggle('active', mode === 'games');
-      scoreBtn.setAttribute('aria-pressed', mode === 'score' ? 'true' : 'false');
-      gamesBtn.setAttribute('aria-pressed', mode === 'games' ? 'true' : 'false');
-    };
-
-    const updateActiveMode = () => {
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.45);
-      const gamesTopY = gamesBar.getBoundingClientRect().top + scrollY;
-      setActiveMode(viewportMidY >= (gamesTopY - 24) ? 'games' : 'score');
-    };
+    if (!scoreBtn || !gamesBtn) return;
 
     scoreBtn.addEventListener('click', () => {
-      setActiveMode('score');
-      jumpToNextEmptyScore();
+      setPrimaryTab('score');
     });
 
     gamesBtn.addEventListener('click', () => {
-      setActiveMode('games');
-      jumpToGamesLauncher();
-      announce('Opened game entry.');
+      setPrimaryTab('games');
     });
 
-    window.addEventListener('scroll', updateActiveMode, { passive: true });
-    window.addEventListener('resize', updateActiveMode);
-    updateActiveMode();
+    syncPrimaryTabUi(getPrimaryTab());
+    syncGameTabUi(getActiveGameTab());
   }
 
   // =============================================================================
@@ -3321,54 +3367,12 @@
       });
     }
 
-    // Games: open/close
-    $(ids.toggleVegas).addEventListener("click", ()=>games_toggle("vegas"));
-    $(ids.toggleBanker).addEventListener("click", ()=>games_toggle("banker"));
-    $(ids.toggleHilo).addEventListener("click", ()=>games_toggle("hilo"));
-    
-    // Skins: toggle and initialize
-    $(ids.toggleSkins)?.addEventListener("click", () => {
-      const sec = $(ids.skinsSection);
-      const open = !sec.classList.contains('open');
-      sec.classList.toggle('open', open);
-      sec.setAttribute('aria-hidden', open ? 'false' : 'true');
-      $(ids.toggleSkins)?.classList.toggle('active', open);
-      if(open) {
-        setTimeout(() => { window.Skins?.init(); }, 0);
-      }
-      Storage.saveDebounced();
-    });
-    
-    // Junk: toggle and initialize
-    document.getElementById('toggleJunk')?.addEventListener('click', () => {
-      const sec = document.getElementById('junkSection');
-      const open = !sec.classList.contains('open');
-      sec.classList.toggle('open', open);
-      sec.setAttribute('aria-hidden', open ? 'false' : 'true');
-      document.getElementById('toggleJunk')?.classList.toggle('active', open);
-      if(open) {
-        setTimeout(() => { 
-          window.Junk?.init();
-          // Restore achievements from localStorage after table is built
-          const savedState = localStorage.getItem(Storage.KEY);
-          if(savedState) {
-            try {
-              const state = JSON.parse(savedState);
-              if(state.junk?.achievements) {
-                setTimeout(() => {
-                  if(window.Junk && typeof window.Junk.setAchievementState === 'function') {
-                    window.Junk.setAchievementState(state.junk.achievements);
-                  }
-                }, 100);
-              }
-            } catch(e) {
-              console.error('[Junk] Failed to restore achievements:', e);
-            }
-          }
-        }, 0);
-      }
-      Storage.saveDebounced();
-    });
+    // Games: select tabs
+    $(ids.toggleVegas).addEventListener("click", ()=>setGameTab("vegas"));
+    $(ids.toggleBanker).addEventListener("click", ()=>setGameTab("banker"));
+    $(ids.toggleHilo).addEventListener("click", ()=>setGameTab("hilo"));
+    $(ids.toggleSkins).addEventListener("click", ()=>setGameTab("skins"));
+    document.getElementById('toggleJunk')?.addEventListener('click', () => setGameTab('junk'));
     
     // Clear Junk Achievements button
     document.getElementById('clearJunkAchievements')?.addEventListener('click', () => {
@@ -3517,7 +3521,7 @@
       Storage.saveDebounced();
     });
     applyFontSize(Config.FONT_SIZE);
-    setupEntrySwitcher();
+    setupEntryTabs();
     
     Scorecard.player.updateCountDisplay();
 
