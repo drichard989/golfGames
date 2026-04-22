@@ -83,8 +83,17 @@
               <button id="cloudJoinBtn" class="btn" type="button">Join</button>
               <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
             </div>
+            <div style="display:flex; flex-wrap: wrap; gap: 8px; align-items: center; width: 100%;">
+              <select id="cloudSnapshotSelect" style="min-width: 220px; max-width: 100%; padding: 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
+                <option value="">Live current version</option>
+              </select>
+              <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
+              <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
+              <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
+            </div>
             <div id="cloudStatus" class="small" style="margin:0;">Cloud: not connected</div>
             <div id="cloudCodes" class="small" style="margin:0; display:none;"></div>
+            <div id="cloudSnapshotStatus" class="small" style="margin:0; display:none;"></div>
           </div>
         </div>
       </div>
