@@ -123,7 +123,7 @@
 
     <p class="small" id="parBadge" aria-live="polite"></p>
     <div id="viewModeScorecardBanner" class="view-mode-banner" style="display:none;" role="status" aria-live="polite">
-      👁️ View Mode: This scorecard is read-only.
+      👁️ View Mode: Read-only. You can switch tabs, but scorecard and game controls cannot be edited.
     </div>
     <div class="entry-switcher" role="tablist" aria-label="Switch between scorecard and games">
       <button id="entrySwitcherScoreBtn" class="entry-switcher-btn active" type="button" role="tab" aria-selected="true" aria-controls="scoreEntryPanel">⛳ Score</button>
@@ -182,10 +182,6 @@
     </section>
 
     <section id="gamesEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherGamesBtn" hidden>
-    <div id="viewModeGamesBanner" class="view-mode-banner" style="display:none;" role="status" aria-live="polite">
-      👁️ View Mode: You can open/close games, but game controls are read-only.
-    </div>
-
     <!-- GAMES LAUNCHER -->
     <div class="gamesbar" id="gamesLauncher" role="tablist" aria-label="Choose a golf game">
       <button id="toggleJunk" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="junkSection">🗑️ Junk</button>
