@@ -7,6 +7,7 @@
   const PUSH_DEBOUNCE_MS = 900;
   const MIN_PUSH_INTERVAL_MS = 1200;
   const SNAPSHOT_LIST_LIMIT = 20;
+  const VIEWER_LOCK_FEEDBACK_INTERVAL_MS = 1500;
 
   const EL = {
     createBtn: () => document.getElementById('cloudCreateBtn'),
@@ -23,6 +24,54 @@
     codes: () => document.getElementById('cloudCodes'),
     snapshotStatus: () => document.getElementById('cloudSnapshotStatus')
   };
+
+  const VIEWER_LOCK_SELECTORS = [
+    '#courseSelect',
+    '#addPlayerBtn',
+    '#clearAllBtn',
+    '#resetBtn',
+    '#saveBtn',
+    '#refreshAllBtn',
+    '#advanceToggle',
+    '#csvInput',
+    '#fontSizeSmall',
+    '#fontSizeMedium',
+    '#fontSizeLarge',
+    'input[name="handicapMode"]',
+    '#main-scorecard input',
+    '#main-scorecard select',
+    '#main-scorecard textarea',
+    '#vegasSection input',
+    '#vegasSection select',
+    '#vegasSection textarea',
+    '#vegasSection button',
+    '#bankerSection input',
+    '#bankerSection select',
+    '#bankerSection textarea',
+    '#bankerSection button',
+    '#skinsSection input',
+    '#skinsSection select',
+    '#skinsSection textarea',
+    '#skinsSection button',
+    '#junkSection input',
+    '#junkSection select',
+    '#junkSection textarea',
+    '#junkSection button',
+    '#hiloSection input',
+    '#hiloSection select',
+    '#hiloSection textarea',
+    '#hiloSection button'
+  ];
+
+  const VIEWER_ALLOWED_CLICK_IDS = new Set([
+    'toggleVegas',
+    'toggleBanker',
+    'toggleSkins',
+    'toggleJunk',
+    'toggleHilo',
+    'gamesLauncherBtn',
+    'scorecardLauncherBtn'
+  ]);
 
   const state = {
     initialized: false,
@@ -47,7 +96,9 @@
     snapshots: [],
     originalSave: null,
     lastPushAt: 0,
-    lastPushedContentHash: ''
+    lastPushedContentHash: '',
+    lockObserver: null,
+    lastViewerBlockedNoticeAt: 0
   };
 
   function setStatus(msg) {
@@ -82,45 +133,7 @@
   }
 
   function setViewerLockEnabled(enabled) {
-    const selectors = [
-      '#courseSelect',
-      '#addPlayerBtn',
-      '#clearAllBtn',
-      '#resetBtn',
-      '#saveBtn',
-      '#refreshAllBtn',
-      '#advanceToggle',
-      '#csvInput',
-      '#fontSizeSmall',
-      '#fontSizeMedium',
-      '#fontSizeLarge',
-      'input[name="handicapMode"]',
-      '#main-scorecard input',
-      '#main-scorecard select',
-      '#main-scorecard textarea',
-      '#vegasSection input',
-      '#vegasSection select',
-      '#vegasSection textarea',
-      '#vegasSection button',
-      '#bankerSection input',
-      '#bankerSection select',
-      '#bankerSection textarea',
-      '#bankerSection button',
-      '#skinsSection input',
-      '#skinsSection select',
-      '#skinsSection textarea',
-      '#skinsSection button',
-      '#junkSection input',
-      '#junkSection select',
-      '#junkSection textarea',
-      '#junkSection button',
-      '#hiloSection input',
-      '#hiloSection select',
-      '#hiloSection textarea',
-      '#hiloSection button'
-    ];
-
-    const nodes = Array.from(document.querySelectorAll(selectors.join(',')));
+    const nodes = Array.from(document.querySelectorAll(VIEWER_LOCK_SELECTORS.join(',')));
     nodes.forEach((el) => {
       if (!(el instanceof HTMLElement)) return;
 
@@ -157,6 +170,73 @@
 
       el.removeAttribute('aria-disabled');
       el.classList.remove('cloud-view-locked');
+    });
+  }
+
+  function isViewerSession() {
+    return state.session?.role === 'viewer';
+  }
+
+  function notifyViewerReadOnly() {
+    const now = Date.now();
+    if (now - state.lastViewerBlockedNoticeAt < VIEWER_LOCK_FEEDBACK_INTERVAL_MS) {
+      return;
+    }
+
+    state.lastViewerBlockedNoticeAt = now;
+    const msg = 'View mode is read-only';
+    if (typeof window.announce === 'function') {
+      window.announce(msg);
+    }
+  }
+
+  function shouldBlockViewerEvent(target, eventType) {
+    if (!(target instanceof HTMLElement)) return false;
+    if (!isViewerSession()) return false;
+
+    if (eventType === 'click') {
+      const allowedBtn = target.closest('button[id], [role="button"][id]');
+      if (allowedBtn instanceof HTMLElement && VIEWER_ALLOWED_CLICK_IDS.has(allowedBtn.id)) {
+        return false;
+      }
+    }
+
+    return !!target.closest(VIEWER_LOCK_SELECTORS.join(','));
+  }
+
+  function enforceViewerReadOnlyGuards() {
+    const guard = (event) => {
+      if (!event?.isTrusted) return;
+      const target = event.target;
+      const eventType = event.type;
+      if (!shouldBlockViewerEvent(target, eventType)) return;
+
+      event.preventDefault();
+      event.stopPropagation();
+      syncViewerLock();
+      setStatus('Cloud: connected (viewer) • Read-only mode');
+      notifyViewerReadOnly();
+    };
+
+    document.addEventListener('beforeinput', guard, true);
+    document.addEventListener('input', guard, true);
+    document.addEventListener('change', guard, true);
+    document.addEventListener('click', guard, true);
+  }
+
+  function ensureViewerLockObserver() {
+    if (state.lockObserver || typeof MutationObserver === 'undefined') return;
+    if (!document.body) return;
+
+    state.lockObserver = new MutationObserver(() => {
+      if (!isViewerSession()) return;
+      setViewerLockEnabled(true);
+      setViewModeBannersVisible(true);
+    });
+
+    state.lockObserver.observe(document.body, {
+      childList: true,
+      subtree: true
     });
   }
 
@@ -829,6 +909,14 @@
   }
 
   function bindUi() {
+    ensureViewerLockObserver();
+    enforceViewerReadOnlyGuards();
+
+    window.addEventListener('pageshow', () => syncViewerLock());
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) syncViewerLock();
+    });
+
     document.addEventListener('pointerdown', (e) => markBankerInteraction(e.target), true);
     document.addEventListener('focusin', (e) => markBankerInteraction(e.target), true);
 
