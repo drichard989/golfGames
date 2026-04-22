@@ -557,20 +557,20 @@
 
   function getGamesScrollTop() {
     const container = getGamesScrollContainer();
-    if (container && container.scrollHeight > container.clientHeight) {
-      return container.scrollTop || 0;
-    }
-    return window.scrollY || window.pageYOffset || 0;
+    if (!container) return 0;
+    return container.scrollTop || 0;
   }
 
   function setGamesScrollTop(top) {
     const safeTop = Number(top) || 0;
     const container = getGamesScrollContainer();
-    if (container && container.scrollHeight > container.clientHeight) {
+    if (!container) return;
+
+    // Direct assignment is most reliable on iOS for element scroll restoration.
+    container.scrollTop = safeTop;
+    try {
       container.scrollTo({ top: safeTop, left: 0, behavior: 'auto' });
-      return;
-    }
-    window.scrollTo({ top: safeTop, left: 0, behavior: 'auto' });
+    } catch {}
   }
 
   function syncGamesPanelHeight() {
