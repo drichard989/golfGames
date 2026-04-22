@@ -578,8 +578,16 @@
     if (!panel || panel.hidden) return;
 
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-    const rect = panel.getBoundingClientRect();
-    const available = Math.max(220, Math.floor(viewportHeight - rect.top - 8));
+    const panelRect = panel.getBoundingClientRect();
+    const switcherRect = document.getElementById('entrySwitcherGamesBtn')
+      ?.closest('.entry-switcher')
+      ?.getBoundingClientRect();
+
+    const topBoundary = switcherRect
+      ? Math.max(panelRect.top, switcherRect.bottom + 6)
+      : panelRect.top;
+
+    const available = Math.max(220, Math.floor(viewportHeight - topBoundary - 8));
     panel.style.maxHeight = `${available}px`;
   }
 
@@ -707,6 +715,7 @@
     const sync = () => syncGamesPanelHeight();
     window.addEventListener('resize', sync, { passive: true });
     window.addEventListener('orientationchange', sync, { passive: true });
+    window.addEventListener('scroll', sync, { passive: true });
   }
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
