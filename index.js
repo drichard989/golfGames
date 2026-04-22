@@ -605,6 +605,21 @@
     panel.style.maxHeight = `${available}px`;
   }
 
+  function syncSafeTopInset() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    const vv = window.visualViewport;
+    const visualTop = vv ? Math.max(0, Math.round(vv.offsetTop || 0)) : 0;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches || window.navigator.standalone;
+    const fallbackTop = (isIOS && standalone) ? 20 : 0;
+    const safeTop = Math.max(visualTop, fallbackTop);
+
+    root.style.setProperty('--safe-top-dynamic', `${safeTop}px`);
+  }
+
   function rememberPrimaryTabScroll(which = getPrimaryTab()) {
     if (which !== 'score' && which !== 'games') return;
     PRIMARY_TAB_SCROLL_POSITIONS[which] = window.scrollY || window.pageYOffset || 0;
@@ -739,10 +754,17 @@
     const panel = getGamesScrollContainer();
     if (!panel) return;
 
-    const sync = () => syncGamesPanelHeight();
+    const sync = () => {
+      syncSafeTopInset();
+      syncGamesPanelHeight();
+    };
+
+    sync();
     window.addEventListener('resize', sync, { passive: true });
     window.addEventListener('orientationchange', sync, { passive: true });
     window.addEventListener('scroll', sync, { passive: true });
+    window.visualViewport?.addEventListener('resize', sync, { passive: true });
+    window.visualViewport?.addEventListener('scroll', sync, { passive: true });
   }
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
