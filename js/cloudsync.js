@@ -13,6 +13,10 @@
     createBtn: () => document.getElementById('cloudCreateBtn'),
     joinBtn: () => document.getElementById('cloudJoinBtn'),
     leaveBtn: () => document.getElementById('cloudLeaveBtn'),
+    createBadgeBtn: () => document.getElementById('cloudCreateBadgeBtn'),
+    qrBadgeBtn: () => document.getElementById('cloudQrBadgeBtn'),
+    editCodeBadgeBtn: () => document.getElementById('cloudEditCodeBadgeBtn'),
+    viewCodeBadgeBtn: () => document.getElementById('cloudViewCodeBadgeBtn'),
     joinCode: () => document.getElementById('cloudJoinCode'),
     snapshotSelect: () => document.getElementById('cloudSnapshotSelect'),
     loadSnapshotBtn: () => document.getElementById('cloudLoadSnapshotBtn'),
@@ -123,6 +127,70 @@
         badge.textContent = '☁ Offline';
         badge.setAttribute('data-live', 'false');
       }
+    }
+
+    syncHeaderCodeBadgeButtons();
+  }
+
+  function syncHeaderCodeBadgeButtons() {
+    const createBtn = EL.createBadgeBtn();
+    const qrBtn = EL.qrBadgeBtn();
+    const editBtn = EL.editCodeBadgeBtn();
+    const viewBtn = EL.viewCodeBadgeBtn();
+
+    if (createBtn) {
+      const isEditorLive = state.session?.role === 'editor';
+      createBtn.disabled = isEditorLive;
+      createBtn.textContent = isEditorLive ? 'Live' : 'Go Live';
+      createBtn.title = isEditorLive ? 'Already in a live editor session' : 'Create live session';
+    }
+
+    if (qrBtn) {
+      qrBtn.disabled = false;
+      qrBtn.textContent = 'Share QR';
+      qrBtn.title = 'Share live view QR code';
+    }
+
+    if (editBtn) {
+      const editCode = normalizeCode(state.session?.editCode || '');
+      const show = !!editCode;
+      editBtn.hidden = !show;
+      if (show) {
+        editBtn.disabled = false;
+        editBtn.textContent = `Edit ${editCode}`;
+        editBtn.title = 'Tap to copy edit code';
+      }
+    }
+
+    if (viewBtn) {
+      const viewCode = normalizeCode(state.session?.viewCode || '');
+      const show = !!viewCode;
+      viewBtn.hidden = !show;
+      if (show) {
+        viewBtn.disabled = false;
+        viewBtn.textContent = `View ${viewCode}`;
+        viewBtn.title = 'Tap to copy view-only code';
+      }
+    }
+  }
+
+  async function copySessionCodeToClipboard(codeType) {
+    const key = codeType === 'edit' ? 'editCode' : 'viewCode';
+    const label = codeType === 'edit' ? 'Edit' : 'View';
+    const code = normalizeCode(state.session?.[key] || '');
+    if (!code) {
+      throw new Error(`${label} code unavailable`);
+    }
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(code);
+    } else {
+      window.prompt(`Copy ${label.toLowerCase()} code`, code);
+    }
+
+    setStatus(`Cloud: ${label.toLowerCase()} code copied`);
+    if (typeof window.announce === 'function') {
+      window.announce(`${label} code copied.`);
     }
   }
 
@@ -1294,6 +1362,18 @@
 
     EL.leaveBtn()?.addEventListener('click', () => leaveSession());
 
+    EL.createBadgeBtn()?.addEventListener('click',
+      withCloudOp('create session (badge)', 'Cloud: creating session...', createSession));
+
+    EL.qrBadgeBtn()?.addEventListener('click',
+      withCloudOp('share QR (badge)', 'Cloud: preparing live QR...', generateLiveViewQrCode));
+
+    EL.editCodeBadgeBtn()?.addEventListener('click',
+      withCloudOp('copy edit code (badge)', null, () => copySessionCodeToClipboard('edit')));
+
+    EL.viewCodeBadgeBtn()?.addEventListener('click',
+      withCloudOp('copy view code (badge)', null, () => copySessionCodeToClipboard('view')));
+
     EL.snapshotSelect()?.addEventListener('change', () => {
       state.activeSnapshotId = EL.snapshotSelect()?.value || '';
       syncSnapshotButtons();
@@ -1307,6 +1387,8 @@
 
     EL.saveSnapshotBtn()?.addEventListener('click',
       withCloudOp('save reviewed snapshot', null, saveReviewedSnapshotAsCurrent));
+
+    syncHeaderCodeBadgeButtons();
   }
 
   async function initFirebase() {
