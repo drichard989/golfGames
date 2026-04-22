@@ -19,7 +19,6 @@
     resumeLiveBtn: () => document.getElementById('cloudResumeLiveBtn'),
     saveSnapshotBtn: () => document.getElementById('cloudSaveSnapshotBtn'),
     viewModeScorecardBanner: () => document.getElementById('viewModeScorecardBanner'),
-    viewModeGamesBanner: () => document.getElementById('viewModeGamesBanner'),
     status: () => document.getElementById('cloudStatus'),
     codes: () => document.getElementById('cloudCodes'),
     snapshotStatus: () => document.getElementById('cloudSnapshotStatus')
@@ -127,11 +126,6 @@
     const scorecardBanner = EL.viewModeScorecardBanner();
     if (scorecardBanner) {
       scorecardBanner.style.display = visible ? '' : 'none';
-    }
-
-    const gamesBanner = EL.viewModeGamesBanner();
-    if (gamesBanner) {
-      gamesBanner.style.display = visible ? '' : 'none';
     }
   }
 
@@ -1043,6 +1037,18 @@
 
     const ref = state.db.ref(`games/${gameId}/state`);
     state.unsubRef = ref;
+
+    // Explicit initial hydrate so join never waits for the next live write.
+    // Some mobile/browser cases can delay the first realtime callback.
+    try {
+      const initialSnap = await ref.get();
+      const initialState = initialSnap?.val?.();
+      if (initialState) {
+        applyRemoteState(initialState);
+      }
+    } catch (err) {
+      console.warn('[CloudSync] initial state fetch failed:', err);
+    }
 
     ref.on('value', (snap) => {
       const data = snap.val();
