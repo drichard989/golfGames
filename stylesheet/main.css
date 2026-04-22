@@ -89,6 +89,12 @@
   }
 }
 
+@media (display-mode: fullscreen) {
+  :root {
+    --safe-top-dynamic: 44px;
+  }
+}
+
 :root[data-font-size="small"] {
   --font-size-step: -3px;
 }
@@ -155,7 +161,7 @@ body {
   color: var(--ink);
   color-scheme: dark;
   overscroll-behavior: none;
-  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+  padding: var(--safe-top-inset) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   -webkit-tap-highlight-color: transparent;
   position: relative;
 }
@@ -189,7 +195,7 @@ body::before {
 
 /* ---- Header / Controls ---- */
 header {
-  padding: calc(var(--safe-top-inset) + var(--space-md)) var(--space-lg) var(--space-sm);
+  padding: var(--space-md) var(--space-lg) var(--space-sm);
   display: grid;
   gap: var(--space-sm);
   /* Smooth collapse when Games tab is active */
