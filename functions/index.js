@@ -188,6 +188,37 @@ exports.redeemGameCode = onCall({ region: REGION }, async (request) => {
   };
 });
 
+exports.getGameCodes = onCall({ region: REGION }, async (request) => {
+  const uid = ensureAuthed(request);
+  const gameId = String(request.data?.gameId || '').trim();
+
+  if (!gameId) {
+    throw new HttpsError('invalid-argument', 'gameId is required.');
+  }
+
+  const roleSnap = await db.ref(`games/${gameId}/members/${uid}/role`).get();
+  const role = roleSnap.val();
+  if (role !== 'editor') {
+    throw new HttpsError('permission-denied', 'Editor access required.');
+  }
+
+  const codesSnap = await db.ref(`games/${gameId}/codes`).get();
+  const codes = codesSnap.val() || {};
+  const viewCode = normalizeCode(codes.viewCode);
+  const editCode = normalizeCode(codes.editCode);
+
+  if (!viewCode) {
+    throw new HttpsError('not-found', 'View code not found for this game.');
+  }
+
+  return {
+    ok: true,
+    gameId,
+    editCode,
+    viewCode
+  };
+});
+
 exports.cleanupOldCloudData = onSchedule(
   {
     region: REGION,
