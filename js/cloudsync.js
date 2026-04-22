@@ -567,8 +567,6 @@
     const codes = await ensureShareSessionCodes();
     return codes.editCode;
   }
-    return viewCode;
-  }
 
   async function shareLiveViewLink() {
     if (!state.user) throw new Error('Cloud auth is not ready yet.');
