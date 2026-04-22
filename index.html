@@ -22,7 +22,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v2.4.4</h1>
+        <h1>Manito Golf Games v2.4.5</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
@@ -198,8 +198,6 @@
     </div>
     <div id="scorecardOptionsPanel" class="game-options-panel scorecard-options-panel" hidden>
       <div class="controls scorecard-options-controls">
-        <button id="clearAllBtn" class="btn">Clear Names &amp; Scores</button>
-        <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
         <div class="control handicap-mode-control">
           <label>Handicap Mode:</label>
           <div class="hcp-mode-btn-group" id="handicapModeGroup" role="radiogroup" aria-label="Handicap Mode">
@@ -208,6 +206,8 @@
             <button type="button" class="btn hcp-mode-btn" id="handicapModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
           </div>
         </div>
+        <button id="clearAllBtn" class="btn">Clear Names &amp; Scores</button>
+        <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
       </div>
     </div>
     </section>
@@ -582,218 +582,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js" defer></script>
     <script src="js/firebase-config.js" defer></script>
     <script src="js/cloudsync.js" defer></script>
-    <!-- Inline bootstrap to verify scripts run -->
-    <script>
-      console.log('[golfGames] inline bootstrap script loaded');
-      
-      // Highlight holes where players receive strokes
-      window.addEventListener('DOMContentLoaded', function() {
-        
-        function updateStrokeHighlights() {
-          // Use global HCPMEN (updated when course changes)
-          const HCPMEN = window.HCPMEN;
-          if (!HCPMEN || !Array.isArray(HCPMEN)) {
-            // Config might not be initialized yet - this is normal during page load
-            console.log('[Highlights] Waiting for course data to load...');
-            return; // Don't highlight if no course data yet
-          }
-          
-          // Get selected handicap mode
-          const modeRadio = document.querySelector('input[name="handicapMode"]:checked');
-          const mode = modeRadio ? modeRadio.value : 'playOffLow';
-          
-          console.log('[updateStrokeHighlights] Mode:', mode); // Debug log
-          
-          // Query from scrollable table (has score inputs)
-          const scoreTable = document.querySelector('#scorecard');
-          if(!scoreTable) {
-            console.error('[Highlights] Scorecard table not found!');
-            return;
-          }
-          
-          const playerRows = scoreTable.querySelectorAll('.player-row');
-          if(!playerRows.length) return;
-          
-          // Get CHs from fixed table
-          const fixedTable = document.querySelector('#scorecardFixed');
-          const fixedRows = fixedTable ? fixedTable.querySelectorAll('.player-row') : [];
-          const chs = [];
-          fixedRows.forEach(function(row) {
-            const chInput = row.querySelector('.ch-input');
-            const val = chInput && chInput.value !== ''
-              ? (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : parseFloat(chInput.value))
-              : null;
-            chs.push(val !== null && !isNaN(val) ? val : null);
-          });
-          
-          // Mode 1: GROSS - no stroke indicators
-          if (mode === 'gross') {
-            playerRows.forEach(function(row) {
-              const scoreInputs = row.querySelectorAll('.score-input');
-              scoreInputs.forEach(function(input) {
-                input.classList.remove('receives-stroke', 'gives-stroke');
-                input.removeAttribute('data-strokes');
-                input.removeAttribute('title');
-              });
-            });
-            return;
-          }
-          
-          // Mode 2: Play Off Low (current behavior)
-          if (mode === 'playOffLow') {
-            const validCHs = chs.filter(function(ch) { return ch !== null; });
-            if(validCHs.length === 0) return;
-            
-            const minCH = Math.min.apply(null, validCHs);
-            const adjustedCHs = chs.map(function(ch) { return ch !== null ? ch - minCH : 0; });
-            
-            // Update each player's score inputs
-            playerRows.forEach(function(row, playerIdx) {
-              const adjustedCH = adjustedCHs[playerIdx];
-              const scoreInputs = row.querySelectorAll('.score-input');
-              
-              // Only highlight if this player has a CH entered
-              if(chs[playerIdx] === null) {
-                scoreInputs.forEach(function(input) {
-                  input.classList.remove('receives-stroke', 'gives-stroke');
-                  input.removeAttribute('title');
-                });
-                return;
-              }
-              
-              scoreInputs.forEach(function(input, holeIdx) {
-                const holeHCP = HCPMEN[holeIdx];
-                // Correct formula: player gets stroke if their adjusted CH >= hole's HCP index
-                const fullStrokes = Math.floor(adjustedCH / 18);
-                const remainingStrokes = adjustedCH % 18;
-                const getsStroke = remainingStrokes >= holeHCP;
-                const totalStrokes = fullStrokes + (getsStroke ? 1 : 0);
-                
-                // Remove both classes first
-                input.classList.remove('receives-stroke', 'gives-stroke');
-                
-                if(totalStrokes > 0) {
-                  input.classList.add('receives-stroke');
-                  input.setAttribute('data-strokes', totalStrokes);
-                  input.setAttribute('title', 'Receives ' + totalStrokes + ' stroke(s)');
-                } else {
-                  input.removeAttribute('data-strokes');
-                  input.removeAttribute('title');
-                }
-              });
-            });
-            return;
-          }
-          
-          // Mode 3: Full Handicap - everyone gets their full CH
-          if (mode === 'fullHandicap') {
-            playerRows.forEach(function(row, playerIdx) {
-              const rawCH = chs[playerIdx];
-              const scoreInputs = row.querySelectorAll('.score-input');
-              
-              // Only highlight if this player has a CH entered
-              if(rawCH === null) {
-                scoreInputs.forEach(function(input) {
-                  input.classList.remove('receives-stroke', 'gives-stroke');
-                  input.removeAttribute('title');
-                });
-                return;
-              }
-              
-              scoreInputs.forEach(function(input, holeIdx) {
-                const holeHCP = HCPMEN[holeIdx];
-                
-                // Calculate strokes on this hole based on raw CH
-                let totalStrokes = 0;
-                if (rawCH > 0) {
-                  // Normal handicap - receives strokes (subtract from gross)
-                  const fullStrokes = Math.floor(rawCH / 18);
-                  const remainingStrokes = rawCH % 18;
-                  const getsStroke = remainingStrokes >= holeHCP;
-                  totalStrokes = fullStrokes + (getsStroke ? 1 : 0);
-                } else if (rawCH < 0) {
-                  // Plus handicap - gives strokes (add to gross)
-                  const absCH = Math.abs(rawCH);
-                  const fullStrokes = Math.floor(absCH / 18);
-                  const remainingStrokes = absCH % 18;
-                  const getsStroke = holeHCP >= (19 - remainingStrokes);
-                  totalStrokes = -(fullStrokes + (getsStroke ? 1 : 0));
-                }
-                
-                // Remove both classes first
-                input.classList.remove('receives-stroke', 'gives-stroke');
-                
-                if(totalStrokes > 0) {
-                  // Receiving strokes - green highlight
-                  input.classList.add('receives-stroke');
-                  input.setAttribute('data-strokes', totalStrokes);
-                  input.setAttribute('title', 'Receives ' + totalStrokes + ' stroke(s)');
-                } else if(totalStrokes < 0) {
-                  // Giving strokes (plus handicap) - red highlight
-                  input.classList.add('gives-stroke');
-                  input.setAttribute('data-strokes', Math.abs(totalStrokes));
-                  input.setAttribute('title', 'Gives ' + Math.abs(totalStrokes) + ' stroke(s) (plus handicap)');
-                } else {
-                  input.removeAttribute('data-strokes');
-                  input.removeAttribute('title');
-                }
-              });
-            });
-            return;
-          }
-        }
-        
-        // Update on CH input changes and score input changes
-        document.addEventListener('input', function(e) {
-          if(e.target && e.target.classList && (e.target.classList.contains('ch-input') || e.target.classList.contains('score-input'))) {
-            updateStrokeHighlights();
-          }
-        });
-        
-        // Update on handicap mode change
-        function forceHandicapModeRefresh() {
-          try {
-            if (window.GolfApp?.scorecard?.calc) {
-              // Bypass recalc throttle for explicit mode toggles
-              window.GolfApp.scorecard.calc._lastRecalcAll = 0;
-              window.GolfApp.scorecard.calc.recalcAll();
-              window.GolfApp.scorecard.calc.applyStrokeHighlighting();
-            }
-            if (window.AppManager?.recalcGames) {
-              window.AppManager.recalcGames();
-            }
-          } catch (err) {
-            console.warn('[Highlights] forceHandicapModeRefresh failed:', err);
-          }
-
-          // Run highlight passes now and after layout settles
-          updateStrokeHighlights();
-          requestAnimationFrame(updateStrokeHighlights);
-          setTimeout(updateStrokeHighlights, 0);
-          setTimeout(updateStrokeHighlights, 80);
-        }
-
-        document.addEventListener('change', function(e) {
-          if(e.target && e.target.name === 'handicapMode') {
-            forceHandicapModeRefresh();
-            // Save mode selection to localStorage
-            if(typeof window.saveDebounced === 'function') {
-              window.saveDebounced();
-            }
-          }
-        });
-        
-        // Also update on load event from main script
-        setTimeout(updateStrokeHighlights, 500);
-        setTimeout(updateStrokeHighlights, 1000);
-        
-        // Make globally accessible for course switching
-        window.updateStrokeHighlights = updateStrokeHighlights;
-        
-        // Initial update
-        updateStrokeHighlights();
-      });
-    </script>
     <!-- QR Code Libraries (must load before qrcode.js) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
