@@ -144,7 +144,7 @@ body {
   color: var(--ink);
   color-scheme: dark;
   overscroll-behavior: none;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: 0 env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -158,7 +158,7 @@ body {
 
 /* ---- Header / Controls ---- */
 header {
-  padding: var(--space-md) var(--space-lg) var(--space-sm);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--space-md)) var(--space-lg) var(--space-sm);
   display: grid;
   gap: var(--space-sm);
   /* Smooth collapse when Games tab is active */
@@ -181,7 +181,8 @@ header.header-collapsed {
 
 .sticky-nav-bar {
   position: sticky;
-  top: calc(env(safe-area-inset-top, 0px));
+  top: 0;
+  padding-top: env(safe-area-inset-top, 0px);
   z-index: 31;
   background: var(--bg);
 }
@@ -484,10 +485,43 @@ input[type="text"] {
   gap: 12px;
 }
 
-.handicap-mode-control .radio {
-  display: inline-flex;
+.hcp-mode-btn-group {
+  display: flex;
   gap: 6px;
-  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hcp-mode-btn {
+  flex: 1 1 auto;
+  min-height: var(--touch-min);
+  font-size: var(--text-sm);
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+
+.hcp-mode-btn[data-active="true"] {
+  background: rgba(74, 158, 255, 0.18);
+  border-color: rgba(74, 158, 255, 0.7);
+  color: #4a9eff;
+  font-weight: 600;
+}
+
+:root[data-theme="light"] .hcp-mode-btn {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+:root[data-theme="light"] .hcp-mode-btn[data-active="true"] {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.6);
+  color: #1d4ed8;
+  font-weight: 600;
 }
 
 .csv-control {
@@ -716,6 +750,10 @@ input[type="text"] {
 
 .entry-panel[hidden] {
   display: none !important;
+}
+
+#scoreEntryPanel {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-lg));
 }
 
 #gamesEntryPanel {
@@ -1246,6 +1284,39 @@ tfoot td {
   display: inline-flex;
   gap: var(--space-xs);
   align-items: center;
+  min-height: var(--touch-min);
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--panel-alt);
+  color: var(--muted);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.radio:has(input[type="radio"]:checked) {
+  background: rgba(74, 158, 255, 0.18);
+  border-color: rgba(74, 158, 255, 0.7);
+  color: #4a9eff;
+  font-weight: 600;
+}
+
+:root[data-theme="light"] .radio {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+:root[data-theme="light"] .radio:has(input[type="radio"]:checked) {
+  background: rgba(37, 99, 235, 0.12);
+  border-color: rgba(37, 99, 235, 0.6);
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* Hide the actual radio dot — the label itself is the button */
+.radio input[type="radio"] {
+  display: none;
 }
 
 .vegas-opt-flag {

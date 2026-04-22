@@ -22,7 +22,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v2.4.1</h1>
+        <h1>Manito Golf Games v2.4.2</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
@@ -202,9 +202,11 @@
         <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
         <div class="control handicap-mode-control">
           <label>Handicap Mode:</label>
-          <label class="radio"><input type="radio" name="handicapMode" value="gross" id="handicapModeGross" /> Gross</label>
-          <label class="radio"><input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked /> Play Off Low</label>
-          <label class="radio"><input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" /> Full Handicap</label>
+          <div class="hcp-mode-btn-group" id="handicapModeGroup" role="radiogroup" aria-label="Handicap Mode">
+            <button type="button" class="btn hcp-mode-btn" id="handicapModeGross" data-value="gross" role="radio" aria-checked="false">Gross</button>
+            <button type="button" class="btn hcp-mode-btn" id="handicapModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="true" data-active="true">Play Off Low</button>
+            <button type="button" class="btn hcp-mode-btn" id="handicapModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+          </div>
         </div>
       </div>
     </div>
