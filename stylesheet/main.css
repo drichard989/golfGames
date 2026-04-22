@@ -167,7 +167,8 @@ header {
   overflow: hidden;
 }
 
-header.games-active {
+header.games-active,
+header.header-collapsed {
   max-height: 0 !important;
   padding-top: 0 !important;
   padding-bottom: 0 !important;
@@ -175,8 +176,40 @@ header.games-active {
   pointer-events: none;
 }
 
-#parBadge.games-active {
+#parBadge.games-active,
+#parBadge.header-collapsed {
   display: none;
+}
+
+.header-collapse-bar {
+  display: flex;
+  justify-content: center;
+  padding: 2px 0 0;
+}
+
+.header-collapse-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  padding: 3px 14px;
+  border-radius: 99px;
+  line-height: 1.4;
+  opacity: 0.55;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.header-collapse-btn:hover {
+  opacity: 1;
+  background: var(--panel);
+  border-color: var(--line);
+}
+
+:root[data-theme="light"] .header-collapse-btn {
+  color: var(--muted);
 }
 
 h1 {
