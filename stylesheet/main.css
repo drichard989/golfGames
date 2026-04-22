@@ -426,6 +426,40 @@ input[type="text"] {
   align-items: center;
 }
 
+.cloud-control-compact {
+  margin-top: 2px;
+  padding: 8px 10px;
+  gap: 8px;
+}
+
+.cloud-control-compact .cloud-row {
+  gap: 6px;
+}
+
+.cloud-control-compact .cloud-row-share .btn {
+  flex: 1 1 220px;
+}
+
+.cloud-snapshots-panel {
+  margin: 2px 0 0;
+}
+
+.cloud-control-compact .btn {
+  padding: 8px 12px;
+  min-height: 38px;
+}
+
+.cloud-control-compact #cloudJoinCode,
+.cloud-control-compact #cloudSnapshotSelect {
+  min-width: 180px;
+  padding: 7px 10px;
+}
+
+.cloud-control-compact #cloudStatus {
+  padding: 4px 8px;
+  font-size: calc(var(--text-xs) + var(--font-descriptive-adjust) + var(--font-size-step));
+}
+
 #cloudJoinCode {
   min-width: 220px;
   flex: 1 1 240px;
@@ -1742,10 +1776,6 @@ input[type="text"] {
   flex-wrap: wrap;
   gap: var(--space-sm);
   align-items: flex-start;
-}
-
-.scorecard-add-player-row {
-  padding: 0 var(--space-lg) var(--space-sm);
 }
 
 /* par badge tighter below header */

@@ -42,6 +42,33 @@
           <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
         </div>
 
+        <div class="control cloud-control cloud-control-compact">
+          <div class="cloud-row cloud-row-session">
+            <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
+            <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" />
+            <button id="cloudJoinBtn" class="btn" type="button">Join</button>
+            <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
+          </div>
+          <div class="cloud-row cloud-row-share">
+            <button id="shareHtmlBtn" class="btn" type="button">📱 Share Live Scorecard</button>
+            <button id="generateQRBtn" class="btn" type="button">📷 Share Live via QR</button>
+          </div>
+          <button type="button" class="btn game-options-toggle" id="cloudSnapshotsToggle" data-target="cloudSnapshotsPanel" aria-controls="cloudSnapshotsPanel" aria-expanded="false">Snapshots</button>
+          <div id="cloudSnapshotsPanel" class="game-options-panel cloud-snapshots-panel" hidden>
+            <div class="cloud-row cloud-row-snapshots">
+              <select id="cloudSnapshotSelect">
+                <option value="">Live current version</option>
+              </select>
+              <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
+              <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
+              <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
+            </div>
+          </div>
+          <div id="cloudStatus" class="small">Cloud: not connected</div>
+          <div id="cloudCodes" class="small" style="display:none;"></div>
+          <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
+        </div>
+
         <div id="utilitiesSection" class="utilities-section">
         <div class="controls utilities-grid">
           <div class="utilities-row utilities-row-actions">
@@ -64,8 +91,6 @@
           </div>
 
           <div class="utilities-row utilities-row-export">
-            <button id="shareHtmlBtn" class="btn">📱 Share Live Scorecard</button>
-            <button id="generateQRBtn" class="btn">📷 Share Live via QR</button>
             <button id="archivedToolsToggle" class="btn" type="button">🗄️ Archived Tools</button>
           </div>
 
@@ -84,25 +109,6 @@
             </div>
           </div>
 
-          <div class="control cloud-control">
-            <div class="cloud-row cloud-row-session">
-              <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
-              <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" />
-              <button id="cloudJoinBtn" class="btn" type="button">Join</button>
-              <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
-            </div>
-            <div class="cloud-row cloud-row-snapshots">
-              <select id="cloudSnapshotSelect">
-                <option value="">Live current version</option>
-              </select>
-              <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
-              <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
-              <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
-            </div>
-            <div id="cloudStatus" class="small">Cloud: not connected</div>
-            <div id="cloudCodes" class="small" style="display:none;"></div>
-            <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
-          </div>
         </div>
         <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
         <p class="small">If a player is a + handicap, enter it with a leading plus sign (e.g., +2).</p>
@@ -173,6 +179,7 @@
 
     <!-- SCORECARD OPTIONS -->
     <div class="scorecard-options-bar">
+      <button id="addPlayerBtn" class="btn">+ Add Player</button>
       <button type="button" class="btn game-options-toggle" id="scorecardOptionsToggle" data-target="scorecardOptionsPanel" aria-controls="scorecardOptionsPanel" aria-expanded="false">Scorecard Options</button>
     </div>
     <div id="scorecardOptionsPanel" class="game-options-panel scorecard-options-panel" hidden>
@@ -186,9 +193,6 @@
           <label class="radio"><input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" /> Full Handicap</label>
         </div>
       </div>
-    </div>
-    <div class="controls scorecard-add-player-row">
-      <button id="addPlayerBtn" class="btn">+ Add Player</button>
     </div>
     </section>
 
