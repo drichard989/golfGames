@@ -110,7 +110,7 @@
 
   function showJoinSuccessToast(role) {
     const mode = role === 'editor' ? 'edit' : 'view';
-    const message = `Joined live game (${mode})`;
+    const message = `Joined live ${mode}`;
 
     const existing = document.getElementById('cloudJoinSuccessOverlay');
     if (existing) existing.remove();
@@ -1089,6 +1089,9 @@
   async function subscribeRealtime(gameId) {
     if (!state.db) return;
     unbindRealtime();
+    state.currentLiveState = null;
+    state.lastPushedContentHash = '';
+    state.lastSeenRevision = 0;
 
     const metaSnap = await state.db.ref(`games/${gameId}/meta/lastSnapshotAt`).get().catch(() => null);
     state.lastSnapshotAt = Number(metaSnap?.val?.() ?? 0) || 0;
@@ -1216,6 +1219,7 @@
     state.lastSeenRevision = 0;
     state.lastSnapshotAt = 0;
     state.currentLiveState = null;
+    state.lastPushedContentHash = '';
     state.snapshots = [];
     storeSession(null);
     updateUiForSession();

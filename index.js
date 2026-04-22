@@ -1473,8 +1473,7 @@
           junk: {
             useNet: document.getElementById('junkUseNet')?.checked ?? false,
             achievements: (() => {
-              const hasRenderedAchievementInputs = document.querySelectorAll('#junkTable input.junk-ach').length > 0;
-              if (typeof window.Junk?.getAchievementState === 'function' && hasRenderedAchievementInputs) {
+              if (typeof window.Junk?.getAchievementState === 'function') {
                 return window.Junk.getAchievementState();
               }
               return existingState?.junk?.achievements ?? [];
@@ -1689,8 +1688,7 @@
           useNet: document.getElementById('junkUseNet')?.checked ?? false,
           open: $(ids.junkSection)?.classList.contains("open"),
           achievements: (() => {
-            const hasRenderedAchievementInputs = document.querySelectorAll('#junkTable input.junk-ach').length > 0;
-            if (typeof window.Junk?.getAchievementState === 'function' && hasRenderedAchievementInputs) {
+            if (typeof window.Junk?.getAchievementState === 'function') {
               return window.Junk.getAchievementState();
             }
             return existingState?.junk?.achievements ?? [];
