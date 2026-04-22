@@ -373,6 +373,13 @@
     return url.toString();
   }
 
+  function buildEditShareUrl(editCode) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('view');
+    url.searchParams.set('code', normalizeCode(editCode));
+    return url.toString();
+  }
+
   function stableStringify(value) {
     if (value === null || typeof value !== 'object') {
       return JSON.stringify(value);
@@ -510,7 +517,7 @@
     return result?.data;
   }
 
-  async function ensureShareSessionWithViewCode() {
+  async function ensureShareSessionCodes() {
     if (!state.session) {
       await createSession();
     }
@@ -519,8 +526,11 @@
       throw new Error('Editor access is required to share a live scorecard.');
     }
 
-    if (state.session.viewCode) {
-      return state.session.viewCode;
+    if (state.session.viewCode && state.session.editCode) {
+      return {
+        viewCode: state.session.viewCode,
+        editCode: state.session.editCode
+      };
     }
 
     const codes = await callFunction('getGameCodes', {
@@ -528,11 +538,12 @@
     });
 
     const viewCode = normalizeCode(codes?.viewCode);
-    if (!viewCode) {
-      throw new Error('Unable to fetch view code for this session.');
+    const editCode = normalizeCode(codes?.editCode || state.session.editCode || '');
+    if (!viewCode || !editCode) {
+      throw new Error('Unable to fetch share codes for this session.');
     }
 
-    state.session.editCode = normalizeCode(codes?.editCode || state.session.editCode || '');
+    state.session.editCode = editCode;
     state.session.viewCode = viewCode;
     storeSession({
       gameId: state.session.gameId,
@@ -541,6 +552,21 @@
       viewCode: state.session.viewCode || ''
     });
     updateUiForSession();
+    return {
+      viewCode,
+      editCode
+    };
+  }
+
+  async function ensureShareSessionWithViewCode() {
+    const codes = await ensureShareSessionCodes();
+    return codes.viewCode;
+  }
+
+  async function ensureShareSessionWithEditCode() {
+    const codes = await ensureShareSessionCodes();
+    return codes.editCode;
+  }
     return viewCode;
   }
 
@@ -576,7 +602,7 @@
     setStatus('Cloud: live view link ready');
   }
 
-  function openQrModalFromText(text, title = 'Live Share QR') {
+  function openQrModalFromText(text, title = 'Live Share QR', subtitleText = 'Scan to open the live view scorecard.') {
     if (typeof qrcode === 'undefined') {
       throw new Error('QR library unavailable. Refresh and try again.');
     }
@@ -610,7 +636,7 @@
     heading.style.cssText = 'margin: 0 0 10px 0;';
 
     const subtitle = document.createElement('p');
-    subtitle.textContent = 'Scan to open the live view scorecard.';
+    subtitle.textContent = subtitleText;
     subtitle.style.cssText = 'margin: 0 0 14px 0; color: #555;';
 
     const qrWrap = document.createElement('div');
@@ -656,8 +682,18 @@
     setStatus('Cloud: preparing live QR...');
     const viewCode = await ensureShareSessionWithViewCode();
     const url = buildViewShareUrl(viewCode);
-    openQrModalFromText(url, 'Live Scorecard QR');
+    openQrModalFromText(url, 'Live View QR', 'Scan to open the live scorecard in read-only mode.');
     setStatus(`Cloud: live QR ready • Game ${state.session?.gameId || ''}`);
+  }
+
+  async function generateLiveEditQrCode() {
+    if (!state.user) throw new Error('Cloud auth is not ready yet.');
+
+    setStatus('Cloud: preparing edit QR...');
+    const editCode = await ensureShareSessionWithEditCode();
+    const url = buildEditShareUrl(editCode);
+    openQrModalFromText(url, 'Live Edit QR', 'Scan to open the live scorecard with edit access. Share with trusted players only.');
+    setStatus(`Cloud: live edit QR ready • Game ${state.session?.gameId || ''}`);
   }
 
   function updateUiForSession() {
@@ -1263,6 +1299,30 @@
     await subscribeRealtime(state.session.gameId);
   }
 
+  function focusScorecardAfterUrlJoin() {
+    const utilitiesSection = document.getElementById('utilitiesSection');
+    if (utilitiesSection) {
+      utilitiesSection.classList.remove('open');
+    }
+
+    const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
+    if (scoreBtn) {
+      scoreBtn.click();
+    } else {
+      const scorePanel = document.getElementById('scoreEntryPanel');
+      const gamesPanel = document.getElementById('gamesEntryPanel');
+      if (scorePanel) scorePanel.hidden = false;
+      if (gamesPanel) gamesPanel.hidden = true;
+    }
+
+    const scorecard = document.getElementById('main-scorecard');
+    if (scorecard) {
+      requestAnimationFrame(() => {
+        scorecard.scrollIntoView({ behavior: 'auto', block: 'start' });
+      });
+    }
+  }
+
   async function joinSessionFromUrlIfPresent() {
     const code = getCodeFromUrl();
     if (!code) return false;
@@ -1270,6 +1330,7 @@
     try {
       await joinSessionWithCode(code);
       clearCodeFromUrl();
+      focusScorecardAfterUrlJoin();
       setStatus(`Cloud: joined from shared link (${state.session?.role || 'viewer'})`);
       return true;
     } catch (err) {
@@ -1311,6 +1372,7 @@
     leaveSession,
     shareLiveViewLink,
     generateLiveViewQrCode,
+    generateLiveEditQrCode,
     queuePush,
     getSession: () => state.session,
     isApplyingRemote: () => state.isApplyingRemote
