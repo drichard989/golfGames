@@ -2244,7 +2244,7 @@
       if (advanceLabel) advanceLabel.textContent = 'Advance: ↓ Down';
 
       // Reset game options to defaults
-      this.clearGamesData();
+      this.clearGameData('all', false);
 
       GAME_TAB_ORDER.forEach((gameKey) => games_close(gameKey));
       syncGameTabUi(null);
@@ -3665,6 +3665,51 @@
     }
     Storage.clearEverything();
   });
+
+  const clearGamesDataBtn = document.getElementById('clearGamesDataBtn');
+  if (clearGamesDataBtn) {
+    clearGamesDataBtn.addEventListener('click', async () => {
+      const cloudSession = window.CloudSync?.getSession?.();
+      const confirmed = window.confirm(
+        cloudSession
+          ? 'Clear all game data and leave the live cloud session? You will need a new code to go live again.'
+          : 'Clear all game data and reset game options to defaults?'
+      );
+      if (!confirmed) return;
+
+      if (cloudSession) {
+        await window.CloudSync.leaveSession?.();
+      }
+      Storage.clearGamesData();
+    });
+  }
+
+  const wireGameClearButton = (buttonId, gameKey, label) => {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+      const cloudSession = window.CloudSync?.getSession?.();
+      const confirmed = window.confirm(
+        cloudSession
+          ? `Clear ${label} data and leave the live cloud session? You will need a new code to go live again.`
+          : `Clear ${label} data?`
+      );
+      if (!confirmed) return;
+
+      if (cloudSession) {
+        await window.CloudSync.leaveSession?.();
+      }
+      Storage.clearGameData(gameKey);
+    });
+  };
+
+  wireGameClearButton('clearSkinsDataBtn', 'skins', 'Skins');
+  wireGameClearButton('clearVegasDataBtn', 'vegas', 'Vegas');
+  wireGameClearButton('clearBankerDataBtn', 'banker', 'Banker');
+  wireGameClearButton('clearHiloDataBtn', 'hilo', 'Hi-Lo');
+  wireGameClearButton('clearJunkDataBtn', 'junk', 'Junk');
+
   $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
   
   // Auto-advance direction toggle
