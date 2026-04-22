@@ -208,6 +208,14 @@ header.header-collapsed {
   padding: 2px var(--space-lg) 0;
 }
 
+.header-cloud-status-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
 .header-bar-badge {
   font-size: 12px;
   min-width: 0;
@@ -687,6 +695,39 @@ input[type="text"] {
   border-color: var(--line);
 }
 
+.cloud-code-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 9px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  min-height: 24px;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, opacity 0.2s;
+}
+
+.cloud-code-badge-btn[hidden] {
+  display: none !important;
+}
+
+.cloud-code-badge-btn:hover:not(:disabled) {
+  border-color: rgba(104, 211, 145, 0.7);
+  background: rgba(104, 211, 145, 0.15);
+}
+
+.cloud-code-badge-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
 /* Light theme overrides for badge */
 :root[data-theme="light"] .cloud-status-badge[data-live="true"] {
   color: #0f5b35;
@@ -698,6 +739,18 @@ input[type="text"] {
   color: #666e78;
   background: #f3f5f8;
   border-color: #cfd3d8;
+}
+
+:root[data-theme="light"] .cloud-code-badge-btn {
+  color: #334155;
+  background: #f3f5f8;
+  border-color: #cfd3d8;
+}
+
+:root[data-theme="light"] .cloud-code-badge-btn:hover:not(:disabled) {
+  color: #0f5b35;
+  border-color: #45a46f;
+  background: #dff7ea;
 }
 
 .archived-tools {
