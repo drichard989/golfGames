@@ -298,14 +298,18 @@ h1 {
 }
 
 .view-mode-banner {
-  margin: var(--space-sm) var(--space-lg);
-  padding: var(--space-md) var(--space-lg);
+  margin: 2px var(--space-lg);
+  padding: 4px var(--space-md);
   border: 1px solid var(--warn);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   background: rgba(255, 180, 84, 0.14);
   color: var(--ink);
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
   font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cloud-view-locked,
