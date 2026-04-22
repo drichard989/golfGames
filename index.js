@@ -1752,7 +1752,11 @@
 
         const normalized = this.normalizeLoadedState(merged);
         localStorage.setItem(this.KEY, JSON.stringify(normalized));
-        this.load();
+        this.load({
+          applyLocalUi: false,
+          announceRestore: false,
+          source
+        });
         console.log(`[Storage] Applied sync state from ${source}`);
         return true;
       } catch (error) {
@@ -1765,8 +1769,14 @@
      * Load saved game state from localStorage
      * @returns {boolean} Success status
      */
-    load() {
+    load(options = {}) {
       this._isLoading = true;
+
+      const {
+        applyLocalUi = true,
+        announceRestore = true,
+        source = 'local'
+      } = options || {};
       
       try {
         let raw = localStorage.getItem(this.KEY);
@@ -1798,7 +1808,7 @@
         }
         
         // Restore advance direction
-        if(s.advanceDirection) {
+        if(applyLocalUi && s.advanceDirection) {
           Config.ADVANCE_DIRECTION = s.advanceDirection;
           const label = document.getElementById('advanceLabel');
           if(label) {
@@ -1823,7 +1833,7 @@
         }
 
         // Restore font size
-        if (s.fontSize) {
+        if (applyLocalUi && s.fontSize && s.fontSize !== Config.FONT_SIZE) {
           applyFontSize(s.fontSize);
         }
         
@@ -1922,45 +1932,50 @@
           if(unitValueEl) unitValueEl.value = s.hilo.unitValue;
         }
 
-        // Restore open/closed game sections exactly as saved
-        const setGameOpenState = (sectionId, toggleId, shouldOpen) => {
-          const sec = document.getElementById(sectionId);
-          const btn = document.getElementById(toggleId);
-          if (!sec) return;
-          sec.classList.toggle('open', !!shouldOpen);
-          sec.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
-          if (btn) btn.classList.toggle('active', !!shouldOpen);
-        };
+        if (applyLocalUi) {
+          // Restore open/closed game sections exactly as saved
+          const setGameOpenState = (sectionId, toggleId, shouldOpen) => {
+            const sec = document.getElementById(sectionId);
+            const btn = document.getElementById(toggleId);
+            if (!sec) return;
+            sec.classList.toggle('open', !!shouldOpen);
+            sec.setAttribute('aria-hidden', shouldOpen ? 'false' : 'true');
+            if (btn) btn.classList.toggle('active', !!shouldOpen);
+          };
 
-        setGameOpenState('vegasSection', 'toggleVegas', !!s.vegas?.open);
-        setGameOpenState('bankerSection', 'toggleBanker', !!s.banker?.open);
-        setGameOpenState('skinsSection', 'toggleSkins', !!s.skins?.open);
-        setGameOpenState('junkSection', 'toggleJunk', !!s.junk?.open);
-        setGameOpenState('hiloSection', 'toggleHilo', !!s.hilo?.open);
+          setGameOpenState('vegasSection', 'toggleVegas', !!s.vegas?.open);
+          setGameOpenState('bankerSection', 'toggleBanker', !!s.banker?.open);
+          setGameOpenState('skinsSection', 'toggleSkins', !!s.skins?.open);
+          setGameOpenState('junkSection', 'toggleJunk', !!s.junk?.open);
+          setGameOpenState('hiloSection', 'toggleHilo', !!s.hilo?.open);
 
-        // Initialize modules for sections that were saved open
-        if (s.vegas?.open) {
-          window.Vegas?.renderTable?.();
-          window.Vegas?.renderTeamControls?.();
-        }
-        if (s.banker?.open) {
-          window.Banker?.init?.();
-        }
-        if (s.skins?.open) {
-          window.Skins?.init?.();
-        }
-        if (s.junk?.open) {
-          window.Junk?.init?.();
-        }
-        if (s.hilo?.open) {
-          window.HiLo?.init?.();
+          // Initialize modules for sections that were saved open
+          if (s.vegas?.open) {
+            window.Vegas?.renderTable?.();
+            window.Vegas?.renderTeamControls?.();
+          }
+          if (s.banker?.open) {
+            window.Banker?.init?.();
+          }
+          if (s.skins?.open) {
+            window.Skins?.init?.();
+          }
+          if (s.junk?.open) {
+            window.Junk?.init?.();
+          }
+          if (s.hilo?.open) {
+            window.HiLo?.init?.();
+          }
         }
 
         // Recalculate all games with restored data
         AppManager.recalcGames();
         
-        const savedDate = new Date(s.savedAt || Date.now()).toLocaleString();
-        Utils.announce(`Restored saved card (${savedDate}).`);
+        if (announceRestore) {
+          const savedDate = new Date(s.savedAt || Date.now()).toLocaleString();
+          const prefix = source === 'remote' ? 'Synced live card' : 'Restored saved card';
+          Utils.announce(`${prefix} (${savedDate}).`);
+        }
       } catch(err) {
         console.error('[Storage] Load failed:', err);
         this._isLoading = false;
