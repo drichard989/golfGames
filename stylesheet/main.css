@@ -426,9 +426,26 @@ input[type="text"] {
 }
 
 /* ---- Utilities Section ---- */
+.utilities-toggle-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-top: var(--space-sm);
+}
+
+.utilities-toggle-btn.is-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-bottom-color: transparent;
+}
+
 .utilities-section {
   display: none;
-  margin-top: var(--space-md);
+  margin-top: 0;
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: var(--space-sm);
 }
 
 .utilities-section.open {

@@ -37,36 +37,10 @@
             </select>
           </div>
           <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
-          <button id="utilitiesToggle" class="btn">⚙️ Utilities</button>
           <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
         </div>
 
-        <div class="control cloud-control cloud-control-compact">
-          <div class="cloud-row cloud-row-session">
-            <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
-            <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" />
-            <button id="cloudJoinBtn" class="btn" type="button">Join</button>
-            <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
-          </div>
-          <div class="cloud-row cloud-row-share">
-            <button id="shareHtmlBtn" class="btn" type="button">📱 Share Live Scorecard</button>
-            <button id="generateQRBtn" class="btn" type="button">📷 Share Live via QR</button>
-          </div>
-          <button type="button" class="btn game-options-toggle" id="cloudSnapshotsToggle" data-target="cloudSnapshotsPanel" aria-controls="cloudSnapshotsPanel" aria-expanded="false">Snapshots</button>
-          <div id="cloudSnapshotsPanel" class="game-options-panel cloud-snapshots-panel" hidden>
-            <div class="cloud-row cloud-row-snapshots">
-              <select id="cloudSnapshotSelect">
-                <option value="">Live current version</option>
-              </select>
-              <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
-              <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
-              <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
-            </div>
-          </div>
-          <div id="cloudStatus" class="small">Cloud: not connected</div>
-          <div id="cloudCodes" class="small" style="display:none;"></div>
-          <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
-        </div>
+        <button id="utilitiesToggle" class="btn utilities-toggle-btn" type="button" aria-expanded="false">⚙️ Utilities</button>
 
         <div id="utilitiesSection" class="utilities-section">
         <div class="controls utilities-grid">
@@ -109,9 +83,36 @@
           </div>
 
         </div>
-        <p class="small">Swipe the table left/right. Player names stay pinned. Pars & Men's HCP are fixed from the card.</p>
+        <p class="small">Swipe the table left/right. Player names stay pinned. Pars &amp; Men's HCP are fixed from the card.</p>
         <p class="small">If a player is a + handicap, enter it with a leading plus sign (e.g., +2).</p>
         <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Full Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
+        </div>
+
+        <div class="control cloud-control cloud-control-compact">
+          <div class="cloud-row cloud-row-session">
+            <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
+            <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" />
+            <button id="cloudJoinBtn" class="btn" type="button">Join</button>
+            <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
+          </div>
+          <div class="cloud-row cloud-row-share">
+            <button id="shareHtmlBtn" class="btn" type="button">📱 Share Live Scorecard</button>
+            <button id="generateQRBtn" class="btn" type="button">📷 Share Live via QR</button>
+          </div>
+          <button type="button" class="btn game-options-toggle" id="cloudSnapshotsToggle" data-target="cloudSnapshotsPanel" aria-controls="cloudSnapshotsPanel" aria-expanded="false">Snapshots</button>
+          <div id="cloudSnapshotsPanel" class="game-options-panel cloud-snapshots-panel" hidden>
+            <div class="cloud-row cloud-row-snapshots">
+              <select id="cloudSnapshotSelect">
+                <option value="">Live current version</option>
+              </select>
+              <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
+              <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
+              <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
+            </div>
+          </div>
+          <div id="cloudStatus" class="small">Cloud: not connected</div>
+          <div id="cloudCodes" class="small" style="display:none;"></div>
+          <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
         </div>
       </div>
     </header>
