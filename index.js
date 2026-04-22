@@ -2165,6 +2165,70 @@
       Utils.announce("All fields cleared.");
     },
 
+    clearGameData(gameKey = 'all', announceResult = true) {
+      const key = String(gameKey || 'all').toLowerCase();
+
+      const resetVegas = () => {
+        window.Vegas?.setTeamAssignments?.({ A: [], B: [] });
+        window.Vegas?.setOptions?.({
+          useNet: false,
+          netHcpMode: 'playOffLow',
+          doubleBirdie: false,
+          tripleEagle: false,
+          pointValue: 0
+        });
+        window.Vegas?.renderTeamControls?.();
+      };
+
+      const resetBanker = () => {
+        window.Banker?.setState?.({ holes: [] });
+      };
+
+      const resetSkins = () => {
+        const skinsModeGross = document.getElementById('skinsModeGross');
+        const skinsModeNet = document.getElementById('skinsModeNet');
+        const skinsBuyIn = document.getElementById('skinsBuyIn');
+        const skinsCarry = document.getElementById('skinsCarry');
+        const skinsHalf = document.getElementById('skinsHalf');
+        if (skinsModeGross) skinsModeGross.checked = true;
+        if (skinsModeNet) skinsModeNet.checked = false;
+        if (skinsBuyIn) skinsBuyIn.value = '10';
+        if (skinsCarry) skinsCarry.checked = true;
+        if (skinsHalf) skinsHalf.checked = false;
+      };
+
+      const resetJunk = () => {
+        const junkUseNet = document.getElementById('junkUseNet');
+        if (junkUseNet) junkUseNet.checked = false;
+        window.Junk?.clearAllAchievements?.();
+      };
+
+      const resetHilo = () => {
+        const hiloUnitValue = document.getElementById('hiloUnitValue');
+        if (hiloUnitValue) hiloUnitValue.value = '10';
+        window.HiLo?.update?.();
+      };
+
+      if (key === 'all' || key === 'vegas') resetVegas();
+      if (key === 'all' || key === 'banker') resetBanker();
+      if (key === 'all' || key === 'skins') resetSkins();
+      if (key === 'all' || key === 'junk') resetJunk();
+      if (key === 'all' || key === 'hilo') resetHilo();
+
+      AppManager.recalcGames();
+      this.save();
+
+      if (announceResult) {
+        const label = key === 'all' ? 'All game data cleared.' : `${key.toUpperCase()} data cleared.`;
+        Utils.announce(label);
+      }
+    },
+
+    clearGamesData() {
+      this.clearGameData('all', false);
+      Utils.announce('All game data cleared.');
+    },
+
     /**
      * Clear all scorecard + game data and reset game options to defaults.
      */
@@ -2180,42 +2244,13 @@
       if (advanceLabel) advanceLabel.textContent = 'Advance: ↓ Down';
 
       // Reset game options to defaults
-      window.Vegas?.setTeamAssignments?.({ A: [], B: [] });
-      window.Vegas?.setOptions?.({
-        useNet: false,
-        netHcpMode: 'playOffLow',
-        doubleBirdie: false,
-        tripleEagle: false,
-        pointValue: 0
-      });
-      window.Vegas?.renderTeamControls?.();
-
-      window.Banker?.setState?.({ holes: [] });
-
-      const skinsModeGross = document.getElementById('skinsModeGross');
-      const skinsModeNet = document.getElementById('skinsModeNet');
-      const skinsBuyIn = document.getElementById('skinsBuyIn');
-      const skinsCarry = document.getElementById('skinsCarry');
-      const skinsHalf = document.getElementById('skinsHalf');
-      if (skinsModeGross) skinsModeGross.checked = true;
-      if (skinsModeNet) skinsModeNet.checked = false;
-      if (skinsBuyIn) skinsBuyIn.value = '10';
-      if (skinsCarry) skinsCarry.checked = true;
-      if (skinsHalf) skinsHalf.checked = false;
-
-      const junkUseNet = document.getElementById('junkUseNet');
-      if (junkUseNet) junkUseNet.checked = false;
-      window.Junk?.clearAllAchievements?.();
-
-      const hiloUnitValue = document.getElementById('hiloUnitValue');
-      if (hiloUnitValue) hiloUnitValue.value = '10';
+      this.clearGameData('all', false);
 
       GAME_TAB_ORDER.forEach((gameKey) => games_close(gameKey));
       syncGameTabUi(null);
       syncPrimaryTabUi('score');
 
       Scorecard.calc.recalcAll();
-      AppManager.recalcGames();
       this.save();
       Utils.announce('All scorecard and game data cleared.');
     }
@@ -3630,6 +3665,51 @@
     }
     Storage.clearEverything();
   });
+
+  const clearGamesDataBtn = document.getElementById('clearGamesDataBtn');
+  if (clearGamesDataBtn) {
+    clearGamesDataBtn.addEventListener('click', async () => {
+      const cloudSession = window.CloudSync?.getSession?.();
+      const confirmed = window.confirm(
+        cloudSession
+          ? 'Clear all game data and leave the live cloud session? You will need a new code to go live again.'
+          : 'Clear all game data and reset game options to defaults?'
+      );
+      if (!confirmed) return;
+
+      if (cloudSession) {
+        await window.CloudSync.leaveSession?.();
+      }
+      Storage.clearGamesData();
+    });
+  }
+
+  const wireGameClearButton = (buttonId, gameKey, label) => {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+      const cloudSession = window.CloudSync?.getSession?.();
+      const confirmed = window.confirm(
+        cloudSession
+          ? `Clear ${label} data and leave the live cloud session? You will need a new code to go live again.`
+          : `Clear ${label} data?`
+      );
+      if (!confirmed) return;
+
+      if (cloudSession) {
+        await window.CloudSync.leaveSession?.();
+      }
+      Storage.clearGameData(gameKey);
+    });
+  };
+
+  wireGameClearButton('clearSkinsDataBtn', 'skins', 'Skins');
+  wireGameClearButton('clearVegasDataBtn', 'vegas', 'Vegas');
+  wireGameClearButton('clearBankerDataBtn', 'banker', 'Banker');
+  wireGameClearButton('clearHiloDataBtn', 'hilo', 'Hi-Lo');
+  wireGameClearButton('clearJunkDataBtn', 'junk', 'Junk');
+
   $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
   
   // Auto-advance direction toggle
