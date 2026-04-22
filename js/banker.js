@@ -1302,6 +1302,18 @@
     refreshPlayerNames() {
       const names = getPlayerNames();
       const playerCount = getPlayerCount();
+
+      for (let h = 1; h <= 18; h++) {
+        const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
+        if (!bankerSelect) continue;
+
+        for (let p = 0; p < playerCount; p++) {
+          const option = bankerSelect.querySelector(`option[value="${p}"]`);
+          if (option) {
+            option.textContent = names[p] || `Player ${p + 1}`;
+          }
+        }
+      }
       
       // Update footer header
       for (let p = 0; p < playerCount; p++) {
@@ -1387,11 +1399,15 @@
         // Listen for score/name/CH changes - refresh names aggressively
         document.addEventListener('input', (e) => {
           const t = e.target;
-          if (t.classList?.contains('score-input') || 
-              t.classList?.contains('ch-input') ||
-              t.classList?.contains('name-edit')) {
-            // Always refresh names on any input change to catch updates quickly
+          if (t.classList?.contains('name-edit')) {
             this.refreshPlayerNames();
+            this.updateBetInputs();
+            this.update();
+            return;
+          }
+
+          if (t.classList?.contains('score-input') || 
+              t.classList?.contains('ch-input')) {
             this.update();
           }
         }, { passive: true });
