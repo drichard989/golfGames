@@ -23,8 +23,11 @@
     <header>
       <div class="header-title-row">
         <h1>Manito Golf Games v.21 PWA</h1>
-        <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️</button>
-        <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
+        <div class="header-action-buttons">
+          <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️</button>
+          <button type="button" class="btn game-options-toggle" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
+          <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
+        </div>
       </div>
       <div class="controls header-addplayer-row header-cloud-row" style="display: flex; gap: 12px; align-items: center;">
       </div>
@@ -83,10 +86,9 @@
         </div>
         </div>
 
-  <div class="cloud-utilities-divider"></div>
+      </div>
 
-        <button type="button" class="btn game-options-toggle utilities-toggle-btn" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
-        <div id="cloudOptionsPanel" class="game-options-panel" hidden>
+      <div id="cloudOptionsPanel" class="game-options-panel header-cloud-options-panel" hidden>
         <div class="control cloud-control cloud-control-compact">
           <div class="cloud-row cloud-row-session">
             <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
@@ -112,7 +114,6 @@
           <div id="cloudStatus" class="small">Cloud: not connected</div>
           <div id="cloudCodes" class="small" style="display:none;"></div>
           <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
-        </div>
         </div>
       </div>
     </header>
