@@ -1323,6 +1323,11 @@ tfoot td {
   border-color: #cbd5e1;
   color: #1f2937;
 }
+:root[data-theme="light"] .banker-mode-toggle-btn {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #1f2937;
+}
 :root[data-theme="light"] .vegas-toggle-btn:has(input:checked),
 :root[data-theme="light"] .vegas-choice-btn:has(input:checked) {
   border-color: #16a34a;
@@ -1334,7 +1339,17 @@ tfoot td {
   background: rgba(22, 163, 74, 0.14);
   color: #14532d;
 }
+:root[data-theme="light"] .banker-mode-toggle-btn:has(input:checked) {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.14);
+  color: #14532d;
+}
 :root[data-theme="light"] .skins-toggle-btn:has(input:disabled:checked) {
+  border-color: #cbd5e1;
+  background: rgba(148, 163, 184, 0.18);
+  color: #64748b;
+}
+:root[data-theme="light"] .banker-mode-toggle-btn:has(input:disabled:checked) {
   border-color: #cbd5e1;
   background: rgba(148, 163, 184, 0.18);
   color: #64748b;
@@ -1357,12 +1372,18 @@ tfoot td {
   gap: 8px;
 }
 
+.banker-mode-buttons {
+  display: grid;
+  gap: 8px;
+}
+
 .skins-half-wrap {
   margin-top: 8px;
   margin-left: 24px;
 }
 
-.skins-toggle-btn {
+.skins-toggle-btn,
+.banker-mode-toggle-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1376,23 +1397,27 @@ tfoot td {
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
 }
 
-.skins-toggle-btn input {
+.skins-toggle-btn input,
+.banker-mode-toggle-btn input {
   margin: 0;
 }
 
-.skins-toggle-btn:has(input:checked) {
+.skins-toggle-btn:has(input:checked),
+.banker-mode-toggle-btn:has(input:checked) {
   border-color: rgba(104, 211, 145, 0.75);
   background: rgba(104, 211, 145, 0.18);
   color: #d9ffe9;
   font-weight: 700;
 }
 
-.skins-toggle-btn:has(input:disabled) {
+.skins-toggle-btn:has(input:disabled),
+.banker-mode-toggle-btn:has(input:disabled) {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.skins-toggle-btn:has(input:disabled:checked) {
+.skins-toggle-btn:has(input:disabled:checked),
+.banker-mode-toggle-btn:has(input:disabled:checked) {
   border-color: rgba(168, 179, 191, 0.45);
   background: rgba(168, 179, 191, 0.12);
   color: var(--muted);
@@ -1443,6 +1468,7 @@ tfoot td {
 .vegas-toggle-btn,
 .vegas-choice-btn,
 .skins-toggle-btn,
+.banker-mode-toggle-btn,
 .junk-toggle-btn {
   position: relative;
   gap: 0;
@@ -1451,6 +1477,7 @@ tfoot td {
 .vegas-toggle-btn input,
 .vegas-choice-btn input,
 .skins-toggle-btn input,
+.banker-mode-toggle-btn input,
 .junk-toggle-btn input {
   -webkit-appearance: none;
   appearance: none;
@@ -1469,6 +1496,7 @@ tfoot td {
 .vegas-toggle-btn:has(input:focus-visible),
 .vegas-choice-btn:has(input:focus-visible),
 .skins-toggle-btn:has(input:focus-visible),
+.banker-mode-toggle-btn:has(input:focus-visible),
 .junk-toggle-btn:has(input:focus-visible) {
   outline: 2px solid rgba(104, 211, 145, 0.75);
   outline-offset: 2px;

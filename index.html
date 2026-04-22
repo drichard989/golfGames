@@ -22,7 +22,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v2.4.6</h1>
+        <h1>Manito Golf Games v2.4.7</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
@@ -387,15 +387,16 @@
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Scoring Mode</div>
-          <label class="radio">
-            <input type="radio" name="bankerMode" id="bankerModeGross" value="gross" />
-            Gross (raw scores)
-          </label>
-          <br />
-          <label class="radio">
-            <input type="radio" name="bankerMode" id="bankerModeNet" value="net" checked />
-            Net (with handicaps)
-          </label>
+          <div class="banker-mode-buttons" role="radiogroup" aria-label="Banker scoring mode">
+            <label class="banker-mode-toggle-btn" for="bankerModeGross">
+              <input type="radio" name="bankerMode" id="bankerModeGross" value="gross" />
+              <span>Gross (raw scores)</span>
+            </label>
+            <label class="banker-mode-toggle-btn" for="bankerModeNet">
+              <input type="radio" name="bankerMode" id="bankerModeNet" value="net" checked />
+              <span>Net (with handicaps)</span>
+            </label>
+          </div>
         </div>
         <div class="control-box">
           <div class="pill">How It Works</div>
