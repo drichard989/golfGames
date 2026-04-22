@@ -112,10 +112,55 @@
     const mode = role === 'editor' ? 'edit' : 'view';
     const message = `Joined live game (${mode})`;
 
-    if (window.ErrorHandler?.success) {
-      window.ErrorHandler.success(message, 1800);
-      return;
-    }
+    const existing = document.getElementById('cloudJoinSuccessOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'cloudJoinSuccessOverlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      z-index: 10050;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.42);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+    `;
+
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--ink);
+      padding: 16px 20px;
+      font-size: var(--text-xl);
+      font-weight: 700;
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.38);
+      max-width: min(90vw, 420px);
+      text-align: center;
+    `;
+    card.textContent = message;
+
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+    });
+
+    const displayMs = 3600;
+    setTimeout(() => {
+      overlay.style.opacity = '0';
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.remove();
+      }, 220);
+    }, displayMs);
 
     if (typeof window.announce === 'function') {
       window.announce(message);
