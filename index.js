@@ -593,14 +593,14 @@
     const panel = getGamesScrollContainer();
     if (!panel || panel.hidden) return;
 
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const viewportHeight = (window.visualViewport?.height) || window.innerHeight || document.documentElement.clientHeight || 0;
     const navBar = document.querySelector('.sticky-nav-bar');
     const navBarRect = navBar?.getBoundingClientRect();
 
     // Measure from the bottom of the sticky nav bar to the bottom of the viewport.
     // This is reliable regardless of what's above (header shown/hidden, transitions).
     const topBoundary = navBarRect ? navBarRect.bottom + 4 : 120;
-    const available = Math.max(220, Math.floor(viewportHeight - topBoundary - 8));
+    const available = Math.max(220, Math.floor(viewportHeight - topBoundary));
     panel.style.height = `${available}px`;
     panel.style.maxHeight = `${available}px`;
   }
@@ -1103,8 +1103,8 @@
         });
         
         // Check current handicap mode
-        const modeRadio = document.querySelector('input[name="handicapMode"]:checked');
-        const mode = modeRadio ? modeRadio.value : 'playOffLow';
+        const modeBtn = document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]');
+        const mode = modeBtn ? modeBtn.dataset.value : 'playOffLow';
         
         // Mode 1: GROSS - no adjustments (return all zeros)
         if (mode === 'gross') {
@@ -1572,7 +1572,7 @@
         },
         scorecard: {
           course: ACTIVE_COURSE,
-          handicapMode: document.querySelector('input[name="handicapMode"]:checked')?.value || 'playOffLow',
+          handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'playOffLow',
           players: players.map((p) => ({
             id: p.id,
             name: p.name,
@@ -1816,7 +1816,7 @@
           version: this.CURRENT_VERSION,
         course: ACTIVE_COURSE,
         advanceDirection: Config.ADVANCE_DIRECTION,
-        handicapMode: document.querySelector('input[name="handicapMode"]:checked')?.value || 'playOffLow',
+        handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'playOffLow',
         players: players,
         vegas: { 
           teams: window.Vegas?.getTeamAssignments(), 
@@ -2148,11 +2148,7 @@
         // Restore handicap mode
         if(s.handicapMode) {
           const modeId = 'handicapMode' + s.handicapMode.charAt(0).toUpperCase() + s.handicapMode.slice(1);
-          const modeRadio = document.getElementById(modeId);
-          if(modeRadio) {
-            modeRadio.checked = true;
-            // Stroke highlighting will be applied after data is loaded (line 1506)
-          }
+          setHandicapModeBtn(modeId);
         }
 
         // Restore font size
@@ -2451,8 +2447,7 @@
       this.clearAll();
 
       // Reset primary scorecard options
-      const playOffLowRadio = document.getElementById('handicapModePlayOffLow');
-      if (playOffLowRadio) playOffLowRadio.checked = true;
+      setHandicapModeBtn('handicapModePlayOffLow');
 
       Config.ADVANCE_DIRECTION = 'down';
       const advanceLabel = document.getElementById('advanceLabel');
@@ -3959,6 +3954,22 @@
   $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
   
   // Auto-advance direction toggle
+  // Handicap mode button group
+  function setHandicapModeBtn(activeId) {
+    document.querySelectorAll('#handicapModeGroup .hcp-mode-btn').forEach(btn => {
+      const isActive = btn.id === activeId;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+  }
+  document.getElementById('handicapModeGroup')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.hcp-mode-btn');
+    if (!btn) return;
+    setHandicapModeBtn(btn.id);
+    Scorecard.calc.recalcAll();
+    Storage.saveDebounced();
+  });
+
   document.getElementById('advanceToggle')?.addEventListener("click", () => {
     if (Config.ADVANCE_DIRECTION === 'down') {
       Config.ADVANCE_DIRECTION = 'right';
