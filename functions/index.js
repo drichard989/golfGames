@@ -62,7 +62,7 @@ function normalizeCode(code) {
 function normalizeIpKey(ip) {
   const normalized = String(ip || '').trim();
   if (!normalized) return '';
-  return normalized.replace(/[^a-zA-Z0-9:_\-.]/g, '_');
+  return normalized.replace(/[^a-zA-Z0-9:_\-]/g, '_');
 }
 
 function randomGameId() {
