@@ -80,6 +80,15 @@
   --safe-top-inset: max(env(safe-area-inset-top, 0px), var(--safe-top-dynamic));
 }
 
+/* In standalone/PWA mode, bootstrap a conservative safe-area default so the
+   first CSS paint is correct before JS has a chance to measure the real value.
+   JS (syncSafeTopInset) will overwrite --safe-top-dynamic with the exact px. */
+@media (display-mode: standalone) {
+  :root {
+    --safe-top-dynamic: 44px;
+  }
+}
+
 :root[data-font-size="small"] {
   --font-size-step: -3px;
 }
@@ -195,6 +204,12 @@ header.header-collapsed {
   padding-bottom: 0 !important;
   opacity: 0;
   pointer-events: none;
+}
+
+/* In collapsed (Hide) mode only show the status badge, go-live toggle and share QR */
+header.header-collapsed ~ .sticky-nav-bar #cloudEditCodeBadgeBtn,
+header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
+  display: none !important;
 }
 
 #parBadge.header-collapsed {
