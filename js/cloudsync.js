@@ -101,6 +101,7 @@
     lastPushedContentHash: '',
     lockObserver: null,
     lastViewerBlockedNoticeAt: 0
+    pushSuspended: false
   };
 
   function setStatus(msg) {
@@ -900,7 +901,7 @@
   }
 
   function queuePush(reason = 'local-change') {
-    if (!state.session || state.session.role !== 'editor' || state.isViewingSnapshot) return;
+    if (!state.session || state.session.role !== 'editor' || state.isViewingSnapshot || state.pushSuspended) return;
     clearTimeout(state.pushTimer);
 
     const elapsed = Date.now() - (state.lastPushAt || 0);
@@ -1468,6 +1469,20 @@
     queuePush,
     getSession: () => state.session,
     isApplyingRemote: () => state.isApplyingRemote
+    /**
+     * Block all outgoing cloud pushes immediately (cancels any pending push timer too).
+     * Call this before beginning a destructive local operation so no stale or partial
+     * state reaches the cloud.  The cloud retains whatever was last pushed.
+     * Pair with resumePushes() if the operation is cancelled.
+     */
+    suspendPushes() {
+      clearTimeout(state.pushTimer);
+      state.pushSuspended = true;
+    },
+    /** Re-enable cloud pushes after a cancelled destructive operation. */
+    resumePushes() {
+      state.pushSuspended = false;
+    }
   };
 
   document.addEventListener('DOMContentLoaded', () => {
