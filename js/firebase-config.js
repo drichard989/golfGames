@@ -23,7 +23,7 @@ window.FIREBASE_USE_EMULATORS = false;
 
 // Required for production Cloud Functions callable access when App Check is enforced.
 // Create a reCAPTCHA v3 site key in Firebase App Check and set it here.
-window.FIREBASE_APPCHECK_SITE_KEY = '';
+window.FIREBASE_APPCHECK_SITE_KEY = '6LeJxsQsAAAAADaVnKaFJs6qqZg_Q5RdCtgn0dyD';
 
 // Optional for local debugging only:
 // set to true OR to a debug token string from browser console/App Check logs.
