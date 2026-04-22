@@ -592,12 +592,11 @@
 
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
     const panelRect = panel.getBoundingClientRect();
-    const switcherRect = document.getElementById('entrySwitcherGamesBtn')
-      ?.closest('.entry-switcher')
-      ?.getBoundingClientRect();
+    const collapseBar = document.querySelector('.header-collapse-bar');
+    const collapseBarRect = collapseBar?.getBoundingClientRect();
 
-    const topBoundary = switcherRect
-      ? Math.max(panelRect.top, switcherRect.bottom + 6)
+    const topBoundary = collapseBarRect
+      ? Math.max(panelRect.top, collapseBarRect.bottom + 4)
       : panelRect.top;
 
     const available = Math.max(220, Math.floor(viewportHeight - topBoundary - 8));
