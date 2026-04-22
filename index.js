@@ -3695,6 +3695,8 @@
   $(ids.resetBtn).addEventListener("click", async () => {
     const cloudSession = window.CloudSync?.getSession?.();
     if (cloudSession) {
+      // Block cloud pushes immediately so the cloud keeps its last good state.
+      window.CloudSync?.suspendPushes?.();
       const dialog = document.createElement('div');
       dialog.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;`;
       const box = document.createElement('div');
@@ -3723,12 +3725,17 @@
         confirmBtn.onclick = () => { dialog.remove(); resolve(true); };
         cancelBtn.onclick = () => { dialog.remove(); resolve(false); };
       });
-      if (!confirmed) return;
+      if (!confirmed) {
+        window.CloudSync?.resumePushes?.();
+        return;
+      }
       await window.CloudSync.leaveSession?.();
     }
     Storage.clearScoresOnly();
   });
   $(ids.clearAllBtn).addEventListener("click", async () => {
+    // Block cloud pushes immediately so the cloud keeps its last good state.
+    window.CloudSync?.suspendPushes?.();
     // Create confirmation dialog
     const dialog = document.createElement('div');
     dialog.style.cssText = `
@@ -3794,10 +3801,14 @@
         await window.CloudSync.leaveSession?.();
       }
       Storage.clearAll();
+    } else {
+      window.CloudSync?.resumePushes?.();
     }
   });
 
   $(ids.clearEverythingBtn).addEventListener("click", async () => {
+    // Block cloud pushes immediately so the cloud keeps its last good state.
+    window.CloudSync?.suspendPushes?.();
     const dialog = document.createElement('div');
     dialog.style.cssText = `
       position: fixed;
@@ -3856,7 +3867,10 @@
       cancelBtn.onclick = () => { dialog.remove(); resolve(false); };
     });
 
-    if (!confirmed) return;
+    if (!confirmed) {
+      window.CloudSync?.resumePushes?.();
+      return;
+    }
 
     if (window.CloudSync?.getSession?.()) {
       await window.CloudSync.leaveSession?.();
@@ -3875,6 +3889,7 @@
       );
       if (!confirmed) return;
 
+      window.CloudSync?.suspendPushes?.();
       if (cloudSession) {
         await window.CloudSync.leaveSession?.();
       }
@@ -3895,6 +3910,7 @@
       );
       if (!confirmed) return;
 
+      window.CloudSync?.suspendPushes?.();
       if (cloudSession) {
         await window.CloudSync.leaveSession?.();
       }
