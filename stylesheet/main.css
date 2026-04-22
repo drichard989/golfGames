@@ -476,6 +476,41 @@ input[type="text"] {
   margin: var(--space-md) 0 24px;
 }
 
+.entry-switcher {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  z-index: 30;
+  display: flex;
+  gap: 10px;
+  margin: var(--space-md) var(--space-lg) 0;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-3xl);
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
+}
+
+.entry-switcher-btn {
+  flex: 1 1 0;
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  border-radius: var(--radius-3xl);
+  padding: 12px 14px;
+  min-height: var(--touch-comfortable);
+  font-size: var(--text-md);
+  font-weight: 700;
+}
+
+.entry-switcher-btn.active {
+  color: var(--ink);
+  background: var(--panel-alt);
+  border-color: var(--line);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
 .scorecard-fixed {
   flex-shrink: 0;
   flex-grow: 0;
@@ -1650,6 +1685,17 @@ input[type="text"] {
   .gamesbar {
     gap: 10px;
     margin: var(--space-md) var(--space-md) 0;
+  }
+
+  .entry-switcher {
+    margin: var(--space-md) var(--space-md) 0;
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .entry-switcher-btn {
+    padding: 10px 12px;
+    font-size: var(--text-sm);
   }
 
   .gamesbar .game-toggle {

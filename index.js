@@ -1,10 +1,10 @@
 /* ============================================================================
    GOLF SCORECARD APPLICATION
    ============================================================================
-   
+
    A Progressive Web App (PWA) for tracking golf scores with multiple side games.
    Supports 1-99 players with flexible course selection and comprehensive scoring.
-   
+
    FEATURES:
    • Dynamic scorecard with auto-advance input
    • Course handicap support (including negative handicaps)
@@ -15,158 +15,56 @@
    • Offline support with service worker caching
    • Dark/light theme toggle
    • Responsive design for mobile/tablet/desktop
-   
-   ============================================================================
-   ARCHITECTURE
-   ============================================================================
-   
-   CORE (index.js) - ~1,300 lines
-   ├─ Config         - Course database, constants, active course state
-   ├─ Utils          - DOM helpers ($, $$), math utilities (sum, clamp)
-   ├─ AppManager     - Coordinates recalculations across all game modes
-   ├─ Storage        - localStorage save/load with versioning (v5)
-   ├─ Scorecard      - Table building, calculations, player/course management
-   │  ├─ build       - Header, par/HCP rows, player rows, totals row
-   │  ├─ calc        - Adjusted handicaps, stroke allocation, NDB capping
-   │  ├─ player      - Add/remove players, overlay sync, count display
-   │  └─ course      - Course switching, par/HCP updates, badge display
-   ├─ Games UI       - Toggle sections (open/close/toggle)
-   ├─ CSV            - Import/export scorecard data
-   ├─ Players        - Add/remove player management
-   └─ Init           - Event wiring, state restoration
-   
-   GAME MODULES (external .js files)
-   🔗 js/vegas.js         (568 lines) - Vegas team game
-      • 2v2 teams or 3-player rotation with ghost
-      • Scores combined into 2-digit numbers (low wins)
-      • Multipliers for birdies/eagles (2x, 3x)
-      • Digit flipping on opponent birdie+
-      • NET scoring support with NDB cap
-      • Dollar calculations based on point value
-      Exposed: window.Vegas {compute, render, renderTeamControls, recalc, renderTable,
-               getTeamAssignments, setTeamAssignments, getOptions, setOptions}
-   
-   🔗 js/skins.js         (377 lines) - Skins competition
-      • Lowest net score wins each hole
-      • Carry-over on ties (pot accumulates)
-      • Half-pops mode (0.5 stroke increments)
-      • Buy-in and payout calculations
-      • Dynamic player support (1-99)
-      Exposed: window.Skins {init, refreshForPlayerChange, update, compute, render}
-   
-   🔗 js/junk.js          (487 lines) - Junk (Dots) game
-      • Eagle: 4 dots, Birdie: 2 dots, Par: 1 dot
-      • NET scoring option with NDB cap
-      • Achievements system (Hogan, Sandy, Sadaam, Pulley, Triple)
-      • Weighted bonus points for achievements
-      Exposed: window.Junk {init, initAchievements, refreshForPlayerChange, update}
-   
-   🔗 js/banker.js     (~1500 lines) - Banker game
-      • Per-hole rotating banker selection with max-bet system
-      • Player bets with individual 2× doubles, banker 2× all bets
-      • Gross and Net (full handicap) scoring modes
-      • Stroke indicators per hole per player
-      • Payout table with running totals
-      Exposed: window.Banker {init, update, buildTable, getState, setState, clearAll, refreshForPlayerChange}
-   
-   🔗 js/hilo.js          (~400 lines) - Hi-Lo team game
-      • 4 players: Low+High handicap vs Middle two
-      • Team stroke differential applied to worst player on high team
-      • 3 games: Front 9 (1 unit), Back 9 (1 unit), Full 18 (2 units)
-      • Per-hole scoring: Low vs Low, High vs High (1 point each)
-      • Auto-press: 2-0 hole win creates new game for remaining holes
-      • Press games worth 1 unit each (2 units for Full 18 presses)
-      • Hole-by-hole breakdown with comparison results
-      Exposed: window.HiLo {init, update, compute, render}
-   
-   🔗 js/export.js        (~370 lines) - CSV and Email export
-      • CSV Export: Download scorecard as CSV file
-      • Email Export: Format scorecard + game results for email
-      • Includes all active game results with options
-      • Plain text formatting for email compatibility
-      Exposed: window.Export {exportCurrentScorecard, emailCurrentScorecard}
-   
-   ============================================================================
-   FILE STRUCTURE
-   ============================================================================
-   
-   /
-   ├── index.html          - Main HTML structure, styles, game sections
-   ├── index.js            - Core scorecard logic (this file)
-   ├── sw.js               - Service worker for PWA caching (v1.3.7)
-   ├── manifest.json       - PWA manifest
-   ├── js/
-   │   ├── export.js       - CSV and Email export module
-   │   ├── vegas.js        - Vegas game module
-   │   ├── skins.js        - Skins game module
-   │   ├── junk.js         - Junk game module
-   │   ├── hilo.js         - Hi-Lo game module
-   │   └── banker.js       - Banker game (full implementation)
-   ├── images/             - Icons and assets
-   └── stylesheet/         - CSS files
-   
-   ============================================================================
 */
 
 (() => {
   'use strict';
-  console.log('[golfGames] index.js loaded');
-  
+
   // =============================================================================
-  // 📦 CONFIG MODULE - Course Database & Constants
+  // CONFIG MODULE - Course Database & Constants
   // =============================================================================
-  
+
   const Config = {
-    // Scorecard configuration
     HOLES: 18,
     MIN_PLAYERS: 1,
     MAX_PLAYERS: 99,
     DEFAULT_PLAYERS: 4,
     LEADING_FIXED_COLS: 2,
-    NDB_BUFFER: 2, // Net Double Bogey: max penalty is par + buffer + strokes
+    NDB_BUFFER: 2,
     STORAGE_KEY: 'golf_scorecard_v5',
-    
-    // Course database
-    // ★ TO ADD A NEW COURSE:
-    // 1. Add entry with unique ID (lowercase, no spaces)
-    // 2. Provide course name (displayed in dropdown)
-    // 3. Add pars array for holes 1-18 (exactly 18 values)
-    // 4. Add handicap index (HCP) array for holes 1-18 (values 1-18)
-    //    • HCP 1 = hardest hole, HCP 18 = easiest hole
+    ADVANCE_DIRECTION: 'down',
+    FONT_SIZE: 'medium',
+
     COURSES: {
-      'manito': {
+      manito: {
         name: 'Manito Country Club',
-        pars: [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4],
-        hcpMen: [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8]
-      },    
-      'dove': {
+        pars: [4, 4, 4, 5, 3, 4, 4, 3, 4, 4, 4, 3, 5, 5, 4, 4, 3, 4],
+        hcpMen: [7, 13, 11, 15, 17, 1, 5, 9, 3, 10, 2, 12, 14, 18, 4, 6, 16, 8]
+      },
+      dove: {
         name: 'Dove Canyon Country Club',
-        pars: [5,4,4,3,4,4,3,4,5, 3,5,4,3,5,4,4,3,4],
-        hcpMen: [11,7,3,15,1,13,17,9,5,14,4,12,16,2,6,10,18,8]
+        pars: [5, 4, 4, 3, 4, 4, 3, 4, 5, 3, 5, 4, 3, 5, 4, 4, 3, 4],
+        hcpMen: [11, 7, 3, 15, 1, 13, 17, 9, 5, 14, 4, 12, 16, 2, 6, 10, 18, 8]
       }
     },
-    
-    // Active course state (mutable)
+
     activeCourse: 'manito',
     pars: null,
     hcpMen: null,
-    FONT_SIZE: 'medium',
-    
-    // Initialize with default course
+
     init() {
       this.pars = [...this.COURSES.manito.pars];
       this.hcpMen = [...this.COURSES.manito.hcpMen];
-      // Expose globally for backward compatibility
       window.PARS = this.pars;
       window.HCPMEN = this.hcpMen;
     },
-    
-    // Switch active course
+
     switchCourse(courseId) {
       if (!this.COURSES[courseId]) {
         console.error(`[Config] Unknown course: ${courseId}`);
         return false;
       }
+
       this.activeCourse = courseId;
       this.pars = [...this.COURSES[courseId].pars];
       this.hcpMen = [...this.COURSES[courseId].hcpMen];
@@ -175,11 +73,9 @@
       return true;
     }
   };
-  
-  // Initialize config
+
   Config.init();
-  
-  // Legacy global constants for backward compatibility
+
   const HOLES = Config.HOLES;
   let PLAYERS = Config.DEFAULT_PLAYERS;
   const MIN_PLAYERS = Config.MIN_PLAYERS;
@@ -191,39 +87,32 @@
   let PARS = Config.pars;
   let HCPMEN = Config.hcpMen;
   let ACTIVE_COURSE = Config.activeCourse;
-  
-  // Expose PLAYERS globally for game modules
+
   Object.defineProperty(window, 'PLAYERS', {
     get() { return PLAYERS; },
-    set(val) { PLAYERS = val; }
+    set(value) { PLAYERS = value; }
   });
-  
-  // Expose COURSES and ACTIVE_COURSE for export module
+
   window.COURSES = COURSES;
   Object.defineProperty(window, 'ACTIVE_COURSE', {
     get() { return ACTIVE_COURSE; },
-    set(val) { ACTIVE_COURSE = val; }
+    set(value) { ACTIVE_COURSE = value; }
   });
 
-  // =============================================================================
-  // 🔧 CONSTANTS - Magic numbers extracted for clarity
-  // =============================================================================
-  
   const TIMING = {
-    FOCUS_DELAY_MS: 50,          // Delay before focusing next input (prevents race conditions)
-    RECALC_DEBOUNCE_MS: 300,     // Debounce delay for auto-save
-    INIT_RETRY_DELAY_MS: 150,    // Delay for game module initialization retries
-    RESIZE_DEBOUNCE_MS: 150      // Debounce delay for window resize handler
+    FOCUS_DELAY_MS: 50,
+    RECALC_DEBOUNCE_MS: 300,
+    INIT_RETRY_DELAY_MS: 150,
+    RESIZE_DEBOUNCE_MS: 150
   };
-  
+
   const LIMITS = {
     MIN_HANDICAP: -50,
     MAX_HANDICAP: 60,
     MIN_SCORE: 1,
     MAX_SCORE: 20
   };
-  
-  // Game scoring constants
+
   const GAME_CONSTANTS = {
     JUNK: {
       POINTS: {
@@ -251,12 +140,11 @@
       DEFAULT_BUYIN: 10
     }
   };
-  
-  // Expose game constants globally for game modules
+
   window.GAME_CONSTANTS = GAME_CONSTANTS;
 
   // =============================================================================
-  // 📦 UTILS MODULE - DOM Helpers & Math Utilities
+  // UTILS MODULE - DOM Helpers & Math Utilities
   // =============================================================================
   
   const Utils = {
@@ -3261,203 +3149,45 @@
   }
 
   function jumpToGamesLauncher() {
-    const gamesBar = document.querySelector('.gamesbar');
+    const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
     if (!gamesBar) return;
     gamesBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  const FLOATING_NAV_STORAGE_KEY = 'golf_floating_nav_position_v1';
+  function setupEntrySwitcher() {
+    const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
+    const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
+    const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
+    if (!scoreBtn || !gamesBtn || !gamesBar) return;
 
-  function clampFloatingPosition(left, top, width, height) {
-    const pad = 8;
-    const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
-    const viewportH = window.innerHeight || document.documentElement.clientHeight || 0;
-
-    const minLeft = pad;
-    const maxLeft = Math.max(pad, viewportW - width - pad);
-    const minTop = pad;
-    const maxTop = Math.max(pad, viewportH - height - pad);
-
-    return {
-      left: Math.min(maxLeft, Math.max(minLeft, left)),
-      top: Math.min(maxTop, Math.max(minTop, top))
-    };
-  }
-
-  function loadFloatingNavPosition() {
-    try {
-      const raw = localStorage.getItem(FLOATING_NAV_STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!Number.isFinite(parsed?.left) || !Number.isFinite(parsed?.top)) return null;
-      return { left: parsed.left, top: parsed.top };
-    } catch {
-      return null;
-    }
-  }
-
-  function saveFloatingNavPosition(left, top) {
-    try {
-      localStorage.setItem(FLOATING_NAV_STORAGE_KEY, JSON.stringify({ left, top }));
-    } catch {
-      // ignore storage write failures
-    }
-  }
-
-  function setupFloatingNavButtons() {
-    const container = document.getElementById('floatingNavButtons');
-    const nextBtn = document.getElementById('floatingNextScoreBtn');
-    const gamesBtn = document.getElementById('floatingGamesBtn');
-    if (!container || !nextBtn || !gamesBtn) return;
-
-    // Restore persisted position (or keep default from markup)
-    const restorePosition = () => {
-      const savedPos = loadFloatingNavPosition();
-      if (!savedPos) return;
-      const rect = container.getBoundingClientRect();
-      const clamped = clampFloatingPosition(savedPos.left, savedPos.top, rect.width, rect.height);
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
+    const setActiveMode = (mode) => {
+      scoreBtn.classList.toggle('active', mode === 'score');
+      gamesBtn.classList.toggle('active', mode === 'games');
+      scoreBtn.setAttribute('aria-pressed', mode === 'score' ? 'true' : 'false');
+      gamesBtn.setAttribute('aria-pressed', mode === 'games' ? 'true' : 'false');
     };
 
-    restorePosition();
-
-    const updateVisibility = () => {
-      const gamesBar = document.querySelector('.gamesbar');
-      if (!gamesBar) {
-        nextBtn.style.display = 'none';
-        gamesBtn.style.display = '';
-        return;
-      }
-
+    const updateActiveMode = () => {
       const scrollY = window.scrollY || window.pageYOffset || 0;
-      const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.5);
+      const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.45);
       const gamesTopY = gamesBar.getBoundingClientRect().top + scrollY;
-      const inGamesContext = viewportMidY >= (gamesTopY - 40);
-
-      const setNextBtnLabel = (isGamesContext) => {
-        nextBtn.textContent = isGamesContext ? '⛳ Scorecard' : '⛳ Next Empty';
-      };
-
-      // Always show exactly one nav button based on current scroll context.
-      if (inGamesContext) {
-        setNextBtnLabel(true);
-        nextBtn.style.display = '';
-        gamesBtn.style.display = 'none';
-      } else {
-        setNextBtnLabel(false);
-        nextBtn.style.display = 'none';
-        gamesBtn.style.display = '';
-      }
+      setActiveMode(viewportMidY >= (gamesTopY - 24) ? 'games' : 'score');
     };
 
-    // Drag support (mouse + touch + pen)
-    container.style.touchAction = 'none';
-    let drag = null;
-    let suppressClick = false;
-
-    const onPointerMove = (e) => {
-      if (!drag || e.pointerId !== drag.pointerId) return;
-
-      const dx = e.clientX - drag.startX;
-      const dy = e.clientY - drag.startY;
-      const movedEnough = Math.abs(dx) > 4 || Math.abs(dy) > 4;
-      if (movedEnough) suppressClick = true;
-
-      const rect = container.getBoundingClientRect();
-      const nextLeft = drag.originLeft + dx;
-      const nextTop = drag.originTop + dy;
-      const clamped = clampFloatingPosition(nextLeft, nextTop, rect.width, rect.height);
-
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
-    };
-
-    const onPointerUp = (e) => {
-      if (!drag || e.pointerId !== drag.pointerId) return;
-      try { container.releasePointerCapture(e.pointerId); } catch {}
-
-      const rect = container.getBoundingClientRect();
-      const clamped = clampFloatingPosition(rect.left, rect.top, rect.width, rect.height);
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
-      saveFloatingNavPosition(clamped.left, clamped.top);
-
-      drag = null;
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
-      setTimeout(() => { suppressClick = false; }, 0);
-    };
-
-    container.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return;
-      const rect = container.getBoundingClientRect();
-
-      // Convert default right/bottom anchored layout to explicit left/top before dragging.
-      if (!container.style.left || container.style.right !== 'auto') {
-        container.style.left = `${rect.left}px`;
-        container.style.top = `${rect.top}px`;
-        container.style.right = 'auto';
-        container.style.bottom = 'auto';
-      }
-
-      drag = {
-        pointerId: e.pointerId,
-        startX: e.clientX,
-        startY: e.clientY,
-        originLeft: rect.left,
-        originTop: rect.top
-      };
-      suppressClick = false;
-      try { container.setPointerCapture(e.pointerId); } catch {}
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      window.addEventListener('pointercancel', onPointerUp);
+    scoreBtn.addEventListener('click', () => {
+      setActiveMode('score');
+      jumpToNextEmptyScore();
     });
 
-    container.addEventListener('click', (e) => {
-      if (!suppressClick) return;
-      e.preventDefault();
-      e.stopPropagation();
-      suppressClick = false;
-    }, true);
-
-    nextBtn.addEventListener('click', jumpToNextEmptyScore);
-    gamesBtn.addEventListener('click', jumpToGamesLauncher);
-
-    const throttledUpdate = Utils.throttle(updateVisibility, 120);
-
-    // 'scroll' is reliable on desktop/Android but fires late or not at all
-    // during iOS Safari momentum scrolling. touchmove covers the active-drag
-    // phase; touchend + deferred calls catch the settle after the finger lifts.
-    window.addEventListener('scroll', throttledUpdate, { passive: true });
-    document.addEventListener('touchmove', throttledUpdate, { passive: true });
-    document.addEventListener('touchend', () => {
-      updateVisibility();
-      setTimeout(updateVisibility, 150);
-      setTimeout(updateVisibility, 400);
-    }, { passive: true });
-
-    window.addEventListener('resize', () => {
-      const rect = container.getBoundingClientRect();
-      const clamped = clampFloatingPosition(rect.left, rect.top, rect.width, rect.height);
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
-      saveFloatingNavPosition(clamped.left, clamped.top);
-      throttledUpdate();
+    gamesBtn.addEventListener('click', () => {
+      setActiveMode('games');
+      jumpToGamesLauncher();
+      announce('Opened game entry.');
     });
-    document.addEventListener('visibilitychange', throttledUpdate);
 
-    updateVisibility();
+    window.addEventListener('scroll', updateActiveMode, { passive: true });
+    window.addEventListener('resize', updateActiveMode);
+    updateActiveMode();
   }
 
   // =============================================================================
@@ -3787,7 +3517,7 @@
       Storage.saveDebounced();
     });
     applyFontSize(Config.FONT_SIZE);
-    setupFloatingNavButtons();
+    setupEntrySwitcher();
     
     Scorecard.player.updateCountDisplay();
 
