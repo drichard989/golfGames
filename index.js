@@ -1251,10 +1251,16 @@
           
           if(sr > 0) {
             input.classList.add("receives-stroke");
+            input.classList.remove("gives-stroke");
             input.dataset.strokes = String(sr);
             input.title = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
-          } else {
+          } else if(sr < 0) {
+            input.classList.add("gives-stroke");
             input.classList.remove("receives-stroke");
+            input.dataset.strokes = String(Math.abs(sr));
+            input.title = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
+          } else {
+            input.classList.remove("receives-stroke", "gives-stroke");
             input.removeAttribute("data-strokes");
             input.removeAttribute("title");
           }
@@ -1338,10 +1344,16 @@
             
             if(sr > 0) {
               input.classList.add("receives-stroke");
+              input.classList.remove("gives-stroke");
               input.dataset.strokes = String(sr);
               input.title = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
-            } else {
+            } else if(sr < 0) {
+              input.classList.add("gives-stroke");
               input.classList.remove("receives-stroke");
+              input.dataset.strokes = String(Math.abs(sr));
+              input.title = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
+            } else {
+              input.classList.remove("receives-stroke", "gives-stroke");
               input.removeAttribute("data-strokes");
               input.removeAttribute("title");
             }
@@ -2148,7 +2160,7 @@
         // Restore handicap mode
         if(s.handicapMode) {
           const modeId = 'handicapMode' + s.handicapMode.charAt(0).toUpperCase() + s.handicapMode.slice(1);
-          setHandicapModeBtn(modeId);
+          setHandicapModeButtonState(modeId);
         }
 
         // Restore font size
@@ -2447,7 +2459,7 @@
       this.clearAll();
 
       // Reset primary scorecard options
-      setHandicapModeBtn('handicapModePlayOffLow');
+      setHandicapModeButtonState('handicapModePlayOffLow');
 
       Config.ADVANCE_DIRECTION = 'down';
       const advanceLabel = document.getElementById('advanceLabel');
@@ -2546,6 +2558,31 @@
         console.warn('[FontSize] delayed syncRowHeights failed:', error);
       }
     }, 120);
+  }
+
+  /**
+   * Set active handicap mode button in the scorecard control group.
+   * @param {string} activeId - Target button id
+   */
+  function setHandicapModeButtonState(activeId) {
+    const buttons = document.querySelectorAll('#handicapModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+
+    if (!matched) {
+      const fallbackBtn = document.getElementById('handicapModePlayOffLow');
+      if (fallbackBtn) {
+        fallbackBtn.dataset.active = 'true';
+        fallbackBtn.setAttribute('aria-checked', 'true');
+      }
+    }
   }
   
   // Expose announce globally for external modules
@@ -3955,17 +3992,10 @@
   
   // Auto-advance direction toggle
   // Handicap mode button group
-  function setHandicapModeBtn(activeId) {
-    document.querySelectorAll('#handicapModeGroup .hcp-mode-btn').forEach(btn => {
-      const isActive = btn.id === activeId;
-      btn.dataset.active = isActive ? 'true' : 'false';
-      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
-    });
-  }
   document.getElementById('handicapModeGroup')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.hcp-mode-btn');
     if (!btn) return;
-    setHandicapModeBtn(btn.id);
+    setHandicapModeButtonState(btn.id);
     Scorecard.calc.recalcAll();
     Storage.saveDebounced();
   });

@@ -181,8 +181,7 @@ header.header-collapsed {
 
 .sticky-nav-bar {
   position: sticky;
-  top: 0;
-  padding-top: env(safe-area-inset-top, 0px);
+  top: env(safe-area-inset-top, 0px);
   z-index: 31;
   background: var(--bg);
 }
@@ -854,9 +853,9 @@ table {
 
 #scorecardFixed {
   border-right: 2px solid rgba(168, 179, 191, 0.4);
-  min-width: 160px;
-  max-width: 160px;
-  width: 160px;
+  min-width: 175px;
+  max-width: 175px;
+  width: 175px;
 }
 
 #scorecard {
@@ -885,9 +884,9 @@ td {
 #scorecardFixed td:first-child {
   text-align: left;
   padding: var(--space-xs) 6px;
-  min-width: 105px;
-  max-width: 105px;
-  width: 105px;
+  min-width: 120px;
+  max-width: 120px;
+  width: 120px;
   background-color: var(--panel);
   font-size: calc(var(--text-sm) + var(--font-data-adjust) + var(--font-size-step));
   overflow: hidden;
@@ -1284,39 +1283,6 @@ tfoot td {
   display: inline-flex;
   gap: var(--space-xs);
   align-items: center;
-  min-height: var(--touch-min);
-  padding: 6px 12px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  background: var(--panel-alt);
-  color: var(--muted);
-  transition: background 0.12s, border-color 0.12s, color 0.12s;
-}
-
-.radio:has(input[type="radio"]:checked) {
-  background: rgba(74, 158, 255, 0.18);
-  border-color: rgba(74, 158, 255, 0.7);
-  color: #4a9eff;
-  font-weight: 600;
-}
-
-:root[data-theme="light"] .radio {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-  color: #64748b;
-}
-
-:root[data-theme="light"] .radio:has(input[type="radio"]:checked) {
-  background: rgba(37, 99, 235, 0.12);
-  border-color: rgba(37, 99, 235, 0.6);
-  color: #1d4ed8;
-  font-weight: 600;
-}
-
-/* Hide the actual radio dot — the label itself is the button */
-.radio input[type="radio"] {
-  display: none;
 }
 
 .vegas-opt-flag {
