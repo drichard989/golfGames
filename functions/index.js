@@ -8,12 +8,40 @@ admin.initializeApp();
 const db = admin.database();
 
 const REGION = 'us-central1';
+const CALLABLE_OPTS = { region: REGION, enforceAppCheck: true };
 const EDIT_CODE_LENGTH = 8;
 const VIEW_CODE_LENGTH = 8;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const MAX_CODE_ATTEMPTS = 10;
 const DATA_RETENTION_DAYS = 5;
 const RETENTION_MS = DATA_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+
+const RATE_LIMITS = {
+  REDEEM_UID: {
+    path: (uid) => `rateLimits/redeemByUid/${uid}`,
+    windowMs: 5 * 60 * 1000,
+    maxAttempts: 40,
+    lockoutMs: 10 * 60 * 1000
+  },
+  REDEEM_IP: {
+    path: (ipKey) => `rateLimits/redeemByIp/${ipKey}`,
+    windowMs: 5 * 60 * 1000,
+    maxAttempts: 120,
+    lockoutMs: 10 * 60 * 1000
+  },
+  INVALID_UID: {
+    path: (uid) => `rateLimits/redeemInvalidByUid/${uid}`,
+    windowMs: 10 * 60 * 1000,
+    maxAttempts: 10,
+    lockoutMs: 30 * 60 * 1000
+  },
+  INVALID_IP: {
+    path: (ipKey) => `rateLimits/redeemInvalidByIp/${ipKey}`,
+    windowMs: 10 * 60 * 1000,
+    maxAttempts: 30,
+    lockoutMs: 30 * 60 * 1000
+  }
+};
 
 function nowTs() {
   return Date.now();
@@ -29,6 +57,12 @@ function randomFromAlphabet(length) {
 
 function normalizeCode(code) {
   return String(code || '').trim().replace(/\s+/g, '').toUpperCase();
+}
+
+function normalizeIpKey(ip) {
+  const normalized = String(ip || '').trim();
+  if (!normalized) return '';
+  return normalized.replace(/[^a-zA-Z0-9:_\-.]/g, '_');
 }
 
 function randomGameId() {
@@ -65,12 +99,59 @@ function ensureAuthed(request) {
   return request.auth.uid;
 }
 
+async function enforceRateLimit(path, { windowMs, maxAttempts, lockoutMs }, label) {
+  const now = nowTs();
+  const ref = db.ref(path);
+
+  let blocked = false;
+  let retryAfterMs = 0;
+
+  await ref.transaction((current) => {
+    const data = current && typeof current === 'object' ? current : {};
+    const lockedUntil = Number(data.lockedUntil) || 0;
+    if (lockedUntil > now) {
+      blocked = true;
+      retryAfterMs = lockedUntil - now;
+      return;
+    }
+
+    const windowStart = Number(data.windowStart) || 0;
+    const prevCount = Number(data.count) || 0;
+    const sameWindow = windowStart > 0 && (now - windowStart) < windowMs;
+    const count = sameWindow ? prevCount : 0;
+    const nextCount = count + 1;
+
+    if (nextCount > maxAttempts) {
+      blocked = true;
+      retryAfterMs = lockoutMs;
+      return {
+        windowStart: now,
+        count: 0,
+        lockedUntil: now + lockoutMs,
+        updatedAt: now
+      };
+    }
+
+    return {
+      windowStart: sameWindow ? windowStart : now,
+      count: nextCount,
+      lockedUntil: 0,
+      updatedAt: now
+    };
+  });
+
+  if (blocked) {
+    const retrySeconds = Math.max(1, Math.ceil(retryAfterMs / 1000));
+    throw new HttpsError('resource-exhausted', `Too many ${label} attempts. Retry in ${retrySeconds}s.`);
+  }
+}
+
 function sanitizeIncomingGame(game) {
   if (!game || typeof game !== 'object') return null;
   return game;
 }
 
-exports.createGameSession = onCall({ region: REGION }, async (request) => {
+exports.createGameSession = onCall(CALLABLE_OPTS, async (request) => {
   const uid = ensureAuthed(request);
 
   const payload = request.data || {};
@@ -144,8 +225,22 @@ exports.createGameSession = onCall({ region: REGION }, async (request) => {
   };
 });
 
-exports.redeemGameCode = onCall({ region: REGION }, async (request) => {
+exports.redeemGameCode = onCall(CALLABLE_OPTS, async (request) => {
   const uid = ensureAuthed(request);
+  const ipKey = normalizeIpKey(request.rawRequest?.ip);
+
+  await enforceRateLimit(
+    RATE_LIMITS.REDEEM_UID.path(uid),
+    RATE_LIMITS.REDEEM_UID,
+    'redeem'
+  );
+  if (ipKey) {
+    await enforceRateLimit(
+      RATE_LIMITS.REDEEM_IP.path(ipKey),
+      RATE_LIMITS.REDEEM_IP,
+      'redeem'
+    );
+  }
 
   const code = normalizeCode(request.data?.code);
   if (!code || code.length < 6) {
@@ -155,6 +250,18 @@ exports.redeemGameCode = onCall({ region: REGION }, async (request) => {
   const codeSnap = await db.ref(`codeMap/${code}`).get();
   const codeData = codeSnap.val();
   if (!codeData || !codeData.gameId || !codeData.role) {
+    await enforceRateLimit(
+      RATE_LIMITS.INVALID_UID.path(uid),
+      RATE_LIMITS.INVALID_UID,
+      'invalid-code'
+    );
+    if (ipKey) {
+      await enforceRateLimit(
+        RATE_LIMITS.INVALID_IP.path(ipKey),
+        RATE_LIMITS.INVALID_IP,
+        'invalid-code'
+      );
+    }
     throw new HttpsError('not-found', 'Code not found.');
   }
 
@@ -199,7 +306,7 @@ exports.redeemGameCode = onCall({ region: REGION }, async (request) => {
   };
 });
 
-exports.getGameCodes = onCall({ region: REGION }, async (request) => {
+exports.getGameCodes = onCall(CALLABLE_OPTS, async (request) => {
   const uid = ensureAuthed(request);
   const gameId = String(request.data?.gameId || '').trim();
 
