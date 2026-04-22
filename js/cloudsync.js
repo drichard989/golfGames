@@ -115,6 +115,17 @@
 
     const isLive = forceOffline ? false : (forceOnline ? true : !!state.session);
     statusEl.setAttribute('data-live', isLive ? 'true' : 'false');
+
+    const badge = document.getElementById('cloudStatusBadge');
+    if (badge) {
+      if (isLive) {
+        badge.textContent = '☁ Live';
+        badge.setAttribute('data-live', 'true');
+      } else {
+        badge.textContent = '☁ Offline';
+        badge.setAttribute('data-live', 'false');
+      }
+    }
   }
 
   function showJoinSuccessToast(role) {
