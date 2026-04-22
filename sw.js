@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v2.3.0';
+const CACHE_VERSION = 'v2.4.0';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache - comprehensive list
@@ -56,10 +56,11 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
   
-  // Network-only for HTML and JS files (completely bypass cache, always fresh)
+  // Network-first for all app files (HTML, JS, CSS) — always fresh, offline fallback
   if (request.destination === 'document' || 
       url.pathname.endsWith('.html') || 
       url.pathname.endsWith('.js') ||
+      url.pathname.endsWith('.css') ||
       url.pathname === '/') {
     event.respondWith(
       fetch(request, {
