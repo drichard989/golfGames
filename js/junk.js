@@ -46,6 +46,7 @@
   const HOLES = 18;
   let junkCoreListenersBound = false;
   let junkAchievementListenersBound = false;
+  let persistedAchievementState = [];
   
   // Access game constants with fallbacks
   const getJunkConstants = () => {
@@ -605,6 +606,12 @@
   function getAchievementState() {
     const achievements = [];
     const checkboxes = document.querySelectorAll('#junkTable input.junk-ach:checked');
+    if (checkboxes.length === 0) {
+      return Array.isArray(persistedAchievementState)
+        ? persistedAchievementState.map((achievement) => ({ ...achievement }))
+        : [];
+    }
+
     checkboxes.forEach(cb => {
       achievements.push({
         player: parseInt(cb.dataset.player),
@@ -612,6 +619,8 @@
         key: cb.dataset.key
       });
     });
+
+    persistedAchievementState = achievements.map((achievement) => ({ ...achievement }));
     return achievements;
   }
 
@@ -620,15 +629,24 @@
    * @param {Array} achievements - Array of {player, hole, key}
    */
   function setAchievementState(achievements) {
-    if(!achievements || !Array.isArray(achievements)) return;
+    persistedAchievementState = Array.isArray(achievements)
+      ? achievements.map((achievement) => ({ ...achievement }))
+      : [];
     
     // First, ensure the table is built and enhanced
     const tbody = document.querySelector('#junkBody');
     if(!tbody || !tbody.querySelector('.junk-cell')) {
       return;
     }
+
+    tbody.querySelectorAll('input.junk-ach').forEach((checkbox) => {
+      if (checkbox.checked) {
+        checkbox.checked = false;
+        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
     
-    achievements.forEach(({player, hole, key}) => {
+    persistedAchievementState.forEach(({player, hole, key}) => {
       const checkbox = document.querySelector(
         `#junkTable input.junk-ach[data-player="${player}"][data-hole="${hole}"][data-key="${key}"]`
       );
@@ -644,6 +662,8 @@
    * Clear all achievements (checkboxes) for all players on all holes
    */
   function clearAllAchievements() {
+    persistedAchievementState = [];
+
     // Find all achievement checkboxes in the Junk table
     const checkboxes = document.querySelectorAll('#junkTable input[type="checkbox"]');
     checkboxes.forEach(checkbox => {
@@ -655,7 +675,9 @@
     });
     
     // Update the table to recalculate totals
-    updateJunk();
+    if (document.getElementById('junkBody')) {
+      updateJunk();
+    }
     
     // Save the cleared state
     if (typeof window.saveDebounced === 'function') {
