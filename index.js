@@ -551,6 +551,38 @@
     return document.getElementById('gamesEntryPanel')?.hidden ? 'score' : 'games';
   }
 
+  function getGamesScrollContainer() {
+    return document.getElementById('gamesEntryPanel');
+  }
+
+  function getGamesScrollTop() {
+    const container = getGamesScrollContainer();
+    if (container && container.scrollHeight > container.clientHeight) {
+      return container.scrollTop || 0;
+    }
+    return window.scrollY || window.pageYOffset || 0;
+  }
+
+  function setGamesScrollTop(top) {
+    const safeTop = Number(top) || 0;
+    const container = getGamesScrollContainer();
+    if (container && container.scrollHeight > container.clientHeight) {
+      container.scrollTo({ top: safeTop, left: 0, behavior: 'auto' });
+      return;
+    }
+    window.scrollTo({ top: safeTop, left: 0, behavior: 'auto' });
+  }
+
+  function syncGamesPanelHeight() {
+    const panel = getGamesScrollContainer();
+    if (!panel || panel.hidden) return;
+
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const rect = panel.getBoundingClientRect();
+    const available = Math.max(220, Math.floor(viewportHeight - rect.top - 8));
+    panel.style.maxHeight = `${available}px`;
+  }
+
   function rememberPrimaryTabScroll(which = getPrimaryTab()) {
     if (which !== 'score' && which !== 'games') return;
     PRIMARY_TAB_SCROLL_POSITIONS[which] = window.scrollY || window.pageYOffset || 0;
@@ -558,7 +590,7 @@
 
   function rememberGameTabScroll(which = getActiveGameTab()) {
     if (!GAME_TAB_ORDER.includes(which)) return;
-    GAME_TAB_SCROLL_POSITIONS[which] = window.scrollY || window.pageYOffset || 0;
+    GAME_TAB_SCROLL_POSITIONS[which] = getGamesScrollTop();
   }
 
   function restorePrimaryTabScroll(which) {
@@ -582,11 +614,12 @@
     if (!GAME_TAB_ORDER.includes(which)) return;
     const top = Number(GAME_TAB_SCROLL_POSITIONS[which]) || 0;
     const applyScroll = () => {
-      window.scrollTo({ top, left: 0, behavior: 'auto' });
+      setGamesScrollTop(top);
     };
 
     requestAnimationFrame(applyScroll);
     setTimeout(applyScroll, 120);
+    setTimeout(applyScroll, 260);
   }
 
   function syncPrimaryTabUi(activeTab) {
@@ -633,6 +666,7 @@
 
     syncPrimaryTabUi(which);
     if (which === 'games') {
+      syncGamesPanelHeight();
       const activeGame = getActiveGameTab();
       if (activeGame) {
         restoreGameTabScroll(activeGame);
@@ -664,6 +698,15 @@
 
     scrollPane.addEventListener('scroll', () => syncScrollTop(scrollPane, fixedPane), { passive: true });
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
+  }
+
+  function setupGamesPanelScrollSync() {
+    const panel = getGamesScrollContainer();
+    if (!panel) return;
+
+    const sync = () => syncGamesPanelHeight();
+    window.addEventListener('resize', sync, { passive: true });
+    window.addEventListener('orientationchange', sync, { passive: true });
   }
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
@@ -3621,6 +3664,7 @@
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
     Scorecard.player.syncOverlay();
     setupScorecardScrollSync();
+    setupGamesPanelScrollSync();
     
     // Sync row heights after tables are built (skip highlighting on init - will be applied after data loads)
     requestAnimationFrame(() => {

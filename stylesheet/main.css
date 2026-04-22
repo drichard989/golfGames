@@ -499,6 +499,13 @@ input[type="text"] {
   display: none !important;
 }
 
+#gamesEntryPanel {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+}
+
 .entry-switcher {
   position: sticky;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
