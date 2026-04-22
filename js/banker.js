@@ -381,6 +381,10 @@
     betInput.title = isInvalid ? `Bet exceeds max of $${maxBet}` : '';
   }
 
+  // =============================================================================
+  // PURE GAME ENGINE (no DOM access)
+  // =============================================================================
+
   /**
    * Pure Banker game engine based on provided state and scorebook.
    * Does not read or write DOM.
@@ -633,12 +637,10 @@
       const testElement = document.getElementById(DOM_IDS.bankerSelect(1));
       if (!testElement) {
         // Table not built yet, store for later
-        console.log('[Banker] Table not built, storing state for later restoration');
         this._pendingState = sanitizedState;
         return;
       }
       
-      console.log('[Banker] Restoring state to DOM');
       // Delay to ensure DOM is ready
       setTimeout(() => {
         sanitizedState.holes.forEach((holeState, idx) => {
@@ -704,7 +706,7 @@
         }
         
         // Reset banker double
-  const bankerDoubleBtn = document.getElementById(DOM_IDS.bankerDouble(h));
+        const bankerDoubleBtn = document.getElementById(DOM_IDS.bankerDouble(h));
         if (bankerDoubleBtn) {
           setToggleButtonState(bankerDoubleBtn, false);
         }
@@ -914,16 +916,13 @@
      * Build the Banker table
      */
     buildTable() {
-      console.log('[Banker] buildTable() called');
       const tbody = document.getElementById('bankerBody');
-      console.log('[Banker] tbody element:', tbody);
       if (!tbody) {
         console.error('[Banker] bankerBody tbody not found!');
         return;
       }
       
       tbody.innerHTML = '';
-      console.log('[Banker] Building table for', getPlayerCount(), 'players');
       const playerCount = getPlayerCount();
       const names = getPlayerNames();
       
@@ -1058,7 +1057,6 @@
         
         tbody.appendChild(tr);
       }
-      console.log('[Banker] buildTable completed - added 18 rows');
     },
 
     /**
@@ -1369,15 +1367,8 @@
      * Initialize Banker game
      */
     init() {
-      console.log('[Banker] init() called, _initialized:', this._initialized);
-      
-      // Check if tbody exists
-      const tbody = document.getElementById('bankerBody');
-      console.log('[Banker] tbody found:', !!tbody);
-      
       // Only do full init once
       if (!this._initialized) {
-        console.log('[Banker] Running full initialization...');
         this.buildTable();
         this.rebuildFooter();
         this.updateBetInputs();
@@ -1436,7 +1427,6 @@
         
         // Check if there's a pending state to restore (from page load)
         if (this._pendingState) {
-          console.log('[Banker] Applying pending state from page load');
           // Apply immediately after table is built
           setTimeout(() => {
             this.setState(this._pendingState);
@@ -1492,5 +1482,4 @@
   };
 
   window.Banker = Banker;
-  console.log('[Banker] Module loaded and exported to window.Banker');
 })();

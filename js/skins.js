@@ -201,11 +201,6 @@
     const ndb = par + NDB_BUFFER + sr;
     const adjGross = Math.min(gross, ndb);
     const netScore = adjGross - sr;
-    
-    if (holeIdx === 0 && playerIdx < 3) {
-      console.log(`[getNetForSkins] P${playerIdx} H1: adjCH=${adj}, strokes=${sr}, gross=${gross}, net=${netScore}, half=${half}`);
-    }
-    
     return netScore;
   }
 
@@ -247,18 +242,11 @@
       let pot = 1;
       let carryoverFromHoles = []; // Track which holes contribute to current pot
 
-      console.log('[Skins.compute] Starting with useNet:', useNet, 'half:', half);
-
       for (let h = 0; h < HOLES; h++) {
         // Use gross or net scores based on mode
         const scores = Array.from({ length: playerCount }, (_, p) => 
           useNet ? getNetForSkins(p, h, half) : getGross(p, h)
         );
-        
-        if (h === 0) {
-          console.log('[Skins.compute] Hole 1 scores:', scores, 'useNet:', useNet, 'half:', half);
-        }
-        
         const filled = scores.map((n, p) => ({ n, p })).filter(x => x.n > 0);
         if (filled.length < 2) {
           if (carry) {
@@ -405,9 +393,6 @@
     const carry = document.getElementById('skinsCarry')?.checked ?? true;
     const half = document.getElementById('skinsHalf')?.checked ?? false;
     const buyIn = Math.max(0, Number(document.getElementById('skinsBuyIn')?.value) || 0);
-    
-    console.log('[Skins] updateSkins called - useNet:', useNet, 'half:', half, 'carry:', carry);
-    
     const data = Skins.compute({ carry, half, buyIn, useNet });
     Skins.render(data);
   }

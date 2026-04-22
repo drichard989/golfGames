@@ -611,7 +611,7 @@
     }
 
     state.currentLiveState = syncGame;
-  state.lastPushedContentHash = getSyncContentHash(syncGame);
+    state.lastPushedContentHash = getSyncContentHash(syncGame);
 
     if (state.isViewingSnapshot) {
       state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
@@ -804,67 +804,56 @@
     updateUiForSession();
   }
 
+  // =============================================================================
+  // UI BINDINGS
+  // =============================================================================
+
+  /**
+   * Shared wrapper for async cloud button actions.
+   * Shows a working status, catches errors, and surfaces them in the status bar.
+   * @param {string} tag - Label for console error context
+   * @param {string|null} workingMsg - Optional status message shown before the async work
+   * @param {() => Promise<void>} fn - Async action to run
+   * @returns {() => void} Click handler
+   */
+  function withCloudOp(tag, workingMsg, fn) {
+    return async () => {
+      try {
+        if (workingMsg) setStatus(workingMsg);
+        await fn();
+      } catch (err) {
+        console.error(`[CloudSync] ${tag}:`, err);
+        setStatus(`Cloud: ${err.message}`);
+      }
+    };
+  }
+
   function bindUi() {
     document.addEventListener('pointerdown', (e) => markBankerInteraction(e.target), true);
     document.addEventListener('focusin', (e) => markBankerInteraction(e.target), true);
 
-    EL.createBtn()?.addEventListener('click', async () => {
-      try {
-        setStatus('Cloud: creating session...');
-        await createSession();
-      } catch (err) {
-        console.error('[CloudSync] create session failed:', err);
-        setStatus(`Cloud: ${err.message}`);
-      }
-    });
+    EL.createBtn()?.addEventListener('click',
+      withCloudOp('create session', 'Cloud: creating session...', createSession));
 
-    EL.joinBtn()?.addEventListener('click', async () => {
-      try {
-        setStatus('Cloud: joining...');
-        await joinSessionWithCode(EL.joinCode()?.value || '');
-      } catch (err) {
-        console.error('[CloudSync] join failed:', err);
-        setStatus(`Cloud: ${err.message}`);
-      }
-    });
+    EL.joinBtn()?.addEventListener('click',
+      withCloudOp('join session', 'Cloud: joining...', () =>
+        joinSessionWithCode(EL.joinCode()?.value || '')));
 
-    EL.leaveBtn()?.addEventListener('click', async () => {
-      await leaveSession();
-    });
+    EL.leaveBtn()?.addEventListener('click', () => leaveSession());
 
     EL.snapshotSelect()?.addEventListener('change', () => {
       state.activeSnapshotId = EL.snapshotSelect()?.value || '';
       syncSnapshotButtons();
     });
 
-    EL.loadSnapshotBtn()?.addEventListener('click', async () => {
-      try {
-        setStatus('Cloud: loading snapshot...');
-        await reviewSelectedSnapshot();
-      } catch (err) {
-        console.error('[CloudSync] snapshot review failed:', err);
-        setStatus(`Cloud: ${err.message}`);
-      }
-    });
+    EL.loadSnapshotBtn()?.addEventListener('click',
+      withCloudOp('snapshot review', 'Cloud: loading snapshot...', reviewSelectedSnapshot));
 
-    EL.resumeLiveBtn()?.addEventListener('click', async () => {
-      try {
-        setStatus('Cloud: returning to live...');
-        await resumeLiveState();
-      } catch (err) {
-        console.error('[CloudSync] resume live failed:', err);
-        setStatus(`Cloud: ${err.message}`);
-      }
-    });
+    EL.resumeLiveBtn()?.addEventListener('click',
+      withCloudOp('resume live', 'Cloud: returning to live...', resumeLiveState));
 
-    EL.saveSnapshotBtn()?.addEventListener('click', async () => {
-      try {
-        await saveReviewedSnapshotAsCurrent();
-      } catch (err) {
-        console.error('[CloudSync] save reviewed snapshot failed:', err);
-        setStatus(`Cloud: ${err.message}`);
-      }
-    });
+    EL.saveSnapshotBtn()?.addEventListener('click',
+      withCloudOp('save reviewed snapshot', null, saveReviewedSnapshotAsCurrent));
   }
 
   async function initFirebase() {

@@ -61,10 +61,13 @@
       • Weighted bonus points for achievements
       Exposed: window.Junk {init, initAchievements, refreshForPlayerChange, update}
    
-   🔗 js/banker.js        (38 lines) - Banker game [STUB]
-      • Points-per-match with rotation or until-beaten modes
-      • To be implemented
-      Exposed: window.Banker {init}
+   🔗 js/banker.js     (~1500 lines) - Banker game
+      • Per-hole rotating banker selection with max-bet system
+      • Player bets with individual 2× doubles, banker 2× all bets
+      • Gross and Net (full handicap) scoring modes
+      • Stroke indicators per hole per player
+      • Payout table with running totals
+      Exposed: window.Banker {init, update, buildTable, getState, setState, clearAll, refreshForPlayerChange}
    
    🔗 js/hilo.js          (~400 lines) - Hi-Lo team game
       • 4 players: Low+High handicap vs Middle two
@@ -98,7 +101,7 @@
    │   ├── skins.js        - Skins game module
    │   ├── junk.js         - Junk game module
    │   ├── hilo.js         - Hi-Lo game module
-   │   └── banker.js       - Banker game stub
+   │   └── banker.js       - Banker game (full implementation)
    ├── images/             - Icons and assets
    └── stylesheet/         - CSS files
    
@@ -560,15 +563,20 @@
    * Ensures Vegas, Skins, Junk, Hi-Lo, and Banker stay in sync when scores change
    */
   const AppManager = {
-    recalcGames(){
-      try{ window.Vegas?.recalc(); }catch(e){ console.warn('vegas_recalc failed', e); }
-      try{ window.Skins?.update(); }catch(e){ /* skins may not be open yet */ }
-      try{ window.Junk?.update(); }catch(e){ /* junk may not be open yet */ }
-      try{ window.HiLo?.update(); }catch(e){ /* hilo may not be open yet */ }
-      try{ window.Banker?.update(); }catch(e){ /* banker may not be open yet */ }
+    /**
+     * Trigger a recalculation on all active game modules.
+     * Each call is guarded so a missing or uninitialized module never
+     * prevents the rest from updating.
+     */
+    recalcGames() {
+      try { window.Vegas?.recalc();  } catch (e) { console.warn('[AppManager] Vegas recalc failed', e); }
+      try { window.Skins?.update();  } catch (e) { /* skins may not be initialized yet */ }
+      try { window.Junk?.update();   } catch (e) { /* junk may not be initialized yet */ }
+      try { window.HiLo?.update();   } catch (e) { /* hilo may not be initialized yet */ }
+      try { window.Banker?.update(); } catch (e) { /* banker may not be initialized yet */ }
     }
   };
-  try{ window.AppManager = AppManager; }catch{}
+  try { window.AppManager = AppManager; } catch {}
 
   const ids = {
     holesHeader:"#holesHeader",parRow:"#parRow",hcpRow:"#hcpRow",totalsRow:"#totalsRow",
@@ -582,19 +590,19 @@
     vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", hiloSection:"#hiloSection", junkSection:"#junkSection",
 
     // Vegas
-  vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
-  vegasTableBody:"#vegasBody", vegasTotalA:"#vegasTotalA", vegasTotalB:"#vegasTotalB", vegasPtsA:"#vegasPtsA", vegasPtsB:"#vegasPtsB",
-  optUseNet:"#optUseNet", optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
-  vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB", vegasNetHcpMode:"#vegasNetHcpMode",
+    vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
+    vegasTableBody:"#vegasBody", vegasTotalA:"#vegasTotalA", vegasTotalB:"#vegasTotalB", vegasPtsA:"#vegasPtsA", vegasPtsB:"#vegasPtsB",
+    optUseNet:"#optUseNet", optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
+    vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB", vegasNetHcpMode:"#vegasNetHcpMode",
 
     // Skins
     skinsModeGross:"#skinsModeGross", skinsModeNet:"#skinsModeNet",
     skinsCarry:"#skinsCarry", skinsHalf:"#skinsHalf",
     skinsBody:"#skinsBody",
     skinsSummary:"#skinsSummary",
-// CSV
+    // CSV
     csvInput:"#csvInput", dlTemplateBtn:"#dlTemplateBtn",
-  fontSizeSmall:"#fontSizeSmall", fontSizeMedium:"#fontSizeMedium", fontSizeLarge:"#fontSizeLarge",
+    fontSizeSmall:"#fontSizeSmall", fontSizeMedium:"#fontSizeMedium", fontSizeLarge:"#fontSizeLarge",
   };
 
   // =============================================================================
@@ -865,7 +873,8 @@
        * Sync row heights between fixed and scrollable tables
        * This ensures perfect vertical alignment on all devices
        */
-    syncRowHeights(skipHighlighting = false) {        const fixedTable = $(ids.tableFixed);
+      syncRowHeights(skipHighlighting = false) {
+        const fixedTable = $(ids.tableFixed);
         const scrollTable = $(ids.table);
         
         if (!fixedTable || !scrollTable) return;
@@ -1153,7 +1162,6 @@
           const scoreInputs = $$("input.score-input", row);
           
           for(let h=0; h<HOLES; h++){
-            const holeHcp = Config.hcpMen[h];
             const sr = Scorecard.calc.strokesOnHole(playerAdjCH, h);
             const input = scoreInputs[h];
             if(!input) continue;
@@ -1162,24 +1170,10 @@
               input.classList.add("receives-stroke");
               input.dataset.strokes = String(sr);
               input.title = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
-              
-              // FORCE inline styles as backup (nuclear option for testing)
-              if(sr === 1) {
-                input.style.border = '2px solid var(--accent)';
-                input.style.boxShadow = '0 0 0 1px var(--accent)';
-              } else if(sr === 2) {
-                input.style.border = '2px solid var(--accent)';
-                input.style.boxShadow = '0 0 0 6px var(--bg), 0 0 0 8px var(--accent)';
-              } else {
-                input.style.border = '2px solid var(--accent)';
-                input.style.boxShadow = '0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent)';
-              }
             } else {
               input.classList.remove("receives-stroke");
               input.removeAttribute("data-strokes");
               input.removeAttribute("title");
-              input.style.border = '';
-              input.style.boxShadow = '';
             }
           }
         });
@@ -1757,7 +1751,6 @@
           announceRestore: false,
           source
         });
-        console.log(`[Storage] Applied sync state from ${source}`);
         return true;
       } catch (error) {
         console.error('[Storage] applySyncGameState failed:', error);
@@ -3207,7 +3200,8 @@
   function recalculateEverything() {
     Scorecard.calc.recalcTotalsRow();
     window.Vegas?.renderTeamControls();
-    // Small delay to ensure Vegas team controls are rendered before recalc
+    // Defer game recalcs by one microtask so Vegas team-control DOM changes
+    // from renderTeamControls() are fully applied before we read them.
     setTimeout(() => {
       AppManager.recalcGames();
       window.Skins?.refreshForPlayerChange();
