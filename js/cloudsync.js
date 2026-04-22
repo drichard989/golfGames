@@ -1042,7 +1042,22 @@
     try {
       result = await callFunction('redeemGameCode', { code });
     } catch (err) {
-      throw new Error('redeemGameCode function failed. Deploy Cloud Functions first.');
+      const msg = err?.message || String(err);
+      // Surface the real error rather than the generic "deploy functions" message
+      if (msg.toLowerCase().includes('app-check') || msg.toLowerCase().includes('appcheck') || msg.toLowerCase().includes('attestation')) {
+        throw new Error('App Check verification failed. Try refreshing the page.');
+      }
+      if (msg.toLowerCase().includes('unauthenticated') || msg.toLowerCase().includes('not authenticated')) {
+        throw new Error('Not signed in. Refresh and try again.');
+      }
+      if (msg.toLowerCase().includes('not-found') || msg.toLowerCase().includes('not found')) {
+        throw new Error('Code not found or expired.');
+      }
+      if (msg.toLowerCase().includes('resource-exhausted') || msg.toLowerCase().includes('too many')) {
+        throw new Error('Too many attempts. Wait a few minutes and try again.');
+      }
+      console.error('[CloudSync] redeemGameCode error:', err);
+      throw new Error(`Join failed: ${msg}`);
     }
 
     if (!result?.gameId || !result?.role) {
