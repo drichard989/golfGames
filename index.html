@@ -26,7 +26,6 @@
         <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
       </div>
       <div class="controls header-addplayer-row header-cloud-row" style="display: flex; gap: 12px; align-items: center;">
-        <span id="cloudStatusBadge" class="cloud-status-badge" aria-live="polite" aria-label="Cloud connection status"></span>
       </div>
 
       <div id="headerOptionsPanel" class="game-options-panel header-options-panel" hidden>
@@ -122,6 +121,7 @@
       👁️ View Mode: Read-only. You can switch tabs, but scorecard and game controls cannot be edited.
     </div>
     <div class="header-collapse-bar">
+      <span id="cloudStatusBadge" class="cloud-status-badge header-bar-badge" aria-live="polite" aria-label="Cloud connection status"></span>
       <button id="headerCollapseBtn" class="header-collapse-btn" type="button" aria-label="Hide header" aria-expanded="true">▲ Hide</button>
     </div>
     <div class="entry-switcher" role="tablist" aria-label="Switch between scorecard and games">
