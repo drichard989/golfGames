@@ -3256,7 +3256,42 @@
       Scorecard.build.syncRowHeights(true);
     });
 
-  $(ids.resetBtn).addEventListener("click", () => { Storage.clearScoresOnly(); });
+  $(ids.resetBtn).addEventListener("click", async () => {
+    const cloudSession = window.CloudSync?.getSession?.();
+    if (cloudSession) {
+      const dialog = document.createElement('div');
+      dialog.style.cssText = `position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10000;`;
+      const box = document.createElement('div');
+      box.style.cssText = `background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:24px;max-width:400px;box-shadow:0 10px 40px rgba(0,0,0,0.3);`;
+      const title = document.createElement('h3');
+      title.textContent = 'Reset Scores & Leave Cloud Session?';
+      title.style.cssText = 'margin:0 0 12px 0;color:var(--ink);';
+      const msg = document.createElement('p');
+      msg.textContent = 'Resetting scores will disconnect you from the live cloud session. Anyone watching the live link will no longer see updates. You will need to create and share a new code to go live again.';
+      msg.style.cssText = 'margin:0 0 20px 0;color:var(--muted);';
+      const btns = document.createElement('div');
+      btns.style.cssText = 'display:flex;gap:12px;';
+      const confirmBtn = document.createElement('button');
+      confirmBtn.textContent = 'Reset & Leave';
+      confirmBtn.className = 'btn';
+      confirmBtn.style.cssText = 'flex:1;background:var(--danger);color:white;';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.className = 'btn';
+      cancelBtn.style.cssText = 'flex:1;';
+      btns.append(confirmBtn, cancelBtn);
+      box.append(title, msg, btns);
+      dialog.appendChild(box);
+      document.body.appendChild(dialog);
+      const confirmed = await new Promise((resolve) => {
+        confirmBtn.onclick = () => { dialog.remove(); resolve(true); };
+        cancelBtn.onclick = () => { dialog.remove(); resolve(false); };
+      });
+      if (!confirmed) return;
+      await window.CloudSync.leaveSession?.();
+    }
+    Storage.clearScoresOnly();
+  });
   $(ids.clearAllBtn).addEventListener("click", async () => {
     // Create confirmation dialog
     const dialog = document.createElement('div');
@@ -3284,11 +3319,14 @@
     `;
     
     const title = document.createElement('h3');
-    title.textContent = 'Clear All Names & Scores?';
+    const cloudSession = window.CloudSync?.getSession?.();
+    title.textContent = cloudSession ? 'Clear All & Leave Cloud Session?' : 'Clear All Names & Scores?';
     title.style.cssText = 'margin: 0 0 12px 0; color: var(--ink);';
     
     const message = document.createElement('p');
-    message.textContent = 'This will clear all player names, handicaps, and scores. This action cannot be undone.';
+    message.textContent = cloudSession
+      ? 'This will clear all player names, handicaps, and scores, and disconnect you from the live cloud session. Anyone watching the live link will no longer see updates. You will need to create and share a new code to go live again.'
+      : 'This will clear all player names, handicaps, and scores. This action cannot be undone.';
     message.style.cssText = 'margin: 0 0 20px 0; color: var(--muted);';
     
     const btnContainer = document.createElement('div');
@@ -3316,6 +3354,9 @@
     });
     
     if (confirmed) {
+      if (window.CloudSync?.getSession?.()) {
+        await window.CloudSync.leaveSession?.();
+      }
       Storage.clearAll();
     }
   });
