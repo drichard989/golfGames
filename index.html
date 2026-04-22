@@ -22,7 +22,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v2.4.5</h1>
+        <h1>Manito Golf Games v2.4.6</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
@@ -220,9 +220,6 @@
       <button id="toggleVegas" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="vegasSection">🎲 Vegas</button>
       <button id="toggleHilo" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="hiloSection">🎯 Hi-Lo</button>
       <button id="toggleBanker" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="bankerSection">🏦 Banker</button>
-    </div>
-    <div class="controls" style="margin: 8px 16px 0;">
-      <button id="clearGamesDataBtn" class="btn">Clear All Game Data</button>
     </div>
     <!-- SKINS GAME -->
     <section class="game-section" id="skinsSection" role="tabpanel" aria-labelledby="toggleSkins" aria-hidden="true">
@@ -565,6 +562,9 @@
         </table>
       </div>
     </section>
+    <div class="controls games-actions-row">
+      <button id="clearGamesDataBtn" class="btn">Clear All Game Data</button>
+    </div>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     </section>
     <script src="index.js" defer></script>
