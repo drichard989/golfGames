@@ -513,6 +513,12 @@
 
     state.session.editCode = normalizeCode(codes?.editCode || state.session.editCode || '');
     state.session.viewCode = viewCode;
+    storeSession({
+      gameId: state.session.gameId,
+      role: state.session.role,
+      editCode: state.session.editCode || '',
+      viewCode: state.session.viewCode || ''
+    });
     updateUiForSession();
     return viewCode;
   }
@@ -687,10 +693,12 @@
 
     state.lastSnapshotAt = timestamp;
 
-    return Promise.all([
-      state.db.ref(snapshotPath).set(payload),
-      state.db.ref(`games/${state.session.gameId}/meta/lastSnapshotAt`).set(timestamp)
-    ]).then(() => payload).catch((err) => {
+    const updates = {
+      [snapshotPath]: payload,
+      [`games/${state.session.gameId}/meta/lastSnapshotAt`]: timestamp
+    };
+
+    return state.db.ref().update(updates).then(() => payload).catch((err) => {
       console.warn('[CloudSync] snapshot write failed:', err);
       return null;
     });
@@ -734,18 +742,22 @@
       ? state.currentLiveState
       : null;
 
+    const rootUpdates = {
+      [`${gameRoot}/meta/updatedAt`]: now,
+      [`${gameRoot}/meta/updatedBy`]: state.user?.uid || 'local-client'
+    };
+
     if (!prevSyncState) {
-      await state.db.ref(`${gameRoot}/state`).set(syncGame);
+      rootUpdates[`${gameRoot}/state`] = syncGame;
     } else {
-      const updates = {};
-      buildDiffUpdates(prevSyncState, syncGame, '', updates);
-      if (Object.keys(updates).length > 0) {
-        await state.db.ref(`${gameRoot}/state`).update(updates);
-      }
+      const stateUpdates = {};
+      buildDiffUpdates(prevSyncState, syncGame, '', stateUpdates);
+      Object.keys(stateUpdates).forEach((path) => {
+        rootUpdates[`${gameRoot}/state/${path}`] = stateUpdates[path];
+      });
     }
 
-    await state.db.ref(`${gameRoot}/meta/updatedAt`).set(now);
-    await state.db.ref(`${gameRoot}/meta/updatedBy`).set(state.user?.uid || 'local-client');
+    await state.db.ref().update(rootUpdates);
 
     state.lastSeenRevision = nextRevision;
     state.currentLiveState = syncGame;
@@ -971,7 +983,7 @@
     unbindRealtime();
 
     const metaSnap = await state.db.ref(`games/${gameId}/meta/lastSnapshotAt`).get().catch(() => null);
-    state.lastSnapshotAt = Number(metaSnap?.val?.() ?? metaSnap?.val?.lastSnapshotAt ?? 0) || 0;
+    state.lastSnapshotAt = Number(metaSnap?.val?.() ?? 0) || 0;
     bindSnapshotList(gameId);
 
     const ref = state.db.ref(`games/${gameId}/state`);
@@ -1009,7 +1021,12 @@
       viewCode: result.viewCode
     };
 
-    storeSession({ gameId: result.gameId, role: 'editor' });
+    storeSession({
+      gameId: result.gameId,
+      role: 'editor',
+      editCode: normalizeCode(result.editCode || ''),
+      viewCode: normalizeCode(result.viewCode || '')
+    });
     updateUiForSession();
     await subscribeRealtime(result.gameId);
   }
@@ -1033,10 +1050,17 @@
 
     state.session = {
       gameId: result.gameId,
-      role: result.role === 'editor' ? 'editor' : 'viewer'
+      role: result.role === 'editor' ? 'editor' : 'viewer',
+      editCode: normalizeCode(result.editCode || ''),
+      viewCode: normalizeCode(result.viewCode || '')
     };
 
-    storeSession({ gameId: result.gameId, role: state.session.role });
+    storeSession({
+      gameId: result.gameId,
+      role: state.session.role,
+      editCode: state.session.editCode || '',
+      viewCode: state.session.viewCode || ''
+    });
     updateUiForSession();
     await subscribeRealtime(result.gameId);
   }
@@ -1167,7 +1191,9 @@
 
     state.session = {
       gameId: stored.gameId,
-      role: stored.role === 'editor' ? 'editor' : 'viewer'
+      role: stored.role === 'editor' ? 'editor' : 'viewer',
+      editCode: normalizeCode(stored.editCode || ''),
+      viewCode: normalizeCode(stored.viewCode || '')
     };
 
     updateUiForSession();

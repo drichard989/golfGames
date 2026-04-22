@@ -180,11 +180,22 @@ exports.redeemGameCode = onCall({ region: REGION }, async (request) => {
     joinedAt: currentMemberSnap.val()?.joinedAt || nowTs()
   });
 
+  let editCode = '';
+  let viewCode = '';
+  if (targetRole === 'editor') {
+    const codesSnap = await db.ref(`games/${gameId}/codes`).get();
+    const codes = codesSnap.val() || {};
+    editCode = normalizeCode(codes.editCode);
+    viewCode = normalizeCode(codes.viewCode);
+  }
+
   logger.info('Redeemed code', { gameId, uid, role: targetRole });
   return {
     ok: true,
     gameId,
-    role: targetRole
+    role: targetRole,
+    editCode,
+    viewCode
   };
 });
 
