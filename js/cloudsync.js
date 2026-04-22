@@ -108,6 +108,20 @@
     if (statusEl) statusEl.textContent = msg;
   }
 
+  function showJoinSuccessToast(role) {
+    const mode = role === 'editor' ? 'edit' : 'view';
+    const message = `Joined live game (${mode})`;
+
+    if (window.ErrorHandler?.success) {
+      window.ErrorHandler.success(message, 1800);
+      return;
+    }
+
+    if (typeof window.announce === 'function') {
+      window.announce(message);
+    }
+  }
+
   function setCodesText(text, visible = false) {
     const el = EL.codes();
     if (!el) return;
@@ -1140,6 +1154,7 @@
     window.GolfApp?.storage?.prepareForIncomingSyncState?.();
     updateUiForSession();
     await subscribeRealtime(result.gameId);
+    showJoinSuccessToast(state.session.role);
   }
 
   async function leaveSession() {
