@@ -1874,6 +1874,21 @@ input[type="text"] {
   min-width: 0;
 }
 
+.header-theme-toggle {
+  flex: 0 0 auto;
+  min-height: 0;
+  padding: 4px 8px;
+  font-size: 16px;
+  line-height: 1;
+  border-radius: var(--radius-md);
+}
+
+.cloud-utilities-divider {
+  margin: var(--space-md) 0 var(--space-sm);
+  border-top: 1px solid var(--line);
+  opacity: 0.5;
+}
+
 .header-cloud-row {
   margin-top: 2px;
 }
