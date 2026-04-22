@@ -951,13 +951,13 @@ body.mode-score #scorecardFrozenHost {
   display: flex;
 }
 
-body.mode-score #scorecardFixed thead tr,
-body.mode-score #parRowFixed,
-body.mode-score #hcpRowFixed,
-body.mode-score #scorecard thead tr,
-body.mode-score #parRow,
-body.mode-score #hcpRow {
-  visibility: hidden;
+body.mode-score #main-scorecard #scorecardFixed thead tr,
+body.mode-score #main-scorecard #parRowFixed,
+body.mode-score #main-scorecard #hcpRowFixed,
+body.mode-score #main-scorecard #scorecard thead tr,
+body.mode-score #main-scorecard #parRow,
+body.mode-score #main-scorecard #hcpRow {
+  display: none;
 }
 
 .scorecard-fixed {
