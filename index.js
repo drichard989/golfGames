@@ -564,7 +564,7 @@
   function restorePrimaryTabScroll(which) {
     if (which !== 'score' && which !== 'games') return;
     const top = Number(PRIMARY_TAB_SCROLL_POSITIONS[which]) || 0;
-    requestAnimationFrame(() => {
+    const applyScroll = () => {
       window.scrollTo({ top, left: 0, behavior: 'auto' });
       if (which === 'score') {
         const syncRowHeights = window.GolfApp?.scorecard?.build?.syncRowHeights;
@@ -572,15 +572,21 @@
           syncRowHeights(true);
         }
       }
-    });
+    };
+
+    requestAnimationFrame(applyScroll);
+    setTimeout(applyScroll, 120);
   }
 
   function restoreGameTabScroll(which) {
     if (!GAME_TAB_ORDER.includes(which)) return;
     const top = Number(GAME_TAB_SCROLL_POSITIONS[which]) || 0;
-    requestAnimationFrame(() => {
+    const applyScroll = () => {
       window.scrollTo({ top, left: 0, behavior: 'auto' });
-    });
+    };
+
+    requestAnimationFrame(applyScroll);
+    setTimeout(applyScroll, 120);
   }
 
   function syncPrimaryTabUi(activeTab) {
