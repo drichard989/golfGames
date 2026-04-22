@@ -1769,6 +1769,14 @@ tfoot td {
   border-radius: var(--radius-sm);
   padding: 6px 10px;
   font-size: 11px;
+
+.scorecard-help-notes {
+  margin: 6px var(--space-lg) 0;
+}
+
+.scorecard-help-notes .small {
+  margin: 4px 0;
+}
   font-weight: 500;
   line-height: 1;
   min-height: 36px;
@@ -1876,10 +1884,10 @@ input[type="text"] {
 
 .header-theme-toggle {
   flex: 0 0 auto;
-  min-height: 0;
-  padding: 4px 8px;
+  min-height: var(--touch-min);
+  padding: var(--space-md) 10px;
   font-size: 16px;
-  line-height: 1;
+  line-height: 1.1;
   border-radius: var(--radius-md);
 }
 
