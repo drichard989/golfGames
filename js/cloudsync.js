@@ -1203,7 +1203,7 @@
       editCode: state.session.editCode || '',
       viewCode: state.session.viewCode || ''
     });
-    window.GolfApp?.storage?.prepareForIncomingSyncState?.();
+    window.GolfApp?.storage?.prepareForIncomingSyncState?.(undefined, { resetSharedGames: false });
     updateUiForSession();
     await subscribeRealtime(result.gameId);
     showJoinSuccessToast(state.session.role);

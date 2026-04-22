@@ -1800,7 +1800,8 @@
       Scorecard.player.syncOverlay();
     },
 
-    prepareForIncomingSyncState(targetPlayerCount = MIN_PLAYERS) {
+    prepareForIncomingSyncState(targetPlayerCount = MIN_PLAYERS, options = {}) {
+      const { resetSharedGames = true } = options || {};
       this.syncPlayerRowCount(targetPlayerCount);
 
       const fixedRows = $$("#scorecardFixed .player-row");
@@ -1827,35 +1828,37 @@
         });
       });
 
-      const skinsModeGross = document.getElementById('skinsModeGross');
-      const skinsModeNet = document.getElementById('skinsModeNet');
-      const skinsBuyIn = document.getElementById('skinsBuyIn');
-      const skinsCarry = document.getElementById('skinsCarry');
-      const skinsHalf = document.getElementById('skinsHalf');
-      if (skinsModeGross) skinsModeGross.checked = true;
-      if (skinsModeNet) skinsModeNet.checked = false;
-      if (skinsBuyIn) skinsBuyIn.value = '10';
-      if (skinsCarry) skinsCarry.checked = true;
-      if (skinsHalf) skinsHalf.checked = false;
+      if (resetSharedGames) {
+        const skinsModeGross = document.getElementById('skinsModeGross');
+        const skinsModeNet = document.getElementById('skinsModeNet');
+        const skinsBuyIn = document.getElementById('skinsBuyIn');
+        const skinsCarry = document.getElementById('skinsCarry');
+        const skinsHalf = document.getElementById('skinsHalf');
+        if (skinsModeGross) skinsModeGross.checked = true;
+        if (skinsModeNet) skinsModeNet.checked = false;
+        if (skinsBuyIn) skinsBuyIn.value = '10';
+        if (skinsCarry) skinsCarry.checked = true;
+        if (skinsHalf) skinsHalf.checked = false;
 
-      const junkUseNet = document.getElementById('junkUseNet');
-      if (junkUseNet) junkUseNet.checked = false;
-      document.querySelectorAll('#junkTable input.junk-ach').forEach((checkbox) => {
-        checkbox.checked = false;
-      });
+        const junkUseNet = document.getElementById('junkUseNet');
+        if (junkUseNet) junkUseNet.checked = false;
+        document.querySelectorAll('#junkTable input.junk-ach').forEach((checkbox) => {
+          checkbox.checked = false;
+        });
 
-      const hiloUnitValue = document.getElementById('hiloUnitValue');
-      if (hiloUnitValue) hiloUnitValue.value = '10';
+        const hiloUnitValue = document.getElementById('hiloUnitValue');
+        if (hiloUnitValue) hiloUnitValue.value = '10';
 
-      window.Vegas?.setTeamAssignments?.({ A: [], B: [] });
-      window.Vegas?.setOptions?.({
-        useNet: false,
-        netHcpMode: 'playOffLow',
-        doubleBirdie: false,
-        tripleEagle: false,
-        pointValue: 0
-      });
-      window.Banker?.setState?.({ holes: [] });
+        window.Vegas?.setTeamAssignments?.({ A: [], B: [] });
+        window.Vegas?.setOptions?.({
+          useNet: false,
+          netHcpMode: 'playOffLow',
+          doubleBirdie: false,
+          tripleEagle: false,
+          pointValue: 0
+        });
+        window.Banker?.setState?.({ holes: [] });
+      }
 
       Scorecard.calc.recalcAll();
       Scorecard.player.syncOverlay();
