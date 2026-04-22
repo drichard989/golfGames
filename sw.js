@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v2.4.15';
+const CACHE_VERSION = 'v2.4.17';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache - comprehensive list
@@ -18,7 +18,12 @@ const FILES_TO_CACHE = [
   '/js/qrcode.js',
   '/js/firebase-config.js',
   '/js/cloudsync.js',
-  '/stylesheet/main.css'
+  '/stylesheet/main.css',
+  '/images/favicon-16.png',
+  '/images/favicon-32.png',
+  '/images/apple-touch-icon.png',
+  '/images/icon-192.png',
+  '/images/icon-512.png'
 ];
 
 // Install - cache files
