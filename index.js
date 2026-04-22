@@ -1,10 +1,10 @@
 /* ============================================================================
    GOLF SCORECARD APPLICATION
    ============================================================================
-   
+
    A Progressive Web App (PWA) for tracking golf scores with multiple side games.
    Supports 1-99 players with flexible course selection and comprehensive scoring.
-   
+
    FEATURES:
    • Dynamic scorecard with auto-advance input
    • Course handicap support (including negative handicaps)
@@ -15,57 +15,136 @@
    • Offline support with service worker caching
    • Dark/light theme toggle
    • Responsive design for mobile/tablet/desktop
-   
-   ============================================================================
-   ARCHITECTURE
-   ============================================================================
-   
-   CORE (index.js) - ~1,300 lines
-   ├─ Config         - Course database, constants, active course state
-   ├─ Utils          - DOM helpers ($, $$), math utilities (sum, clamp)
-   ├─ AppManager     - Coordinates recalculations across all game modes
-   ├─ Storage        - localStorage save/load with versioning (v5)
-   ├─ Scorecard      - Table building, calculations, player/course management
-   │  ├─ build       - Header, par/HCP rows, player rows, totals row
-   │  ├─ calc        - Adjusted handicaps, stroke allocation, NDB capping
-   │  ├─ player      - Add/remove players, overlay sync, count display
-   │  └─ course      - Course switching, par/HCP updates, badge display
-   ├─ Games UI       - Toggle sections (open/close/toggle)
-   ├─ CSV            - Import/export scorecard data
-   ├─ Players        - Add/remove player management
-   └─ Init           - Event wiring, state restoration
-   
-   GAME MODULES (external .js files)
-   🔗 js/vegas.js         (568 lines) - Vegas team game
-      • 2v2 teams or 3-player rotation with ghost
-      • Scores combined into 2-digit numbers (low wins)
-      • Multipliers for birdies/eagles (2x, 3x)
-      • Digit flipping on opponent birdie+
-      • NET scoring support with NDB cap
-      • Dollar calculations based on point value
-      Exposed: window.Vegas {compute, render, renderTeamControls, recalc, renderTable,
-               getTeamAssignments, setTeamAssignments, getOptions, setOptions}
-   
-   🔗 js/skins.js         (377 lines) - Skins competition
-      • Lowest net score wins each hole
-      • Carry-over on ties (pot accumulates)
-      • Half-pops mode (0.5 stroke increments)
-      • Buy-in and payout calculations
-      • Dynamic player support (1-99)
-      Exposed: window.Skins {init, refreshForPlayerChange, update, compute, render}
-   
-   🔗 js/junk.js          (487 lines) - Junk (Dots) game
-      • Eagle: 4 dots, Birdie: 2 dots, Par: 1 dot
-      • NET scoring option with NDB cap
-      • Achievements system (Hogan, Sandy, Sadaam, Pulley, Triple)
-      • Weighted bonus points for achievements
-      Exposed: window.Junk {init, initAchievements, refreshForPlayerChange, update}
-   🔗 js/banker.js     (~1500 lines) - Banker game
-      • Per-hole rotating banker selection with max-bet system
-      • Player bets with individual 2× doubles, banker 2× all bets
-      • Gross and Net (full handicap) scoring modes
+*/
+
+(() => {
+  'use strict';
+
   // =============================================================================
-  // 📦 UTILS MODULE - DOM Helpers & Math Utilities
+  // CONFIG MODULE - Course Database & Constants
+  // =============================================================================
+
+  const Config = {
+    HOLES: 18,
+    MIN_PLAYERS: 1,
+    MAX_PLAYERS: 99,
+    DEFAULT_PLAYERS: 4,
+    LEADING_FIXED_COLS: 2,
+    NDB_BUFFER: 2,
+    STORAGE_KEY: 'golf_scorecard_v5',
+    ADVANCE_DIRECTION: 'down',
+    FONT_SIZE: 'medium',
+
+    COURSES: {
+      manito: {
+        name: 'Manito Country Club',
+        pars: [4, 4, 4, 5, 3, 4, 4, 3, 4, 4, 4, 3, 5, 5, 4, 4, 3, 4],
+        hcpMen: [7, 13, 11, 15, 17, 1, 5, 9, 3, 10, 2, 12, 14, 18, 4, 6, 16, 8]
+      },
+      dove: {
+        name: 'Dove Canyon Country Club',
+        pars: [5, 4, 4, 3, 4, 4, 3, 4, 5, 3, 5, 4, 3, 5, 4, 4, 3, 4],
+        hcpMen: [11, 7, 3, 15, 1, 13, 17, 9, 5, 14, 4, 12, 16, 2, 6, 10, 18, 8]
+      }
+    },
+
+    activeCourse: 'manito',
+    pars: null,
+    hcpMen: null,
+
+    init() {
+      this.pars = [...this.COURSES.manito.pars];
+      this.hcpMen = [...this.COURSES.manito.hcpMen];
+      window.PARS = this.pars;
+      window.HCPMEN = this.hcpMen;
+    },
+
+    switchCourse(courseId) {
+      if (!this.COURSES[courseId]) {
+        console.error(`[Config] Unknown course: ${courseId}`);
+        return false;
+      }
+
+      this.activeCourse = courseId;
+      this.pars = [...this.COURSES[courseId].pars];
+      this.hcpMen = [...this.COURSES[courseId].hcpMen];
+      window.PARS = this.pars;
+      window.HCPMEN = this.hcpMen;
+      return true;
+    }
+  };
+
+  Config.init();
+
+  const HOLES = Config.HOLES;
+  let PLAYERS = Config.DEFAULT_PLAYERS;
+  const MIN_PLAYERS = Config.MIN_PLAYERS;
+  const MAX_PLAYERS = Config.MAX_PLAYERS;
+  const DEFAULT_PLAYERS = Config.DEFAULT_PLAYERS;
+  const LEADING_FIXED_COLS = Config.LEADING_FIXED_COLS;
+  const NDB_BUFFER = Config.NDB_BUFFER;
+  const COURSES = Config.COURSES;
+  let PARS = Config.pars;
+  let HCPMEN = Config.hcpMen;
+  let ACTIVE_COURSE = Config.activeCourse;
+
+  Object.defineProperty(window, 'PLAYERS', {
+    get() { return PLAYERS; },
+    set(value) { PLAYERS = value; }
+  });
+
+  window.COURSES = COURSES;
+  Object.defineProperty(window, 'ACTIVE_COURSE', {
+    get() { return ACTIVE_COURSE; },
+    set(value) { ACTIVE_COURSE = value; }
+  });
+
+  const TIMING = {
+    FOCUS_DELAY_MS: 50,
+    RECALC_DEBOUNCE_MS: 300,
+    INIT_RETRY_DELAY_MS: 150,
+    RESIZE_DEBOUNCE_MS: 150
+  };
+
+  const LIMITS = {
+    MIN_HANDICAP: -50,
+    MAX_HANDICAP: 60,
+    MIN_SCORE: 1,
+    MAX_SCORE: 20
+  };
+
+  const GAME_CONSTANTS = {
+    JUNK: {
+      POINTS: {
+        EAGLE: 4,
+        BIRDIE: 2,
+        PAR: 1,
+        BOGEY: 0
+      },
+      ACHIEVEMENTS: {
+        HOGAN: 5,
+        SANDY: 3,
+        SADAAM: 2,
+        PULLEY: 1,
+        TRIPLE: 10
+      }
+    },
+    VEGAS: {
+      MULTIPLIERS: {
+        DEFAULT: 1,
+        BIRDIE: 2,
+        EAGLE: 3
+      }
+    },
+    SKINS: {
+      DEFAULT_BUYIN: 10
+    }
+  };
+
+  window.GAME_CONSTANTS = GAME_CONSTANTS;
+
+  // =============================================================================
+  // UTILS MODULE - DOM Helpers & Math Utilities
   // =============================================================================
   
   const Utils = {
