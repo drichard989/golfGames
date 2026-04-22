@@ -158,9 +158,9 @@ body {
 
 /* ---- Header / Controls ---- */
 header {
-  padding: var(--space-xl) var(--space-lg) var(--space-md);
+  padding: var(--space-md) var(--space-lg) var(--space-sm);
   display: grid;
-  gap: var(--space-md);
+  gap: var(--space-sm);
 }
 
 h1 {
@@ -509,12 +509,12 @@ input[type="text"] {
 
 .entry-switcher {
   position: sticky;
-  top: calc(env(safe-area-inset-top, 0px) + 10px);
+  top: calc(env(safe-area-inset-top, 0px) + 6px);
   z-index: 30;
   display: flex;
-  gap: 10px;
-  margin: var(--space-md) var(--space-lg) 0;
-  padding: 10px;
+  gap: 8px;
+  margin: var(--space-sm) var(--space-lg) 0;
+  padding: 6px;
   border: 1px solid var(--line);
   border-radius: var(--radius-3xl);
   background: color-mix(in srgb, var(--panel) 86%, transparent);
@@ -529,8 +529,8 @@ input[type="text"] {
   background: transparent;
   color: var(--muted);
   border-radius: var(--radius-3xl);
-  padding: 12px 14px;
-  min-height: var(--touch-comfortable);
+  padding: 10px 14px;
+  min-height: 40px;
   font-size: var(--text-md);
   font-weight: 700;
 }
@@ -1644,9 +1644,64 @@ input[type="text"] {
   font-size: var(--text-xl);
 }
 
+/* Add Player row — small top gap without large inline margin */
+.header-addplayer-row {
+  margin-top: var(--space-xs);
+}
+
+/* Scorecard Options toggle bar */
+.scorecard-options-bar {
+  display: flex;
+  align-items: center;
+  padding: var(--space-sm) var(--space-lg) 0;
+}
+
+.scorecard-options-panel {
+  margin: var(--space-xs) var(--space-lg) var(--space-md);
+  padding: var(--space-md);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--panel-alt);
+}
+
+.scorecard-options-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: flex-start;
+}
+
+/* par badge tighter below header */
+#parBadge {
+  margin: 0 var(--space-lg) 2px;
+}
+
 /* =========================
    Responsive Design
    ========================= */
+
+/* Large desktop — extra compactness */
+@media (min-width: 900px) {
+  header {
+    padding: var(--space-sm) var(--space-lg) 4px;
+    gap: var(--space-xs);
+  }
+
+  .header-addplayer-row {
+    margin-top: 2px;
+  }
+
+  .entry-switcher {
+    margin: 4px var(--space-lg) 0;
+    padding: 5px;
+    gap: 6px;
+  }
+
+  .entry-switcher-btn {
+    padding: 8px 14px;
+    min-height: 36px;
+  }
+}
 
 /* Desktop optimization (1400px and below) */
 @media (max-width: 1400px) {

@@ -32,7 +32,7 @@
         <button id="utilitiesToggle" class="btn">⚙️ Utilities</button>
         <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
       </div>
-      <div class="controls" style="margin-top: 16px; display: flex; gap: 12px; align-items: center;">
+      <div class="controls header-addplayer-row" style="display: flex; gap: 12px; align-items: center;">
         <button id="addPlayerBtn" class="btn">+ Add Player</button>
         <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
       </div>
@@ -113,26 +113,6 @@
       <button id="entrySwitcherGamesBtn" class="entry-switcher-btn" type="button" role="tab" aria-selected="false" aria-controls="gamesEntryPanel">🎮 Games</button>
     </div>
     <section id="scoreEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherScoreBtn">
-    <div class="controls" style="margin: 12px 16px 0; gap: 8px; align-items: flex-start;">
-      <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
-      <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
-
-      <div class="control handicap-mode-control" style="flex: 1 1 520px;">
-        <label>Handicap Mode:</label>
-        <label class="radio">
-          <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
-          Gross
-        </label>
-        <label class="radio">
-          <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
-          Play Off Low
-        </label>
-        <label class="radio">
-          <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
-          Full Handicap
-        </label>
-      </div>
-    </div>
 
     <!-- SCORECARD - Dual Table Layout -->
     <div class="scorecard-container" id="main-scorecard">
@@ -181,6 +161,23 @@
             <!-- Player rows inserted by JS -->
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- SCORECARD OPTIONS -->
+    <div class="scorecard-options-bar">
+      <button type="button" class="btn game-options-toggle" id="scorecardOptionsToggle" data-target="scorecardOptionsPanel" aria-controls="scorecardOptionsPanel" aria-expanded="false">Scorecard Options</button>
+    </div>
+    <div id="scorecardOptionsPanel" class="game-options-panel scorecard-options-panel" hidden>
+      <div class="controls scorecard-options-controls">
+        <button id="clearAllBtn" class="btn">Clear Names &amp; Scores</button>
+        <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
+        <div class="control handicap-mode-control">
+          <label>Handicap Mode:</label>
+          <label class="radio"><input type="radio" name="handicapMode" value="gross" id="handicapModeGross" /> Gross</label>
+          <label class="radio"><input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked /> Play Off Low</label>
+          <label class="radio"><input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" /> Full Handicap</label>
+        </div>
       </div>
     </div>
     </section>
