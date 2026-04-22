@@ -434,6 +434,22 @@ input[type="text"] {
   margin: 0;
 }
 
+.archived-tools {
+  border-style: dashed;
+  border-color: rgba(168, 179, 191, 0.45);
+  background: rgba(16, 22, 30, 0.5);
+}
+
+.archived-tools-title {
+  width: 100%;
+  margin-bottom: 4px;
+  color: var(--muted);
+}
+
+.archived-tools-row {
+  width: 100%;
+}
+
 /* =========================
    Scorecard (Dual-Table Layout)
    ========================= */

@@ -324,6 +324,34 @@
     return String(code || '').trim().replace(/\s+/g, '').toUpperCase();
   }
 
+  function getCodeFromUrl() {
+    try {
+      const url = new URL(window.location.href);
+      const direct = url.searchParams.get('view') || url.searchParams.get('code') || '';
+      return normalizeCode(direct);
+    } catch {
+      return '';
+    }
+  }
+
+  function clearCodeFromUrl() {
+    try {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('view') && !url.searchParams.has('code')) return;
+      url.searchParams.delete('view');
+      url.searchParams.delete('code');
+      const next = `${url.pathname}${url.search}${url.hash}`;
+      window.history.replaceState({}, '', next);
+    } catch {}
+  }
+
+  function buildViewShareUrl(viewCode) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('code');
+    url.searchParams.set('view', normalizeCode(viewCode));
+    return url.toString();
+  }
+
   function stableStringify(value) {
     if (value === null || typeof value !== 'object') {
       return JSON.stringify(value);
@@ -459,6 +487,150 @@
     const callable = fns.httpsCallable(name);
     const result = await callable(data || {});
     return result?.data;
+  }
+
+  async function ensureShareSessionWithViewCode() {
+    if (!state.session) {
+      await createSession();
+    }
+
+    if (!state.session || state.session.role !== 'editor') {
+      throw new Error('Editor access is required to share a live scorecard.');
+    }
+
+    if (state.session.viewCode) {
+      return state.session.viewCode;
+    }
+
+    const codes = await callFunction('getGameCodes', {
+      gameId: state.session.gameId
+    });
+
+    const viewCode = normalizeCode(codes?.viewCode);
+    if (!viewCode) {
+      throw new Error('Unable to fetch view code for this session.');
+    }
+
+    state.session.editCode = normalizeCode(codes?.editCode || state.session.editCode || '');
+    state.session.viewCode = viewCode;
+    updateUiForSession();
+    return viewCode;
+  }
+
+  async function shareLiveViewLink() {
+    if (!state.user) throw new Error('Cloud auth is not ready yet.');
+
+    setStatus('Cloud: preparing live share link...');
+    const viewCode = await ensureShareSessionWithViewCode();
+    const url = buildViewShareUrl(viewCode);
+    const shareText = `Live golf scorecard (view-only). Code: ${viewCode}`;
+
+    if (navigator.share) {
+      await navigator.share({
+        title: 'Live Golf Scorecard',
+        text: shareText,
+        url
+      });
+      setStatus(`Cloud: shared live view link • Game ${state.session?.gameId || ''}`);
+      return;
+    }
+
+    const fallbackText = `${shareText}\n${url}`;
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(fallbackText);
+      setStatus('Cloud: live view link copied to clipboard');
+      if (typeof window.announce === 'function') {
+        window.announce('Live share link copied.');
+      }
+      return;
+    }
+
+    window.prompt('Copy this live view link', url);
+    setStatus('Cloud: live view link ready');
+  }
+
+  function openQrModalFromText(text, title = 'Live Share QR') {
+    if (typeof qrcode === 'undefined') {
+      throw new Error('QR library unavailable. Refresh and try again.');
+    }
+
+    const modal = document.createElement('div');
+    modal.id = 'cloudLiveQrModal';
+    modal.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    `;
+
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: white;
+      color: #111;
+      border-radius: 12px;
+      max-width: 420px;
+      width: 100%;
+      padding: 20px;
+      text-align: center;
+    `;
+
+    const heading = document.createElement('h2');
+    heading.textContent = title;
+    heading.style.cssText = 'margin: 0 0 10px 0;';
+
+    const subtitle = document.createElement('p');
+    subtitle.textContent = 'Scan to open the live view scorecard.';
+    subtitle.style.cssText = 'margin: 0 0 14px 0; color: #555;';
+
+    const qrWrap = document.createElement('div');
+    qrWrap.style.cssText = 'display:flex; justify-content:center; margin: 10px 0 14px 0;';
+
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.className = 'btn';
+    closeBtn.addEventListener('click', () => modal.remove());
+
+    card.appendChild(heading);
+    card.appendChild(subtitle);
+    card.appendChild(qrWrap);
+    card.appendChild(closeBtn);
+    modal.appendChild(card);
+    document.body.appendChild(modal);
+
+    const qr = qrcode(0, 'M');
+    qr.addData(String(text));
+    qr.make();
+
+    const size = 260;
+    const cellSize = Math.floor(size / qr.getModuleCount());
+    const actualSize = cellSize * qr.getModuleCount();
+    const canvas = document.createElement('canvas');
+    canvas.width = actualSize;
+    canvas.height = actualSize;
+    const ctx = canvas.getContext('2d');
+
+    for (let row = 0; row < qr.getModuleCount(); row++) {
+      for (let col = 0; col < qr.getModuleCount(); col++) {
+        ctx.fillStyle = qr.isDark(row, col) ? '#000000' : '#ffffff';
+        ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+      }
+    }
+
+    qrWrap.appendChild(canvas);
+  }
+
+  async function generateLiveViewQrCode() {
+    if (!state.user) throw new Error('Cloud auth is not ready yet.');
+
+    setStatus('Cloud: preparing live QR...');
+    const viewCode = await ensureShareSessionWithViewCode();
+    const url = buildViewShareUrl(viewCode);
+    openQrModalFromText(url, 'Live Scorecard QR');
+    setStatus(`Cloud: live QR ready • Game ${state.session?.gameId || ''}`);
   }
 
   function updateUiForSession() {
@@ -1002,6 +1174,16 @@
     await subscribeRealtime(state.session.gameId);
   }
 
+  async function joinSessionFromUrlIfPresent() {
+    const code = getCodeFromUrl();
+    if (!code) return false;
+
+    await joinSessionWithCode(code);
+    clearCodeFromUrl();
+    setStatus(`Cloud: joined from shared link (${state.session?.role || 'viewer'})`);
+    return true;
+  }
+
   async function init() {
     if (state.initialized) return;
     state.initialized = true;
@@ -1012,7 +1194,10 @@
     const ok = await initFirebase();
     if (!ok) return;
 
-    await restoreSession();
+    const joinedFromUrl = await joinSessionFromUrlIfPresent();
+    if (!joinedFromUrl) {
+      await restoreSession();
+    }
   }
 
   window.CloudSync = {
@@ -1020,6 +1205,8 @@
     createSession,
     joinSessionWithCode,
     leaveSession,
+    shareLiveViewLink,
+    generateLiveViewQrCode,
     queuePush,
     getSession: () => state.session,
     isApplyingRemote: () => state.isApplyingRemote

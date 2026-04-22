@@ -3667,36 +3667,72 @@
 
     // Banker: no UI wiring (stub only)
 
-    // CSV upload & template
-    const csvInput = $(ids.csvInput);
-    if (csvInput) csvInput.addEventListener("change", (e) => {
-      const f = e.target.files && e.target.files[0];
-      if (f) handleCSVFile(f);
-      e.target.value = ""; // allow re-upload same file
-    });
-    const dlBtn = $(ids.dlTemplateBtn);
-    if (dlBtn) dlBtn.addEventListener("click", downloadCSVTemplate);
-    
-    const exportBtn = document.getElementById('exportCSVBtn');
-    if (exportBtn) exportBtn.addEventListener("click", exportCurrentScorecard);
-    
-    const emailBtn = document.getElementById('emailCSVBtn');
-    if (emailBtn) emailBtn.addEventListener("click", emailCurrentScorecard);
-    
-    const shareHtmlBtn = document.getElementById('shareHtmlBtn');
-    if (shareHtmlBtn && window.Export && window.Export.shareHtmlSnapshot) {
-      shareHtmlBtn.addEventListener("click", () => window.Export.shareHtmlSnapshot());
+    // Deprecated transfer/archive tools (kept for easy rollback)
+    // Includes: CSV import/export, HTML snapshot share, and QR scan import.
+    // Flip to true to restore old bindings instantly.
+    const ENABLE_DEPRECATED_TRANSFER_TOOLS = false;
+    if (ENABLE_DEPRECATED_TRANSFER_TOOLS) {
+      const csvInput = $(ids.csvInput);
+      if (csvInput) csvInput.addEventListener("change", (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (f) handleCSVFile(f);
+        e.target.value = ""; // allow re-upload same file
+      });
+
+      const dlBtn = $(ids.dlTemplateBtn);
+      if (dlBtn) dlBtn.addEventListener("click", downloadCSVTemplate);
+
+      const exportBtn = document.getElementById('exportCSVBtn');
+      if (exportBtn) exportBtn.addEventListener("click", exportCurrentScorecard);
+
+      const emailBtn = document.getElementById('emailCSVBtn');
+      if (emailBtn) emailBtn.addEventListener("click", emailCurrentScorecard);
+
+      const legacyShareBtn = document.getElementById('shareHtmlArchiveBtn');
+      if (legacyShareBtn && window.Export && window.Export.shareHtmlSnapshot) {
+        legacyShareBtn.addEventListener("click", () => window.Export.shareHtmlSnapshot());
+      }
+    }
+
+    // New share flow: create/reuse cloud session and share a view-link URL.
+    const shareLiveBtn = document.getElementById('shareHtmlBtn');
+    if (shareLiveBtn) {
+      shareLiveBtn.addEventListener('click', async () => {
+        try {
+          if (!window.CloudSync?.shareLiveViewLink) {
+            announce('Cloud share is not ready yet.');
+            return;
+          }
+          await window.CloudSync.shareLiveViewLink();
+        } catch (error) {
+          console.error('[Share] Failed to share live link:', error);
+          announce(error?.message || 'Unable to share live link.');
+        }
+      });
     }
 
     // QR Code buttons
     const generateQRBtn = document.getElementById('generateQRBtn');
-    if (generateQRBtn && window.QRShare && window.QRShare.generate) {
-      generateQRBtn.addEventListener("click", () => window.QRShare.generate());
+    if (generateQRBtn) {
+      generateQRBtn.addEventListener('click', async () => {
+        try {
+          if (!window.CloudSync?.generateLiveViewQrCode) {
+            announce('Cloud QR share is not ready yet.');
+            return;
+          }
+          await window.CloudSync.generateLiveViewQrCode();
+        } catch (error) {
+          console.error('[Share QR] Failed to generate live QR:', error);
+          announce(error?.message || 'Unable to generate live QR.');
+        }
+      });
     }
     
-    const scanQRBtn = document.getElementById('scanQRBtn');
-    if (scanQRBtn && window.QRShare && window.QRShare.scan) {
-      scanQRBtn.addEventListener("click", () => window.QRShare.scan());
+    if (ENABLE_DEPRECATED_TRANSFER_TOOLS) {
+      const scanQRBtn = document.getElementById('scanQRBtn');
+      if (scanQRBtn && window.QRShare && window.QRShare.scan) {
+        scanQRBtn.addEventListener("click", () => window.QRShare.scan());
+      }
     }
 
     // Player management buttons
@@ -3726,6 +3762,16 @@
           utilitiesControls.prepend(control);
         }
       }
+    }
+
+    // Archived tools section toggle
+    const archivedToolsToggle = document.getElementById('archivedToolsToggle');
+    const archivedToolsSection = document.getElementById('archivedToolsSection');
+    if (archivedToolsToggle && archivedToolsSection) {
+      archivedToolsToggle.addEventListener('click', () => {
+        const isOpen = archivedToolsSection.style.display !== 'none';
+        archivedToolsSection.style.display = isOpen ? 'none' : '';
+      });
     }
 
     document.getElementById('fontSizeSmall')?.addEventListener('click', () => {
