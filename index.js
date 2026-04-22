@@ -591,7 +591,7 @@
 
   function syncGamesPanelHeight() {
     const panel = getGamesScrollContainer();
-    if (!panel || panel.hidden) return;
+    if (!panel) return;
 
     const viewportHeight = (window.visualViewport?.height) || window.innerHeight || document.documentElement.clientHeight || 0;
     const navBar = document.querySelector('.sticky-nav-bar');
@@ -789,6 +789,10 @@
     window.addEventListener('scroll', sync, { passive: true });
     window.visualViewport?.addEventListener('resize', sync, { passive: true });
     window.visualViewport?.addEventListener('scroll', sync, { passive: true });
+    // Re-measure once all resources are loaded (env() is reliably resolved by then)
+    // and again on pageshow so PWA home-screen launches always get the correct value.
+    window.addEventListener('load', () => syncSafeTopInset(), { once: true });
+    window.addEventListener('pageshow', () => syncSafeTopInset(), { passive: true });
   }
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
@@ -4302,13 +4306,17 @@
       headerAutoHiddenByGamesTab = false; // user explicitly chose — override auto behaviour
       applyHeaderVisibility();
       syncHeaderCollapseBtn();
-      // Re-measure after header transition (~220ms) so games panel fills viewport.
+      // Re-measure at multiple points after the header transition (220ms) completes.
       requestAnimationFrame(() => syncGamesPanelHeight());
-      setTimeout(() => syncGamesPanelHeight(), 280);
+      setTimeout(() => syncGamesPanelHeight(), 240);
+      setTimeout(() => syncGamesPanelHeight(), 400);
     });
     // Re-measure whenever the header finishes its CSS transition.
-    document.querySelector('header')?.addEventListener('transitionend', () => {
-      syncGamesPanelHeight();
+    // Wrap in rAF so the sticky nav has been composited before we measure its position.
+    document.querySelector('header')?.addEventListener('transitionend', (e) => {
+      if (e.propertyName === 'max-height') {
+        requestAnimationFrame(() => syncGamesPanelHeight());
+      }
     });
     syncHeaderCollapseBtn();
 

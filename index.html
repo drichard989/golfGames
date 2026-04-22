@@ -22,7 +22,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v2.4.11</h1>
+        <h1>Manito Golf Games v2.4.12</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
@@ -386,7 +386,7 @@
     <!-- BANKER GAME -->
     <section class="game-section" id="bankerSection" role="tabpanel" aria-labelledby="toggleBanker" aria-hidden="true">
       <h2>🏦 Banker</h2>
-      <div class="controls" style="margin: 0 0 8px 0;">
+      <div class="controls" style="margin: 0 0 8px 0; flex-wrap: nowrap;">
         <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
         <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
       </div>
@@ -445,8 +445,7 @@
     <!-- HI-LO GAME -->
     <section class="game-section" id="hiloSection" role="tabpanel" aria-labelledby="toggleHilo" aria-hidden="true">
       <h2>Hi-Lo</h2>
-      <div class="controls" style="margin: 0 0 8px 0;">
-        <button id="clearHiloDataBtn" class="btn">Clear Hi-Lo Data</button>
+      <div class="controls" style="margin: 0 0 8px 0; flex-wrap: nowrap;">
         <button type="button" class="btn game-options-toggle" data-target="hiloOptionsPanel" aria-controls="hiloOptionsPanel" aria-expanded="false">Hi-Lo Description</button>
       </div>
       <div id="hiloOptionsPanel" class="game-options-panel" hidden>
