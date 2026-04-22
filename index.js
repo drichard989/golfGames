@@ -495,6 +495,7 @@
 
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
+  const PRIMARY_TAB_SCROLL_POSITIONS = { score: 0, games: 0 };
 
   function resolveTargetElement(target) {
     return typeof target === 'string'
@@ -542,6 +543,25 @@
     return document.getElementById('gamesEntryPanel')?.hidden ? 'score' : 'games';
   }
 
+  function rememberPrimaryTabScroll(which = getPrimaryTab()) {
+    if (which !== 'score' && which !== 'games') return;
+    PRIMARY_TAB_SCROLL_POSITIONS[which] = window.scrollY || window.pageYOffset || 0;
+  }
+
+  function restorePrimaryTabScroll(which) {
+    if (which !== 'score' && which !== 'games') return;
+    const top = Number(PRIMARY_TAB_SCROLL_POSITIONS[which]) || 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top, left: 0, behavior: 'auto' });
+      if (which === 'score') {
+        const syncRowHeights = window.GolfApp?.scorecard?.build?.syncRowHeights;
+        if (typeof syncRowHeights === 'function') {
+          syncRowHeights(true);
+        }
+      }
+    });
+  }
+
   function syncPrimaryTabUi(activeTab) {
     const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
     const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
@@ -574,13 +594,37 @@
   function setPrimaryTab(which, { save = true } = {}) {
     if (which !== 'score' && which !== 'games') return;
 
+    const currentTab = getPrimaryTab();
+    rememberPrimaryTabScroll(currentTab);
+
     if (which === 'games' && !getActiveGameTab()) {
       setGameTab(DEFAULT_GAME_TAB, { save: false, activatePrimary: false });
     }
 
     syncPrimaryTabUi(which);
+    restorePrimaryTabScroll(which);
 
     if (save) saveDebounced();
+  }
+
+  function setupScorecardScrollSync() {
+    const fixedPane = document.querySelector('.scorecard-fixed');
+    const scrollPane = document.querySelector('.scorecard-scroll');
+    if (!fixedPane || !scrollPane) return;
+
+    let syncing = false;
+
+    const syncScrollTop = (source, target) => {
+      if (syncing) return;
+      syncing = true;
+      target.scrollTop = source.scrollTop;
+      requestAnimationFrame(() => {
+        syncing = false;
+      });
+    };
+
+    scrollPane.addEventListener('scroll', () => syncScrollTop(scrollPane, fixedPane), { passive: true });
+    fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
   }
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
@@ -876,37 +920,38 @@
         const scrollTable = $(ids.table);
         
         if (!fixedTable || !scrollTable) return;
-        
-        const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
-        const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
-        
-        // Reset heights to auto to allow natural sizing
-        [...fixedRows, ...scrollRows].forEach(row => {
-          row.style.height = 'auto';
-        });
-        
-        // Force multiple layout recalculations
-        void fixedTable.offsetHeight;
-        void scrollTable.offsetHeight;
-        
-        // Small delay to ensure layout completes
-        requestAnimationFrame(() => {
-          // Sync each row pair
+
+        if (this._syncRowHeightsFrame) {
+          cancelAnimationFrame(this._syncRowHeightsFrame);
+        }
+
+        this._syncRowHeightsFrame = requestAnimationFrame(() => {
+          this._syncRowHeightsFrame = null;
+
+          const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
+          const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
+          const allRows = [...fixedRows, ...scrollRows];
+
+          allRows.forEach((row) => {
+            row.style.height = 'auto';
+          });
+
+          void fixedTable.offsetHeight;
+          void scrollTable.offsetHeight;
+
           const maxRows = Math.max(fixedRows.length, scrollRows.length);
           for (let i = 0; i < maxRows; i++) {
             const fixedRow = fixedRows[i];
             const scrollRow = scrollRows[i];
-            
-            if (fixedRow && scrollRow) {
-              // Get fresh measurements
-              const fixedHeight = fixedRow.getBoundingClientRect().height;
-              const scrollHeight = scrollRow.getBoundingClientRect().height;
-              const maxHeight = Math.max(fixedHeight, scrollHeight);
-              
-              // Apply explicit heights
-              fixedRow.style.height = `${maxHeight}px`;
-              scrollRow.style.height = `${maxHeight}px`;
-            }
+            if (!fixedRow || !scrollRow) continue;
+
+            const fixedHeight = Math.ceil(fixedRow.getBoundingClientRect().height);
+            const scrollHeight = Math.ceil(scrollRow.getBoundingClientRect().height);
+            const maxHeight = Math.max(fixedHeight, scrollHeight);
+            const nextHeight = `${maxHeight}px`;
+
+            if (fixedRow.style.height !== nextHeight) fixedRow.style.height = nextHeight;
+            if (scrollRow.style.height !== nextHeight) scrollRow.style.height = nextHeight;
           }
         });
         
@@ -3351,6 +3396,7 @@
   function init(){
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
     Scorecard.player.syncOverlay();
+    setupScorecardScrollSync();
     
     // Sync row heights after tables are built (skip highlighting on init - will be applied after data loads)
     requestAnimationFrame(() => {
