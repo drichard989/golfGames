@@ -41,9 +41,8 @@
           <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
         </div>
 
-        <button id="utilitiesToggle" class="btn utilities-toggle-btn" type="button" aria-expanded="false">⚙️ Utilities</button>
-
-        <div id="utilitiesSection" class="utilities-section">
+        <button type="button" class="btn game-options-toggle utilities-toggle-btn" id="utilitiesToggle" aria-expanded="false">⚙️ Utilities</button>
+        <div id="utilitiesSection" class="utilities-section" hidden>
         <div class="controls utilities-grid">
           <div class="utilities-row utilities-row-actions">
             <button id="saveBtn" class="btn">💾 Save</button>
@@ -84,8 +83,10 @@
         </div>
         </div>
 
-        <div class="cloud-utilities-divider"></div>
+  <div class="cloud-utilities-divider"></div>
 
+        <button type="button" class="btn game-options-toggle" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Cloud Options</button>
+        <div id="cloudOptionsPanel" class="game-options-panel" hidden>
         <div class="control cloud-control cloud-control-compact">
           <div class="cloud-row cloud-row-session">
             <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
@@ -111,6 +112,7 @@
           <div id="cloudStatus" class="small">Cloud: not connected</div>
           <div id="cloudCodes" class="small" style="display:none;"></div>
           <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
+        </div>
         </div>
       </div>
     </header>
