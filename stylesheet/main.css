@@ -517,26 +517,26 @@ input[type="text"] {
   border-color: rgba(255, 107, 107, 0.75);
 }
 
-/* Create Live Session button — light green accent */
+/* Create Live Session button — solid green */
 #cloudCreateBtn {
-  background: rgba(28, 118, 67, 0.28);
-  border-color: rgba(104, 211, 145, 0.55);
-  color: #d9ffe9;
+  background: #1f9d55;
+  border-color: #1a8a49;
+  color: #fff;
 }
 
 #cloudCreateBtn:hover {
-  background: rgba(28, 118, 67, 0.42);
-  border-color: rgba(104, 211, 145, 0.8);
+  background: #22b360;
+  border-color: #1f9d55;
 }
 
 :root[data-theme="light"] #cloudCreateBtn {
-  background: rgba(34, 160, 90, 0.12);
-  border-color: rgba(34, 160, 90, 0.45);
-  color: #1a6640;
+  background: #1f9d55;
+  border-color: #1a8a49;
+  color: #fff;
 }
 
 :root[data-theme="light"] #cloudCreateBtn:hover {
-  background: rgba(34, 160, 90, 0.22);
+  background: #22b360;
 }
 
 /* Compact cloud status badge in header (next to Add Player) */
@@ -604,9 +604,43 @@ input[type="text"] {
   display: flex;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: var(--radius-2xl);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
   overflow: hidden;
-  margin: var(--space-md) 0 24px;
+  margin: var(--space-md) 0 0;
+  border-bottom: none;
+}
+
+.scorecard-card-footer {
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-top: 1px solid rgba(168, 179, 191, 0.15);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  margin: 0 0 4px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.scorecard-add-player-btn {
+  background: rgba(74, 158, 255, 0.12);
+  border-color: rgba(74, 158, 255, 0.35);
+  color: #a8d4ff;
+}
+
+.scorecard-add-player-btn:hover {
+  background: rgba(74, 158, 255, 0.22);
+  border-color: rgba(74, 158, 255, 0.55);
+}
+
+:root[data-theme="light"] .scorecard-add-player-btn {
+  background: rgba(37, 99, 235, 0.07);
+  border-color: rgba(37, 99, 235, 0.3);
+  color: #1d4ed8;
+}
+
+:root[data-theme="light"] .scorecard-add-player-btn:hover {
+  background: rgba(37, 99, 235, 0.14);
 }
 
 .entry-panel[hidden] {
@@ -1798,7 +1832,7 @@ input[type="text"] {
 .scorecard-options-bar {
   display: flex;
   align-items: center;
-  padding: var(--space-sm) var(--space-lg) 0;
+  padding: 4px var(--space-lg) 0;
 }
 
 .scorecard-options-panel {

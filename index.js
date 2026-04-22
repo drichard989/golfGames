@@ -588,6 +588,11 @@
       : panelRect.top;
 
     const available = Math.max(220, Math.floor(viewportHeight - topBoundary - 8));
+    // Set both height and maxHeight so the panel always fills the viewport below
+    // the tab bar. Without a fixed height, a short game section shrinks the
+    // panel to its content size — leaving no scroll range and making dragging
+    // feel broken.
+    panel.style.height = `${available}px`;
     panel.style.maxHeight = `${available}px`;
   }
 
