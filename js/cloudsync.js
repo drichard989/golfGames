@@ -1109,6 +1109,12 @@
     ensureViewerLockObserver();
     enforceViewerReadOnlyGuards();
 
+    // Auto-open utilities panel when a join code is in the URL
+    if (getCodeFromUrl()) {
+      const utilitiesSection = document.getElementById('utilitiesSection');
+      if (utilitiesSection) utilitiesSection.classList.add('open');
+    }
+
     window.addEventListener('pageshow', () => syncViewerLock());
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) syncViewerLock();
@@ -1225,10 +1231,19 @@
     const code = getCodeFromUrl();
     if (!code) return false;
 
-    await joinSessionWithCode(code);
-    clearCodeFromUrl();
-    setStatus(`Cloud: joined from shared link (${state.session?.role || 'viewer'})`);
-    return true;
+    try {
+      await joinSessionWithCode(code);
+      clearCodeFromUrl();
+      setStatus(`Cloud: joined from shared link (${state.session?.role || 'viewer'})`);
+      return true;
+    } catch (err) {
+      console.error('[CloudSync] Failed to join session from URL code:', err);
+      // Pre-fill the join input so the user can retry manually
+      const joinInput = EL.joinCode();
+      if (joinInput) joinInput.value = code;
+      setStatus(`Cloud: couldn't auto-join (${err.message}). Tap Join to retry.`);
+      return false;
+    }
   }
 
   async function init() {
@@ -1239,7 +1254,13 @@
     patchStorageSaveHook();
 
     const ok = await initFirebase();
-    if (!ok) return;
+    if (!ok) {
+      // Still pre-fill join code from URL so user can retry once cloud is ready
+      const code = getCodeFromUrl();
+      const joinInput = EL.joinCode();
+      if (code && joinInput) joinInput.value = code;
+      return;
+    }
 
     const joinedFromUrl = await joinSessionFromUrlIfPresent();
     if (!joinedFromUrl) {
