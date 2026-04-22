@@ -496,6 +496,7 @@
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
   const PRIMARY_TAB_SCROLL_POSITIONS = { score: 0, games: 0 };
+  let syncRowHeightsFrame = null;
 
   function resolveTargetElement(target) {
     return typeof target === 'string'
@@ -780,7 +781,7 @@
           chInput.inputMode="text"; 
           chInput.className="ch-input"; 
           chInput.value="0"; 
-          chInput.pattern="[+-]?[0-9]*";
+          chInput.pattern="[+\\-]?[0-9]*";
           chInput.autocomplete="off";
           
           chInput.addEventListener("input", () => { 
@@ -921,12 +922,12 @@
         
         if (!fixedTable || !scrollTable) return;
 
-        if (this._syncRowHeightsFrame) {
-          cancelAnimationFrame(this._syncRowHeightsFrame);
+        if (syncRowHeightsFrame) {
+          cancelAnimationFrame(syncRowHeightsFrame);
         }
 
-        this._syncRowHeightsFrame = requestAnimationFrame(() => {
-          this._syncRowHeightsFrame = null;
+        syncRowHeightsFrame = requestAnimationFrame(() => {
+          syncRowHeightsFrame = null;
 
           const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
           const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
@@ -2893,7 +2894,7 @@
     chInput.inputMode = "text";
     chInput.className = "ch-input";
     chInput.value = "0";
-    chInput.pattern = "[+-]?[0-9]*";
+    chInput.pattern = "[+\\-]?[0-9]*";
     chInput.autocomplete = "off";
     chInput.addEventListener("input", () => {
       const raw = String(chInput.value ?? '').trim();
