@@ -1468,7 +1468,7 @@
     generateLiveEditQrCode,
     queuePush,
     getSession: () => state.session,
-    isApplyingRemote: () => state.isApplyingRemote
+    isApplyingRemote: () => state.isApplyingRemote,
     /**
      * Block all outgoing cloud pushes immediately (cancels any pending push timer too).
      * Call this before beginning a destructive local operation so no stale or partial
