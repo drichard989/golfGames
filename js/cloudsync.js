@@ -142,7 +142,7 @@
       const isLive = !!state.session;
       createBtn.hidden = false;
       createBtn.disabled = false;
-      createBtn.textContent = isLive ? 'Online' : 'Offline';
+      createBtn.textContent = isLive ? 'Go offline' : 'Go live';
       createBtn.title = isLive ? 'Leave live session' : 'Create live session';
       createBtn.setAttribute('data-live', isLive ? 'true' : 'false');
     }
