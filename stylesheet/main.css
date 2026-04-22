@@ -167,7 +167,6 @@ header {
   overflow: hidden;
 }
 
-header.games-active,
 header.header-collapsed {
   max-height: 0 !important;
   padding-top: 0 !important;
@@ -176,9 +175,15 @@ header.header-collapsed {
   pointer-events: none;
 }
 
-#parBadge.games-active,
 #parBadge.header-collapsed {
   display: none;
+}
+
+.sticky-nav-bar {
+  position: sticky;
+  top: calc(env(safe-area-inset-top, 0px));
+  z-index: 31;
+  background: var(--bg);
 }
 
 .header-collapse-bar {
@@ -696,9 +701,8 @@ input[type="text"] {
 }
 
 .entry-switcher {
-  position: sticky;
-  top: calc(env(safe-area-inset-top, 0px) + 6px);
-  z-index: 30;
+  position: static;
+  z-index: auto;
   display: flex;
   gap: 8px;
   margin: var(--space-sm) var(--space-lg) 0;

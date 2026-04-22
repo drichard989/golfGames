@@ -495,17 +495,20 @@
 
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
-  let headerManuallyCollapsed = false; // Score tab: user hid the header
-  let headerShownOnGames = false;       // Games tab: user explicitly showed the header
+  let headerVisible = true;             // true = header shown
+  let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
+
+  function applyHeaderVisibility() {
+    const appHeader = document.querySelector('header');
+    appHeader?.classList.toggle('header-collapsed', !headerVisible);
+  }
 
   function syncHeaderCollapseBtn() {
     const btn = document.getElementById('headerCollapseBtn');
     if (!btn) return;
-    const onGames = getPrimaryTab() === 'games';
-    const isCollapsed = onGames ? !headerShownOnGames : headerManuallyCollapsed;
-    btn.textContent = isCollapsed ? '▼ Show' : '▲ Hide';
-    btn.setAttribute('aria-label', isCollapsed ? 'Show header' : 'Hide header');
-    btn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+    btn.textContent = headerVisible ? '▲ Hide' : '▼ Show';
+    btn.setAttribute('aria-label', headerVisible ? 'Hide header' : 'Show header');
+    btn.setAttribute('aria-expanded', headerVisible ? 'true' : 'false');
   }
 
   const PRIMARY_TAB_SCROLL_POSITIONS = { score: 0, games: 0 };
@@ -592,11 +595,11 @@
 
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
     const panelRect = panel.getBoundingClientRect();
-    const collapseBar = document.querySelector('.header-collapse-bar');
-    const collapseBarRect = collapseBar?.getBoundingClientRect();
+    const navBar = document.querySelector('.sticky-nav-bar');
+    const navBarRect = navBar?.getBoundingClientRect();
 
-    const topBoundary = collapseBarRect
-      ? Math.max(panelRect.top, collapseBarRect.bottom + 4)
+    const topBoundary = navBarRect
+      ? Math.max(panelRect.top, navBarRect.bottom + 4)
       : panelRect.top;
 
     const available = Math.max(220, Math.floor(viewportHeight - topBoundary - 8));
@@ -695,22 +698,21 @@
     const appHeader = document.querySelector('header');
     const parBadge = document.getElementById('parBadge');
     if (which === 'games') {
-      // Auto-collapse unless user has explicitly shown the header on games tab.
-      if (headerShownOnGames) {
-        appHeader?.classList.remove('games-active');
-        parBadge?.classList.remove('games-active');
-      } else {
-        appHeader?.classList.add('games-active');
-        parBadge?.classList.add('games-active');
+      if (headerVisible) {
+        // Auto-hide for games tab — remember it was automatic, not user-driven.
+        headerVisible = false;
+        headerAutoHiddenByGamesTab = true;
+        applyHeaderVisibility();
       }
     } else {
-      appHeader?.classList.remove('games-active');
-      parBadge?.classList.remove('games-active');
-      // Re-apply manual collapse if the user had hidden it while on Score tab.
-      if (headerManuallyCollapsed) {
-        appHeader?.classList.add('header-collapsed');
-        parBadge?.classList.add('header-collapsed');
+      if (headerAutoHiddenByGamesTab) {
+        // Restore — games tab auto-hid it, user didn't choose to hide it.
+        headerVisible = true;
+        headerAutoHiddenByGamesTab = false;
+        applyHeaderVisibility();
       }
+      // If user manually hid it (headerVisible=false, headerAutoHiddenByGamesTab=false),
+      // keep it hidden — applyHeaderVisibility already set the class.
     }
     syncHeaderCollapseBtn();
 
@@ -4230,21 +4232,10 @@
 
     // Header collapse toggle
     document.getElementById('headerCollapseBtn')?.addEventListener('click', () => {
-      const appHeader = document.querySelector('header');
-      const parBadge = document.getElementById('parBadge');
-      const onGamesTab = getPrimaryTab() === 'games';
-      if (onGamesTab) {
-        // Toggle whether header is shown on games tab (default is hidden).
-        headerShownOnGames = !headerShownOnGames;
-        appHeader?.classList.toggle('games-active', !headerShownOnGames);
-        parBadge?.classList.toggle('games-active', !headerShownOnGames);
-      } else {
-        headerManuallyCollapsed = !headerManuallyCollapsed;
-        appHeader?.classList.toggle('header-collapsed', headerManuallyCollapsed);
-        parBadge?.classList.toggle('header-collapsed', headerManuallyCollapsed);
-      }
+      headerVisible = !headerVisible;
+      headerAutoHiddenByGamesTab = false; // user explicitly chose — override auto behaviour
+      applyHeaderVisibility();
       syncHeaderCollapseBtn();
-      // Recalculate games panel height after header reflows.
       requestAnimationFrame(() => syncGamesPanelHeight());
     });
     syncHeaderCollapseBtn();
