@@ -60,45 +60,10 @@
       • Achievements system (Hogan, Sandy, Sadaam, Pulley, Triple)
       • Weighted bonus points for achievements
       Exposed: window.Junk {init, initAchievements, refreshForPlayerChange, update}
-        const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
    🔗 js/banker.js     (~1500 lines) - Banker game
       • Per-hole rotating banker selection with max-bet system
       • Player bets with individual 2× doubles, banker 2× all bets
       • Gross and Net (full handicap) scoring modes
-      function setupEntrySwitcher() {
-        const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
-        const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
-        const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
-        if (!scoreBtn || !gamesBtn || !gamesBar) return;
-
-        const setActiveMode = (mode) => {
-          scoreBtn.classList.toggle('active', mode === 'score');
-          gamesBtn.classList.toggle('active', mode === 'games');
-          scoreBtn.setAttribute('aria-pressed', mode === 'score' ? 'true' : 'false');
-          gamesBtn.setAttribute('aria-pressed', mode === 'games' ? 'true' : 'false');
-        };
-
-        const updateActiveMode = () => {
-          const scrollY = window.scrollY || window.pageYOffset || 0;
-          const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.45);
-          const gamesTopY = gamesBar.getBoundingClientRect().top + scrollY;
-          setActiveMode(viewportMidY >= (gamesTopY - 24) ? 'games' : 'score');
-        };
-
-        scoreBtn.addEventListener('click', () => {
-          setActiveMode('score');
-          jumpToNextEmptyScore();
-        });
-
-        gamesBtn.addEventListener('click', () => {
-          setActiveMode('games');
-          jumpToGamesLauncher();
-          announce('Opened game entry.');
-        });
-
-        window.addEventListener('scroll', updateActiveMode, { passive: true });
-        window.addEventListener('resize', updateActiveMode);
-        updateActiveMode();
   // =============================================================================
   // 📦 UTILS MODULE - DOM Helpers & Math Utilities
   // =============================================================================
@@ -3105,203 +3070,45 @@
   }
 
   function jumpToGamesLauncher() {
-    const gamesBar = document.querySelector('.gamesbar');
+    const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
     if (!gamesBar) return;
     gamesBar.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  const FLOATING_NAV_STORAGE_KEY = 'golf_floating_nav_position_v1';
+  function setupEntrySwitcher() {
+    const scoreBtn = document.getElementById('entrySwitcherScoreBtn');
+    const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
+    const gamesBar = document.getElementById('gamesLauncher') || document.querySelector('.gamesbar');
+    if (!scoreBtn || !gamesBtn || !gamesBar) return;
 
-  function clampFloatingPosition(left, top, width, height) {
-    const pad = 8;
-    const viewportW = window.innerWidth || document.documentElement.clientWidth || 0;
-    const viewportH = window.innerHeight || document.documentElement.clientHeight || 0;
-
-    const minLeft = pad;
-    const maxLeft = Math.max(pad, viewportW - width - pad);
-    const minTop = pad;
-    const maxTop = Math.max(pad, viewportH - height - pad);
-
-    return {
-      left: Math.min(maxLeft, Math.max(minLeft, left)),
-      top: Math.min(maxTop, Math.max(minTop, top))
-    };
-  }
-
-  function loadFloatingNavPosition() {
-    try {
-      const raw = localStorage.getItem(FLOATING_NAV_STORAGE_KEY);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw);
-      if (!Number.isFinite(parsed?.left) || !Number.isFinite(parsed?.top)) return null;
-      return { left: parsed.left, top: parsed.top };
-    } catch {
-      return null;
-    }
-  }
-
-  function saveFloatingNavPosition(left, top) {
-    try {
-      localStorage.setItem(FLOATING_NAV_STORAGE_KEY, JSON.stringify({ left, top }));
-    } catch {
-      // ignore storage write failures
-    }
-  }
-
-  function setupFloatingNavButtons() {
-    const container = document.getElementById('floatingNavButtons');
-    const nextBtn = document.getElementById('floatingNextScoreBtn');
-    const gamesBtn = document.getElementById('floatingGamesBtn');
-    if (!container || !nextBtn || !gamesBtn) return;
-
-    // Restore persisted position (or keep default from markup)
-    const restorePosition = () => {
-      const savedPos = loadFloatingNavPosition();
-      if (!savedPos) return;
-      const rect = container.getBoundingClientRect();
-      const clamped = clampFloatingPosition(savedPos.left, savedPos.top, rect.width, rect.height);
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
+    const setActiveMode = (mode) => {
+      scoreBtn.classList.toggle('active', mode === 'score');
+      gamesBtn.classList.toggle('active', mode === 'games');
+      scoreBtn.setAttribute('aria-pressed', mode === 'score' ? 'true' : 'false');
+      gamesBtn.setAttribute('aria-pressed', mode === 'games' ? 'true' : 'false');
     };
 
-    restorePosition();
-
-    const updateVisibility = () => {
-      const gamesBar = document.querySelector('.gamesbar');
-      if (!gamesBar) {
-        nextBtn.style.display = 'none';
-        gamesBtn.style.display = '';
-        return;
-      }
-
+    const updateActiveMode = () => {
       const scrollY = window.scrollY || window.pageYOffset || 0;
-      const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.5);
+      const viewportMidY = scrollY + ((window.innerHeight || document.documentElement.clientHeight || 0) * 0.45);
       const gamesTopY = gamesBar.getBoundingClientRect().top + scrollY;
-      const inGamesContext = viewportMidY >= (gamesTopY - 40);
-
-      const setNextBtnLabel = (isGamesContext) => {
-        nextBtn.textContent = isGamesContext ? '⛳ Scorecard' : '⛳ Next Empty';
-      };
-
-      // Always show exactly one nav button based on current scroll context.
-      if (inGamesContext) {
-        setNextBtnLabel(true);
-        nextBtn.style.display = '';
-        gamesBtn.style.display = 'none';
-      } else {
-        setNextBtnLabel(false);
-        nextBtn.style.display = 'none';
-        gamesBtn.style.display = '';
-      }
+      setActiveMode(viewportMidY >= (gamesTopY - 24) ? 'games' : 'score');
     };
 
-    // Drag support (mouse + touch + pen)
-    container.style.touchAction = 'none';
-    let drag = null;
-    let suppressClick = false;
-
-    const onPointerMove = (e) => {
-      if (!drag || e.pointerId !== drag.pointerId) return;
-
-      const dx = e.clientX - drag.startX;
-      const dy = e.clientY - drag.startY;
-      const movedEnough = Math.abs(dx) > 4 || Math.abs(dy) > 4;
-      if (movedEnough) suppressClick = true;
-
-      const rect = container.getBoundingClientRect();
-      const nextLeft = drag.originLeft + dx;
-      const nextTop = drag.originTop + dy;
-      const clamped = clampFloatingPosition(nextLeft, nextTop, rect.width, rect.height);
-
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
-    };
-
-    const onPointerUp = (e) => {
-      if (!drag || e.pointerId !== drag.pointerId) return;
-      try { container.releasePointerCapture(e.pointerId); } catch {}
-
-      const rect = container.getBoundingClientRect();
-      const clamped = clampFloatingPosition(rect.left, rect.top, rect.width, rect.height);
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
-      saveFloatingNavPosition(clamped.left, clamped.top);
-
-      drag = null;
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
-      setTimeout(() => { suppressClick = false; }, 0);
-    };
-
-    container.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0) return;
-      const rect = container.getBoundingClientRect();
-
-      // Convert default right/bottom anchored layout to explicit left/top before dragging.
-      if (!container.style.left || container.style.right !== 'auto') {
-        container.style.left = `${rect.left}px`;
-        container.style.top = `${rect.top}px`;
-        container.style.right = 'auto';
-        container.style.bottom = 'auto';
-      }
-
-      drag = {
-        pointerId: e.pointerId,
-        startX: e.clientX,
-        startY: e.clientY,
-        originLeft: rect.left,
-        originTop: rect.top
-      };
-      suppressClick = false;
-      try { container.setPointerCapture(e.pointerId); } catch {}
-      window.addEventListener('pointermove', onPointerMove);
-      window.addEventListener('pointerup', onPointerUp);
-      window.addEventListener('pointercancel', onPointerUp);
+    scoreBtn.addEventListener('click', () => {
+      setActiveMode('score');
+      jumpToNextEmptyScore();
     });
 
-    container.addEventListener('click', (e) => {
-      if (!suppressClick) return;
-      e.preventDefault();
-      e.stopPropagation();
-      suppressClick = false;
-    }, true);
-
-    nextBtn.addEventListener('click', jumpToNextEmptyScore);
-    gamesBtn.addEventListener('click', jumpToGamesLauncher);
-
-    const throttledUpdate = Utils.throttle(updateVisibility, 120);
-
-    // 'scroll' is reliable on desktop/Android but fires late or not at all
-    // during iOS Safari momentum scrolling. touchmove covers the active-drag
-    // phase; touchend + deferred calls catch the settle after the finger lifts.
-    window.addEventListener('scroll', throttledUpdate, { passive: true });
-    document.addEventListener('touchmove', throttledUpdate, { passive: true });
-    document.addEventListener('touchend', () => {
-      updateVisibility();
-      setTimeout(updateVisibility, 150);
-      setTimeout(updateVisibility, 400);
-    }, { passive: true });
-
-    window.addEventListener('resize', () => {
-      const rect = container.getBoundingClientRect();
-      const clamped = clampFloatingPosition(rect.left, rect.top, rect.width, rect.height);
-      container.style.left = `${clamped.left}px`;
-      container.style.top = `${clamped.top}px`;
-      container.style.right = 'auto';
-      container.style.bottom = 'auto';
-      saveFloatingNavPosition(clamped.left, clamped.top);
-      throttledUpdate();
+    gamesBtn.addEventListener('click', () => {
+      setActiveMode('games');
+      jumpToGamesLauncher();
+      announce('Opened game entry.');
     });
-    document.addEventListener('visibilitychange', throttledUpdate);
 
-    updateVisibility();
+    window.addEventListener('scroll', updateActiveMode, { passive: true });
+    window.addEventListener('resize', updateActiveMode);
+    updateActiveMode();
   }
 
   // =============================================================================
