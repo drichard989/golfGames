@@ -3634,16 +3634,94 @@
       });
     }
 
+    function chooseLiveQrMode() {
+      return new Promise((resolve) => {
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+          padding: 16px;
+        `;
+
+        const box = document.createElement('div');
+        box.style.cssText = `
+          background: var(--panel);
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          padding: 22px;
+          width: 100%;
+          max-width: 420px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        `;
+
+        const title = document.createElement('h3');
+        title.textContent = 'Choose QR Type';
+        title.style.cssText = 'margin: 0 0 10px 0; color: var(--ink);';
+
+        const msg = document.createElement('p');
+        msg.textContent = 'Choose whether this QR opens view-only mode or edit mode.';
+        msg.style.cssText = 'margin: 0 0 16px 0; color: var(--muted);';
+
+        const row = document.createElement('div');
+        row.style.cssText = 'display: flex; gap: 10px; flex-wrap: wrap;';
+
+        const viewBtn = document.createElement('button');
+        viewBtn.className = 'btn';
+        viewBtn.textContent = 'View Only QR';
+        viewBtn.style.cssText = 'flex: 1 1 120px;';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn';
+        editBtn.textContent = 'Edit QR';
+        editBtn.style.cssText = 'flex: 1 1 120px; background: var(--warn); color: #111;';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn';
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.style.cssText = 'flex: 1 1 120px;';
+
+        const close = (choice) => {
+          dialog.remove();
+          resolve(choice);
+        };
+
+        viewBtn.addEventListener('click', () => close('view'));
+        editBtn.addEventListener('click', () => close('edit'));
+        cancelBtn.addEventListener('click', () => close(null));
+        dialog.addEventListener('click', (e) => {
+          if (e.target === dialog) close(null);
+        });
+
+        row.append(viewBtn, editBtn, cancelBtn);
+        box.append(title, msg, row);
+        dialog.appendChild(box);
+        document.body.appendChild(dialog);
+      });
+    }
+
     // QR Code buttons
     const generateQRBtn = document.getElementById('generateQRBtn');
     if (generateQRBtn) {
       generateQRBtn.addEventListener('click', async () => {
         try {
-          if (!window.CloudSync?.generateLiveViewQrCode) {
+          if (!window.CloudSync?.generateLiveViewQrCode || !window.CloudSync?.generateLiveEditQrCode) {
             announce('Cloud QR share is not ready yet.');
             return;
           }
-          await window.CloudSync.generateLiveViewQrCode();
+
+          const mode = await chooseLiveQrMode();
+          if (!mode) return;
+
+          if (mode === 'edit') {
+            await window.CloudSync.generateLiveEditQrCode();
+          } else {
+            await window.CloudSync.generateLiveViewQrCode();
+          }
         } catch (error) {
           console.error('[Share QR] Failed to generate live QR:', error);
           announce(error?.message || 'Unable to generate live QR.');
