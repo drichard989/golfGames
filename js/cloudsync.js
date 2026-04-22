@@ -100,7 +100,7 @@
     lastPushAt: 0,
     lastPushedContentHash: '',
     lockObserver: null,
-    lastViewerBlockedNoticeAt: 0
+    lastViewerBlockedNoticeAt: 0,
     pushSuspended: false
   };
 
