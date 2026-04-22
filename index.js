@@ -841,31 +841,40 @@
     cloneRowsInto(fixedSourceRows, fixedTarget);
     cloneRowsInto(scrollSourceRows, scrollTarget);
 
-    const setCellMetrics = (sourceRows, targetTable) => {
-      const targetRows = Array.from(targetTable.querySelectorAll('tr'));
-      sourceRows.forEach((sourceRow, rowIndex) => {
-        const targetRow = targetRows[rowIndex];
-        if (!sourceRow || !targetRow) return;
+    const fixedTargetRows = Array.from(fixedTarget.querySelectorAll('tr'));
+    const scrollTargetRows = Array.from(scrollTarget.querySelectorAll('tr'));
 
-        const sourceCells = Array.from(sourceRow.children);
-        const targetCells = Array.from(targetRow.children);
-        const rowHeight = Math.ceil(sourceRow.getBoundingClientRect().height);
-        targetRow.style.height = `${rowHeight}px`;
+    const applyCellMetrics = (sourceRow, targetRow, rowHeight) => {
+      if (!sourceRow || !targetRow) return;
+      const sourceCells = Array.from(sourceRow.children);
+      const targetCells = Array.from(targetRow.children);
+      targetRow.style.height = `${rowHeight}px`;
 
-        sourceCells.forEach((sourceCell, cellIndex) => {
-          const targetCell = targetCells[cellIndex];
-          if (!targetCell) return;
-          const width = Math.ceil(sourceCell.getBoundingClientRect().width);
-          targetCell.style.width = `${width}px`;
-          targetCell.style.minWidth = `${width}px`;
-          targetCell.style.maxWidth = `${width}px`;
-          targetCell.style.height = `${rowHeight}px`;
-        });
+      sourceCells.forEach((sourceCell, cellIndex) => {
+        const targetCell = targetCells[cellIndex];
+        if (!targetCell) return;
+        const width = Math.ceil(sourceCell.getBoundingClientRect().width);
+        targetCell.style.width = `${width}px`;
+        targetCell.style.minWidth = `${width}px`;
+        targetCell.style.maxWidth = `${width}px`;
+        targetCell.style.height = `${rowHeight}px`;
       });
     };
 
-    setCellMetrics(fixedSourceRows, fixedTarget);
-    setCellMetrics(scrollSourceRows, scrollTarget);
+    const rowCount = Math.max(fixedSourceRows.length, scrollSourceRows.length);
+    for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+      const fixedSourceRow = fixedSourceRows[rowIndex];
+      const scrollSourceRow = scrollSourceRows[rowIndex];
+      const fixedTargetRow = fixedTargetRows[rowIndex];
+      const scrollTargetRow = scrollTargetRows[rowIndex];
+
+      const fixedHeight = Math.ceil(fixedSourceRow?.getBoundingClientRect().height || 0);
+      const scrollHeight = Math.ceil(scrollSourceRow?.getBoundingClientRect().height || 0);
+      const sharedRowHeight = Math.max(fixedHeight, scrollHeight, 1);
+
+      applyCellMetrics(fixedSourceRow, fixedTargetRow, sharedRowHeight);
+      applyCellMetrics(scrollSourceRow, scrollTargetRow, sharedRowHeight);
+    }
 
     const fixedWidth = Math.ceil(fixedPane.getBoundingClientRect().width);
     fixedWrap.style.width = `${fixedWidth}px`;
