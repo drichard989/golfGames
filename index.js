@@ -672,15 +672,31 @@
       setGameTab(DEFAULT_GAME_TAB, { save: false, activatePrimary: false });
     }
 
+    // Collapse the header when on Games tab to maximise panel real estate.
+    // Must happen before syncPrimaryTabUi so the new maxHeight calculation
+    // already sees the header as gone.
+    const appHeader = document.querySelector('header');
+    const parBadge = document.getElementById('parBadge');
+    if (which === 'games') {
+      appHeader?.classList.add('games-active');
+      parBadge?.classList.add('games-active');
+    } else {
+      appHeader?.classList.remove('games-active');
+      parBadge?.classList.remove('games-active');
+    }
+
     syncPrimaryTabUi(which);
     if (which === 'games') {
-      syncGamesPanelHeight();
-      const activeGame = getActiveGameTab();
-      if (activeGame) {
-        restoreGameTabScroll(activeGame);
-      } else {
-        restorePrimaryTabScroll(which);
-      }
+      // Delay one frame so the header collapse reflows before measuring.
+      requestAnimationFrame(() => {
+        syncGamesPanelHeight();
+        const activeGame = getActiveGameTab();
+        if (activeGame) {
+          restoreGameTabScroll(activeGame);
+        } else {
+          restorePrimaryTabScroll(which);
+        }
+      });
     } else {
       restorePrimaryTabScroll(which);
     }
