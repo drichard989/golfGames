@@ -605,6 +605,27 @@
     panel.style.maxHeight = `${available}px`;
   }
 
+  function syncScorecardStickyOffsets() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    const stickyNav = document.querySelector('.sticky-nav-bar');
+    const stickyNavRect = stickyNav?.getBoundingClientRect();
+    const stickyTop = Math.max(0, Math.round(stickyNavRect?.bottom || 0));
+
+    const scoreHeaderRow = document.querySelector('#scorecard thead tr')
+      || document.querySelector('#scorecardFixed thead tr');
+    const parRow = document.querySelector('#scorecard .par-row')
+      || document.querySelector('#scorecardFixed .par-row');
+
+    const headerRowHeight = Math.max(36, Math.round(scoreHeaderRow?.getBoundingClientRect().height || 0));
+    const parRowHeight = Math.max(36, Math.round(parRow?.getBoundingClientRect().height || 0));
+
+    root.style.setProperty('--scorecard-sticky-top', `${stickyTop}px`);
+    root.style.setProperty('--scorecard-head-row-h', `${headerRowHeight}px`);
+    root.style.setProperty('--scorecard-par-row-h', `${parRowHeight}px`);
+  }
+
   function syncSafeTopInset() {
     const root = document.documentElement;
     if (!root) return;
@@ -783,6 +804,7 @@
     const sync = () => {
       syncSafeTopInset();
       syncGamesPanelHeight();
+      syncScorecardStickyOffsets();
     };
 
     sync();

@@ -965,7 +965,7 @@ table {
 
 thead th {
   position: sticky;
-  top: 0;
+  top: var(--scorecard-sticky-top, 0px);
   background: var(--panel-alt);
   z-index: var(--z-sticky-header);
 }
@@ -1101,7 +1101,10 @@ tr:last-child td {
 /* Emphasize Par and Handicap rows */
 .par-row th,
 .par-row td {
-  background: transparent;
+  position: sticky;
+  top: calc(var(--scorecard-sticky-top, 0px) + var(--scorecard-head-row-h, 40px));
+  z-index: var(--z-sticky-header);
+  background: var(--panel);
   border-left: 1px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
@@ -1110,11 +1113,19 @@ tr:last-child td {
 
 .hcp-row th,
 .hcp-row td {
-  background: transparent;
+  position: sticky;
+  top: calc(var(--scorecard-sticky-top, 0px) + var(--scorecard-head-row-h, 40px) + var(--scorecard-par-row-h, 40px));
+  z-index: var(--z-sticky-header);
+  background: var(--panel);
   border-left: 1px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 1px solid rgba(255, 255, 255, 0.3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+#scorecardFixed .par-row td,
+#scorecardFixed .hcp-row td {
+  z-index: var(--z-sticky-first-col);
 }
 
 .par-row input,
