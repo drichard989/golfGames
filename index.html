@@ -37,63 +37,75 @@
         <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
       </div>
       <div id="utilitiesSection" class="utilities-section">
-        <div class="controls">
-          <button id="saveBtn" class="btn">💾 Save</button>
-          <button id="refreshAllBtn" class="btn" title="Recalculate all games and totals">🔄 Recalculate Everything</button>
-          <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
-          <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
-          <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
-          <div class="control" style="display: flex; gap: 16px; align-items: center;">
-            <label style="font-size: 14px; color: var(--muted); margin-right: 8px;">Handicap Mode:</label>
-            <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
-              <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
-              Gross
-            </label>
-            <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
-              <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
-              Play Off Low
-            </label>
-            <label class="radio" style="display: inline-flex; gap: 6px; align-items: center;">
-              <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
-              Full Handicap
-            </label>
+        <div class="controls utilities-grid">
+          <div class="utilities-row utilities-row-actions">
+            <button id="saveBtn" class="btn">💾 Save</button>
+            <button id="refreshAllBtn" class="btn" title="Recalculate all games and totals">🔄 Recalculate Everything</button>
+            <button id="clearAllBtn" class="btn">Clear Names & Scores</button>
+            <button id="resetBtn" class="btn">Reset Scores</button>
+            <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
           </div>
-          <div class="control">
-            <label for="csvInput">CSV</label>
-            <input id="csvInput" type="file" accept=".csv" />
+
+          <div class="utilities-row utilities-row-settings">
+            <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
+            <button id="themeToggle" class="theme-toggle" type="button">☀️ Light Mode</button>
+
+            <div class="control utilities-control handicap-mode-control">
+              <label>Handicap Mode:</label>
+              <label class="radio">
+                <input type="radio" name="handicapMode" value="gross" id="handicapModeGross" />
+                Gross
+              </label>
+              <label class="radio">
+                <input type="radio" name="handicapMode" value="playOffLow" id="handicapModePlayOffLow" checked />
+                Play Off Low
+              </label>
+              <label class="radio">
+                <input type="radio" name="handicapMode" value="fullHandicap" id="handicapModeFullHandicap" />
+                Full Handicap
+              </label>
+            </div>
+
+            <div class="control utilities-control csv-control">
+              <label for="csvInput">CSV</label>
+              <input id="csvInput" type="file" accept=".csv" />
+            </div>
+
+            <div class="control utilities-control font-size-control">
+              <label>Font Size</label>
+              <button id="fontSizeSmall" class="btn font-size-btn" type="button" aria-pressed="false">Small</button>
+              <button id="fontSizeMedium" class="btn font-size-btn" type="button" aria-pressed="true">Medium</button>
+              <button id="fontSizeLarge" class="btn font-size-btn" type="button" aria-pressed="false">Large</button>
+            </div>
           </div>
-          <div class="control" style="gap: 8px; align-items: center;">
-            <label style="margin-right: 4px;">Font Size</label>
-            <button id="fontSizeSmall" class="btn font-size-btn" type="button" aria-pressed="false">Small</button>
-            <button id="fontSizeMedium" class="btn font-size-btn" type="button" aria-pressed="true">Medium</button>
-            <button id="fontSizeLarge" class="btn font-size-btn" type="button" aria-pressed="false">Large</button>
+
+          <div class="utilities-row utilities-row-export">
+            <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
+            <button id="exportCSVBtn" class="btn">📤 Export Current Scorecard</button>
+            <button id="emailCSVBtn" class="btn">📧 Email Scorecard</button>
+            <button id="shareHtmlBtn" class="btn">📱 Share Results</button>
+            <button id="generateQRBtn" class="btn">📷 Share via QR Code</button>
+            <button id="scanQRBtn" class="btn">📸 Scan QR Code</button>
           </div>
-          <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
-          <button id="exportCSVBtn" class="btn">📤 Export Current Scorecard</button>
-          <button id="emailCSVBtn" class="btn">📧 Email Scorecard</button>
-          <button id="shareHtmlBtn" class="btn">📱 Share Results</button>
-          <button id="generateQRBtn" class="btn">📷 Share via QR Code</button>
-          <button id="scanQRBtn" class="btn">📸 Scan QR Code</button>
-          <button id="resetBtn" class="btn">Reset Scores</button>
-          <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
-          <div class="control cloud-control" style="display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 320px;">
-            <div style="display:flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+
+          <div class="control cloud-control">
+            <div class="cloud-row cloud-row-session">
               <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
-              <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" style="min-width: 180px;" />
+              <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" />
               <button id="cloudJoinBtn" class="btn" type="button">Join</button>
               <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
             </div>
-            <div style="display:flex; flex-wrap: wrap; gap: 8px; align-items: center; width: 100%;">
-              <select id="cloudSnapshotSelect" style="min-width: 220px; max-width: 100%; padding: 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
+            <div class="cloud-row cloud-row-snapshots">
+              <select id="cloudSnapshotSelect">
                 <option value="">Live current version</option>
               </select>
               <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
               <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
               <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
             </div>
-            <div id="cloudStatus" class="small" style="margin:0;">Cloud: not connected</div>
-            <div id="cloudCodes" class="small" style="margin:0; display:none;"></div>
-            <div id="cloudSnapshotStatus" class="small" style="margin:0; display:none;"></div>
+            <div id="cloudStatus" class="small">Cloud: not connected</div>
+            <div id="cloudCodes" class="small" style="display:none;"></div>
+            <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
           </div>
         </div>
       </div>

@@ -356,6 +356,84 @@ input[type="text"] {
   display: block;
 }
 
+.utilities-grid {
+  display: grid;
+  gap: var(--space-sm);
+  align-items: stretch;
+}
+
+.utilities-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.utilities-row .btn,
+.utilities-row .theme-toggle {
+  white-space: nowrap;
+}
+
+.utilities-control {
+  max-width: 100%;
+}
+
+.handicap-mode-control {
+  flex: 1 1 620px;
+  gap: 12px;
+}
+
+.handicap-mode-control .radio {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.csv-control {
+  flex: 1 1 320px;
+}
+
+.font-size-control {
+  gap: var(--space-xs);
+}
+
+.cloud-control {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: 100%;
+}
+
+.cloud-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+#cloudJoinCode {
+  min-width: 220px;
+  flex: 1 1 240px;
+}
+
+#cloudSnapshotSelect {
+  min-width: 240px;
+  max-width: 100%;
+  padding: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  flex: 1 1 280px;
+}
+
+#cloudStatus,
+#cloudCodes,
+#cloudSnapshotStatus {
+  margin: 0;
+}
+
 /* =========================
    Scorecard (Dual-Table Layout)
    ========================= */
@@ -1582,6 +1660,32 @@ input[type="text"] {
 
   .controls {
     gap: 10px;
+  }
+
+  .utilities-row {
+    align-items: stretch;
+  }
+
+  .utilities-row .btn,
+  .utilities-row .theme-toggle {
+    flex: 1 1 auto;
+  }
+
+  .handicap-mode-control,
+  .csv-control,
+  .font-size-control {
+    flex: 1 1 100%;
+  }
+
+  .cloud-row {
+    align-items: stretch;
+  }
+
+  .cloud-row .btn,
+  .cloud-row select,
+  .cloud-row input {
+    flex: 1 1 100%;
+    min-width: 0;
   }
 
   .btn {
