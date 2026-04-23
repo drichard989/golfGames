@@ -1427,60 +1427,63 @@
     },
 
     /**
-     * Rebuild footer to match current player count
+     * Rebuild bottom totals card (same look as header totals card).
+     * Populates #bankerFooterTotals using the existing footer cell IDs so
+     * render() and refreshPlayerNames keep working unchanged.
      */
     rebuildFooter() {
-      const tfoot = document.querySelector('#bankerTable tfoot');
-      if (!tfoot) return;
-      
-      tfoot.innerHTML = '';
+      const container = document.getElementById('bankerFooterTotals');
+      if (!container) return;
+
+      container.innerHTML = '';
       const playerCount = getPlayerCount();
       const names = getPlayerNames();
-      
-      const totalsRow = document.createElement('tr');
-      
-      const labelTd = document.createElement('td');
-      labelTd.innerHTML = '<strong>Totals</strong>';
-      labelTd.colSpan = 5;
-      totalsRow.appendChild(labelTd);
-      
-      tfoot.appendChild(totalsRow);
-      
-      // Player totals row
-      const playerTotalsRow = document.createElement('tr');
-      
-      const playerLabelTd = document.createElement('td');
-      playerLabelTd.textContent = 'Player';
-      playerLabelTd.className = 'banker-footer-label';
-      playerTotalsRow.appendChild(playerLabelTd);
-      
+
+      const table = document.createElement('table');
+      table.className = 'banker-header-totals-table';
+
+      const tbody = document.createElement('tbody');
+
+      const titleRow = document.createElement('tr');
+      titleRow.className = 'banker-header-title-row';
+      const titleCell = document.createElement('th');
+      titleCell.colSpan = playerCount + 1;
+      titleCell.textContent = 'Totals';
+      titleRow.appendChild(titleCell);
+      tbody.appendChild(titleRow);
+
+      const playerRow = document.createElement('tr');
+      playerRow.className = 'banker-header-data-row';
+      const playerLabel = document.createElement('td');
+      playerLabel.textContent = 'Player';
+      playerLabel.className = 'banker-footer-label';
+      playerRow.appendChild(playerLabel);
       for (let p = 0; p < playerCount; p++) {
-        const nameTd = document.createElement('td');
-        nameTd.id = DOM_IDS.footerName(p);
-        nameTd.textContent = names[p] || `P${p + 1}`;
-        nameTd.className = 'banker-footer-player';
-        playerTotalsRow.appendChild(nameTd);
+        const nameCell = document.createElement('td');
+        nameCell.id = DOM_IDS.footerName(p);
+        nameCell.textContent = names[p] || `P${p + 1}`;
+        nameCell.className = 'banker-footer-player';
+        playerRow.appendChild(nameCell);
       }
-      
-      tfoot.appendChild(playerTotalsRow);
-      
-      // Totals row
-      const amountsRow = document.createElement('tr');
-      
-      const amountLabelTd = document.createElement('td');
-      amountLabelTd.textContent = 'Net';
-      amountLabelTd.className = 'banker-footer-label';
-      amountsRow.appendChild(amountLabelTd);
-      
+      tbody.appendChild(playerRow);
+
+      const netRow = document.createElement('tr');
+      netRow.className = 'banker-header-data-row';
+      const netLabel = document.createElement('td');
+      netLabel.textContent = 'Net';
+      netLabel.className = 'banker-footer-label';
+      netRow.appendChild(netLabel);
       for (let p = 0; p < playerCount; p++) {
-        const totalTd = document.createElement('td');
-        totalTd.id = DOM_IDS.totalCell(p);
-        totalTd.textContent = '$0.00';
-        totalTd.className = 'banker-footer-total';
-        amountsRow.appendChild(totalTd);
+        const totalCell = document.createElement('td');
+        totalCell.id = DOM_IDS.totalCell(p);
+        totalCell.textContent = '$0.00';
+        totalCell.className = 'banker-footer-total';
+        netRow.appendChild(totalCell);
       }
-      
-      tfoot.appendChild(amountsRow);
+      tbody.appendChild(netRow);
+
+      table.appendChild(tbody);
+      container.appendChild(table);
     },
 
     /**

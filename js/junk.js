@@ -412,20 +412,23 @@
   }
 
   function renderJunkLiveResults(totals = []) {
-    const container = document.getElementById('junkLiveResults');
-    if (!container) return;
+    const containers = [
+      document.getElementById('junkLiveResults'),
+      document.getElementById('junkResultsBottom')
+    ].filter(Boolean);
+    if (!containers.length) return;
 
     const names = getPlayerNames();
     const playerCount = getPlayerCount();
     if (!playerCount) {
-      container.innerHTML = '';
+      containers.forEach(c => { c.innerHTML = ''; });
       return;
     }
 
     const headerCells = Array.from({ length: playerCount }, (_, p) => `<td>${names[p] || `P${p+1}`}</td>`).join('');
     const totalCells = Array.from({ length: playerCount }, (_, p) => `<td>${Number.isFinite(totals[p]) ? totals[p] : '—'}</td>`).join('');
 
-    container.innerHTML = `
+    const html = `
       <table class="live-results-table" aria-label="Live Junk results">
         <tbody>
           <tr class="live-results-title-row"><th colspan="${playerCount + 1}">Totals</th></tr>
@@ -434,6 +437,7 @@
         </tbody>
       </table>
     `;
+    containers.forEach(c => { c.innerHTML = html; });
   }
 
   function updateJunk(){

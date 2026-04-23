@@ -214,8 +214,11 @@
   }
 
   function renderVegasLiveResults(data) {
-    const container = document.getElementById('vegasLiveResults');
-    if (!container) return;
+    const containers = [
+      document.getElementById('vegasLiveResults'),
+      document.getElementById('vegasResultsBottom')
+    ].filter(Boolean);
+    if (!containers.length) return;
 
     const teamAName = document.getElementById('vegasColA')?.textContent?.trim() || 'Team A';
     const teamBName = document.getElementById('vegasColB')?.textContent?.trim() || 'Team B';
@@ -234,11 +237,11 @@
     };
 
     if (!data?.valid) {
-      container.innerHTML = '';
+      containers.forEach(c => { c.innerHTML = ''; });
       return;
     }
 
-    container.innerHTML = `
+    const html = `
       <table class="live-results-table" aria-label="Live Vegas results">
         <tbody>
           <tr class="live-results-title-row"><th colspan="3">Totals</th></tr>
@@ -249,6 +252,7 @@
         </tbody>
       </table>
     `;
+    containers.forEach(c => { c.innerHTML = html; });
   }
 
   // =============================================================================
@@ -551,6 +555,7 @@ const Vegas = {
       const breakdownRow = document.getElementById('vegasGameBreakdown');
       const breakdownData = document.getElementById('vegasGameBreakdownData');
       if(breakdownRow && breakdownData && data.gameResults){
+        breakdownRow.hidden = false;
         breakdownRow.style.display = '';
         const gameLines = data.gameResults.map((game, i) => {
           const playerName = names[game.player] || `P${game.player+1}`;
@@ -571,7 +576,7 @@ const Vegas = {
       
       // Hide game breakdown in non-rotation mode
       const breakdownRow = document.getElementById('vegasGameBreakdown');
-      if(breakdownRow) breakdownRow.style.display = 'none';
+      if(breakdownRow) { breakdownRow.hidden = true; breakdownRow.style.display = 'none'; }
     }
 
     const ta = $(ids.vegasTotalA);
