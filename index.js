@@ -699,7 +699,6 @@
     gamesBtn.setAttribute('aria-selected', !isScore ? 'true' : 'false');
     scorePanel.hidden = !isScore;
     gamesPanel.hidden = isScore;
-    requestAnimationFrame(() => syncFrozenScorecardHeader());
   }
 
   function syncGameTabUi(activeGame) {
@@ -760,11 +759,9 @@
   function setupScorecardScrollSync() {
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
-    const frozenScroll = document.getElementById('scorecardFrozenScroll');
     if (!fixedPane || !scrollPane) return;
 
     let syncingVertical = false;
-    let syncingHorizontal = false;
 
     const syncScrollTop = (source, target) => {
       if (syncingVertical) return;
@@ -777,155 +774,9 @@
 
     scrollPane.addEventListener('scroll', () => {
       syncScrollTop(scrollPane, fixedPane);
-      if (frozenScroll) {
-        if (syncingHorizontal) return;
-        syncingHorizontal = true;
-        frozenScroll.scrollLeft = scrollPane.scrollLeft;
-        syncingHorizontal = false;
-      }
     }, { passive: true });
 
-    if (frozenScroll) {
-      frozenScroll.addEventListener('scroll', () => {
-        if (syncingHorizontal) return;
-        syncingHorizontal = true;
-        scrollPane.scrollLeft = frozenScroll.scrollLeft;
-        syncingHorizontal = false;
-      }, { passive: true });
-    }
-
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
-  }
-
-  function syncFrozenScorecardHeader() {
-    const body = document.body;
-    const host = document.getElementById('scorecardFrozenHost');
-    const fixedWrap = host?.querySelector('.scorecard-frozen-fixed');
-    const scrollWrap = document.getElementById('scorecardFrozenScroll');
-    const fixedTarget = document.getElementById('scorecardFrozenFixed');
-    const scrollTarget = document.getElementById('scorecardFrozenTable');
-    const fixedPane = document.querySelector('.scorecard-fixed');
-    const scrollPane = document.querySelector('.scorecard-scroll');
-    const fixedSource = document.getElementById('scorecardFixed');
-    const scrollSource = document.getElementById('scorecard');
-    if (!host || !fixedWrap || !scrollWrap || !fixedTarget || !scrollTarget || !fixedPane || !scrollPane || !fixedSource || !scrollSource) return;
-
-    const isScore = body?.classList.contains('mode-score');
-    host.hidden = !isScore;
-    if (!isScore) {
-      body?.classList.remove('frozen-ready');
-      return;
-    }
-
-    // Keep originals visible while measuring, then hide them once clone is synced.
-    body?.classList.remove('frozen-ready');
-
-    const cloneRowsInto = (rows, targetTable) => {
-      targetTable.innerHTML = '';
-      const tbody = document.createElement('tbody');
-      rows.forEach((sourceRow) => {
-        if (!sourceRow) return;
-        const clone = sourceRow.cloneNode(true);
-        clone.removeAttribute('id');
-        clone.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
-        clone.querySelectorAll('input, select, textarea, button').forEach((el) => {
-          el.setAttribute('tabindex', '-1');
-          el.setAttribute('aria-hidden', 'true');
-        });
-        tbody.appendChild(clone);
-      });
-      targetTable.appendChild(tbody);
-    };
-
-    const fixedSourceRows = [
-      fixedSource.querySelector('thead tr'),
-      document.getElementById('parRowFixed'),
-      document.getElementById('hcpRowFixed')
-    ];
-    const scrollSourceRows = [
-      scrollSource.querySelector('thead tr'),
-      document.getElementById('parRow'),
-      document.getElementById('hcpRow')
-    ];
-
-    cloneRowsInto(fixedSourceRows, fixedTarget);
-    cloneRowsInto(scrollSourceRows, scrollTarget);
-
-    const fixedTargetRows = Array.from(fixedTarget.querySelectorAll('tr'));
-    const scrollTargetRows = Array.from(scrollTarget.querySelectorAll('tr'));
-
-    const applyCellMetrics = (sourceRow, targetRow, rowHeight, referenceCells = []) => {
-      if (!sourceRow || !targetRow) return;
-      const sourceCells = Array.from(sourceRow.children);
-      const targetCells = Array.from(targetRow.children);
-      targetRow.style.height = `${rowHeight}px`;
-
-      sourceCells.forEach((sourceCell, cellIndex) => {
-        const targetCell = targetCells[cellIndex];
-        if (!targetCell) return;
-        const referenceCell = referenceCells[cellIndex] || sourceCell;
-        // Use exact fractional px — Math.ceil() accumulates rounding error across
-        // 9+ cells, shifting divider columns visibly off by several pixels.
-        const width = referenceCell.getBoundingClientRect().width;
-        targetCell.style.width = `${width}px`;
-        targetCell.style.minWidth = `${width}px`;
-        targetCell.style.maxWidth = `${width}px`;
-        targetCell.style.height = `${rowHeight}px`;
-      });
-    };
-
-    const rowCount = Math.max(fixedSourceRows.length, scrollSourceRows.length);
-    const sharedRowHeights = [];
-    for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-      const fixedSourceRow = fixedSourceRows[rowIndex];
-      const scrollSourceRow = scrollSourceRows[rowIndex];
-      const fixedHeight = fixedSourceRow?.getBoundingClientRect().height || 0;
-      const scrollHeight = scrollSourceRow?.getBoundingClientRect().height || 0;
-      sharedRowHeights[rowIndex] = Math.max(fixedHeight, scrollHeight, 1);
-    }
-
-    // Switch to final layout (source header rows hidden) before width sampling.
-    // This prevents 1px-per-column drift caused by measuring against pre-hide auto layout.
-    body?.classList.add('frozen-ready');
-
-    // Use visible player rows as width references so frozen columns match the
-    // live body grid exactly (header/par rows can be wider under auto layout).
-    const fixedReferenceCells = Array.from(
-      fixedSource.querySelector('tbody tr.player-row')?.children ||
-      fixedSourceRows[0]?.children ||
-      []
-    );
-    const scrollReferenceCells = Array.from(
-      scrollSource.querySelector('tbody tr.player-row')?.children ||
-      scrollSourceRows[0]?.children ||
-      []
-    );
-
-    for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-      const fixedSourceRow = fixedSourceRows[rowIndex];
-      const scrollSourceRow = scrollSourceRows[rowIndex];
-      const fixedTargetRow = fixedTargetRows[rowIndex];
-      const scrollTargetRow = scrollTargetRows[rowIndex];
-      const sharedRowHeight = sharedRowHeights[rowIndex] || 1;
-
-      applyCellMetrics(fixedSourceRow, fixedTargetRow, sharedRowHeight, fixedReferenceCells);
-      applyCellMetrics(scrollSourceRow, scrollTargetRow, sharedRowHeight, scrollReferenceCells);
-    }
-
-    const fixedWidth = fixedPane.getBoundingClientRect().width;
-    fixedWrap.style.width = `${fixedWidth}px`;
-    fixedWrap.style.minWidth = `${fixedWidth}px`;
-    fixedWrap.style.maxWidth = `${fixedWidth}px`;
-    // Lock the fixed table element width so responsive min-width rules can't expand it
-    fixedTarget.style.width = `${fixedWidth}px`;
-    fixedTarget.style.minWidth = '0';
-
-    // Use scrollWidth (full content width) not getBoundingClientRect (viewport-clipped)
-    const scrollTableWidth = scrollSource.scrollWidth;
-    scrollTarget.style.width = `${scrollTableWidth}px`;
-    scrollTarget.style.minWidth = `${scrollTableWidth}px`;
-
-    scrollWrap.scrollLeft = scrollPane.scrollLeft;
   }
 
   function setupGamesPanelScrollSync() {
@@ -935,7 +786,6 @@
     const syncLayout = () => {
       syncSafeTopInset();
       syncGamesPanelHeight();
-      syncFrozenScorecardHeader();
     };
 
     const syncOnScroll = () => {
@@ -1291,9 +1141,19 @@
             if (scrollRow.style.height !== nextHeight) scrollRow.style.height = nextHeight;
           }
 
+          // Keep sticky par/hcp offsets aligned to current live row heights.
+          const headerRow = scrollTable.querySelector('thead tr');
+          const parRow = document.getElementById('parRow');
+          const headerHeight = Math.ceil(headerRow?.getBoundingClientRect().height || 44);
+          const parHeight = Math.ceil(parRow?.getBoundingClientRect().height || 44);
+          const rootStyle = document.documentElement?.style;
+          if (rootStyle) {
+            rootStyle.setProperty('--score-sticky-par-top', `${headerHeight}px`);
+            rootStyle.setProperty('--score-sticky-hcp-top', `${headerHeight + parHeight}px`);
+          }
+
         });
 
-        syncFrozenScorecardHeader();
         
         // Note: Stroke highlighting is managed by recalcAll() with proper timing
         // Do not call applyStrokeHighlighting() here to avoid race conditions
@@ -1511,7 +1371,6 @@
         if(tds[base+1]) tds[base+1].textContent=INN||"—"; 
         if(tds[base+2]) tds[base+2].textContent=TOT||"—";
 
-        requestAnimationFrame(() => syncFrozenScorecardHeader());
       },
 
       /**
