@@ -159,6 +159,27 @@
     return { useNet, netHcpMode };
   }
 
+  function getJunkSkinsDotsConfig() {
+    const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
+    const mode = activeBtn?.dataset.value || 'gross';
+    const useNet = mode !== 'gross';
+    const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+    const carry = document.getElementById('junkSkinsCarry')?.checked ?? true;
+    const half = useNet ? (document.getElementById('junkSkinsHalf')?.checked ?? false) : false;
+    const buyIn = Math.max(0, Number(document.getElementById('junkSkinsBuyIn')?.value) || 0);
+    return { useNet, netHcpMode, carry, half, buyIn };
+  }
+
+  function syncJunkSkinsHalfState() {
+    const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
+    const isNet = (activeBtn?.dataset.value || 'gross') !== 'gross';
+    const halfEl = document.getElementById('junkSkinsHalf');
+    if (halfEl) {
+      halfEl.disabled = !isNet;
+      if (!isNet) halfEl.checked = false;
+    }
+  }
+
   function calcStrokesFromHandicap(handicap, holeHcp) {
     const h = Number(handicap) || 0;
     if (h === 0) return 0;
@@ -169,6 +190,25 @@
     const extra = holeHcp <= rem ? 1 : 0;
     const magnitude = base + extra;
     return h >= 0 ? magnitude : -magnitude;
+  }
+
+  function strokesOnHoleHalfAware(adjCH, holeIdx, half, HCPMEN) {
+    const holeHcp = (HCPMEN || window.HCPMEN || Array(18).fill(1))[holeIdx - 1] || 1;
+
+    if (adjCH < 0) {
+      const absAdj = Math.abs(adjCH);
+      const base = Math.floor(absAdj / 18);
+      const rem = absAdj % 18;
+      const fullStrokes = base + (holeHcp <= rem ? 1 : 0);
+      return half ? -(fullStrokes * 0.5) : -fullStrokes;
+    }
+
+    if (adjCH === 0) return 0;
+
+    const base = Math.floor(adjCH / 18);
+    const rem = adjCH % 18;
+    const fullStrokes = base + (holeHcp <= rem ? 1 : 0);
+    return half ? (fullStrokes * 0.5) : fullStrokes;
   }
 
   function getJunkScoreForHole(playerIdx, hole, config, cache = {}) {
@@ -182,6 +222,80 @@
 
     const strokes = calcStrokesFromHandicap(handicap, holeHcp);
     return gross - strokes;
+  }
+
+  function getJunkSkinsScoreForHole(playerIdx, hole, config, cache = {}) {
+    const gross = getScore(playerIdx, hole);
+    if (!Number.isFinite(gross) || !config.useNet) return gross;
+
+    const handicap = config.netHcpMode === 'fullHandicap'
+      ? ((cache.rawCHs || getRawCHs())[playerIdx] || 0)
+      : ((cache.adjustedCHs || getAdjustedCHs())[playerIdx] || 0);
+    const strokesReceived = strokesOnHoleHalfAware(handicap, hole, config.half, cache.HCPMEN);
+    const par = getPar(hole);
+    const ndb = Number.isFinite(par) ? (par + 2 + strokesReceived) : gross;
+    const cappedGross = Math.min(gross, ndb);
+    return cappedGross - strokesReceived;
+  }
+
+  function computeJunkSkinAwards(config) {
+    const playerCount = getPlayerCount();
+    const awards = Array.from({ length: HOLES }, () => Array(playerCount).fill(0));
+    let pot = 1;
+
+    const cache = {
+      HCPMEN: window.HCPMEN || Array(18).fill(1),
+      adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
+      rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+    };
+
+    for (let h = 1; h <= HOLES; h++) {
+      const scores = Array.from({ length: playerCount }, (_, p) =>
+        getJunkSkinsScoreForHole(p, h, config, cache)
+      );
+      const filled = scores.map((n, p) => ({ n, p })).filter((x) => Number.isFinite(x.n) && x.n > 0);
+
+      if (filled.length < 2) {
+        if (config.carry) pot += 1;
+        continue;
+      }
+
+      const min = Math.min(...filled.map((x) => x.n));
+      const winners = filled.filter((x) => x.n === min).map((x) => x.p);
+      if (winners.length !== 1) {
+        if (config.carry) pot += 1;
+        continue;
+      }
+
+      const winner = winners[0];
+      awards[h - 1][winner] = pot;
+      pot = 1;
+    }
+
+    return awards;
+  }
+
+  function applyAutoSkinAwards(awards, config) {
+    const players = getPlayerCount();
+    const valuePerSkin = Number(config.buyIn) || 0;
+
+    for (let h = 1; h <= HOLES; h++) {
+      for (let p = 0; p < players; p++) {
+        const td = document.getElementById(`junk_h${h}_p${p+1}`);
+        const checkbox = document.querySelector(`#junkTable input.junk-ach[data-player="${p}"][data-hole="${h}"][data-key="skin"]`);
+        if (!td || !checkbox) continue;
+
+        const skinsWon = awards[h - 1]?.[p] || 0;
+        const skinPoints = skinsWon > 0 ? (skinsWon * valuePerSkin) : 0;
+        const hasSkin = skinPoints > 0;
+
+        td.dataset.skin = hasSkin ? '1' : '';
+        td.dataset.skinCount = hasSkin ? String(skinPoints) : '';
+        checkbox.dataset.count = hasSkin ? String(skinPoints) : '0';
+        checkbox.checked = hasSkin;
+        checkbox.disabled = true;
+      }
+    }
   }
 
   function syncJunkNetModeVisibility() {
@@ -422,12 +536,15 @@
           cb.dataset.hole   = String(holeIdx+1);
           cb.dataset.key    = id;
           cb.dataset.pts    = String(pts);
+          if (id === 'skin') {
+            cb.disabled = true;
+            cb.title = 'Skin dots are auto-awarded from Junk Skins Dots settings';
+            cb.dataset.count = td.dataset.skinCount || '0';
+          }
           // restore if previously stored on the TD
           cb.checked = td.dataset[id] === '1';
           cb.addEventListener('change', ()=>{
-            // Skin awards are one-way once granted; do not allow manual uncheck.
-            if (id === 'skin' && !cb.checked) {
-              cb.checked = true;
+            if (id === 'skin') {
               return;
             }
             td.dataset[id] = cb.checked ? '1' : '';
@@ -462,7 +579,12 @@
     let total = 0;
     box.querySelectorAll('input.junk-ach:checked').forEach(cb=>{
       const w = Number(cb.dataset.pts) || 1;
-      total += w;
+      if (cb.dataset.key === 'skin') {
+        const skinCount = Number(cb.dataset.count || 0);
+        total += w * (Number.isFinite(skinCount) ? skinCount : 0);
+      } else {
+        total += w;
+      }
     });
     return total;
   }
@@ -499,7 +621,14 @@
     box.querySelectorAll('input.junk-ach:checked').forEach(cb=>{
       const achId = cb.dataset.key;
       const ach = ACH.find(a => a.id === achId);
-      if(ach) labels.push(ach.label);
+      if (ach) {
+        if (achId === 'skin') {
+          const skinCount = Number(cb.dataset.count || 0);
+          labels.push(skinCount > 1 ? `${ach.label} x${skinCount}` : ach.label);
+        } else {
+          labels.push(ach.label);
+        }
+      }
     });
     
     // Join with line breaks after every 2 items
@@ -515,12 +644,18 @@
     const players = getPlayerCount();
     if(!tbody) return;
 
+    syncJunkSkinsHalfState();
+
     const config = getJunkScoringConfig();
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
       adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
       rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
     };
+
+    const skinsConfig = getJunkSkinsDotsConfig();
+    const skinsAwards = computeJunkSkinAwards(skinsConfig);
+    applyAutoSkinAwards(skinsAwards, skinsConfig);
     
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const totals = Array(players).fill(0);
@@ -624,6 +759,19 @@
           updateJunk();
         }
       }, { passive: true });
+
+      document.getElementById('junkSkinsCarry')?.addEventListener('change', () => {
+        updateJunk();
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
+      });
+      document.getElementById('junkSkinsHalf')?.addEventListener('change', () => {
+        updateJunk();
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
+      });
+      document.getElementById('junkSkinsBuyIn')?.addEventListener('input', () => {
+        updateJunk();
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
+      });
     }
   }
 
@@ -645,10 +793,12 @@
     }
 
     checkboxes.forEach(cb => {
+      const count = cb.dataset.key === 'skin' ? (Number(cb.dataset.count) || 1) : undefined;
       achievements.push({
         player: parseInt(cb.dataset.player),
         hole: parseInt(cb.dataset.hole),
-        key: cb.dataset.key
+        key: cb.dataset.key,
+        count
       });
     });
 
@@ -678,16 +828,28 @@
       }
     });
     
-    persistedAchievementState.forEach(({player, hole, key}) => {
+    persistedAchievementState.forEach(({player, hole, key, count}) => {
       const checkbox = document.querySelector(
         `#junkTable input.junk-ach[data-player="${player}"][data-hole="${hole}"][data-key="${key}"]`
       );
-      if(checkbox && !checkbox.checked) {
-        checkbox.checked = true;
-        // Trigger change event to update labels and totals
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      if(checkbox) {
+        if (key === 'skin') {
+          checkbox.dataset.count = String(Number(count) || 1);
+          const td = document.getElementById(`junk_h${Number(hole)}_p${Number(player)+1}`);
+          if (td) {
+            td.dataset.skin = '1';
+            td.dataset.skinCount = checkbox.dataset.count;
+          }
+          checkbox.checked = true;
+        } else if (!checkbox.checked) {
+          checkbox.checked = true;
+          // Trigger change event to update labels and totals
+          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        }
       }
     });
+
+    updateJunkTotalsWeighted();
   }
 
   /**

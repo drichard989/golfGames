@@ -516,6 +516,27 @@
             <button type="button" class="btn hcp-mode-btn" id="junkHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
             <button type="button" class="btn hcp-mode-btn" id="junkHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
           </div>
+          <div class="pill" style="margin-top: 10px;">Skins Dots (Auto)</div>
+          <div class="small" style="margin-bottom: 6px;">Automatically awards Skin dots using Skins-style rules.</div>
+          <div class="hcp-mode-btn-group" id="junkSkinsModeGroup" role="radiogroup" aria-label="Junk skins dots scoring mode">
+            <button type="button" class="btn hcp-mode-btn" id="junkSkinsModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
+            <button type="button" class="btn hcp-mode-btn" id="junkSkinsModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
+            <button type="button" class="btn hcp-mode-btn" id="junkSkinsModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+          </div>
+          <label class="skins-toggle-btn" for="junkSkinsCarry" style="margin-top: 8px;">
+            <input type="checkbox" id="junkSkinsCarry" checked />
+            <span>Carry over on ties</span>
+          </label>
+          <div class="skins-half-wrap" style="margin-top: 8px;">
+            <label class="skins-toggle-btn skins-half-btn" for="junkSkinsHalf">
+              <input type="checkbox" id="junkSkinsHalf" disabled />
+              <span>Half-Pop (0.5 strokes)</span>
+            </label>
+          </div>
+          <label class="input-label" style="margin-top: 8px; display: inline-block;">
+            Value per skin: <input type="number" id="junkSkinsBuyIn" min="0" step="0.01" value="1" inputmode="decimal" autocomplete="off"
+              style="width: 80px; display: inline-block; margin-left: 4px; -moz-appearance: textfield; appearance: textfield;" />
+          </label>
           <button id="clearJunkAchievements" class="btn" style="margin-top: 8px;">Clear All Achievements</button>
         </div>
       </div>
