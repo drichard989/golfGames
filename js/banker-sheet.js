@@ -614,12 +614,15 @@
   }
 
   function buildSummaryRows(){
-    // After activating, render a compact per-hole summary row instead of
-    // the hidden input controls, so users can see hole state at a glance.
+    // After activating, render a compact desktop-like readout inside the
+    // row (banker, max bet, each opponent's bet + 2× state, banker 2×,
+    // result) so the hole state is visible at a glance. Tapping the row
+    // opens the full bottom sheet for editing.
     const tbody = document.getElementById('bankerBody');
     if (!tbody) return;
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const names = getPlayerNames();
+    const pc = getPlayerCount();
     rows.forEach((tr, i) => {
       const h = i + 1;
       let summary = tr.querySelector('.banker-sheet-summary-cell');
@@ -632,36 +635,70 @@
       const bankerIdx = getBankerIdx(h);
       const maxBet = getMaxBet(h);
       const bankerDbl = isBankerDoubled(h);
-      const resultTxt = getResultText(h);
       const par = getHolePar(h);
       const isPar3 = par === 3;
       const multLabel = isPar3 ? '3×' : '2×';
 
       if (bankerIdx < 0) {
-        summary.innerHTML = `
-          <span class="banker-sheet-summary-empty">Tap to set up hole</span>
-        `;
+        summary.innerHTML = `<span class="banker-sheet-summary-empty">Tap to set up hole</span>`;
         tr.classList.add('banker-sheet-row-empty');
-      } else {
-        const pc = getPlayerCount();
-        let activeBets = 0, totalBets = 0, doubledBets = 0;
-        for (let p = 0; p < pc; p++){
-          if (p === bankerIdx) continue;
-          const b = getBet(p, h);
-          if (b > 0) { activeBets++; totalBets += b; }
-          if (isPlayerDoubled(p, h)) doubledBets++;
-        }
-        const bankerName = escapeHtml(names[bankerIdx] || `P${bankerIdx+1}`);
-        const parts = [];
-        parts.push(`<span class="bss-chip bss-banker">🏦 ${bankerName}</span>`);
-        parts.push(`<span class="bss-chip bss-max">Max $${maxBet || 0}</span>`);
-        parts.push(`<span class="bss-chip bss-bets">${activeBets} bet${activeBets===1?'':'s'}${totalBets>0?` · $${totalBets}`:''}</span>`);
-        if (doubledBets > 0) parts.push(`<span class="bss-chip bss-dbl">${doubledBets}× ${multLabel}</span>`);
-        if (bankerDbl) parts.push(`<span class="bss-chip bss-bank-dbl">Banker ${multLabel}</span>`);
-        if (resultTxt && resultTxt !== '—') parts.push(`<span class="bss-chip bss-result">${escapeHtml(resultTxt)}</span>`);
-        summary.innerHTML = parts.join('');
-        tr.classList.remove('banker-sheet-row-empty');
+        return;
       }
+
+      tr.classList.remove('banker-sheet-row-empty');
+      const bankerName = escapeHtml(names[bankerIdx] || `P${bankerIdx+1}`);
+
+      // Per-opponent bets mini-grid (compact "Name  $bet  2×?  stroke?")
+      const betItems = [];
+      for (let p = 0; p < pc; p++){
+        if (p === bankerIdx) continue;
+        const b = getBet(p, h);
+        const dbl = isPlayerDoubled(p, h);
+        const stroke = getStrokeIndicatorFor(p, h);
+        const nm = escapeHtml(names[p] || `P${p+1}`);
+        const amt = b > 0 ? `$${b}` : '—';
+        betItems.push(`
+          <div class="bss-bet-line${b>0?'':' bss-bet-empty'}${dbl?' bss-bet-dbl':''}">
+            <span class="bss-bet-name">${nm}</span>
+            ${stroke ? `<span class="bss-bet-stroke" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>` : ''}
+            <span class="bss-bet-amt">${amt}</span>
+            ${dbl ? `<span class="bss-bet-mult">${multLabel}</span>` : ''}
+          </div>
+        `);
+      }
+
+      // Result: reuse the existing result cell's HTML when present so we get
+      // the same rich markup (player rows, ±$ styling, banker total).
+      const resultCellEl = document.getElementById(DOM_IDS.resultCell(h));
+      const resultHtml = resultCellEl ? resultCellEl.innerHTML.trim() : '';
+      const resultBlock = resultHtml
+        ? `<div class="bss-result-block">${resultHtml}</div>`
+        : `<div class="bss-result-block bss-result-empty">—</div>`;
+
+      summary.innerHTML = `
+        <div class="bss-grid">
+          <div class="bss-col bss-col-banker">
+            <div class="bss-col-label">Banker</div>
+            <div class="bss-banker-name">🏦 ${bankerName}</div>
+          </div>
+          <div class="bss-col bss-col-max">
+            <div class="bss-col-label">Max</div>
+            <div class="bss-max-val">$${maxBet || 0}</div>
+          </div>
+          <div class="bss-col bss-col-bets">
+            <div class="bss-col-label">Bets</div>
+            <div class="bss-bet-list">${betItems.join('') || '<span class="bss-bet-empty">—</span>'}</div>
+          </div>
+          <div class="bss-col bss-col-bdbl">
+            <div class="bss-col-label">Banker ${multLabel}</div>
+            <div class="bss-bdbl-val${bankerDbl?' is-on':''}">${bankerDbl ? multLabel : '—'}</div>
+          </div>
+          <div class="bss-col bss-col-result">
+            <div class="bss-col-label">Result</div>
+            ${resultBlock}
+          </div>
+        </div>
+      `;
     });
   }
 
