@@ -557,6 +557,12 @@
           });
           lab.appendChild(cb);
           lab.append(` ${label} (+${pts})`);
+          if (id === 'skin') {
+            const autoBadge = document.createElement('span');
+            autoBadge.className = 'junk-ach-auto-badge';
+            autoBadge.textContent = 'Auto';
+            lab.appendChild(autoBadge);
+          }
           menu.appendChild(lab);
         });
 

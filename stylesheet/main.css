@@ -2430,6 +2430,19 @@ tfoot td {
   font-weight: 700;
 }
 
+.junk-ach-auto-badge {
+  margin-left: auto;
+  padding: 2px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
 /* Density tweaks for game tables */
 #junkTable tbody td,
 #junkTable tbody th,
