@@ -1142,10 +1142,22 @@
           }
 
           // Keep sticky par/hcp offsets aligned to current live row heights.
-          const headerRow = scrollTable.querySelector('thead tr');
-          const parRow = document.getElementById('parRow');
-          const headerHeight = Math.ceil(headerRow?.getBoundingClientRect().height || 44);
-          const parHeight = Math.ceil(parRow?.getBoundingClientRect().height || 44);
+          // Measure both fixed and scroll tables and use the larger value so
+          // sticky rows stay perfectly aligned after font-size/theme changes.
+          const headerRowScroll = scrollTable.querySelector('thead tr');
+          const headerRowFixed = fixedTable.querySelector('thead tr');
+          const parRowScroll = document.getElementById('parRow');
+          const parRowFixed = document.getElementById('parRowFixed');
+          const headerHeight = Math.ceil(Math.max(
+            headerRowScroll?.getBoundingClientRect().height || 0,
+            headerRowFixed?.getBoundingClientRect().height || 0,
+            44
+          ));
+          const parHeight = Math.ceil(Math.max(
+            parRowScroll?.getBoundingClientRect().height || 0,
+            parRowFixed?.getBoundingClientRect().height || 0,
+            44
+          ));
           const rootStyle = document.documentElement?.style;
           if (rootStyle) {
             rootStyle.setProperty('--score-sticky-par-top', `${headerHeight}px`);
