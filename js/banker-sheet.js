@@ -830,6 +830,39 @@
           </div>
         </div>
       `;
+
+      // PHONE OVERRIDE: at phone widths the grid layout was leaving the
+      // result block stuck at intrinsic width even with width:100% all the
+      // way down. Bypass the grid entirely and emit the result block as
+      // the only child of the td so it stretches naturally.
+      const phone = window.matchMedia('(max-width: 480px)').matches;
+      if (phone) {
+        summary.style.padding = '4px 0';
+        summary.innerHTML = resultBlock || '<span class="banker-sheet-summary-empty">—</span>';
+        // Force the result block to fill the td content area
+        const direct = summary.firstElementChild;
+        if (direct) {
+          direct.style.cssText =
+            'display:block;' +
+            'width:100%;' +
+            'max-width:100%;' +
+            'box-sizing:border-box;' +
+            'padding:0;' +
+            'margin:0;';
+          // Also force every direct child (.bsr-row / .bsr-summary) to fill
+          Array.from(direct.children).forEach(child => {
+            if (child.classList.contains('bsr-row')) {
+              child.style.width = '100%';
+              child.style.margin = '0 0 3px 0';
+              child.style.boxSizing = 'border-box';
+            } else if (child.classList.contains('bsr-summary')) {
+              child.style.width = '100%';
+              child.style.margin = '4px 0 0 0';
+              child.style.boxSizing = 'border-box';
+            }
+          });
+        }
+      }
     });
   }
 
