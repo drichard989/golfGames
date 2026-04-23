@@ -947,7 +947,7 @@ body.mode-score #main-scorecard {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  overscroll-behavior: none;
+  overscroll-behavior: auto;
   scrollbar-gutter: stable;
 }
 
@@ -961,26 +961,45 @@ body.mode-score #main-scorecard {
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
-  overscroll-behavior: none;
-  overscroll-behavior-x: none;
+  overscroll-behavior: auto;
+  overscroll-behavior-x: auto;
   scroll-behavior: auto;
 }
 
 /* Scrollbar styling */
 .scorecard-scroll::-webkit-scrollbar {
-  height: 8px;
+  height: 2px;
+  width: 2px;
+}
+
+.scorecard-fixed::-webkit-scrollbar {
+  width: 2px;
+  height: 2px;
 }
 
 .scorecard-scroll::-webkit-scrollbar-track {
   background: var(--panel-alt);
 }
 
+.scorecard-fixed::-webkit-scrollbar-track {
+  background: var(--panel-alt);
+}
+
 .scorecard-scroll::-webkit-scrollbar-thumb {
   background: var(--line);
-  border-radius: 4px;
+  border-radius: 2px;
+}
+
+.scorecard-fixed::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 2px;
 }
 
 .scorecard-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+.scorecard-fixed::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
 
