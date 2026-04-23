@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.0.136" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.0.137" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.0.136" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.0.136" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.0.137" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.0.137" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -639,8 +639,6 @@
          bounding rect gives the exact y-coord of the line beneath which
          we want the panel to pin — even when the shell isn't yet pinned.
 
-         Also writes the same value as inline `top` directly on
-         #bankerLiveResultsPanel so cascade weirdness can never strip it.
          Fires on scroll + resize + ResizeObserver so the offset is always
          current as the header collapses or expands.
          ===================================================================== -->
@@ -657,8 +655,6 @@
             // so it normally pins at top — clamp at >=0 just in case.
             var offset = Math.max(0, Math.round(rect.bottom));
             document.documentElement.style.setProperty('--top-pinned-shell-h', offset + 'px');
-            var panel = document.getElementById('bankerLiveResultsPanel');
-            if (panel) panel.style.top = offset + 'px';
           } catch (e) { /* no-op */ }
         }
         function schedule() {

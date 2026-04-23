@@ -1627,35 +1627,16 @@ tfoot td {
   background: transparent;
 }
 
-/* Keep the Live Banker Results panel pinned below the top shell while
-   the banker table scrolls underneath it. The --top-pinned-shell-h var
-   is set from JS (see index.html) so the offset tracks the shell's
-   actual rendered height. */
-#bankerLiveResultsPanel:not([hidden]) {
+/* Keep live-results option panels pinned near the top of the games scroll
+   container so each game's table scrolls underneath them. */
+.game-section .live-results-panel:not([hidden]) {
   position: sticky;
-  top: var(--top-pinned-shell-h, 0px);
+  top: 4px;
   z-index: 30;
-  /* Solid bg so banker table rows don't show through behind the card. */
+  /* Solid bg so game rows do not show through behind the card while sticky. */
   background: var(--panel-alt);
   padding: 8px 0;
   margin: 0 0 10px;
-}
-
-@media (hover: none), (pointer: coarse) {
-  #bankerLiveResultsPanel:not([hidden]) {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: var(--top-pinned-shell-h, 0px);
-    z-index: 38;
-    margin: 0;
-    padding: 8px var(--space-lg) 10px;
-    background: var(--bg);
-  }
-
-  #bankerSection {
-    padding-top: var(--banker-live-offset, 0px);
-  }
 }
 
 .live-results-card {
