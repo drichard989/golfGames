@@ -4556,12 +4556,12 @@
     const btn = e.target.closest('.hcp-mode-btn');
     if (!btn) return;
     setVegasHcpModeBtnState(btn.id);
-    AppManager.recalcGames();
+    window.Vegas?.recalc?.();
     saveDebounced();
   });
-  $(ids.optDoubleBirdie).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
-  $(ids.optTripleEagle).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
-  $(ids.vegasPointValue)?.addEventListener("input", ()=>{ AppManager.recalcGames(); saveDebounced(); });
+  $(ids.optDoubleBirdie).addEventListener("change", ()=>{ window.Vegas?.recalc?.(); saveDebounced(); });
+  $(ids.optTripleEagle).addEventListener("change", ()=>{ window.Vegas?.recalc?.(); saveDebounced(); });
+  $(ids.vegasPointValue)?.addEventListener("input", ()=>{ window.Vegas?.recalc?.(); saveDebounced(); });
 
     // Banker: no UI wiring (stub only)
 

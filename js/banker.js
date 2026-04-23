@@ -1538,15 +1538,8 @@
           queueSave();
         });
 
-        // Listen for app handicap mode changes to keep banker view in sync
-        document.addEventListener('change', (e) => {
-          const t = e.target;
-          if (t && t.name === 'handicapMode') {
-            this.updateBetInputs();
-            this.update();
-          }
-        });
-        
+        // Banker uses its own scoring mode (#bankerHcpModeGroup) and is
+        // intentionally decoupled from the scorecard handicap mode selector.
         this._initialized = true;
 
         // Apply pending state synchronously — the table is already built at this
