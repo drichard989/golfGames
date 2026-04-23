@@ -779,21 +779,19 @@
     scrollPane.addEventListener('scroll', () => {
       syncScrollTop(scrollPane, fixedPane);
       if (frozenScroll) {
-        if (!syncingHorizontal) {
-          syncingHorizontal = true;
-          frozenScroll.scrollLeft = scrollPane.scrollLeft;
-          requestAnimationFrame(() => { syncingHorizontal = false; });
-        }
+        if (syncingHorizontal) return;
+        syncingHorizontal = true;
+        frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        syncingHorizontal = false;
       }
     }, { passive: true });
 
     if (frozenScroll) {
       frozenScroll.addEventListener('scroll', () => {
-        if (!syncingHorizontal) {
-          syncingHorizontal = true;
-          scrollPane.scrollLeft = frozenScroll.scrollLeft;
-          requestAnimationFrame(() => { syncingHorizontal = false; });
-        }
+        if (syncingHorizontal) return;
+        syncingHorizontal = true;
+        scrollPane.scrollLeft = frozenScroll.scrollLeft;
+        syncingHorizontal = false;
       }, { passive: true });
     }
 
@@ -953,18 +951,23 @@
     const panel = getGamesScrollContainer();
     if (!panel) return;
 
-    const sync = () => {
+    const syncLayout = () => {
       syncSafeTopInset();
       syncGamesPanelHeight();
       syncFrozenScorecardHeader();
     };
 
-    sync();
-    window.addEventListener('resize', sync, { passive: true });
-    window.addEventListener('orientationchange', sync, { passive: true });
-    window.addEventListener('scroll', sync, { passive: true });
-    window.visualViewport?.addEventListener('resize', sync, { passive: true });
-    window.visualViewport?.addEventListener('scroll', sync, { passive: true });
+    const syncOnScroll = () => {
+      syncSafeTopInset();
+      syncGamesPanelHeight();
+    };
+
+    syncLayout();
+    window.addEventListener('resize', syncLayout, { passive: true });
+    window.addEventListener('orientationchange', syncLayout, { passive: true });
+    window.addEventListener('scroll', syncOnScroll, { passive: true });
+    window.visualViewport?.addEventListener('resize', syncLayout, { passive: true });
+    window.visualViewport?.addEventListener('scroll', syncOnScroll, { passive: true });
     // Re-measure once all resources are loaded (env() is reliably resolved by then)
     // and again on pageshow so PWA home-screen launches always get the correct value.
     window.addEventListener('load', () => syncSafeTopInset(), { once: true });
