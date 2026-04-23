@@ -925,11 +925,11 @@ body.mode-score .entry-switcher {
 
 .scorecard-frozen-scroll {
   flex: 1 1 auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: hidden;
   background: var(--panel);
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
+  touch-action: pan-x;
   overscroll-behavior-x: contain;
   user-select: none;
   scrollbar-width: none;

@@ -760,10 +760,12 @@
   function setupScorecardScrollSync() {
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
+    const frozenHost = document.getElementById('scorecardFrozenHost');
     const frozenScroll = document.getElementById('scorecardFrozenScroll');
     if (!fixedPane || !scrollPane) return;
 
     let syncingVertical = false;
+    let syncingHorizontal = false;
 
     const syncScrollTop = (source, target) => {
       if (syncingVertical) return;
@@ -777,42 +779,112 @@
     scrollPane.addEventListener('scroll', () => {
       syncScrollTop(scrollPane, fixedPane);
       if (frozenScroll) {
-        frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        if (!syncingHorizontal) {
+          syncingHorizontal = true;
+          frozenScroll.scrollLeft = scrollPane.scrollLeft;
+          requestAnimationFrame(() => { syncingHorizontal = false; });
+        }
       }
     }, { passive: true });
 
     if (frozenScroll) {
+      frozenScroll.addEventListener('scroll', () => {
+        if (!syncingHorizontal) {
+          syncingHorizontal = true;
+          scrollPane.scrollLeft = frozenScroll.scrollLeft;
+          requestAnimationFrame(() => { syncingHorizontal = false; });
+        }
+      }, { passive: true });
+    }
+
+    if (frozenHost) {
+      const applyHorizontalDelta = (delta) => {
+        if (!delta) return;
+        scrollPane.scrollLeft += delta;
+        if (frozenScroll) {
+          frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        }
+      };
+
+      // Desktop mouse wheel emits vertical delta in this area; map it to horizontal pan.
+      frozenHost.addEventListener('wheel', (event) => {
+        const horizontalDelta = Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
+        if (!horizontalDelta) return;
+        applyHorizontalDelta(horizontalDelta);
+        event.preventDefault();
+      }, { passive: false });
+
+      // Mouse/pen drag on header should pan horizontally like the body grid.
       let dragPointerId = null;
       let dragStartX = 0;
       let dragStartLeft = 0;
 
-      frozenScroll.addEventListener('pointerdown', (event) => {
-        if (event.pointerType === 'mouse' && event.button !== 0) return;
+      frozenHost.addEventListener('pointerdown', (event) => {
+        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+        if (event.button !== 0) return;
         dragPointerId = event.pointerId;
         dragStartX = event.clientX;
         dragStartLeft = scrollPane.scrollLeft;
-        try {
-          frozenScroll.setPointerCapture(event.pointerId);
-        } catch {
-          // setPointerCapture can fail in some browsers; dragging still works.
-        }
       });
 
-      frozenScroll.addEventListener('pointermove', (event) => {
+      frozenHost.addEventListener('pointermove', (event) => {
         if (dragPointerId !== event.pointerId) return;
         const deltaX = event.clientX - dragStartX;
-        scrollPane.scrollLeft = dragStartLeft - deltaX;
-        frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        const nextLeft = dragStartLeft - deltaX;
+        scrollPane.scrollLeft = nextLeft;
+        if (frozenScroll) frozenScroll.scrollLeft = nextLeft;
         event.preventDefault();
       }, { passive: false });
 
-      const endDrag = (event) => {
+      const endPointerDrag = (event) => {
         if (dragPointerId !== event.pointerId) return;
         dragPointerId = null;
       };
 
-      frozenScroll.addEventListener('pointerup', endDrag);
-      frozenScroll.addEventListener('pointercancel', endDrag);
+      frozenHost.addEventListener('pointerup', endPointerDrag);
+      frozenHost.addEventListener('pointercancel', endPointerDrag);
+
+      // iOS: directional touch handling so horizontal pans begin quickly.
+      let touchStartX = 0;
+      let touchStartY = 0;
+      let touchStartLeft = 0;
+      let touchAxis = '';
+
+      frozenHost.addEventListener('touchstart', (event) => {
+        const touch = event.touches?.[0];
+        if (!touch) return;
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        touchStartLeft = scrollPane.scrollLeft;
+        touchAxis = '';
+      }, { passive: true });
+
+      frozenHost.addEventListener('touchmove', (event) => {
+        const touch = event.touches?.[0];
+        if (!touch) return;
+
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+
+        if (!touchAxis) {
+          if (Math.abs(deltaX) < 4 && Math.abs(deltaY) < 4) return;
+          touchAxis = Math.abs(deltaX) >= Math.abs(deltaY) ? 'x' : 'y';
+        }
+
+        if (touchAxis === 'x') {
+          const nextLeft = touchStartLeft - deltaX;
+          scrollPane.scrollLeft = nextLeft;
+          if (frozenScroll) frozenScroll.scrollLeft = nextLeft;
+          event.preventDefault();
+        }
+      }, { passive: false });
+
+      const endTouchDrag = () => {
+        touchAxis = '';
+      };
+
+      frozenHost.addEventListener('touchend', endTouchDrag, { passive: true });
+      frozenHost.addEventListener('touchcancel', endTouchDrag, { passive: true });
     }
 
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
