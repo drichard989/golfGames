@@ -2,7 +2,7 @@
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
-    <title>Manito Golf Games v3.0.25</title>
+    <title>Manito Golf Games v3.0.26</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
     <!-- Aggressive cache prevention for iOS -->
@@ -24,7 +24,7 @@
 
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v3.0.25</h1>
+        <h1>Manito Golf Games v3.0.26</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
@@ -184,16 +184,16 @@
       <div class="scorecard-scroll">
         <table id="scorecard" aria-describedby="saveStatus">
           <thead>
-            <tr id="scorecardOverlayRow" class="scorecard-overlay-row" aria-hidden="true">
-              <th id="scorecardOverlayCell" colspan="23">
-                <div id="scorecardOverlayBand" class="scorecard-overlay-band"></div>
-              </th>
-            </tr>
             <tr id="holesHeader">
               <!-- JS fills Holes 1–18 + Out + In + Total + To Par + Net -->
             </tr>
           </thead>
           <tbody>
+            <tr id="scorecardOverlayRow" class="scorecard-overlay-row" aria-hidden="true">
+              <td id="scorecardOverlayCell" colspan="23">
+                <div id="scorecardOverlayBand" class="scorecard-overlay-band"></div>
+              </td>
+            </tr>
             <tr class="par-row" id="parRow">
               <!-- JS fills par values -->
             </tr>
