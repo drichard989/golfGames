@@ -1634,15 +1634,15 @@ tfoot td {
 /* Keep live-results option panels pinned near the top of the games scroll
    container so each game's table scrolls underneath them. */
 .game-section .live-results-panel:not([hidden]) {
-  --live-panel-overlap: 44px;
+  --live-panel-overlap: 20px;
   position: sticky;
   top: 0;
   z-index: 30;
   /* Solid bg so game rows do not show through behind the card while sticky. */
   background: var(--panel-alt);
-  /* Pull panel up into the header strip so toggle buttons sit over it. */
-  margin: calc(-1 * var(--live-panel-overlap)) 0 10px;
-  padding: calc(var(--live-panel-overlap) + 4px) 0 6px;
+  /* Pull panel slightly under the button row without adding spacer height. */
+  margin: calc(-1 * var(--live-panel-overlap)) 0 6px;
+  padding: 0;
 }
 
 /* Keep game table headers visible below any pinned live-results panel. */
@@ -1656,7 +1656,7 @@ tfoot td {
 
 @media (max-width: 640px) {
   .game-section .live-results-panel:not([hidden]) {
-    --live-panel-overlap: 40px;
+    --live-panel-overlap: 16px;
   }
 }
 

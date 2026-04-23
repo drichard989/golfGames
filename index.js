@@ -4603,14 +4603,13 @@
             section.style.setProperty('--game-live-header-top', '0px');
             return;
           }
-          const panelHeight = Math.max(0, Math.ceil(openLivePanel.getBoundingClientRect().height));
-          const panelStyles = getComputedStyle(openLivePanel);
-          const overlap = Math.max(0, Number.parseFloat(panelStyles.getPropertyValue('--live-panel-overlap')) || 0);
-
-          // The live panel includes top overlap padding so it can sit behind
-          // the toggle buttons. Subtract that overlap when offsetting table
-          // headers, otherwise headers are pushed too far down over data rows.
-          const visiblePanelHeight = Math.max(0, panelHeight - overlap);
+          // Use the rendered card/totals element height only, not wrapper
+          // overlap/margins, so table headers pin directly below live results.
+          const visibleCard = openLivePanel.firstElementChild;
+          const visiblePanelHeight = Math.max(
+            0,
+            Math.ceil((visibleCard || openLivePanel).getBoundingClientRect().height)
+          );
           section.style.setProperty('--game-live-header-top', `${visiblePanelHeight + 2}px`);
         });
       };
