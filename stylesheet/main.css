@@ -1232,6 +1232,37 @@ tr:last-child td {
   border-right: 2px solid rgba(255, 255, 255, 0.4) !important;
 }
 
+/* Keep summary columns stable even when values change from "—" to numbers */
+#scorecard th:nth-child(19),
+#scorecard td:nth-child(19),
+#scorecardFrozenTable th:nth-child(19),
+#scorecardFrozenTable td:nth-child(19),
+#scorecard th:nth-child(20),
+#scorecard td:nth-child(20),
+#scorecardFrozenTable th:nth-child(20),
+#scorecardFrozenTable td:nth-child(20),
+#scorecard th:nth-child(21),
+#scorecard td:nth-child(21),
+#scorecardFrozenTable th:nth-child(21),
+#scorecardFrozenTable td:nth-child(21),
+#scorecard th:nth-child(23),
+#scorecard td:nth-child(23),
+#scorecardFrozenTable th:nth-child(23),
+#scorecardFrozenTable td:nth-child(23) {
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
+}
+
+#scorecard th:nth-child(22),
+#scorecard td:nth-child(22),
+#scorecardFrozenTable th:nth-child(22),
+#scorecardFrozenTable td:nth-child(22) {
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+}
+
 /* Remove spinner buttons */
 .par-row input::-webkit-outer-spin-button,
 .par-row input::-webkit-inner-spin-button,
