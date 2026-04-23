@@ -4597,8 +4597,6 @@
       let livePanelOffsetRaf = null;
       const syncGameLivePanelOffsets = () => {
         livePanelOffsetRaf = null;
-        const gamesPanel = document.getElementById('gamesEntryPanel');
-        const gamesPanelTop = gamesPanel ? gamesPanel.getBoundingClientRect().top : 0;
         document.querySelectorAll('.game-section').forEach((section) => {
           const openLivePanel = section.querySelector('.live-results-panel:not([hidden])');
           if (!openLivePanel) {
@@ -4608,12 +4606,15 @@
           // Use the rendered card/totals element height only, not wrapper
           // overlap/margins, so table headers pin directly below live results.
           const visibleCard = openLivePanel.firstElementChild;
-          const cardRect = (visibleCard || openLivePanel).getBoundingClientRect();
+          const visiblePanelHeight = Math.max(
+            0,
+            Math.ceil((visibleCard || openLivePanel).getBoundingClientRect().height)
+          );
 
-          // Offset sticky headers to the exact live-card bottom within the
-          // Games scroll viewport so headers touch the card without gaps.
-          const stickyTop = Math.max(0, Math.ceil(cardRect.bottom - gamesPanelTop));
-          section.style.setProperty('--game-live-header-top', `${stickyTop}px`);
+          // Stable, scroll-independent header anchor: card height only.
+          // This keeps headers flush under live results instead of drifting
+          // into the table when the panel has not fully reached sticky state.
+          section.style.setProperty('--game-live-header-top', `${visiblePanelHeight}px`);
         });
       };
 
