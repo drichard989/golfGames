@@ -544,6 +544,23 @@ select:not(.select-plain):disabled {
   cursor: not-allowed;
 }
 
+/* Theme the opened option list where browser engines allow it. */
+select:not(.select-plain) option {
+  background-color: var(--panel);
+  color: var(--ink);
+}
+
+select:not(.select-plain) option:checked {
+  background: linear-gradient(var(--accent), var(--accent));
+  color: #ffffff;
+}
+
+select:not(.select-plain) option:hover,
+select:not(.select-plain) option:focus {
+  background-color: color-mix(in srgb, var(--accent) 16%, var(--panel));
+  color: var(--ink);
+}
+
 select:not(.select-plain) option {
   background: var(--panel);
   color: var(--ink);
