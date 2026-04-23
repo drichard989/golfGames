@@ -678,8 +678,15 @@
           ? `<span class="bss-bet-stroke" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>`
           : '';
         const multHtml = dbl ? `<span class="bss-bet-mult">${multLabel}</span>` : '';
+        // Derive stroke direction so we can tint the whole row on tablet
+        // widths (green = receiving a stroke, red = giving a stroke).
+        let strokeCls = '';
+        if (stroke && stroke.text) {
+          if (stroke.text.startsWith('-')) strokeCls = ' bss-bet-stroke-down';
+          else if (stroke.text.startsWith('+')) strokeCls = ' bss-bet-stroke-up';
+        }
         betItems.push(`
-          <div class="bss-bet-line${b>0?'':' bss-bet-empty'}${dbl?' bss-bet-dbl':''}">
+          <div class="bss-bet-line${b>0?'':' bss-bet-empty'}${dbl?' bss-bet-dbl':''}${strokeCls}">
             <span class="bss-bet-stroke-slot">${strokeHtml}</span>
             <span class="bss-bet-name">${nm}</span>
             <span class="bss-bet-amt">${amt}</span>

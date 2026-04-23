@@ -3316,19 +3316,25 @@ input[type="text"] {
     min-width: 36px !important;
   }
 
-  /* Banker result rows inside the mobile inline summary: result now sits
-     on its own full-width row below the grid, so each player's line has
-     the full table width — keep them on one line, no wrap. */
-  .bss-result-block .banker-result-row {
-    flex-wrap: nowrap;
-    padding: 2px 4px;
-    white-space: nowrap;
-    gap: 6px;
+  /* Banker result rows inside the mobile inline summary: result sits on
+     its own row below the grid, and must render exactly like desktop —
+     full-width colored row (green / yellow / red), player name on the
+     left, score + payout on the right, one line per player. */
+  .bss-result-block {
+    display: block;
+    width: 100%;
   }
-  .bss-result-block .banker-result-right {
+  .bss-result-block .banker-result-row {
+    display: flex;
     flex-wrap: nowrap;
-    min-width: 0;
-    flex: 0 0 auto;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    gap: 6px;
+    white-space: nowrap;
+    box-sizing: border-box;
   }
   .bss-result-block .banker-result-name {
     flex: 1 1 auto;
@@ -3336,12 +3342,28 @@ input[type="text"] {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-right: 0;
+  }
+  .bss-result-block .banker-result-right {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto;
+    min-width: 0;
   }
   .bss-result-block .banker-result-score,
   .bss-result-block .banker-result-payout,
   .bss-result-block .banker-result-mult {
     white-space: nowrap;
     flex: 0 0 auto;
+  }
+  .bss-result-block .banker-result-summary {
+    padding: 3px 6px;
+    font-size: 13px;
   }
 }
 
@@ -4221,9 +4243,8 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 }
 .bss-bet-line > .bss-bet-stroke-slot { padding-left: 6px; }
 .bss-bet-line > .bss-bet-mult-slot { padding-right: 6px; }
-.bss-bet-dbl > * {
-  background: rgba(240, 173, 78, 0.08);
-}
+/* Previously tinted doubled rows orange — removed per product decision.
+   The 2× button inside .bss-bet-mult-slot is a sufficient indicator. */
 .bss-bet-name {
   font-weight: 600;
   white-space: nowrap;
@@ -4334,6 +4355,26 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
     border-top: 1px solid var(--line);
   }
   .bss-col-result .bss-col-label { display: none; }
+
+  /* Reclaim room for full player names: hide the standalone stroke pill
+     and instead tint the name + amount cells (green = receiving stroke,
+     red = giving stroke via plus handicap). */
+  .bss-bet-list {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  .bss-bet-stroke-slot { display: none; }
+  .bss-bet-line > .bss-bet-name { padding-left: 6px; }
+
+  .bss-bet-stroke-down > .bss-bet-name,
+  .bss-bet-stroke-down > .bss-bet-amt {
+    background: rgba(0, 188, 140, 0.14);
+    color: var(--accent);
+  }
+  .bss-bet-stroke-up > .bss-bet-name,
+  .bss-bet-stroke-up > .bss-bet-amt {
+    background: rgba(220, 53, 69, 0.14);
+    color: var(--danger, #dc3545);
+  }
 }
 
 /* Narrow phones ≤420px: handled by block earlier in file. */
