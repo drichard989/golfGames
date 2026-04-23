@@ -4594,27 +4594,6 @@
     document.getElementById('toggleWolf')?.addEventListener('click', () => setGameTab('wolf'));
 
     const bindGameOptionsToggles = () => {
-      const syncBankerLivePanelPin = () => {
-        const panel = document.getElementById('bankerLiveResultsPanel');
-        const section = document.getElementById('bankerSection');
-        const shell = document.querySelector('.top-pinned-shell');
-        if (!panel || !section || !shell) return;
-
-        if (panel.hidden) {
-          panel.style.removeProperty('top');
-          section.style.removeProperty('--banker-live-offset');
-          return;
-        }
-
-        const shellRect = shell.getBoundingClientRect();
-        const topOffset = Math.max(0, Math.round(shellRect.bottom));
-        panel.style.top = `${topOffset}px`;
-
-        // Reserve vertical space so fixed/sticky panel does not overlap table rows.
-        const panelHeight = Math.max(0, Math.round(panel.getBoundingClientRect().height));
-        section.style.setProperty('--banker-live-offset', `${panelHeight + 8}px`);
-      };
-
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
       toggles.forEach((toggleBtn) => {
         const targetId = toggleBtn.getAttribute('data-target');
@@ -4627,9 +4606,6 @@
           panel.hidden = !isOpen;
           toggleBtn.classList.toggle('is-open', isOpen);
           toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-          if (targetId === 'bankerLiveResultsPanel') {
-            requestAnimationFrame(syncBankerLivePanelPin);
-          }
         };
 
         syncState(!panel.hidden);
@@ -4638,10 +4614,6 @@
           Storage.saveDebounced();
         });
       });
-
-      window.addEventListener('resize', () => requestAnimationFrame(syncBankerLivePanelPin), { passive: true });
-      window.addEventListener('orientationchange', () => requestAnimationFrame(syncBankerLivePanelPin), { passive: true });
-      requestAnimationFrame(syncBankerLivePanelPin);
     };
     bindGameOptionsToggles();
     
