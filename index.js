@@ -745,10 +745,6 @@
     }
     rememberPrimaryTabScroll(currentTab);
 
-    if (which === 'games' && !getActiveGameTab()) {
-      setGameTab(DEFAULT_GAME_TAB, { save: false, activatePrimary: false });
-    }
-
     // Collapse the header when on Games tab to maximise panel real estate.
     // Must happen before syncPrimaryTabUi so the new maxHeight calculation
     // already sees the header as gone.
