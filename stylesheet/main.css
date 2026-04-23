@@ -4441,6 +4441,58 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
     color: var(--danger, #dc3545);
   }
+
+  /* Result rows full-width, single-line. Same logic as the ≤768px block —
+     duplicated here so the 769–899 tablet range doesn't fall back to the
+     base wrapping rules from `.bss-result-block > *`. */
+  .bss-result-block {
+    display: block;
+    width: 100%;
+  }
+  .bss-result-block .banker-result-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 3px 6px;
+    margin-bottom: 2px;
+    gap: 6px;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .bss-result-block .banker-result-name {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap !important;
+    word-break: normal !important;
+    font-weight: 600;
+    margin-right: 0;
+  }
+  .bss-result-block .banker-result-right {
+    display: flex;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    gap: 6px;
+    flex: 0 0 auto !important;
+  }
+  .bss-result-block .banker-result-score,
+  .bss-result-block .banker-result-payout,
+  .bss-result-block .banker-result-mult {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    flex: 0 0 auto;
+  }
+  .bss-result-block .banker-result-summary {
+    padding: 3px 6px;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* Narrow phones ≤420px: handled by block earlier in file. */
