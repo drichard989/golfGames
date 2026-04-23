@@ -871,12 +871,10 @@
     setTimeout(ensureFallbackMode, 200);
     setTimeout(ensureFallbackMode, 700);
 
-    // Expose so syncRowHeights() can call after DOM rebuilds
+    // Expose so syncRowHeights() can call after DOM rebuilds / player count changes.
+    // This re-checks whether native sticky works at the current layout size.
     window._iosStickyRefresh = () => {
-      refreshCells();
-      if (fallbackEnabled) {
-        requestAnimationFrame(applyTranslate);
-      }
+      ensureFallbackMode();
     };
   }
 
