@@ -1618,7 +1618,7 @@ tfoot td {
 }
 
 .live-results-table {
-  width: 100%;
+  width: auto;
   min-width: 100%;
   border-collapse: collapse;
   table-layout: auto;
@@ -1628,7 +1628,7 @@ tfoot td {
 .live-results-table td {
   border-bottom: 2px solid var(--line);
   text-align: center;
-  padding: 4px 6px;
+  padding: 4px 10px;
   white-space: nowrap;
   font-size: var(--text-md);
 }
@@ -1652,6 +1652,8 @@ tfoot td {
   background: var(--panel);
   z-index: 1;
   width: 1px;
+  padding-right: 14px;
+  box-shadow: 2px 0 0 0 var(--line);
 }
 
 .live-results-title-row .live-results-label {
@@ -1666,7 +1668,7 @@ tfoot td {
 @media (max-width: 600px) {
   .live-results-table th,
   .live-results-table td {
-    padding: 2px 4px;
+    padding: 2px 8px;
     font-size: var(--text-sm);
   }
   .live-results-title-row th {
@@ -1704,7 +1706,7 @@ tfoot td {
 }
 
 .banker-header-totals-table {
-  width: 100%;
+  width: auto;
   min-width: 100%;
   border-collapse: collapse;
   table-layout: auto;
@@ -1714,7 +1716,7 @@ tfoot td {
 .banker-header-totals-table td {
   border-bottom: 2px solid var(--line);
   text-align: center;
-  padding: 4px 6px;
+  padding: 4px 10px;
   white-space: nowrap;
   font-size: var(--text-md);
 }
@@ -1742,12 +1744,14 @@ tfoot td {
   background: var(--panel);
   z-index: 1;
   width: 1px;
+  padding-right: 14px;
+  box-shadow: 2px 0 0 0 var(--line);
 }
 
 @media (max-width: 600px) {
   .banker-header-totals-table th,
   .banker-header-totals-table td {
-    padding: 2px 4px;
+    padding: 2px 8px;
     font-size: var(--text-sm);
   }
   .banker-header-title-row th {
@@ -3864,6 +3868,21 @@ body.junk-sheet-active .junk-cell { gap: 2px; }
 .junk-sheet-chip.is-auto {
   opacity: 0.75;
   cursor: not-allowed;
+}
+
+/* Light-theme override: the global `:root[data-theme="light"] button` rule wins
+   by specificity, so re-assert the active chip styling here. */
+:root[data-theme="light"] .junk-sheet-chip[data-active="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+:root[data-theme="light"] .junk-sheet-chip[data-active="true"]:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+:root[data-theme="light"] .junk-sheet-chip[data-active="true"] .junk-sheet-chip-pts {
+  color: rgba(255,255,255,0.85);
 }
 
 .junk-sheet-chip-emoji { font-size: 20px; line-height: 1; }
