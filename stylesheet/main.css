@@ -947,7 +947,7 @@ body.mode-score #main-scorecard {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
-  overscroll-behavior: auto;
+  overscroll-behavior: none;
   scrollbar-gutter: stable;
 }
 
@@ -961,8 +961,8 @@ body.mode-score #main-scorecard {
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
-  overscroll-behavior: auto;
-  overscroll-behavior-x: auto;
+  overscroll-behavior: none;
+  overscroll-behavior-x: none;
   scroll-behavior: auto;
 }
 
