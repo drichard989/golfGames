@@ -762,6 +762,7 @@
     const scrollPane = document.querySelector('.scorecard-scroll');
     const frozenHost = document.getElementById('scorecardFrozenHost');
     const frozenScroll = document.getElementById('scorecardFrozenScroll');
+    const frozenProxy = document.getElementById('scorecardFrozenScrollProxy');
     if (!fixedPane || !scrollPane) return;
 
     let syncingVertical = false;
@@ -778,19 +779,21 @@
 
     scrollPane.addEventListener('scroll', () => {
       syncScrollTop(scrollPane, fixedPane);
-      if (frozenScroll) {
+      if (frozenScroll || frozenProxy) {
         if (syncingHorizontal) return;
         syncingHorizontal = true;
-        frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        if (frozenScroll) frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        if (frozenProxy) frozenProxy.scrollLeft = scrollPane.scrollLeft;
         syncingHorizontal = false;
       }
     }, { passive: true });
 
-    if (frozenScroll) {
-      frozenScroll.addEventListener('scroll', () => {
+    if (frozenProxy) {
+      frozenProxy.addEventListener('scroll', () => {
         if (syncingHorizontal) return;
         syncingHorizontal = true;
-        scrollPane.scrollLeft = frozenScroll.scrollLeft;
+        scrollPane.scrollLeft = frozenProxy.scrollLeft;
+        if (frozenScroll) frozenScroll.scrollLeft = frozenProxy.scrollLeft;
         syncingHorizontal = false;
       }, { passive: true });
     }
@@ -799,9 +802,8 @@
       const applyHorizontalDelta = (delta) => {
         if (!delta) return;
         scrollPane.scrollLeft += delta;
-        if (frozenScroll) {
-          frozenScroll.scrollLeft = scrollPane.scrollLeft;
-        }
+        if (frozenScroll) frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        if (frozenProxy) frozenProxy.scrollLeft = scrollPane.scrollLeft;
       };
 
       // Desktop mouse wheel emits vertical delta in this area; map it to horizontal pan.
@@ -823,6 +825,8 @@
     const scrollWrap = document.getElementById('scorecardFrozenScroll');
     const fixedTarget = document.getElementById('scorecardFrozenFixed');
     const scrollTarget = document.getElementById('scorecardFrozenTable');
+    const scrollProxy = document.getElementById('scorecardFrozenScrollProxy');
+    const scrollProxyTrack = document.getElementById('scorecardFrozenScrollProxyTrack');
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
     const fixedSource = document.getElementById('scorecardFixed');
@@ -943,8 +947,15 @@
     const scrollTableWidth = scrollSource.scrollWidth;
     scrollTarget.style.width = `${scrollTableWidth}px`;
     scrollTarget.style.minWidth = `${scrollTableWidth}px`;
+    if (scrollProxyTrack) {
+      scrollProxyTrack.style.width = `${scrollTableWidth}px`;
+      scrollProxyTrack.style.minWidth = `${scrollTableWidth}px`;
+    }
 
     scrollWrap.scrollLeft = scrollPane.scrollLeft;
+    if (scrollProxy) {
+      scrollProxy.scrollLeft = scrollPane.scrollLeft;
+    }
   }
 
   function setupGamesPanelScrollSync() {

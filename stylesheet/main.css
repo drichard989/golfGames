@@ -925,9 +925,19 @@ body.mode-score .entry-switcher {
 
 .scorecard-frozen-scroll {
   flex: 1 1 auto;
+  overflow: hidden;
+  overflow-y: hidden;
+  position: relative;
+  background: var(--panel);
+  pointer-events: none;
+}
+
+.scorecard-frozen-scroll-proxy {
+  position: absolute;
+  inset: 0;
   overflow-x: auto;
   overflow-y: hidden;
-  background: var(--panel);
+  background: transparent;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
   overscroll-behavior-x: contain;
@@ -936,10 +946,14 @@ body.mode-score .entry-switcher {
   -ms-overflow-style: none;
 }
 
-.scorecard-frozen-scroll::-webkit-scrollbar {
+.scorecard-frozen-scroll-proxy::-webkit-scrollbar {
   display: none;
   width: 0;
   height: 0;
+}
+
+#scorecardFrozenScrollProxyTrack {
+  height: 1px;
 }
 
 #scorecardFrozenFixed,
