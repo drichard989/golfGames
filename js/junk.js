@@ -443,7 +443,24 @@
   function updateJunk(){
     const tbody = document.getElementById('junkBody');
     if(!tbody) return;
-    
+
+    // Detect player-count drift: if the table was last built for a different
+    // number of players (e.g. someone tapped the − button on a player row),
+    // rebuild header/body/footer here so the table stays in sync. Other
+    // callers (player-add, course-switch, name-edit) all funnel through
+    // AppManager.recalcGames() -> Junk.update(), so this is the single
+    // chokepoint that keeps junk's view of the roster honest.
+    const playerCount = getPlayerCount();
+    const thead = document.querySelector('#junkTable thead tr');
+    const headerPlayerCells = thead ? Math.max(0, thead.children.length - 1) : 0;
+    if (playerCount !== headerPlayerCells) {
+      rebuildJunkTableHeader();
+      buildJunkTable();
+      refreshJunkHeaderNames();
+      // Re-init achievements UI for the new column set on the next tick.
+      setTimeout(() => { try { initJunkAchievements(); } catch (e) {} }, 0);
+    }
+
     // Check if achievements are active (cells are enhanced)
     const hasEnhancedCells = tbody.querySelector('.junk-cell') !== null;
     
