@@ -3209,6 +3209,77 @@ input[type="text"] {
   }
 }
 
+/* =========================================================================
+   Mobile compaction for game tables (≤600px)
+   Reduces hardcoded min-widths and cell padding on Vegas/Skins/Junk/Hi-Lo/
+   Banker tables so users don't have to scroll horizontally. Reversible: delete
+   this block to restore the wider desktop layout.
+   ========================================================================= */
+@media (max-width: 600px) {
+  .vegas-table,
+  .banker-table,
+  .skins-table,
+  .junk-table,
+  .hilo-table {
+    width: 100%;
+    min-width: 0;
+  }
+  .vegas-table th,
+  .vegas-table td,
+  .banker-table th,
+  .banker-table td,
+  .skins-table th,
+  .skins-table td,
+  .junk-table th,
+  .junk-table td {
+    padding: 3px 4px;
+    font-size: var(--text-sm);
+  }
+  .vegas-table tfoot td,
+  .banker-table tfoot td,
+  .skins-table tfoot td,
+  .junk-table tfoot td {
+    padding: 4px 6px;
+    font-size: var(--text-sm);
+  }
+  .vegas-table tfoot td:first-child,
+  .banker-table tfoot td:first-child,
+  .skins-table tfoot td:first-child,
+  .junk-table tfoot td:first-child {
+    padding-left: 6px;
+  }
+  /* Shrink the hole-number column */
+  .vegas-table thead th:first-child,
+  .banker-table thead th:first-child,
+  .skins-table thead th:first-child,
+  .junk-table thead th:first-child,
+  .vegas-table tbody td:first-child,
+  .banker-table tbody td:first-child,
+  .skins-table tbody td:first-child,
+  .junk-table tbody td:first-child {
+    width: 28px !important;
+    min-width: 28px !important;
+    padding-left: 2px !important;
+    padding-right: 2px !important;
+  }
+}
+
+/* Narrow phones (≤420px): tighten compact banker summary grid further so
+   the inline readout fits without horizontal scroll. */
+@media (max-width: 420px) {
+  .bss-grid {
+    gap: 1px 4px;
+    font-size: 10.5px;
+  }
+  .bss-col-label { font-size: 8px; }
+  .bss-bet-list { column-gap: 4px; }
+  .bss-bet-line > * { padding: 2px 3px; }
+  .bss-bet-line > .bss-bet-name { padding-left: 4px; }
+  .bss-bet-line > .bss-bet-mult-slot { padding-right: 4px; }
+  .bss-bet-amt { min-width: 28px; }
+  .banker-sheet-summary-cell { padding: 4px 6px !important; }
+}
+
 /* =========================
    Light Theme — based on Bootswatch Flatly
    ========================= */
