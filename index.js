@@ -804,11 +804,15 @@
 
     if (overlayHeight <= 0) {
       overlayBand.style.height = '0px';
+      overlayBand.style.transform = 'translateY(0)';
       overlayBand.hidden = true;
       return;
     }
 
     overlayBand.style.height = `${overlayHeight}px`;
+    // Overlay row lives in the main score table body; lift it upward so it
+    // sits directly over the visible header clone (holes/par/hcp block).
+    overlayBand.style.transform = `translateY(-${overlayHeight}px)`;
     overlayBand.hidden = false;
   }
 
