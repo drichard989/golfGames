@@ -345,34 +345,11 @@
             </tr>
           </thead>
           <tbody id="vegasBody"></tbody>
-          <tfoot>
-            <tr>
-              <td>
-                <strong>Totals</strong>
-              </td>
-              <td id="vegasTotalA">—</td>
-              <td id="vegasTotalB">—</td>
-              <td></td>
-              <td id="vegasPtsA">—</td>
-              <td id="vegasPtsB">—</td>
-            </tr>
-            <tr>
-              <td>
-                <strong>Dollars</strong>
-              </td>
-              <td id="vegasDollarA">—</td>
-              <td id="vegasDollarB">—</td>
-              <td></td>
-              <td></td>
-            </tr>
-            <tr id="vegasGameBreakdown" style="display:none;">
-              <td>
-                <strong>Games</strong>
-              </td>
-              <td colspan="5" id="vegasGameBreakdownData" style="font-size: 0.9em; padding: 8px;">—</td>
-            </tr>
-          </tfoot>
         </table>
+      </div>
+      <div id="vegasResultsBottom" class="live-results-card vegas-bottom-results" aria-live="polite"></div>
+      <div id="vegasGameBreakdown" class="small vegas-rotation-breakdown" hidden>
+        <strong>Games:</strong> <span id="vegasGameBreakdownData">—</span>
       </div>
     </section>
     <!-- BANKER GAME -->
@@ -435,9 +412,9 @@
             </tr>
           </thead>
           <tbody id="bankerBody"></tbody>
-          <tfoot></tfoot>
         </table>
       </div>
+      <div id="bankerFooterTotals" class="banker-header-totals" aria-live="polite"></div>
     </section>
     <!-- HI-LO GAME -->
     <section class="game-section" id="hiloSection" role="tabpanel" aria-labelledby="toggleHilo" aria-hidden="true">
@@ -550,28 +527,9 @@
             </tr>
           </thead>
           <tbody id="junkBody"></tbody>
-          <tfoot>
-            <tr>
-              <td>
-                <strong>Totals</strong>
-              </td>
-              <td id="junkTotP1">—</td>
-              <td id="junkTotP2">—</td>
-              <td id="junkTotP3">—</td>
-              <td id="junkTotP4">—</td>
-            </tr>
-            <tr>
-              <td>
-                <strong>Net Totals</strong>
-              </td>
-              <td id="junkNetP1">—</td>
-              <td id="junkNetP2">—</td>
-              <td id="junkNetP3">—</td>
-              <td id="junkNetP4">—</td>
-            </tr>
-          </tfoot>
         </table>
       </div>
+      <div id="junkResultsBottom" class="live-results-card junk-bottom-results" aria-live="polite"></div>
     </section>
     <!-- WOLF GAME -->
     <section class="game-section" id="wolfSection" role="tabpanel" aria-labelledby="toggleWolf" aria-hidden="true">

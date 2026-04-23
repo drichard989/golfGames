@@ -1622,6 +1622,23 @@ tfoot td {
   border-bottom: none;
 }
 
+/* Persistent bottom results cards (Vegas, Junk) + Banker bottom totals */
+.vegas-bottom-results,
+.junk-bottom-results,
+#bankerFooterTotals {
+  margin: 10px 0 0;
+}
+
+.vegas-rotation-breakdown {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel-alt);
+  color: var(--ink);
+  line-height: 1.4;
+}
+
 .banker-header-totals {
   border: 2px solid var(--line);
   border-radius: var(--radius-lg);
