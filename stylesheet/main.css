@@ -1650,8 +1650,11 @@ tfoot td {
   left: 0;
   background: var(--panel);
   z-index: 1;
-  width: 1px;
-  padding-right: 14px;
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+  padding-left: 12px;
+  padding-right: 12px;
   box-shadow: 2px 0 0 0 var(--line);
 }
 
@@ -1741,8 +1744,11 @@ tfoot td {
   left: 0;
   background: var(--panel);
   z-index: 1;
-  width: 1px;
-  padding-right: 14px;
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+  padding-left: 12px;
+  padding-right: 12px;
   box-shadow: 2px 0 0 0 var(--line);
 }
 
