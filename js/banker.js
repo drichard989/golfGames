@@ -50,7 +50,9 @@
     betInput: (player, hole) => `banker_bet_p${player}_h${hole}`,
     playerDouble: (player, hole) => `banker_pdouble_p${player}_h${hole}`,
     totalCell: (player) => `banker_total_p${player}`,
-    footerName: (player) => `banker_name_p${player}`
+    footerName: (player) => `banker_name_p${player}`,
+    headerTotalCell: (player) => `banker_header_total_p${player}`,
+    headerName: (player) => `banker_header_name_p${player}`
   };
 
   function getPlayerNames() {
@@ -809,12 +811,22 @@
       // Update totals footer
       for (let p = 0; p < playerCount; p++) {
         const totalCell = document.getElementById(DOM_IDS.totalCell(p));
+        const headerTotalCell = document.getElementById(DOM_IDS.headerTotalCell(p));
+        const total = playerTotals[p] || 0;
+        const totalText = total >= 0 ? `+$${total.toFixed(2)}` : `-$${Math.abs(total).toFixed(2)}`;
+
         if (totalCell) {
-          const total = playerTotals[p] || 0;
-          totalCell.textContent = total >= 0 ? `+$${total.toFixed(2)}` : `-$${Math.abs(total).toFixed(2)}`;
+          totalCell.textContent = totalText;
           totalCell.classList.remove('banker-total-positive', 'banker-total-negative');
           if (total > 0) totalCell.classList.add('banker-total-positive');
           if (total < 0) totalCell.classList.add('banker-total-negative');
+        }
+
+        if (headerTotalCell) {
+          headerTotalCell.textContent = totalText;
+          headerTotalCell.classList.remove('banker-total-positive', 'banker-total-negative');
+          if (total > 0) headerTotalCell.classList.add('banker-total-positive');
+          if (total < 0) headerTotalCell.classList.add('banker-total-negative');
         }
       }
       
@@ -1348,7 +1360,70 @@
         if (headerCell) {
           headerCell.textContent = names[p] || `P${p + 1}`;
         }
+
+        const compactHeaderCell = document.getElementById(DOM_IDS.headerName(p));
+        if (compactHeaderCell) {
+          compactHeaderCell.textContent = names[p] || `P${p + 1}`;
+        }
       }
+    },
+
+    /**
+     * Rebuild compact totals block shown in Banker section header.
+     */
+    rebuildHeaderTotals() {
+      const container = document.getElementById('bankerHeaderTotals');
+      if (!container) return;
+
+      container.innerHTML = '';
+      const playerCount = getPlayerCount();
+      const names = getPlayerNames();
+
+      const table = document.createElement('table');
+      table.className = 'banker-header-totals-table';
+
+      const tbody = document.createElement('tbody');
+
+      const totalsRow = document.createElement('tr');
+      totalsRow.className = 'banker-header-title-row';
+      const totalsCell = document.createElement('th');
+      totalsCell.colSpan = playerCount + 1;
+      totalsCell.textContent = 'Totals';
+      totalsRow.appendChild(totalsCell);
+      tbody.appendChild(totalsRow);
+
+      const playerRow = document.createElement('tr');
+      playerRow.className = 'banker-header-data-row';
+      const playerLabel = document.createElement('td');
+      playerLabel.textContent = 'Player';
+      playerLabel.className = 'banker-footer-label';
+      playerRow.appendChild(playerLabel);
+      for (let p = 0; p < playerCount; p++) {
+        const nameCell = document.createElement('td');
+        nameCell.id = DOM_IDS.headerName(p);
+        nameCell.textContent = names[p] || `P${p + 1}`;
+        nameCell.className = 'banker-footer-player';
+        playerRow.appendChild(nameCell);
+      }
+      tbody.appendChild(playerRow);
+
+      const netRow = document.createElement('tr');
+      netRow.className = 'banker-header-data-row';
+      const netLabel = document.createElement('td');
+      netLabel.textContent = 'Net';
+      netLabel.className = 'banker-footer-label';
+      netRow.appendChild(netLabel);
+      for (let p = 0; p < playerCount; p++) {
+        const totalCell = document.createElement('td');
+        totalCell.id = DOM_IDS.headerTotalCell(p);
+        totalCell.textContent = '$0.00';
+        totalCell.className = 'banker-footer-total';
+        netRow.appendChild(totalCell);
+      }
+      tbody.appendChild(netRow);
+
+      table.appendChild(tbody);
+      container.appendChild(table);
     },
 
     /**
@@ -1415,6 +1490,7 @@
       // Only do full init once
       if (!this._initialized) {
         this.buildTable();
+        this.rebuildHeaderTotals();
         this.rebuildFooter();
         this.updateBetInputs();
         // Refresh names multiple times to ensure they're loaded from scorecard
@@ -1522,6 +1598,7 @@
       const bankerSection = document.getElementById('bankerSection');
       if (bankerSection && bankerSection.classList.contains('open')) {
         this.buildTable();
+        this.rebuildHeaderTotals();
         this.rebuildFooter();
         this.updateBetInputs();
         this.refreshPlayerNames();

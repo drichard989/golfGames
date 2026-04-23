@@ -213,6 +213,44 @@
     colB.textContent = fmtTeam(teams.B);
   }
 
+  function renderVegasLiveResults(data) {
+    const container = document.getElementById('vegasLiveResults');
+    if (!container) return;
+
+    const teamAName = document.getElementById('vegasColA')?.textContent?.trim() || 'Team A';
+    const teamBName = document.getElementById('vegasColB')?.textContent?.trim() || 'Team B';
+    const fmtMoney = (v) => {
+      const n = Number(v) || 0;
+      const abs = Math.abs(n).toFixed(2);
+      if (n > 0) return `+$${abs}`;
+      if (n < 0) return `-$${abs}`;
+      return '$0.00';
+    };
+    const fmtPts = (v) => {
+      const n = Number(v) || 0;
+      if (n > 0) return `+${n}`;
+      if (n < 0) return `${n}`;
+      return '0';
+    };
+
+    if (!data?.valid) {
+      container.innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = `
+      <table class="live-results-table" aria-label="Live Vegas results">
+        <tbody>
+          <tr class="live-results-title-row"><th colspan="3">Totals</th></tr>
+          <tr class="live-results-data-row"><td class="live-results-label">Team</td><td>${teamAName}</td><td>${teamBName}</td></tr>
+          <tr class="live-results-data-row"><td class="live-results-label">Score</td><td>${data.totalA ?? '—'}</td><td>${data.totalB ?? '—'}</td></tr>
+          <tr class="live-results-data-row"><td class="live-results-label">Points</td><td class="${(Number(data.ptsA) || 0) > 0 ? 'banker-total-positive' : (Number(data.ptsA) || 0) < 0 ? 'banker-total-negative' : ''}">${fmtPts(data.ptsA)}</td><td class="${(Number(data.ptsB) || 0) > 0 ? 'banker-total-positive' : (Number(data.ptsB) || 0) < 0 ? 'banker-total-negative' : ''}">${fmtPts(data.ptsB)}</td></tr>
+          <tr class="live-results-data-row"><td class="live-results-label">Dollars</td><td class="${(Number(data.dollarsA) || 0) > 0 ? 'banker-total-positive' : (Number(data.dollarsA) || 0) < 0 ? 'banker-total-negative' : ''}">${fmtMoney(data.dollarsA)}</td><td class="${(Number(data.dollarsB) || 0) > 0 ? 'banker-total-positive' : (Number(data.dollarsB) || 0) < 0 ? 'banker-total-negative' : ''}">${fmtMoney(data.dollarsB)}</td></tr>
+        </tbody>
+      </table>
+    `;
+  }
+
   // =============================================================================
   // VEGAS GAME LOGIC
   // =============================================================================
@@ -417,6 +455,7 @@ const Vegas = {
       if(db) db.textContent = '—';
       applyVegasTone(da, NaN);
       applyVegasTone(db, NaN);
+      renderVegasLiveResults({ valid: false });
       return;
     }
     if(warn) warn.hidden=true;
@@ -539,6 +578,8 @@ const Vegas = {
     const tb = $(ids.vegasTotalB);
     if(ta) ta.textContent=data.totalA||"—";
     if(tb) tb.textContent=data.totalB||"—";
+
+    renderVegasLiveResults(data);
   },
   // Internal helpers
   _teamPair(players, holeIdx, useNet, netHcpMode = 'playOffLow') {
