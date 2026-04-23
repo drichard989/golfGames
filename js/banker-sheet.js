@@ -146,14 +146,88 @@
     const cell = document.getElementById(DOM_IDS.resultCell(h));
     return cell ? (cell.textContent || '—').trim() : '—';
   }
+
+  function getHcpMode(){
+    const activeBtn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+    return activeBtn?.dataset.value || 'rawHandicap';
+  }
+
+  function getCourseHandicapByPlayer(){
+    const playerCount = getPlayerCount();
+    const rows = document.querySelectorAll('#scorecardFixed .player-row');
+    const handicaps = [];
+    for (let p = 0; p < playerCount; p++) {
+      const chInput = rows[p]?.querySelector('.ch-input');
+      const ch = (typeof window.getActualHandicapValue === 'function'
+        ? window.getActualHandicapValue(chInput)
+        : Number(chInput?.value)) || 0;
+      handicaps.push(ch);
+    }
+    return handicaps;
+  }
+
+  function getAdjustedHandicapByPlayer(){
+    const handicaps = getCourseHandicapByPlayer();
+    if (!handicaps.length) return handicaps;
+    const minCH = Math.min(...handicaps);
+    return handicaps.map((ch) => ch - minCH);
+  }
+
+  function getHoleHcpIndex(holeOneBased){
+    const arr = window.HCPMEN;
+    if (!Array.isArray(arr)) return 1;
+    const v = Number(arr[holeOneBased - 1]);
+    return Number.isFinite(v) && v > 0 ? v : 1;
+  }
+
+  function strokesOnHoleRawCH(rawCH, holeOneBased){
+    if (!rawCH) return 0;
+
+    const holeHcp = getHoleHcpIndex(holeOneBased);
+    if (!holeHcp) return 0;
+
+    if (rawCH < 0) {
+      const absCH = Math.abs(rawCH);
+      const base = Math.floor(absCH / 18);
+      const rem = absCH % 18;
+      const strokes = base + (holeHcp >= (19 - rem) ? 1 : 0);
+      return -strokes;
+    }
+
+    const base = Math.floor(rawCH / 18);
+    const rem = rawCH % 18;
+    return base + (holeHcp <= rem ? 1 : 0);
+  }
+
   function getStrokeIndicatorFor(p, h){
-    // The existing banker.js renders a .banker-inline-stroke-pill inside
-    // .banker-stroke-slot[data-player][data-hole] when net handicap is active.
-    const slot = document.querySelector(`.banker-stroke-slot[data-player="${p}"][data-hole="${h}"]`);
-    if (!slot) return null;
-    const pill = slot.querySelector('.banker-inline-stroke-pill');
-    if (!pill) return null;
-    return { text: pill.textContent || '', title: pill.title || '' };
+    const mode = getHcpMode();
+    if (mode === 'gross') return null;
+
+    const playerCount = getPlayerCount();
+    if (p < 0 || p >= playerCount) return null;
+
+    const rawByPlayer = mode === 'playOffLow'
+      ? getAdjustedHandicapByPlayer()
+      : getCourseHandicapByPlayer();
+
+    const rawCH = Number(rawByPlayer[p]) || 0;
+    if (rawCH === 0) return null;
+
+    const strokes = strokesOnHoleRawCH(rawCH, h);
+    if (strokes === 0) return null;
+
+    if (strokes > 0) {
+      return {
+        text: `-${strokes}`,
+        title: `Receives ${strokes} stroke${strokes > 1 ? 's' : ''} on this hole`
+      };
+    }
+
+    const give = Math.abs(strokes);
+    return {
+      text: `+${give}`,
+      title: `Gives ${give} stroke${give > 1 ? 's' : ''} on this hole (plus handicap)`
+    };
   }
 
   function ensureSheet(){
@@ -413,6 +487,7 @@
     bankerDblBtn.addEventListener('click', () => {
       toggleBankerDouble(hole);
       bankerDblBtn.dataset.active = isBankerDoubled(hole) ? 'true' : 'false';
+      updateLiveResult();
     });
     bankerDblBlock.appendChild(bankerDblBtn);
     // NOTE: appended later, after betsBlock
@@ -706,10 +781,15 @@
       const bankerName = escapeHtml(names[bankerIdx] || `P${bankerIdx+1}`);
       // Banker's own stroke status (green tint when receiving, red when giving)
       const bankerStroke = getStrokeIndicatorFor(bankerIdx, h);
+      const showTabletStrokeIndicator = window.matchMedia('(min-width: 481px)').matches;
       let bankerStrokeCls = '';
+      let bankerStrokeInlineHtml = '';
       if (bankerStroke && bankerStroke.text) {
         if (bankerStroke.text.startsWith('-')) bankerStrokeCls = ' bss-bet-stroke-down';
         else if (bankerStroke.text.startsWith('+')) bankerStrokeCls = ' bss-bet-stroke-up';
+        if (showTabletStrokeIndicator) {
+          bankerStrokeInlineHtml = ` <span class="bss-bet-stroke bss-bet-stroke-inline" title="${escapeHtml(bankerStroke.title)}">${escapeHtml(bankerStroke.text)}</span>`;
+        }
       }
 
       // Per-opponent bets table (aligned 4-column grid: name | stroke | amount | 2x).
@@ -722,8 +802,9 @@
         const stroke = getStrokeIndicatorFor(p, h);
         const nm = escapeHtml(names[p] || `P${p+1}`);
         const amt = b > 0 ? `$${b}` : '—';
-        const strokeHtml = stroke
-          ? `<span class="bss-bet-stroke" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>`
+        const strokeHtml = '';
+        const strokeInlineHtml = (showTabletStrokeIndicator && stroke)
+          ? ` <span class="bss-bet-stroke bss-bet-stroke-inline" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>`
           : '';
         const multHtml = dbl ? `<span class="bss-bet-mult">${multLabel}</span>` : '';
         // Derive stroke direction so we can tint the whole row on tablet
@@ -736,7 +817,7 @@
         betItems.push(`
           <div class="bss-bet-line${b>0?'':' bss-bet-empty'}${dbl?' bss-bet-dbl':''}${strokeCls}">
             <span class="bss-bet-stroke-slot">${strokeHtml}</span>
-            <span class="bss-bet-name">${nm}</span>
+            <span class="bss-bet-name">${nm}${strokeInlineHtml}</span>
             <span class="bss-bet-amt">${amt}</span>
             <span class="bss-bet-mult-slot">${multHtml}</span>
           </div>
@@ -809,7 +890,7 @@
         <div class="bss-grid">
           <div class="bss-col bss-col-banker${bankerStrokeCls}">
             <div class="bss-col-label">Banker</div>
-            <div class="bss-banker-name">🏦 ${bankerName}</div>
+            <div class="bss-banker-name">🏦 ${bankerName}${bankerStrokeInlineHtml}</div>
             <div class="bss-max-inline">Max $${maxBet || 0}</div>
           </div>
           <div class="bss-col bss-col-max">

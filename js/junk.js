@@ -103,8 +103,9 @@
 
   function getPlayerNames(){
     try {
-      const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
-      return nameInputs.map((input, i)=>{
+      const rows = getFixedPlayerRows();
+      return rows.map((row, i) => {
+        const input = row.querySelector('.name-edit');
         const v = input?.value?.trim();
         return v || `Player ${i+1}`;
       });
@@ -116,7 +117,7 @@
   
   function getPlayerCount(){
     try {
-      return document.querySelectorAll('.name-edit').length;
+      return getFixedPlayerRows().length;
     } catch (error) {
       console.error('[Junk] Error getting player count:', error);
       return 0;
@@ -865,8 +866,18 @@
    * @param {Array} achievements - Array of {player, hole, key}
    */
   function setAchievementState(achievements) {
+    const players = getPlayerCount();
     persistedAchievementState = Array.isArray(achievements)
-      ? achievements.map((achievement) => ({ ...achievement }))
+      ? achievements
+          .map((achievement) => ({ ...achievement }))
+          .filter((achievement) => {
+            const player = Number(achievement?.player);
+            const hole = Number(achievement?.hole);
+            const key = String(achievement?.key || '');
+            if (!Number.isInteger(player) || player < 0 || player >= players) return false;
+            if (!Number.isInteger(hole) || hole < 1 || hole > HOLES) return false;
+            return ACH.some((a) => a.id === key);
+          })
       : [];
     
     // First, ensure the table is built and enhanced
