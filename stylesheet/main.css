@@ -912,7 +912,7 @@ body.mode-score .entry-switcher {
   border-bottom: 1px solid var(--line);
   background: var(--panel);
   overflow: hidden;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .scorecard-frozen-fixed {
@@ -920,13 +920,17 @@ body.mode-score .entry-switcher {
   overflow: hidden;
   border-right: 2px solid rgba(168, 179, 191, 0.4);
   background: var(--panel);
+  pointer-events: none;
 }
 
 .scorecard-frozen-scroll {
   flex: 1 1 auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: hidden;
   background: var(--panel);
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
 }
 
 #scorecardFrozenFixed,
