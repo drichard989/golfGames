@@ -254,6 +254,10 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   min-width: 0;
 }
 
+/* Don't let the cloud status badge get clipped to just the ☁ emoji.
+   Always show "☁ Live" / "☁ Offline" in full. */
+.cloud-status-badge { flex: 0 0 auto; }
+
 .header-bar-badge {
   font-size: 12px;
   min-width: 0;
@@ -2959,11 +2963,10 @@ input[type="text"] {
   }
 
   .header-cloud-status-group {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 4px;
     flex: 1 1 auto;
     min-width: 0;
-    overflow: hidden;
   }
 
   .header-collapse-bar .cloud-status-badge,
