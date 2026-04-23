@@ -4645,26 +4645,78 @@
 
           const newCloneTable = document.createElement('table');
           newCloneTable.className = `${table.className} live-results-header-clone-table`;
-          newCloneTable.appendChild(sourceHead.cloneNode(true));
+
+          const sourceHeadRow = sourceHead.rows?.[0];
+          const sourceThsAll = sourceHeadRow ? Array.from(sourceHeadRow.cells) : [];
+          const sourceThsVisible = sourceThsAll.filter((th) => {
+            const cs = getComputedStyle(th);
+            return cs.display !== 'none' && cs.visibility !== 'hidden';
+          });
+
+          const cloneThead = document.createElement('thead');
+          const cloneRow = document.createElement('tr');
+
+          // Banker compact mode (mobile/tablet sheet view) displays 2 logical
+          // columns in the table body: Hole + summary/result. Mirror that here.
+          const isBankerCompact =
+            section.id === 'bankerSection' &&
+            document.body.classList.contains('banker-sheet-active');
+
+          if (isBankerCompact) {
+            const holeTh = document.createElement('th');
+            holeTh.textContent = (sourceThsAll[0]?.textContent || 'Hole').trim() || 'Hole';
+            cloneRow.appendChild(holeTh);
+
+            const resultTh = document.createElement('th');
+            resultTh.textContent = 'Result';
+            cloneRow.appendChild(resultTh);
+          } else {
+            const headersToClone = sourceThsVisible.length ? sourceThsVisible : sourceThsAll;
+            headersToClone.forEach((sourceTh) => {
+              const cloneTh = sourceTh.cloneNode(true);
+              cloneTh.style.removeProperty('display');
+              cloneRow.appendChild(cloneTh);
+            });
+          }
+
+          cloneThead.appendChild(cloneRow);
+          newCloneTable.appendChild(cloneThead);
 
           host.innerHTML = '';
           host.appendChild(newCloneTable);
           cloneTable = newCloneTable;
 
-          const sourceThs = Array.from(sourceHead.querySelectorAll('th'));
           const cloneThs = Array.from(cloneTable.querySelectorAll('th'));
-          sourceThs.forEach((sourceTh, idx) => {
-            const width = Math.ceil(sourceTh.getBoundingClientRect().width);
-            const cloneTh = cloneThs[idx];
-            if (!cloneTh || width <= 0) return;
-            cloneTh.style.width = `${width}px`;
-            cloneTh.style.minWidth = `${width}px`;
-            cloneTh.style.maxWidth = `${width}px`;
-          });
 
           const tableWidth = Math.ceil(table.getBoundingClientRect().width);
           if (tableWidth > 0) {
             cloneTable.style.width = `${tableWidth}px`;
+          }
+
+          if (isBankerCompact) {
+            const holeWidth = Math.max(0, Math.ceil(sourceThsAll[0]?.getBoundingClientRect().width || 0));
+            if (cloneThs[0] && holeWidth > 0) {
+              cloneThs[0].style.width = `${holeWidth}px`;
+              cloneThs[0].style.minWidth = `${holeWidth}px`;
+              cloneThs[0].style.maxWidth = `${holeWidth}px`;
+            }
+
+            if (cloneThs[1] && tableWidth > 0 && holeWidth > 0) {
+              const resultWidth = Math.max(0, tableWidth - holeWidth);
+              cloneThs[1].style.width = `${resultWidth}px`;
+              cloneThs[1].style.minWidth = `${resultWidth}px`;
+              cloneThs[1].style.maxWidth = `${resultWidth}px`;
+            }
+          } else {
+            const headersForWidth = sourceThsVisible.length ? sourceThsVisible : sourceThsAll;
+            headersForWidth.forEach((sourceTh, idx) => {
+              const width = Math.ceil(sourceTh.getBoundingClientRect().width);
+              const cloneTh = cloneThs[idx];
+              if (!cloneTh || width <= 0) return;
+              cloneTh.style.width = `${width}px`;
+              cloneTh.style.minWidth = `${width}px`;
+              cloneTh.style.maxWidth = `${width}px`;
+            });
           }
 
           if (wrap) {
