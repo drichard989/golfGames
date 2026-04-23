@@ -4161,6 +4161,29 @@
   // =============================================================================
   // INITIALIZATION & EVENT WIRING
   // =============================================================================
+
+  async function syncDisplayedAppVersion() {
+    const APP_NAME = 'Golf Games';
+    try {
+      const response = await fetch('sw.js', { cache: 'no-store' });
+      if (!response.ok) return;
+
+      const swSource = await response.text();
+      const match = swSource.match(/CACHE_VERSION\s*=\s*['"]v?([0-9]+\.[0-9]+\.[0-9]+)['"]/i);
+      if (!match) return;
+
+      const version = `v${match[1]}`;
+      const titleText = `${APP_NAME} ${version}`;
+      document.title = titleText;
+
+      const heading = document.querySelector('header .header-title-row h1');
+      if (heading) {
+        heading.textContent = titleText;
+      }
+    } catch (_) {
+      // If sw.js cannot be fetched (for example on restricted file:// contexts), keep static title.
+    }
+  }
   
   /**
    * Initialize the application:
@@ -4169,6 +4192,7 @@
    * - Load saved state from localStorage
    */
   function init(){
+    syncDisplayedAppVersion();
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
     Scorecard.player.syncOverlay();
     setupScorecardScrollSync();
