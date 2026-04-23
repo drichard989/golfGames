@@ -155,7 +155,7 @@
     const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
     const mode = activeBtn?.dataset.value || 'gross';
     const useNet = mode !== 'gross';
-    const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+    const netHcpMode = mode === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
     return { useNet, netHcpMode };
   }
 
@@ -214,7 +214,7 @@
     if (!Number.isFinite(gross) || !config.useNet) return gross;
 
     const holeHcp = (cache.HCPMEN || window.HCPMEN || Array(18).fill(1))[hole - 1] || 1;
-    const handicap = config.netHcpMode === 'fullHandicap'
+    const handicap = config.netHcpMode === 'rawHandicap'
       ? ((cache.rawCHs || getRawCHs())[playerIdx] || 0)
       : ((cache.adjustedCHs || getAdjustedCHs())[playerIdx] || 0);
 
@@ -226,7 +226,7 @@
     const gross = getScore(playerIdx, hole);
     if (!Number.isFinite(gross) || !config.useNet) return gross;
 
-    const handicap = config.netHcpMode === 'fullHandicap'
+    const handicap = config.netHcpMode === 'rawHandicap'
       ? ((cache.rawCHs || getRawCHs())[playerIdx] || 0)
       : ((cache.adjustedCHs || getAdjustedCHs())[playerIdx] || 0);
     const strokesReceived = strokesOnHoleHalfAware(handicap, hole, config.half, cache.HCPMEN);
@@ -243,8 +243,8 @@
 
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
-      adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
     };
 
     for (let h = 1; h <= HOLES; h++) {
@@ -326,8 +326,8 @@
       const config = getJunkScoringConfig();
       const cache = {
         HCPMEN: window.HCPMEN || Array(18).fill(1),
-        adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
-        rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+        adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
+        rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
       };
       
       for(let h=1; h<=HOLES; h++){
@@ -637,8 +637,8 @@
     const config = getJunkScoringConfig();
     const score = getJunkScoreForHole(p, h, config, {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
-      adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
     });
     const par = getPar(h);
     
@@ -684,8 +684,8 @@
     const config = getJunkScoringConfig();
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
-      adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
     };
 
     const skinsConfig = getJunkSkinsDotsConfig();

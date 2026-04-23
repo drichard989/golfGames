@@ -188,7 +188,7 @@
             <div class="hcp-mode-btn-group" id="handicapModeGroup" role="radiogroup" aria-label="Handicap Mode">
               <button type="button" class="btn hcp-mode-btn" id="handicapModeGross" data-value="gross" role="radio" aria-checked="false">Gross</button>
               <button type="button" class="btn hcp-mode-btn" id="handicapModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="true" data-active="true">Play Off Low</button>
-              <button type="button" class="btn hcp-mode-btn" id="handicapModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+              <button type="button" class="btn hcp-mode-btn" id="handicapModeRawHandicap" data-value="rawHandicap" role="radio" aria-checked="false">Raw Handicap</button>
             </div>
           </div>
           <button id="clearAllBtn" class="btn">Clear Names &amp; Scores</button>
@@ -200,7 +200,7 @@
     <div class="scorecard-help-notes">
       <p class="small">Swipe the table left/right. Player names stay pinned. Pars &amp; Men's HCP are fixed from the card.</p>
       <p class="small">If a player is a + handicap, enter it with a leading plus sign (e.g., +2).</p>
-      <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Full Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
+      <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Raw Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
     </div>
     </section>
 
@@ -237,7 +237,7 @@
             <div class="hcp-mode-btn-group" id="skinsHcpModeGroup" role="radiogroup" aria-label="Skins scoring mode">
               <button type="button" class="btn hcp-mode-btn" id="skinsHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
               <button type="button" class="btn hcp-mode-btn" id="skinsHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
-              <button type="button" class="btn hcp-mode-btn" id="skinsHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+              <button type="button" class="btn hcp-mode-btn" id="skinsHcpModeRawHandicap" data-value="rawHandicap" role="radio" aria-checked="false">Raw Handicap</button>
             </div>
           </div>
           <div class="skins-half-wrap" style="margin-top: 8px;">
@@ -308,7 +308,7 @@
             <div class="hcp-mode-btn-group" id="vegasHcpModeGroup" role="radiogroup" aria-label="Vegas scoring mode">
               <button type="button" class="btn hcp-mode-btn" id="vegasHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
               <button type="button" class="btn hcp-mode-btn" id="vegasHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
-              <button type="button" class="btn hcp-mode-btn" id="vegasHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+              <button type="button" class="btn hcp-mode-btn" id="vegasHcpModeRawHandicap" data-value="rawHandicap" role="radio" aria-checked="false">Raw Handicap</button>
             </div>
           </div>
           <div class="vegas-option-buttons">
@@ -372,7 +372,7 @@
             <div class="hcp-mode-btn-group" id="bankerHcpModeGroup" role="radiogroup" aria-label="Banker scoring mode">
               <button type="button" class="btn hcp-mode-btn" id="bankerHcpModeGross" data-value="gross" role="radio" aria-checked="false">Gross</button>
               <button type="button" class="btn hcp-mode-btn" id="bankerHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
-              <button type="button" class="btn hcp-mode-btn" id="bankerHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="true" data-active="true">Full Handicap</button>
+              <button type="button" class="btn hcp-mode-btn" id="bankerHcpModeRawHandicap" data-value="rawHandicap" role="radio" aria-checked="true" data-active="true">Raw Handicap</button>
             </div>
           </div>
         </div>
@@ -391,7 +391,7 @@
           <div class="small">Bets: Each player's bet amount + double option (2×)</div>
           <div class="small">Banker 2×: Banker doubles all outstanding bets</div>
           <div class="small"><strong>Gross:</strong> Raw scores without handicap adjustment</div>
-          <div class="small"><strong>Net:</strong> Scores adjusted by each player's full handicap (+ handicaps add strokes)</div>
+          <div class="small"><strong>Net:</strong> Scores adjusted by each player's raw handicap (+ handicaps add strokes)</div>
         </div>
         <div class="control-box">
           <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
@@ -490,7 +490,7 @@
           <div class="hcp-mode-btn-group" id="junkHcpModeGroup" role="radiogroup" aria-label="Junk scoring mode">
             <button type="button" class="btn hcp-mode-btn" id="junkHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
             <button type="button" class="btn hcp-mode-btn" id="junkHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
-            <button type="button" class="btn hcp-mode-btn" id="junkHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+            <button type="button" class="btn hcp-mode-btn" id="junkHcpModeRawHandicap" data-value="rawHandicap" role="radio" aria-checked="false">Raw Handicap</button>
           </div>
           <div class="pill" style="margin-top: 10px;">Skins Dots (Auto)</div>
           <div class="small" style="margin-bottom: 6px;">Automatically awards Skin dots using Skins-style rules.</div>
@@ -550,7 +550,7 @@
             <div class="hcp-mode-btn-group" id="wolfHcpModeGroup" role="radiogroup" aria-label="Wolf scoring mode">
               <button type="button" class="btn hcp-mode-btn" id="wolfHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
               <button type="button" class="btn hcp-mode-btn" id="wolfHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
-              <button type="button" class="btn hcp-mode-btn" id="wolfHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+              <button type="button" class="btn hcp-mode-btn" id="wolfHcpModeRawHandicap" data-value="rawHandicap" role="radio" aria-checked="false">Raw Handicap</button>
             </div>
           </div>
           <div class="control-box">

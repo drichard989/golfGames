@@ -25,7 +25,7 @@
    Handicap modes (same semantics as other games):
    - gross:        compare raw gross scores.
    - playOffLow:   strokes relative to lowest CH, applied via hole HCP index.
-   - fullHandicap: each player uses their full CH.
+   - rawHandicap: each player uses their full CH.
 
    Exposed as: window.Wolf
    API: {init, update, compute, render, refreshForPlayerChange,
@@ -125,7 +125,7 @@
     const mode = btn?.dataset.value || 'gross';
     return {
       useNet: mode !== 'gross',
-      netHcpMode: mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow'
+      netHcpMode: mode === 'rawHandicap' ? 'rawHandicap' : 'playOffLow'
     };
   }
 
@@ -134,7 +134,7 @@
     if (gross == null) return null;
     if (!config.useNet) return gross;
 
-    const chs = config.netHcpMode === 'fullHandicap' ? cache.rawCHs : cache.adjustedCHs;
+    const chs = config.netHcpMode === 'rawHandicap' ? cache.rawCHs : cache.adjustedCHs;
     const adjCH = chs[playerIdx] || 0;
     const sr = strokesOnHole(adjCH, holeIdx);
     // NDB cap on gross before deducting strokes
@@ -277,8 +277,8 @@
       const playerCount = getPlayerCount();
       const config = getWolfConfig();
       const cache = {
-        adjustedCHs: config.useNet && config.netHcpMode !== 'fullHandicap' ? getAdjustedCHs() : [],
-        rawCHs: config.useNet && config.netHcpMode === 'fullHandicap' ? getRawCHs() : []
+        adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
+        rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
       };
 
       const totals = Array(Math.max(playerCount, REQUIRED_PLAYERS)).fill(0);

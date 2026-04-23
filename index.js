@@ -1382,7 +1382,7 @@
         }
         
         // Mode 3: FULL HANDICAP - return raw CHs (no play off low)
-        if (mode === 'fullHandicap') {
+        if (mode === 'rawHandicap') {
           return chs; // Each player uses their full raw CH
         }
         
@@ -1869,11 +1869,11 @@
           banker: {
             mode: (() => {
               const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
-              return (btn?.dataset.value || 'fullHandicap') === 'gross' ? 'gross' : 'net';
+              return (btn?.dataset.value || 'rawHandicap') === 'gross' ? 'gross' : 'net';
             })(),
             netHcpMode: (() => {
               const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
-              return btn?.dataset.value === 'playOffLow' ? 'playOffLow' : 'fullHandicap';
+              return btn?.dataset.value === 'playOffLow' ? 'playOffLow' : 'rawHandicap';
             })(),
             state: (typeof window.Banker?.getState === 'function')
               ? (window.Banker.getState() ?? existingState?.banker?.state ?? null)
@@ -1886,7 +1886,7 @@
             })(),
             netHcpMode: (() => {
               const btn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
-              return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+              return btn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
             })(),
             buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
             carry: document.getElementById('skinsCarry')?.checked ?? true,
@@ -1904,7 +1904,7 @@
             })(),
             netHcpMode: (() => {
               const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
-              return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+              return activeBtn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
             })(),
             achievements: (() => {
               if (typeof window.Junk?.getAchievementState === 'function') {
@@ -1919,7 +1919,7 @@
               })(),
               netHcpMode: (() => {
                 const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
-                return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+                return activeBtn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
               })(),
               carry: document.getElementById('junkSkinsCarry')?.checked ?? true,
               half: document.getElementById('junkSkinsHalf')?.checked ?? false,
@@ -1936,7 +1936,7 @@
             })(),
             netHcpMode: (() => {
               const btn = document.querySelector('#wolfHcpModeGroup .hcp-mode-btn[data-active="true"]');
-              return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+              return btn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
             })(),
             state: (typeof window.Wolf?.getState === 'function')
               ? (window.Wolf.getState() ?? existingState?.wolf?.state ?? null)
@@ -1975,6 +1975,19 @@
     },
 
     normalizeLoadedState(rawState) {
+      // Migration: legacy 'fullHandicap' token was renamed to 'rawHandicap' in v3.
+      // Rewrite recursively so cloud snapshots, localStorage dumps, and nested
+      // options (e.g. junk.skinsDots.netHcpMode) all get upgraded in place.
+      (function migrateNetHcpMode(node) {
+        if (!node || typeof node !== 'object') return;
+        if (Array.isArray(node)) { node.forEach(migrateNetHcpMode); return; }
+        if (node.netHcpMode === 'fullHandicap') node.netHcpMode = 'rawHandicap';
+        for (const key of Object.keys(node)) {
+          const v = node[key];
+          if (v && typeof v === 'object') migrateNetHcpMode(v);
+        }
+      })(rawState);
+
       if (!rawState || !rawState.sync?.game) {
         return rawState;
       }
@@ -2009,7 +2022,7 @@
         banker: {
           ...(rawState.banker || {}),
           mode: games.banker?.mode ?? rawState.banker?.mode ?? 'net',
-          netHcpMode: games.banker?.netHcpMode ?? rawState.banker?.netHcpMode ?? 'fullHandicap',
+          netHcpMode: games.banker?.netHcpMode ?? rawState.banker?.netHcpMode ?? 'rawHandicap',
           state: games.banker?.state ?? rawState.banker?.state,
           open: localUi.sections?.banker ?? rawState.banker?.open
         },
@@ -2169,11 +2182,11 @@
           open: $(ids.bankerSection).classList.contains("open"),
           mode: (() => {
             const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
-            return (btn?.dataset.value || 'fullHandicap') === 'gross' ? 'gross' : 'net';
+            return (btn?.dataset.value || 'rawHandicap') === 'gross' ? 'gross' : 'net';
           })(),
           netHcpMode: (() => {
             const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
-            return btn?.dataset.value === 'playOffLow' ? 'playOffLow' : 'fullHandicap';
+            return btn?.dataset.value === 'playOffLow' ? 'playOffLow' : 'rawHandicap';
           })(),
           state: (() => {
             const current = (typeof window.Banker?.getState === 'function') ? window.Banker.getState() : null;
@@ -2187,7 +2200,7 @@
           })(),
           netHcpMode: (() => {
             const btn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
-            return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+            return btn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
           })(),
           buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
           carry: document.getElementById('skinsCarry')?.checked ?? true,
@@ -2206,7 +2219,7 @@
           })(),
           netHcpMode: (() => {
             const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
-            return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+            return activeBtn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
           })(),
           open: $(ids.junkSection)?.classList.contains("open"),
           achievements: (() => {
@@ -2222,7 +2235,7 @@
             })(),
             netHcpMode: (() => {
               const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
-              return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+              return activeBtn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
             })(),
             carry: document.getElementById('junkSkinsCarry')?.checked ?? true,
             half: document.getElementById('junkSkinsHalf')?.checked ?? false,
@@ -2241,7 +2254,7 @@
           })(),
           netHcpMode: (() => {
             const btn = document.querySelector('#wolfHcpModeGroup .hcp-mode-btn[data-active="true"]');
-            return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+            return btn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
           })(),
           state: (() => {
             const current = (typeof window.Wolf?.getState === 'function') ? window.Wolf.getState() : null;
@@ -2585,9 +2598,9 @@
         // Restore Banker button state (mode and netHcpMode)
         if (s.banker?.mode != null) {
           const bMode = s.banker.mode;
-          const bHcpMode = s.banker?.netHcpMode || 'fullHandicap';
+          const bHcpMode = s.banker?.netHcpMode || 'rawHandicap';
           const bankerBtnId = bMode !== 'net' ? 'bankerHcpModeGross'
-            : bHcpMode === 'fullHandicap' ? 'bankerHcpModeFullHandicap'
+            : bHcpMode === 'rawHandicap' ? 'bankerHcpModeRawHandicap'
             : 'bankerHcpModePlayOffLow';
           setBankerModeBtn(bankerBtnId);
         }
@@ -2597,7 +2610,7 @@
           const sMode = s.skins.mode;
           const sHcpMode = s.skins?.netHcpMode || 'playOffLow';
           const skinsBtnId = sMode !== 'net' ? 'skinsHcpModeGross'
-            : sHcpMode === 'fullHandicap' ? 'skinsHcpModeFullHandicap'
+            : sHcpMode === 'rawHandicap' ? 'skinsHcpModeRawHandicap'
             : 'skinsHcpModePlayOffLow';
           setSkinsModeBtn(skinsBtnId);
         }
@@ -2619,7 +2632,7 @@
         const junkMode = s.junk?.mode || (s.junk?.useNet ? 'net' : 'gross');
         const junkNetHcpMode = s.junk?.netHcpMode || 'playOffLow';
         const junkBtnId = junkMode !== 'net' ? 'junkHcpModeGross'
-          : junkNetHcpMode === 'fullHandicap' ? 'junkHcpModeFullHandicap'
+          : junkNetHcpMode === 'rawHandicap' ? 'junkHcpModeRawHandicap'
           : 'junkHcpModePlayOffLow';
         setJunkModeBtnState(junkBtnId);
         const junkSkinsCarryEl = document.getElementById('junkSkinsCarry');
@@ -2649,7 +2662,7 @@
           const wMode = s.wolf.mode;
           const wHcpMode = s.wolf?.netHcpMode || 'playOffLow';
           const wolfBtnId = wMode !== 'net' ? 'wolfHcpModeGross'
-            : wHcpMode === 'fullHandicap' ? 'wolfHcpModeFullHandicap'
+            : wHcpMode === 'rawHandicap' ? 'wolfHcpModeRawHandicap'
             : 'wolfHcpModePlayOffLow';
           setWolfModeBtn(wolfBtnId);
         }
@@ -2785,7 +2798,7 @@
       };
 
       const resetBanker = () => {
-        setBankerModeBtn('bankerHcpModeFullHandicap');
+        setBankerModeBtn('bankerHcpModeRawHandicap');
         window.Banker?.setState?.({ holes: [] });
       };
 
@@ -3038,7 +3051,7 @@
       btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
     });
     if (!matched) {
-      const fallback = document.getElementById('bankerHcpModeFullHandicap');
+      const fallback = document.getElementById('bankerHcpModeRawHandicap');
       if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
     }
   }
