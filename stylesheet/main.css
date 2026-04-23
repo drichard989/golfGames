@@ -1668,10 +1668,13 @@ tfoot td {
 
 /* When cloned headers are active, hide the original sticky table headers so
    rows scroll cleanly under the live-results card + clone strip. */
-.game-section.live-header-clone-active .vegas-table thead,
-.game-section.live-header-clone-active .banker-table thead,
-.game-section.live-header-clone-active .junk-table thead,
-.game-section.live-header-clone-active .skins-table thead {
+.game-section.live-header-clone-active #vegasTable thead,
+.game-section.live-header-clone-active #bankerTable thead,
+.game-section.live-header-clone-active #junkTable thead,
+.game-section.live-header-clone-active #wolfTable thead,
+.game-section.live-header-clone-active #skinsTable thead,
+.game-section.live-header-clone-active #hiloTable thead,
+.game-section.live-header-clone-active #hiloHoleTable thead {
   visibility: hidden;
 }
 
