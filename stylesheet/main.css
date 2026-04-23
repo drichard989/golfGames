@@ -261,7 +261,7 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
 
 .header-collapse-btn {
   background: transparent;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   color: var(--muted);
   font-size: 13px;
   font-weight: 600;
@@ -311,7 +311,7 @@ h1 {
 
 .control {
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--space-sm) var(--space-md);
   display: flex;
@@ -331,7 +331,7 @@ h1 {
 
 .control input[type="text"] {
   background: #0c1218;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   color: var(--ink);
   border-radius: var(--radius-md);
   padding: 10px var(--space-md);
@@ -341,7 +341,7 @@ h1 {
 }
 
 .btn {
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: var(--panel);
   color: var(--ink);
   padding: var(--space-md) var(--space-lg);
@@ -371,7 +371,7 @@ h1 {
 .view-mode-banner {
   margin: 2px var(--space-lg);
   padding: 4px var(--space-md);
-  border: 1px solid var(--warn);
+  border: 2px solid var(--warn);
   border-radius: var(--radius-md);
   background: rgba(255, 180, 84, 0.14);
   color: var(--ink);
@@ -401,7 +401,7 @@ h1 {
 .theme-toggle {
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   padding: var(--space-md) var(--space-lg);
   font-size: var(--text-lg);
@@ -514,7 +514,7 @@ input[type="text"] {
 .utilities-section {
   display: none;
   margin-top: 0;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-top: none;
   border-radius: 0 0 var(--radius-md) var(--radius-md);
   padding: var(--space-sm);
@@ -566,7 +566,7 @@ input[type="text"] {
   min-height: var(--touch-min);
   font-size: var(--text-sm);
   background: var(--panel-alt);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   color: var(--muted);
   border-radius: var(--radius-md);
   padding: 6px 10px;
@@ -662,7 +662,7 @@ input[type="text"] {
   padding: 8px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: 4px;
   flex: 1 1 280px;
 }
@@ -676,7 +676,7 @@ input[type="text"] {
 #cloudStatus {
   padding: 6px 10px;
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   font-weight: 700;
 }
 
@@ -721,7 +721,7 @@ input[type="text"] {
   gap: 4px;
   padding: 3px 9px;
   border-radius: 99px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   font-size: var(--text-xs);
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -749,7 +749,7 @@ input[type="text"] {
   justify-content: center;
   padding: 3px 9px;
   border-radius: 99px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: var(--panel);
   color: var(--ink);
   font-size: var(--text-xs);
@@ -843,7 +843,7 @@ input[type="text"] {
 .scorecard-container {
   display: flex;
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
   overflow: visible;
   margin: var(--space-md) 0 0;
@@ -853,7 +853,7 @@ input[type="text"] {
 .scorecard-card-footer {
   background: transparent;
   border: none;
-  border-top: 1px solid rgba(168, 179, 191, 0.15);
+  border-top: 2px solid rgba(168, 179, 191, 0.15);
   border-radius: 0;
   margin: 0;
   padding: 8px 12px;
@@ -865,7 +865,7 @@ input[type="text"] {
 
 .scorecard-controls-shell {
   background: var(--panel-alt);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
   margin: 0 0 8px;
 }
@@ -914,7 +914,7 @@ input[type="text"] {
   gap: 8px;
   margin: var(--space-sm) var(--space-lg) 10px;
   padding: 6px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-3xl);
   background: color-mix(in srgb, var(--panel) 86%, transparent);
   backdrop-filter: blur(14px);
@@ -929,7 +929,7 @@ body.mode-score .entry-switcher {
 .entry-switcher-btn {
   flex: 1 1 0;
   cursor: pointer;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   background: transparent;
   color: var(--muted);
   border-radius: var(--radius-3xl);
@@ -1106,7 +1106,7 @@ thead th {
 
 th,
 td {
-  border-bottom: 1px solid var(--line);
+  border-bottom: 2px solid var(--line);
   text-align: center;
   font-variant-numeric: tabular-nums;
   vertical-align: middle;
@@ -1152,7 +1152,7 @@ td {
   height: 20px;
   padding: 0;
   margin: 0;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: var(--panel);
   color: var(--danger);
   border-radius: var(--radius-sm);
@@ -1236,19 +1236,19 @@ tr:last-child td {
 .par-row th,
 .par-row td {
   background: transparent;
-  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
   border-right: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
   border-bottom: none;
 }
 
 .hcp-row th,
 .hcp-row td {
   background: transparent;
-  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
   border-right: none;
-  border-top: 1px solid rgba(255, 255, 255, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .par-row input,
@@ -1273,7 +1273,7 @@ tr:last-child td {
   width: var(--table-input-width);
   text-align: center;
   border-radius: var(--radius-md);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: #0c1218;
   color: var(--ink);
   padding: 10px var(--space-xs);
@@ -1422,7 +1422,7 @@ tfoot td {
 }
 
 .name-edit:focus {
-  outline: 1px dashed var(--accent);
+  outline: 2px dashed var(--accent);
   border-radius: var(--radius-sm);
 }
 
@@ -1444,7 +1444,7 @@ tfoot td {
 
 .game-toggle {
   cursor: pointer;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: var(--panel-alt);
   border-radius: var(--radius-3xl);
   padding: var(--space-md) 18px;
@@ -1474,7 +1474,7 @@ tfoot td {
   display: none;
   margin: var(--space-lg) var(--space-lg) 32px;
   padding: var(--space-lg);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-xl);
   background: var(--panel-alt);
 }
@@ -1518,7 +1518,7 @@ tfoot td {
 }
 
 .live-results-card {
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
   overflow: hidden;
@@ -1532,7 +1532,7 @@ tfoot td {
 
 .live-results-table th,
 .live-results-table td {
-  border-bottom: 1px solid var(--line);
+  border-bottom: 2px solid var(--line);
   text-align: center;
   padding: 0 8px;
   white-space: nowrap;
@@ -1559,7 +1559,7 @@ tfoot td {
 }
 
 .banker-header-totals {
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
   overflow: hidden;
@@ -1573,7 +1573,7 @@ tfoot td {
 
 .banker-header-totals-table th,
 .banker-header-totals-table td {
-  border-bottom: 1px solid var(--line);
+  border-bottom: 2px solid var(--line);
   text-align: center;
   padding: 0 8px;
   white-space: nowrap;
@@ -1643,7 +1643,7 @@ tfoot td {
 .control-box,
 .team-box,
 .opts-box {
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 10px;
   background: var(--panel);
@@ -1656,7 +1656,7 @@ tfoot td {
 }
 
 .vegas-opt-flag {
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-sm);
   padding: 6px 8px;
   transition: all 0.2s ease;
@@ -1738,7 +1738,7 @@ tfoot td {
   gap: 8px;
   min-height: 40px;
   padding: 8px 12px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--panel);
   color: var(--ink);
@@ -1783,7 +1783,7 @@ tfoot td {
   gap: 8px;
   min-height: 40px;
   padding: 8px 12px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--panel);
   color: var(--ink);
@@ -1864,7 +1864,7 @@ tfoot td {
   gap: 8px;
   min-height: 40px;
   padding: 8px 12px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-md);
   background: var(--panel);
   color: var(--ink);
@@ -1964,7 +1964,7 @@ tfoot td {
   overflow-y: visible !important;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
   scroll-behavior: smooth;
@@ -1993,7 +1993,7 @@ tfoot td {
 .skins-table td,
 .junk-table th,
 .junk-table td {
-  border-bottom: 1px solid var(--line);
+  border-bottom: 2px solid var(--line);
   padding: 4px 6px;
   text-align: center;
   white-space: nowrap;
@@ -2043,7 +2043,7 @@ tfoot td {
   left: 0;
   background-color: var(--panel);
   z-index: var(--z-sticky-col);
-  border-right: 1px solid var(--line);
+  border-right: 2px solid var(--line);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
@@ -2068,7 +2068,7 @@ tfoot td {
   padding: 4px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: 4px;
   font-size: 14px;
   font-weight: 500;
@@ -2084,7 +2084,7 @@ tfoot td {
   min-width: 32px;
   justify-content: center;
   padding: 2px 6px;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   border-radius: 999px;
   font-size: 11px;
   font-weight: 700;
@@ -2109,7 +2109,7 @@ tfoot td {
 .banker-number-input {
   background: var(--bg);
   color: var(--ink);
-  border: 1px solid var(--accent);
+  border: 2px solid var(--accent);
   border-radius: 4px;
   text-align: center;
   font-size: 12px;
@@ -2228,7 +2228,7 @@ tfoot td {
   line-height: 1.2;
   padding: 2px 6px;
   border-radius: 999px;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   white-space: nowrap;
 }
 
@@ -2300,7 +2300,7 @@ tfoot td {
 .banker-result-summary {
   margin-top: 3px;
   padding-top: 3px;
-  border-top: 1px solid var(--line);
+  border-top: 2px solid var(--line);
   font-size: 15px;
   font-weight: 600;
 }
@@ -2379,7 +2379,7 @@ tfoot td {
 #junkTable th:not(:first-child),
 #junkTable td:not(:first-child) {
   padding: 4px !important;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 2px solid rgba(255, 255, 255, 0.05);
 }
 
 #junkTable tbody td {
@@ -2396,7 +2396,7 @@ tfoot td {
 
 :root[data-theme="light"] #junkTable th:not(:first-child),
 :root[data-theme="light"] #junkTable td:not(:first-child) {
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  border-right: 2px solid rgba(0, 0, 0, 0.05);
 }
 
 .junk-cell {
@@ -2441,7 +2441,7 @@ tfoot td {
 .junk-dd > summary {
   list-style: none;
   cursor: pointer;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: rgba(255, 255, 255, 0.08);
   color: var(--ink);
   border-radius: var(--radius-sm);
@@ -2481,7 +2481,7 @@ tfoot td {
   gap: var(--space-xs);
   padding: var(--space-sm);
   min-width: 160px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: var(--panel-alt);
   border-radius: var(--radius-lg);
   max-height: calc(3 * var(--touch-min) + 2 * var(--space-xs) + 2 * var(--space-sm));
@@ -2497,7 +2497,7 @@ tfoot td {
   padding: var(--text-md) var(--space-lg);
   border-radius: var(--radius-lg);
   cursor: pointer;
-  border: 1px solid transparent;
+  border: 2px solid transparent;
   user-select: none;
   color: var(--ink);
   min-height: var(--touch-min);
@@ -2526,7 +2526,7 @@ tfoot td {
   margin-left: auto;
   padding: 2px 6px;
   border-radius: 999px;
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   background: var(--panel);
   color: var(--muted);
   font-size: 10px;
@@ -2601,7 +2601,7 @@ input[type="text"] {
 
 .cloud-utilities-divider {
   margin: var(--space-md) 0 var(--space-sm);
-  border-top: 1px solid var(--line);
+  border-top: 2px solid var(--line);
   opacity: 0.5;
 }
 
@@ -2612,7 +2612,7 @@ input[type="text"] {
 .header-options-panel {
   margin-top: 2px;
   padding: var(--space-sm) var(--space-sm) var(--space-md);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-xl);
   background: var(--panel-alt);
 }
@@ -2620,7 +2620,7 @@ input[type="text"] {
 .header-cloud-options-panel {
   margin-top: var(--space-sm);
   padding: var(--space-sm);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-xl);
   background: var(--panel-alt);
 }
@@ -2643,7 +2643,7 @@ input[type="text"] {
   margin: 0;
   padding: var(--space-sm) 12px 10px;
   border: none;
-  border-top: 1px solid rgba(168, 179, 191, 0.2);
+  border-top: 2px solid rgba(168, 179, 191, 0.2);
   border-radius: 0;
   background: transparent;
 }
@@ -2869,7 +2869,7 @@ input[type="text"] {
   #junkTable td:not(:first-child) {
     width: 68px;
     padding: var(--space-xs) 4px;
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 2px solid rgba(255, 255, 255, 0.1);
   }
 
   .junk-dd > summary {
@@ -3034,15 +3034,15 @@ input[type="text"] {
 /* Light theme table adjustments */
 :root[data-theme="light"] .par-row th,
 :root[data-theme="light"] .par-row td {
-  border-left: 1px solid rgba(0, 0, 0, 0.15);
-  border-top: 1px solid rgba(0, 0, 0, 0.3);
+  border-left: 2px solid rgba(0, 0, 0, 0.15);
+  border-top: 2px solid rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme="light"] .hcp-row th,
 :root[data-theme="light"] .hcp-row td {
-  border-left: 1px solid rgba(0, 0, 0, 0.15);
-  border-top: 1px solid rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  border-left: 2px solid rgba(0, 0, 0, 0.15);
+  border-top: 2px solid rgba(0, 0, 0, 0.3);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.3);
 }
 
 :root[data-theme="light"] .hole-18 {
@@ -3086,7 +3086,7 @@ input[type="text"] {
 :root[data-theme="light"] .ch-input {
   background: #ffffff;
   color: #1a1c1f;
-  border: 1px solid #d3d7dc;
+  border: 2px solid #d3d7dc;
 }
 
 :root[data-theme="light"] .score-input:focus,
@@ -3098,7 +3098,7 @@ input[type="text"] {
 :root[data-theme="light"] .control input[type="text"] {
   background: #ffffff;
   color: #1a1c1f;
-  border: 1px solid #d3d7dc;
+  border: 2px solid #d3d7dc;
 }
 
 /* Light theme button/toggle fixes */
@@ -3298,7 +3298,7 @@ input[type="text"] {
 :root[data-theme="light"] .junk-cell summary,
 :root[data-theme="light"] .junk-cell button {
   background: #f3f5f8;
-  border: 1px solid #cfd3d8;
+  border: 2px solid #cfd3d8;
   color: #1a1c1f;
 }
 
@@ -3310,7 +3310,7 @@ input[type="text"] {
 :root[data-theme="light"] input[type="number"] {
   background: #ffffff;
   color: #1a1c1f;
-  border: 1px solid #d3d7dc;
+  border: 2px solid #d3d7dc;
 }
 
 :root[data-theme="light"] input[type="number"]:focus {
@@ -3321,7 +3321,7 @@ input[type="text"] {
 :root[data-theme="light"] #skinsBuyIn {
   background: #ffffff !important;
   color: #1a1c1f !important;
-  border: 1px solid #d3d7dc !important;
+  border: 2px solid #d3d7dc !important;
 }
 
 /* Light theme delete button */
@@ -3378,7 +3378,7 @@ input[type="text"] {
   right: var(--space-xl);
   max-width: 400px;
   background: var(--panel);
-  border: 1px solid var(--line);
+  border: 2px solid var(--line);
   border-radius: var(--radius-xl);
   box-shadow: 0 8px 32px var(--shadow);
   padding: var(--space-lg);
