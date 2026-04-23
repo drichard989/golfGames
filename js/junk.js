@@ -160,10 +160,9 @@
   }
 
   function getJunkSkinsDotsConfig() {
-    const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
-    const mode = activeBtn?.dataset.value || 'gross';
-    const useNet = mode !== 'gross';
-    const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+    const baseConfig = getJunkScoringConfig();
+    const useNet = baseConfig.useNet;
+    const netHcpMode = baseConfig.netHcpMode;
     const carry = document.getElementById('junkSkinsCarry')?.checked ?? true;
     const half = useNet ? (document.getElementById('junkSkinsHalf')?.checked ?? false) : false;
     const buyIn = Math.max(0, Number(document.getElementById('junkSkinsBuyIn')?.value) || 0);
@@ -171,8 +170,7 @@
   }
 
   function syncJunkSkinsHalfState() {
-    const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
-    const isNet = (activeBtn?.dataset.value || 'gross') !== 'gross';
+    const isNet = getJunkScoringConfig().useNet;
     const halfEl = document.getElementById('junkSkinsHalf');
     if (halfEl) {
       halfEl.disabled = !isNet;
