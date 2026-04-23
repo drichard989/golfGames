@@ -1585,21 +1585,24 @@ tfoot td {
   border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .live-results-table {
   width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .live-results-table th,
 .live-results-table td {
   border-bottom: 2px solid var(--line);
   text-align: center;
-  padding: 0 8px;
+  padding: 4px 6px;
   white-space: nowrap;
+  font-size: var(--text-md);
 }
 
 .live-results-title-row th {
@@ -1616,10 +1619,34 @@ tfoot td {
 .live-results-label {
   text-align: left;
   font-weight: 700;
+  position: sticky;
+  left: 0;
+  background: var(--panel);
+  z-index: 1;
+}
+
+.live-results-title-row .live-results-label {
+  background: var(--panel-alt);
 }
 
 .live-results-table tr:last-child td {
   border-bottom: none;
+}
+
+/* Compact layout on narrow screens so all player columns fit without scrolling */
+@media (max-width: 600px) {
+  .live-results-table th,
+  .live-results-table td {
+    padding: 2px 4px;
+    font-size: var(--text-sm);
+  }
+  .live-results-title-row th {
+    height: 28px;
+    font-size: var(--text-lg);
+  }
+  .live-results-data-row td {
+    height: 36px;
+  }
 }
 
 /* Persistent bottom results cards (Vegas, Junk) + Banker bottom totals */
@@ -1643,21 +1670,24 @@ tfoot td {
   border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
-  overflow: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .banker-header-totals-table {
   width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  table-layout: auto;
 }
 
 .banker-header-totals-table th,
 .banker-header-totals-table td {
   border-bottom: 2px solid var(--line);
   text-align: center;
-  padding: 0 8px;
+  padding: 4px 6px;
   white-space: nowrap;
+  font-size: var(--text-md);
 }
 
 .banker-header-title-row th {
@@ -1673,6 +1703,30 @@ tfoot td {
 
 .banker-header-totals-table tr:last-child td {
   border-bottom: none;
+}
+
+.banker-header-totals-table .banker-footer-label {
+  text-align: left;
+  font-weight: 700;
+  position: sticky;
+  left: 0;
+  background: var(--panel);
+  z-index: 1;
+}
+
+@media (max-width: 600px) {
+  .banker-header-totals-table th,
+  .banker-header-totals-table td {
+    padding: 2px 4px;
+    font-size: var(--text-sm);
+  }
+  .banker-header-title-row th {
+    height: 28px;
+    font-size: var(--text-lg);
+  }
+  .banker-header-data-row td {
+    height: 36px;
+  }
 }
 
 .game-options-panel {
