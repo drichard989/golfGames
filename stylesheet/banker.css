@@ -615,6 +615,27 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   color: var(--danger, #dc3545);
 }
 
+/* When the BANKER picker pill is currently selected (data-active="true"),
+   the default rule above forces the green accent fill. That hid the red
+   stroke-up state for plus-handicap bankers. Override here so a selected
+   plus-handicap banker shows the red danger fill (and keeps the inline
+   stroke pill text legible against it). The stroke-down active state
+   is already green by coincidence, so we leave it as-is. */
+.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] {
+  background: var(--danger, #dc3545);
+  border-color: var(--danger, #dc3545);
+  color: #fff;
+}
+.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] {
+  background: var(--danger, #dc3545);
+  border-color: var(--danger, #dc3545);
+  color: #fff;
+}
+
 .banker-sheet-bet-controls {
   display: flex;
   align-items: center;
