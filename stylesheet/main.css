@@ -3330,59 +3330,6 @@ input[type="text"] {
     width: 42px !important;
     min-width: 36px !important;
   }
-
-  /* Banker result rows inside the mobile inline summary: result sits on
-     its own row below the grid, and must render exactly like desktop —
-     full-width colored row (green / yellow / red), player name on the
-     left, score + payout on the right, one line per player. */
-  .bss-result-block {
-    display: block;
-    width: 100%;
-  }
-  .bss-result-block .banker-result-row {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    padding: 3px 6px;
-    margin-bottom: 2px;
-    gap: 6px;
-    white-space: nowrap;
-    box-sizing: border-box;
-  }
-  .bss-result-block .banker-result-name {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--ink);
-    margin-right: 0;
-  }
-  .bss-result-block .banker-result-right {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto;
-    min-width: 0;
-  }
-  .bss-result-block .banker-result-score,
-  .bss-result-block .banker-result-payout,
-  .bss-result-block .banker-result-mult {
-    white-space: nowrap;
-    flex: 0 0 auto;
-  }
-  .bss-result-block .banker-result-summary {
-    padding: 3px 6px;
-    font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
 
 /* Narrow phones (≤480px): show ONLY the Result block in the inline summary.
@@ -3408,50 +3355,6 @@ input[type="text"] {
     font-size: 11px;
   }
   .banker-sheet-summary-cell { padding: 4px 6px !important; }
-
-  /* Compact result rows on narrow phones: drop colons / spacing so the
-     player name + score + payout all fit on one line. Keep the colored
-     row background, one line per player, stretched edge-to-edge. */
-  .bss-result-block .banker-result-row {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    padding: 2px 6px;
-    font-size: 11px;
-    gap: 4px;
-    white-space: nowrap;
-  }
-  .bss-result-block .banker-result-name {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 11px;
-    font-weight: 600;
-    margin-right: 0;
-  }
-  .bss-result-block .banker-result-right {
-    flex: 0 0 auto !important;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-  }
-  .bss-result-block .banker-result-score { font-size: 10px; }
-  .bss-result-block .banker-result-payout { font-size: 11px; }
-  .bss-result-block .banker-result-mult { font-size: 9px; }
-  .bss-result-block .banker-result-summary {
-    font-size: 12px;
-    padding: 3px 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
 }
 
 /* =========================
@@ -4481,19 +4384,9 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
     color: var(--danger, #dc3545);
   }
-
-  /* Result rows full-width, single-line. (The consolidated
-     body.banker-sheet-active rule below also enforces this; these add
-     tablet-specific font sizing.) */
-  body.banker-sheet-active .bss-result-block .banker-result-row {
-    font-size: 12px;
-  }
-  body.banker-sheet-active .bss-result-block .banker-result-summary {
-    font-size: 13px;
-  }
 }
 
-/* Narrow phones ≤420px: handled by block earlier in file. */
+/* Narrow phones \u2264480px: handled by block earlier in file. */
 
 /* ---------------- Sheet container ---------------- */
 .banker-sheet-backdrop {
