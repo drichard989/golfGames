@@ -764,7 +764,6 @@
     if (!fixedPane || !scrollPane) return;
 
     let syncingVertical = false;
-    let syncingHorizontal = false;
 
     const syncScrollTop = (source, target) => {
       if (syncingVertical) return;
@@ -775,54 +774,45 @@
       });
     };
 
-    const syncScrollLeft = (source, target) => {
-      if (!target || syncingHorizontal) return;
-      syncingHorizontal = true;
-      target.scrollLeft = source.scrollLeft;
-      requestAnimationFrame(() => {
-        syncingHorizontal = false;
-      });
-    };
-
     scrollPane.addEventListener('scroll', () => {
       syncScrollTop(scrollPane, fixedPane);
-      syncScrollLeft(scrollPane, frozenScroll);
+      if (frozenScroll) {
+        frozenScroll.scrollLeft = scrollPane.scrollLeft;
+      }
     }, { passive: true });
 
     if (frozenScroll) {
-      frozenScroll.addEventListener('scroll', () => {
-        syncScrollLeft(frozenScroll, scrollPane);
-      }, { passive: true });
+      let dragPointerId = null;
+      let dragStartX = 0;
+      let dragStartLeft = 0;
 
-      let touchStartX = null;
-      let touchStartLeft = 0;
+      frozenScroll.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        dragPointerId = event.pointerId;
+        dragStartX = event.clientX;
+        dragStartLeft = scrollPane.scrollLeft;
+        try {
+          frozenScroll.setPointerCapture(event.pointerId);
+        } catch {
+          // setPointerCapture can fail in some browsers; dragging still works.
+        }
+      });
 
-      frozenScroll.addEventListener('touchstart', (event) => {
-        const touch = event.touches?.[0];
-        if (!touch) return;
-        touchStartX = touch.clientX;
-        touchStartLeft = scrollPane.scrollLeft;
-      }, { passive: true });
-
-      frozenScroll.addEventListener('touchmove', (event) => {
-        const touch = event.touches?.[0];
-        if (!touch || touchStartX === null) return;
-
-        const deltaX = touch.clientX - touchStartX;
-        const nextLeft = touchStartLeft - deltaX;
-        scrollPane.scrollLeft = nextLeft;
-        syncScrollLeft(scrollPane, frozenScroll);
-
-        // Keep touch gesture dedicated to horizontal scorecard panning.
+      frozenScroll.addEventListener('pointermove', (event) => {
+        if (dragPointerId !== event.pointerId) return;
+        const deltaX = event.clientX - dragStartX;
+        scrollPane.scrollLeft = dragStartLeft - deltaX;
+        frozenScroll.scrollLeft = scrollPane.scrollLeft;
         event.preventDefault();
       }, { passive: false });
 
-      const clearTouchState = () => {
-        touchStartX = null;
+      const endDrag = (event) => {
+        if (dragPointerId !== event.pointerId) return;
+        dragPointerId = null;
       };
 
-      frozenScroll.addEventListener('touchend', clearTouchState, { passive: true });
-      frozenScroll.addEventListener('touchcancel', clearTouchState, { passive: true });
+      frozenScroll.addEventListener('pointerup', endDrag);
+      frozenScroll.addEventListener('pointercancel', endDrag);
     }
 
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
