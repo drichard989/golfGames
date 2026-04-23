@@ -4,6 +4,8 @@
   const CLOUD_SESSION_KEY = 'golf_cloud_session_v1';
   const SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;
   const BANKER_REMOTE_APPLY_GRACE_MS = 1200;
+  const GAME_REMOTE_APPLY_GRACE_MS = 1200;
+  const GAME_INTERACTION_SECTIONS = '#bankerSection, #wolfSection, #vegasSection, #skinsSection, #junkSection, #hiloSection';
   const PUSH_DEBOUNCE_MS = 900;
   const MIN_PUSH_INTERVAL_MS = 1200;
   const SNAPSHOT_LIST_LIMIT = 20;
@@ -97,6 +99,7 @@
     pendingRemoteState: null,
     pendingRemoteTimer: null,
     lastBankerInteractionAt: 0,
+    lastGameInteractionAt: 0,
     lastSeenRevision: 0,
     lastSnapshotAt: 0,
     currentLiveState: null,
@@ -1111,6 +1114,17 @@
     }
   }
 
+  function isGameInteractionActive() {
+    return Date.now() - state.lastGameInteractionAt < GAME_REMOTE_APPLY_GRACE_MS;
+  }
+
+  function markGameInteraction(target) {
+    if (!(target instanceof HTMLElement)) return;
+    if (target.closest(GAME_INTERACTION_SECTIONS)) {
+      state.lastGameInteractionAt = Date.now();
+    }
+  }
+
   function applyRemoteStateToUi(syncGame, revision = 0) {
     state.isApplyingRemote = true;
     try {
@@ -1135,7 +1149,7 @@
       return;
     }
 
-    if (isBankerInputFocused() || isBankerInteractionActive()) {
+    if (isBankerInputFocused() || isBankerInteractionActive() || isGameInteractionActive()) {
       state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
       return;
     }
@@ -1168,7 +1182,7 @@
       return;
     }
 
-    if (state.session?.role === 'editor' && (isBankerInputFocused() || isBankerInteractionActive())) {
+    if (state.session?.role === 'editor' && (isBankerInputFocused() || isBankerInteractionActive() || isGameInteractionActive())) {
       state.pendingRemoteState = syncGame;
       if (!state.pendingRemoteTimer) {
         state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
@@ -1441,8 +1455,15 @@
       if (!document.hidden) syncViewerLock();
     });
 
-    document.addEventListener('pointerdown', (e) => markBankerInteraction(e.target), true);
-    document.addEventListener('focusin', (e) => markBankerInteraction(e.target), true);
+    document.addEventListener('pointerdown', (e) => {
+      markBankerInteraction(e.target);
+      markGameInteraction(e.target);
+    }, true);
+    document.addEventListener('focusin', (e) => {
+      markBankerInteraction(e.target);
+      markGameInteraction(e.target);
+    }, true);
+    document.addEventListener('change', (e) => markGameInteraction(e.target), true);
 
     EL.createBtn()?.addEventListener('click',
       withCloudOp('create session', 'Cloud: creating session...', createSession));

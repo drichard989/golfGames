@@ -639,7 +639,21 @@ const Vegas = {
 };
 
 function vegas_renderTeamControls(){
-  const box=$(ids.vegasTeams); box.innerHTML="";
+  const box=$(ids.vegasTeams); if(!box) return;
+
+  // Preserve existing selections so a re-render (triggered by name edits,
+  // cascades, or cloud sync) does NOT reset the user's team picks.
+  const prevAssignments = (() => {
+    try { return vegas_getTeamAssignments(); } catch { return { A: [], B: [] }; }
+  })();
+  const prevGhosts = [];
+  for (let i = 0; i < 4; i++) {
+    const g = document.getElementById(`vegasGhost_${i}`);
+    prevGhosts.push(!!(g && g.checked));
+  }
+  const hadPrev = (prevAssignments.A?.length || 0) + (prevAssignments.B?.length || 0) > 0;
+
+  box.innerHTML="";
   const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
     const v = input?.value?.trim();
     return v || `Player ${i+1}`;
@@ -708,11 +722,24 @@ function vegas_renderTeamControls(){
     }
   }
   
-  // Set default team assignments
-  $(`input[name="vegasTeam_0"][value="A"]`).checked ||= true;
-  $(`input[name="vegasTeam_1"][value="A"]`).checked ||= true;
-  if(realPlayers >= 3 || needsGhosts) $(`input[name="vegasTeam_2"][value="B"]`).checked ||= true;
-  if(realPlayers >= 4 || needsGhosts) $(`input[name="vegasTeam_3"][value="B"]`).checked ||= true;
+  if (hadPrev) {
+    // Restore the user's prior selections after the destructive rebuild.
+    vegas_setTeamAssignments(prevAssignments);
+    for (let i = realPlayers; i < maxPositions; i++) {
+      const g = document.getElementById(`vegasGhost_${i}`);
+      if (g) g.checked = prevGhosts[i];
+    }
+  } else {
+    // First render: apply sensible defaults (P0+P1 = A, P2+P3 = B)
+    const a0 = $(`input[name="vegasTeam_0"][value="A"]`); if (a0) a0.checked = true;
+    const a1 = $(`input[name="vegasTeam_1"][value="A"]`); if (a1) a1.checked = true;
+    if (realPlayers >= 3 || needsGhosts) {
+      const b2 = $(`input[name="vegasTeam_2"][value="B"]`); if (b2) b2.checked = true;
+    }
+    if (realPlayers >= 4 || needsGhosts) {
+      const b3 = $(`input[name="vegasTeam_3"][value="B"]`); if (b3) b3.checked = true;
+    }
+  }
 }
 function vegas_getTeamAssignments(){
   const teams={A:[],B:[]}; 
