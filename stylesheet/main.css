@@ -489,49 +489,24 @@ input[type="text"] {
   font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
 }
 
-/* Banker table uses many inline font sizes; enforce scaling there */
-#bankerTable th,
-#bankerTable td,
-#bankerTable input,
-#bankerTable select,
-#bankerTable button,
-#bankerTable span,
-#bankerTable div,
-#vegasTable th,
-#vegasTable td,
-#vegasTable input,
-#vegasTable select,
-#vegasTable button,
-#vegasTable span,
-#vegasTable div,
-#skinsTable th,
-#skinsTable td,
-#skinsTable input,
-#skinsTable select,
-#skinsTable button,
-#skinsTable span,
-#skinsTable div,
-#junkTable th,
-#junkTable td,
-#junkTable input,
-#junkTable select,
-#junkTable button,
-#junkTable span,
-#junkTable div,
-#hiloTable th,
-#hiloTable td,
-#hiloTable input,
-#hiloTable select,
-#hiloTable button,
-#hiloTable span,
-#hiloTable div,
-#wolfTable th,
-#wolfTable td,
-#wolfTable input,
-#wolfTable select,
-#wolfTable button,
-#wolfTable span,
-#wolfTable div {
+/* Game tables: enforce font scaling on every cell, input, and inner element.
+   Uses class selectors so it covers all six tables:
+     .banker-table  -> #bankerTable, #wolfTable
+     .vegas-table   -> #vegasTable, #hiloTable
+     .skins-table   -> #skinsTable
+     .junk-table    -> #junkTable
+   Universal descendant selector (* ) makes sure spans, labels, small,
+   strong, b, em, a, p, etc. inside cells also resize. !important is
+   required because some inputs have a more specific id+attribute rule
+   (e.g. input[type="number"]) that would otherwise win the cascade. */
+.banker-table,
+.vegas-table,
+.skins-table,
+.junk-table,
+.banker-table *,
+.vegas-table *,
+.skins-table *,
+.junk-table * {
   font-size: calc(12px + var(--font-data-adjust) + var(--font-size-step)) !important;
 }
 
