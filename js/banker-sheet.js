@@ -598,6 +598,8 @@
   }
 
   function onTableClick(e){
+    // Only intercept rows when the sheet is the active input mode.
+    if (!document.body.classList.contains('banker-sheet-active')) return;
     const tbody = e.target.closest('#bankerBody');
     if (!tbody) return;
     // Clicks on form controls inside shouldn't propagate because the cells
@@ -669,44 +671,79 @@
     scheduleSummaryUpdate._t = requestAnimationFrame(buildSummaryRows);
   }
 
+  let _active = false;
+  let _listenersBound = false;
+  let _tbodyObserver = null;
+
   function activate(){
+    if (_active) return;
+    _active = true;
     document.body.classList.add('banker-sheet-active');
-    // Bind row click delegation
-    document.addEventListener('click', onTableClick);
+
+    if (!_listenersBound) {
+      _listenersBound = true;
+      // Bind row click delegation (guarded by banker-sheet-active in handler)
+      document.addEventListener('click', onTableClick);
+
+      // Also update on any save event the app fires
+      document.addEventListener('input', (e) => {
+        if (!_active) return;
+        if (!e.target || !e.target.id) return;
+        if (e.target.id.startsWith('banker_')) scheduleSummaryUpdate();
+      }, { passive: true });
+      document.addEventListener('change', (e) => {
+        if (!_active) return;
+        if (!e.target || !e.target.id) return;
+        if (e.target.id.startsWith('banker_')) scheduleSummaryUpdate();
+      }, { passive: true });
+    }
 
     // When the banker module rebuilds its table (name change, player count change),
     // the tbody innerHTML is replaced. Use a MutationObserver to re-apply summaries.
     const tbody = document.getElementById('bankerBody');
-    if (tbody) {
-      const obs = new MutationObserver(() => scheduleSummaryUpdate());
-      obs.observe(tbody, { childList: true, subtree: true });
+    if (tbody && !_tbodyObserver) {
+      _tbodyObserver = new MutationObserver(() => {
+        if (_active) scheduleSummaryUpdate();
+      });
+      _tbodyObserver.observe(tbody, { childList: true, subtree: true });
     }
-
-    // Also update on any save event the app fires
-    document.addEventListener('input', (e) => {
-      if (!e.target || !e.target.id) return;
-      if (e.target.id.startsWith('banker_')) scheduleSummaryUpdate();
-    }, { passive: true });
-    document.addEventListener('change', (e) => {
-      if (!e.target || !e.target.id) return;
-      if (e.target.id.startsWith('banker_')) scheduleSummaryUpdate();
-    }, { passive: true });
 
     // Initial render (banker table may not exist yet; MutationObserver handles it)
     scheduleSummaryUpdate();
   }
 
   function deactivate(){
+    if (!_active) return;
+    _active = false;
     document.body.classList.remove('banker-sheet-active');
-    // Remove summary cells
+    // Close any open sheet
+    try { closeSheet(); } catch(_) {}
+    // Remove summary cells so the original banker inputs are fully visible again
     document.querySelectorAll('#bankerBody .banker-sheet-summary-cell').forEach(td => td.remove());
     document.querySelectorAll('#bankerBody tr.banker-sheet-row-empty').forEach(tr => tr.classList.remove('banker-sheet-row-empty'));
   }
 
+  // Desktop (>=900px) uses the original inline banker table with full bet/result
+  // columns. Mobile/tablet portrait (<900px) uses the bottom sheet.
+  const DESKTOP_MQ = window.matchMedia('(min-width: 900px)');
+  function applyViewportMode(){
+    if (DESKTOP_MQ.matches) {
+      deactivate();
+    } else {
+      activate();
+    }
+  }
+  try {
+    DESKTOP_MQ.addEventListener('change', applyViewportMode);
+  } catch(_) {
+    // Safari < 14 fallback
+    DESKTOP_MQ.addListener(applyViewportMode);
+  }
+
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', activate, { once: true });
+    document.addEventListener('DOMContentLoaded', applyViewportMode, { once: true });
   } else {
-    activate();
+    applyViewportMode();
   }
 
   window.BankerSheet = {
