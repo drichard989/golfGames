@@ -785,35 +785,16 @@
       }
     }, { passive: true });
 
-    fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
-  }
-
-  function syncScorecardLabelOverlay() {
-    const overlayBand = document.getElementById('scorecardOverlayBand');
-    if (!overlayBand) return;
-
-    const holesHeader = document.getElementById('holesHeader');
-    const parRow = document.getElementById('parRow');
-    const hcpRow = document.getElementById('hcpRow');
-    const measure = (el) => el ? el.getBoundingClientRect().height : 0;
-    const frozenRows = Array.from(document.querySelectorAll('#scorecardFrozenTable tr'));
-    const holesHeight = measure(holesHeader) || measure(frozenRows[0]);
-    const parHeight = measure(parRow) || measure(frozenRows[1]);
-    const hcpHeight = measure(hcpRow) || measure(frozenRows[2]);
-    const overlayHeight = holesHeight + parHeight + hcpHeight;
-
-    if (overlayHeight <= 0) {
-      overlayBand.style.height = '0px';
-      overlayBand.style.transform = 'translateY(0)';
-      overlayBand.hidden = true;
-      return;
+    if (frozenScroll) {
+      frozenScroll.addEventListener('scroll', () => {
+        if (syncingHorizontal) return;
+        syncingHorizontal = true;
+        scrollPane.scrollLeft = frozenScroll.scrollLeft;
+        syncingHorizontal = false;
+      }, { passive: true });
     }
 
-    overlayBand.style.height = `${overlayHeight}px`;
-    // Overlay row lives in the main score table body; lift it upward so it
-    // sits directly over the visible header clone (holes/par/hcp block).
-    overlayBand.style.transform = `translateY(-${overlayHeight}px)`;
-    overlayBand.hidden = false;
+    fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
   }
 
   function syncFrozenScorecardHeader() {
@@ -823,8 +804,6 @@
     const scrollWrap = document.getElementById('scorecardFrozenScroll');
     const fixedTarget = document.getElementById('scorecardFrozenFixed');
     const scrollTarget = document.getElementById('scorecardFrozenTable');
-    const scrollProxy = document.getElementById('scorecardFrozenScrollProxy');
-    const scrollProxyTrack = document.getElementById('scorecardFrozenScrollProxyTrack');
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
     const fixedSource = document.getElementById('scorecardFixed');
@@ -945,17 +924,8 @@
     const scrollTableWidth = scrollSource.scrollWidth;
     scrollTarget.style.width = `${scrollTableWidth}px`;
     scrollTarget.style.minWidth = `${scrollTableWidth}px`;
-    if (scrollProxyTrack) {
-      scrollProxyTrack.style.width = `${scrollTableWidth}px`;
-      scrollProxyTrack.style.minWidth = `${scrollTableWidth}px`;
-    }
 
     scrollWrap.scrollLeft = scrollPane.scrollLeft;
-    if (scrollProxy) {
-      scrollProxy.scrollLeft = scrollPane.scrollLeft;
-    }
-
-    syncScorecardLabelOverlay();
   }
 
   function setupGamesPanelScrollSync() {
@@ -1296,7 +1266,7 @@
           syncRowHeightsFrame = null;
 
           const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
-          const scrollRows = Array.from(scrollTable.querySelectorAll('tr')).filter((row) => !row.classList.contains('scorecard-overlay-row'));
+          const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
           const allRows = [...fixedRows, ...scrollRows];
 
           allRows.forEach((row) => {
@@ -1321,7 +1291,6 @@
             if (scrollRow.style.height !== nextHeight) scrollRow.style.height = nextHeight;
           }
 
-          syncScorecardLabelOverlay();
         });
 
         syncFrozenScorecardHeader();
