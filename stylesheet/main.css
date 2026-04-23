@@ -851,16 +851,23 @@ input[type="text"] {
 }
 
 .scorecard-card-footer {
-  background: var(--panel-alt);
-  border: 1px solid var(--line);
+  background: transparent;
+  border: none;
   border-top: 1px solid rgba(168, 179, 191, 0.15);
-  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
-  margin: 0 0 4px;
+  border-radius: 0;
+  margin: 0;
   padding: 8px 12px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-sm);
+}
+
+.scorecard-controls-shell {
+  background: var(--panel-alt);
+  border: 1px solid var(--line);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  margin: 0 0 8px;
 }
 
 .scorecard-add-player-btn {
@@ -2549,11 +2556,12 @@ input[type="text"] {
 }
 
 .scorecard-options-panel {
-  margin: var(--space-xs) var(--space-lg) var(--space-md);
-  padding: var(--space-md);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  background: var(--panel-alt);
+  margin: 0;
+  padding: var(--space-sm) 12px 10px;
+  border: none;
+  border-top: 1px solid rgba(168, 179, 191, 0.2);
+  border-radius: 0;
+  background: transparent;
 }
 
 .scorecard-options-controls {

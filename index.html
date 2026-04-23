@@ -192,25 +192,27 @@
       </div>
     </div>
 
-    <!-- SCORECARD FOOTER (attached to card) -->
-    <div class="scorecard-card-footer">
-      <button id="addPlayerBtn" class="btn scorecard-add-player-btn">+ Add Player</button>
-      <button type="button" class="btn game-options-toggle" id="scorecardOptionsToggle" data-target="scorecardOptionsPanel" aria-controls="scorecardOptionsPanel" aria-expanded="false">Scorecard Options</button>
-    </div>
+    <div class="scorecard-controls-shell">
+      <!-- SCORECARD FOOTER (attached to card) -->
+      <div class="scorecard-card-footer">
+        <button id="addPlayerBtn" class="btn scorecard-add-player-btn">+ Add Player</button>
+        <button type="button" class="btn game-options-toggle" id="scorecardOptionsToggle" data-target="scorecardOptionsPanel" aria-controls="scorecardOptionsPanel" aria-expanded="false">Scorecard Options</button>
+      </div>
 
-    <!-- SCORECARD OPTIONS -->
-    <div id="scorecardOptionsPanel" class="game-options-panel scorecard-options-panel" hidden>
-      <div class="controls scorecard-options-controls">
-        <div class="control handicap-mode-control">
-          <label>Handicap Mode:</label>
-          <div class="hcp-mode-btn-group" id="handicapModeGroup" role="radiogroup" aria-label="Handicap Mode">
-            <button type="button" class="btn hcp-mode-btn" id="handicapModeGross" data-value="gross" role="radio" aria-checked="false">Gross</button>
-            <button type="button" class="btn hcp-mode-btn" id="handicapModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="true" data-active="true">Play Off Low</button>
-            <button type="button" class="btn hcp-mode-btn" id="handicapModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+      <!-- SCORECARD OPTIONS -->
+      <div id="scorecardOptionsPanel" class="game-options-panel scorecard-options-panel" hidden>
+        <div class="controls scorecard-options-controls">
+          <div class="control handicap-mode-control">
+            <label>Handicap Mode:</label>
+            <div class="hcp-mode-btn-group" id="handicapModeGroup" role="radiogroup" aria-label="Handicap Mode">
+              <button type="button" class="btn hcp-mode-btn" id="handicapModeGross" data-value="gross" role="radio" aria-checked="false">Gross</button>
+              <button type="button" class="btn hcp-mode-btn" id="handicapModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="true" data-active="true">Play Off Low</button>
+              <button type="button" class="btn hcp-mode-btn" id="handicapModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+            </div>
           </div>
+          <button id="clearAllBtn" class="btn">Clear Names &amp; Scores</button>
+          <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
         </div>
-        <button id="clearAllBtn" class="btn">Clear Names &amp; Scores</button>
-        <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
       </div>
     </div>
 
