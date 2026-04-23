@@ -4388,110 +4388,70 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   margin-top: 1px;
 }
 
-/* Tablets / narrow desktops (421–899px): drop the standalone Max column,
-   stack "Max $X" under the banker name, shrink Banker 2× to a terse "BX",
-   and push Result onto its own full-width row below so each player's
-   result line fills the table (one line per player, no empty right gutter). */
-@media (min-width: 421px) and (max-width: 899px) {
-  .bss-grid {
+/* Tablets / narrow desktops (421px and up, when the bottom sheet is active):
+   drop the standalone Max column, stack "Max $X" under the banker name,
+   shrink Banker 2× to a terse "BX", and push Result onto its own full-width
+   row below so each player's result line fills the table (one line per
+   player, no empty right gutter). Scoped to `body.banker-sheet-active` so
+   wide touch tablets (1024–1366px) get the same treatment as 768px tablets. */
+@media (min-width: 421px) {
+  body.banker-sheet-active .bss-grid {
     grid-template-columns:
       minmax(72px, auto)   /* banker (with max stacked) */
       1fr                  /* bets */
       minmax(32px, auto);  /* BX */
   }
-  .bss-grid .bss-col-max { display: none; }
-  .bss-max-inline { display: block; }
-  .bss-col-bdbl { text-align: center; }
-  .bss-col-bdbl .bss-col-label { letter-spacing: 0.06em; }
+  body.banker-sheet-active .bss-grid .bss-col-max { display: none; }
+  body.banker-sheet-active .bss-max-inline { display: block; }
+  body.banker-sheet-active .bss-col-bdbl { text-align: center; }
+  body.banker-sheet-active .bss-col-bdbl .bss-col-label { letter-spacing: 0.06em; }
   /* Result spans every column on its own row */
-  .bss-grid .bss-col-result {
+  body.banker-sheet-active .bss-grid .bss-col-result {
     grid-column: 1 / -1;
     margin-top: 4px;
     padding-top: 4px;
     border-top: 1px solid var(--line);
   }
-  .bss-col-result .bss-col-label { display: none; }
+  body.banker-sheet-active .bss-col-result .bss-col-label { display: none; }
 
   /* Reclaim room for full player names: hide the standalone stroke pill
      and instead tint the name + amount cells (green = receiving stroke,
      red = giving stroke via plus handicap). */
-  .bss-bet-list {
+  body.banker-sheet-active .bss-bet-list {
     grid-template-columns: minmax(0, 1fr) auto auto;
   }
-  .bss-bet-stroke-slot { display: none; }
-  .bss-bet-line > .bss-bet-name { padding-left: 6px; }
+  body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
+  body.banker-sheet-active .bss-bet-line > .bss-bet-name { padding-left: 6px; }
 
-  .bss-bet-stroke-down > .bss-bet-name,
-  .bss-bet-stroke-down > .bss-bet-amt {
+  body.banker-sheet-active .bss-bet-stroke-down > .bss-bet-name,
+  body.banker-sheet-active .bss-bet-stroke-down > .bss-bet-amt {
     background: rgba(0, 188, 140, 0.18);
     color: var(--accent);
     font-weight: 700;
   }
-  .bss-bet-stroke-up > .bss-bet-name,
-  .bss-bet-stroke-up > .bss-bet-amt {
+  body.banker-sheet-active .bss-bet-stroke-up > .bss-bet-name,
+  body.banker-sheet-active .bss-bet-stroke-up > .bss-bet-amt {
     background: rgba(220, 53, 69, 0.18);
     color: var(--danger, #dc3545);
     font-weight: 700;
   }
 
   /* Tint the banker name itself when the banker strokes on this hole. */
-  .bss-col-banker.bss-bet-stroke-down .bss-banker-name {
+  body.banker-sheet-active .bss-col-banker.bss-bet-stroke-down .bss-banker-name {
     color: var(--accent);
   }
-  .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
+  body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
     color: var(--danger, #dc3545);
   }
 
-  /* Result rows full-width, single-line. Same logic as the ≤768px block —
-     duplicated here so the 769–899 tablet range doesn't fall back to the
-     base wrapping rules from `.bss-result-block > *`. */
-  .bss-result-block {
-    display: block;
-    width: 100%;
-  }
-  .bss-result-block .banker-result-row {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    padding: 3px 6px;
-    margin-bottom: 2px;
-    gap: 6px;
-    white-space: nowrap;
+  /* Result rows full-width, single-line. (The consolidated
+     body.banker-sheet-active rule below also enforces this; these add
+     tablet-specific font sizing.) */
+  body.banker-sheet-active .bss-result-block .banker-result-row {
     font-size: 12px;
   }
-  .bss-result-block .banker-result-name {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap !important;
-    word-break: normal !important;
-    font-weight: 600;
-    margin-right: 0;
-  }
-  .bss-result-block .banker-result-right {
-    display: flex;
-    flex-wrap: nowrap !important;
-    align-items: center;
-    gap: 6px;
-    flex: 0 0 auto !important;
-  }
-  .bss-result-block .banker-result-score,
-  .bss-result-block .banker-result-payout,
-  .bss-result-block .banker-result-mult {
-    white-space: nowrap !important;
-    word-break: normal !important;
-    flex: 0 0 auto;
-  }
-  .bss-result-block .banker-result-summary {
-    padding: 3px 6px;
+  body.banker-sheet-active .bss-result-block .banker-result-summary {
     font-size: 13px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 }
 
@@ -5015,91 +4975,84 @@ body.banker-sheet-open { overflow: hidden; }
 }
 
 /* ----------------------------------------------------------------------------
-   CONSOLIDATED RESULT-ROW LAYOUT (mobile + tablet, <900px)
+   CONSOLIDATED RESULT-ROW LAYOUT (any width, whenever bottom sheet is active)
 
-   A single high-specificity rule that overrides ALL earlier breakpoints to
-   guarantee the per-player banker result rows render full-width with the
-   player name visible (ellipsized only if truly needed) and the score/payout
-   pinned to the right. Applies to BOTH:
+   Scoped to `body.banker-sheet-active` instead of a width media query so it
+   triggers on ALL touch devices regardless of viewport width — including
+   wide Android / iPad tablets (1024–1366px) which would otherwise miss any
+   `max-width: 899px` rule. Forces per-player result rows full-width with the
+   player name visible, score/payout pinned right. Applies to BOTH:
      - inline summary cell  (`.bss-result-block` inside `#bankerBody`)
      - bet sheet popup      (`.banker-sheet-result-block .banker-sheet-result-text`)
-   so the popup style matches the table.
    ---------------------------------------------------------------------------- */
-@media (max-width: 899px) {
-  /* Container: always block, full width, no clipping */
-  #bankerBody .bss-result-block,
-  .banker-sheet-result-block .banker-sheet-result-text {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    overflow: visible !important;
-  }
+body.banker-sheet-active #bankerBody .bss-result-block,
+.banker-sheet-result-block .banker-sheet-result-text {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
 
-  /* Each player row: flex, nowrap, full-width edge-to-edge */
-  #bankerBody .bss-result-block .banker-result-row,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-row {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    min-width: 0 !important;
-    box-sizing: border-box !important;
-    padding: 3px 6px !important;
-    margin: 0 0 2px 0 !important;
-    gap: 6px !important;
-    white-space: nowrap !important;
-  }
+body.banker-sheet-active #bankerBody .bss-result-block .banker-result-row,
+.banker-sheet-result-block .banker-sheet-result-text .banker-result-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding: 3px 6px !important;
+  margin: 0 0 2px 0 !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
 
-  /* Player name: takes all remaining space, ellipsizes only if needed */
-  #bankerBody .bss-result-block .banker-result-name,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-name {
-    flex: 1 1 auto !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    word-break: normal !important;
-    margin-right: 0 !important;
-  }
+body.banker-sheet-active #bankerBody .bss-result-block .banker-result-name,
+.banker-sheet-result-block .banker-sheet-result-text .banker-result-name {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+  margin-right: 0 !important;
+}
 
-  /* Right cluster (score + payout + mult) never wraps, never shrinks */
-  #bankerBody .bss-result-block .banker-result-right,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-right {
-    display: flex !important;
-    flex: 0 0 auto !important;
-    flex-wrap: nowrap !important;
-    align-items: center !important;
-    gap: 6px !important;
-    white-space: nowrap !important;
-  }
-  #bankerBody .bss-result-block .banker-result-score,
-  #bankerBody .bss-result-block .banker-result-payout,
-  #bankerBody .bss-result-block .banker-result-mult,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-score,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-payout,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-mult {
-    flex: 0 0 auto !important;
-    white-space: nowrap !important;
-    word-break: normal !important;
-  }
+body.banker-sheet-active #bankerBody .bss-result-block .banker-result-right,
+.banker-sheet-result-block .banker-sheet-result-text .banker-result-right {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+}
+body.banker-sheet-active #bankerBody .bss-result-block .banker-result-score,
+body.banker-sheet-active #bankerBody .bss-result-block .banker-result-payout,
+body.banker-sheet-active #bankerBody .bss-result-block .banker-result-mult,
+.banker-sheet-result-block .banker-sheet-result-text .banker-result-score,
+.banker-sheet-result-block .banker-sheet-result-text .banker-result-payout,
+.banker-sheet-result-block .banker-sheet-result-text .banker-result-mult {
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  word-break: normal !important;
+}
 
-  /* Banker total summary: full-width, single-line, ellipsized if needed */
-  #bankerBody .bss-result-block .banker-result-summary,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-summary {
-    display: block !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-    padding: 3px 6px !important;
-    margin-top: 3px !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
+body.banker-sheet-active #bankerBody .bss-result-block .banker-result-summary,
+.banker-sheet-result-block .banker-sheet-result-text .banker-result-summary {
+  display: block !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 3px 6px !important;
+  margin-top: 3px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 /* Phone-specific tightening (≤420px): smaller fonts so everything fits

@@ -800,9 +800,11 @@
     document.querySelectorAll('#bankerBody tr.banker-sheet-row-empty').forEach(tr => tr.classList.remove('banker-sheet-row-empty'));
   }
 
-  // Desktop (>=900px) uses the original inline banker table with full bet/result
-  // columns. Mobile/tablet portrait (<900px) uses the bottom sheet.
-  const DESKTOP_MQ = window.matchMedia('(min-width: 900px)');
+  // Desktop = wide screen WITH a precise pointer (mouse). Anything touch-first
+  // (phones, all tablets including 1024–1366px iPads / Android tabs) gets the
+  // bottom sheet + full-width inline summary so the per-player result rows
+  // don't wrap inside a narrow result column.
+  const DESKTOP_MQ = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
   function applyViewportMode(){
     if (DESKTOP_MQ.matches) {
       deactivate();
