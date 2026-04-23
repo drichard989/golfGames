@@ -795,6 +795,8 @@
     if (!scrollPane || !fixedPane) return;
 
     let stickyEls = [];
+    let fallbackEnabled = false;
+    let listenersBound = false;
 
     function refreshCells() {
       stickyEls = [
@@ -805,27 +807,77 @@
         ...fixedPane.querySelectorAll('#parRowFixed td, #parRowFixed th'),
         ...fixedPane.querySelectorAll('#hcpRowFixed td, #hcpRowFixed th'),
       ];
-      stickyEls.forEach(el => { el.style.willChange = 'transform'; });
+      stickyEls.forEach((el) => {
+        el.style.willChange = fallbackEnabled ? 'transform' : 'auto';
+        if (!fallbackEnabled) {
+          el.style.transform = '';
+        }
+      });
     }
-
-    refreshCells();
-    // Expose so syncRowHeights() can call after DOM rebuilds
-    window._iosStickyRefresh = refreshCells;
 
     let rafId = null;
     function applyTranslate() {
       rafId = null;
+      if (!fallbackEnabled) return;
       const st = scrollPane.scrollTop;
       stickyEls.forEach(el => { el.style.transform = `translateY(${st}px)`; });
     }
 
     function onScroll() {
+      if (!fallbackEnabled) return;
       if (rafId) return;
       rafId = requestAnimationFrame(applyTranslate);
     }
 
-    scrollPane.addEventListener('scroll', onScroll, { passive: true });
-    fixedPane.addEventListener('scroll', onScroll, { passive: true });
+    function detectNativeStickyWorks() {
+      const probe = scrollPane.querySelector('thead th') || fixedPane.querySelector('thead th');
+      if (!probe) return true;
+
+      const maxScroll = Math.max(0, scrollPane.scrollHeight - scrollPane.clientHeight);
+      if (maxScroll < 12) return true;
+
+      const startTop = scrollPane.scrollTop;
+      const targetTop = Math.min(maxScroll, startTop + 16);
+      const beforeTop = probe.getBoundingClientRect().top;
+
+      scrollPane.scrollTop = targetTop;
+      fixedPane.scrollTop = targetTop;
+      const afterTop = probe.getBoundingClientRect().top;
+
+      scrollPane.scrollTop = startTop;
+      fixedPane.scrollTop = startTop;
+
+      return Math.abs(afterTop - beforeTop) <= 1.5;
+    }
+
+    function ensureFallbackMode() {
+      const nativeStickyWorks = detectNativeStickyWorks();
+      fallbackEnabled = !nativeStickyWorks;
+      refreshCells();
+
+      if (fallbackEnabled && !listenersBound) {
+        listenersBound = true;
+        scrollPane.addEventListener('scroll', onScroll, { passive: true });
+        fixedPane.addEventListener('scroll', onScroll, { passive: true });
+      }
+
+      if (fallbackEnabled) {
+        applyTranslate();
+      }
+    }
+
+    refreshCells();
+    ensureFallbackMode();
+    setTimeout(ensureFallbackMode, 200);
+    setTimeout(ensureFallbackMode, 700);
+
+    // Expose so syncRowHeights() can call after DOM rebuilds
+    window._iosStickyRefresh = () => {
+      refreshCells();
+      if (fallbackEnabled) {
+        requestAnimationFrame(applyTranslate);
+      }
+    };
   }
 
   function setupGamesPanelScrollSync() {
