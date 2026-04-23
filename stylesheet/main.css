@@ -3695,3 +3695,195 @@ input[type="text"] {
 :root[data-theme="light"] .error-close:hover {
   color: #1a1c1f;
 }
+
+/* ============================================================================
+   JUNK BOTTOM SHEET
+   Additive UI layer. To remove: delete this entire block and js/junk-sheet.js.
+   ============================================================================ */
+
+/* When active, hide the per-cell <details> dropdown and make rows tappable */
+body.junk-sheet-active #junkBody .junk-dd { display: none !important; }
+body.junk-sheet-active #junkBody tr { cursor: pointer; }
+body.junk-sheet-active #junkBody tr:hover td { background: rgba(255,255,255,0.03); }
+:root[data-theme="light"] body.junk-sheet-active #junkBody tr:hover td { background: rgba(0,0,0,0.03); }
+
+/* Collapse cell layout to just the dot + active achievement labels */
+body.junk-sheet-active .junk-cell { gap: 2px; }
+
+/* Backdrop */
+.junk-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 9000;
+}
+.junk-sheet-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Sheet panel */
+.junk-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  color: var(--ink);
+  border-top: 2px solid var(--line);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  box-shadow: 0 -12px 32px rgba(0,0,0,0.4);
+  transform: translateY(100%);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 9001;
+}
+.junk-sheet.is-open { transform: translateY(0); }
+
+@media (min-width: 720px) {
+  .junk-sheet {
+    left: 50%;
+    right: auto;
+    bottom: 24px;
+    transform: translate(-50%, 120%);
+    width: min(680px, calc(100vw - 32px));
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--line);
+  }
+  .junk-sheet.is-open { transform: translate(-50%, 0); }
+}
+
+.junk-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--line);
+  background: var(--panel-alt);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+.junk-sheet-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+.junk-sheet-close {
+  background: transparent;
+  border: 2px solid var(--line);
+  color: var(--ink);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+.junk-sheet-close:hover { background: rgba(255,255,255,0.05); }
+:root[data-theme="light"] .junk-sheet-close:hover { background: rgba(0,0,0,0.05); }
+
+.junk-sheet-body {
+  padding: 12px 16px 4px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+}
+
+.junk-sheet-player {
+  padding: 10px 0 14px;
+  border-bottom: 2px solid var(--line);
+}
+.junk-sheet-player:last-child { border-bottom: none; }
+
+.junk-sheet-player-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.junk-sheet-player-name {
+  font-weight: 700;
+  font-size: var(--text-lg);
+}
+.junk-sheet-player-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.junk-sheet-chip-meta {
+  font-size: var(--text-sm);
+  color: var(--muted);
+  padding: 2px 8px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-alt);
+}
+
+.junk-sheet-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+
+.junk-sheet-chip {
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--panel-alt);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 6px;
+  min-height: 76px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  font-family: inherit;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 80ms ease;
+  text-align: center;
+}
+.junk-sheet-chip:hover:not(:disabled) { border-color: var(--accent); }
+.junk-sheet-chip:active:not(:disabled) { transform: scale(0.97); }
+.junk-sheet-chip[data-active="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+.junk-sheet-chip[data-active="true"] .junk-sheet-chip-pts { color: rgba(255,255,255,0.85); }
+.junk-sheet-chip.is-auto {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.junk-sheet-chip-emoji { font-size: 20px; line-height: 1; }
+.junk-sheet-chip-label { font-weight: 600; font-size: var(--text-sm); line-height: 1.1; }
+.junk-sheet-chip-pts { font-size: var(--text-xs); color: var(--muted); line-height: 1; }
+
+.junk-sheet-footer {
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 2px solid var(--line);
+  background: var(--panel-alt);
+  display: flex;
+  justify-content: flex-end;
+}
+.junk-sheet-done {
+  min-width: 120px;
+}
+
+/* Prevent background scroll while sheet is open */
+body.junk-sheet-open { overflow: hidden; }
+
+/* ============================================================================
+   END JUNK BOTTOM SHEET
+   ============================================================================ */
