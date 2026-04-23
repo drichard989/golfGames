@@ -240,6 +240,88 @@
       if (idx < 0) return;
       openSheet(idx + 1);
     });
+
+    // Mobile 2-column summary layout (hole | all players' dots) — driven by
+    // the `.junk-mobile-summary-active` body class. We toggle it based on a
+    // media query and rebuild the per-row summary cell.
+    const MQ = window.matchMedia('(max-width: 600px)');
+    const applyMobile = () => {
+      if (MQ.matches) {
+        document.body.classList.add('junk-mobile-summary-active');
+        buildJunkSummaryRows();
+      } else {
+        document.body.classList.remove('junk-mobile-summary-active');
+        clearJunkSummaryRows();
+      }
+    };
+    try { MQ.addEventListener('change', applyMobile); }
+    catch(_) { MQ.addListener(applyMobile); }
+    applyMobile();
+
+    // Rebuild summaries when junk data changes or tbody is regenerated.
+    const tbody = document.getElementById('junkBody');
+    if (tbody) {
+      const obs = new MutationObserver(() => {
+        if (document.body.classList.contains('junk-mobile-summary-active')) {
+          scheduleJunkSummaryUpdate();
+        }
+      });
+      obs.observe(tbody, { childList: true, subtree: true, characterData: true });
+    }
+    document.addEventListener('input', (e) => {
+      if (!document.body.classList.contains('junk-mobile-summary-active')) return;
+      if (!e.target) return;
+      // Score changes and achievement toggles can affect dots
+      if (e.target.classList && (e.target.classList.contains('score-input') || e.target.classList.contains('junk-ach'))) {
+        scheduleJunkSummaryUpdate();
+      }
+    }, { passive: true });
+  }
+
+  function scheduleJunkSummaryUpdate(){
+    if (scheduleJunkSummaryUpdate._t) cancelAnimationFrame(scheduleJunkSummaryUpdate._t);
+    scheduleJunkSummaryUpdate._t = requestAnimationFrame(buildJunkSummaryRows);
+  }
+
+  function buildJunkSummaryRows(){
+    const tbody = document.getElementById('junkBody');
+    if (!tbody) return;
+    const names = getPlayerNames();
+    const pc = names.length;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.forEach((tr, i) => {
+      const h = i + 1;
+      let cell = tr.querySelector('.junk-mobile-summary-cell');
+      if (!cell) {
+        cell = document.createElement('td');
+        cell.className = 'junk-mobile-summary-cell';
+        tr.appendChild(cell);
+      }
+      const lines = [];
+      for (let p = 0; p < pc; p++){
+        const td = document.getElementById(`junk_h${h}_p${p+1}`);
+        const dot = td ? (td.querySelector('.junk-dot')?.textContent || td.textContent || '').trim() : '';
+        const hasDot = dot && dot !== '—' && dot !== '';
+        const nm = escapeHtmlLocal(names[p] || `P${p+1}`);
+        lines.push(`
+          <div class="junk-mini-row${hasDot?'':' is-empty'}">
+            <span class="junk-mini-name">${nm}</span>
+            <span class="junk-mini-dot">${hasDot ? escapeHtmlLocal(dot) : '—'}</span>
+          </div>
+        `);
+      }
+      cell.innerHTML = lines.join('') || `<span class="junk-mini-empty">Tap to score</span>`;
+    });
+  }
+
+  function clearJunkSummaryRows(){
+    document.querySelectorAll('#junkBody .junk-mobile-summary-cell').forEach(c => c.remove());
+  }
+
+  function escapeHtmlLocal(s){
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[c]);
   }
 
   if (document.readyState === 'loading') {
