@@ -2,7 +2,7 @@
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
-    <title>Manito Golf Games v3.0.33</title>
+    <title>Manito Golf Games v3.0.34</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
     <!-- Aggressive cache prevention for iOS -->
@@ -22,9 +22,10 @@
     <!-- Accessibility announcer for screen readers -->
     <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
 
+    <div class="top-pinned-shell">
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v3.0.33</h1>
+        <h1>Manito Golf Games v3.0.34</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
@@ -138,6 +139,7 @@
         <button id="entrySwitcherGamesBtn" class="entry-switcher-btn" type="button" role="tab" aria-selected="false" aria-controls="gamesEntryPanel">🎮 Games</button>
       </div>
     </div>
+    </div>
     <section id="scoreEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherScoreBtn">
 
     <!-- SCORECARD - Dual Table Layout -->
@@ -232,10 +234,12 @@
     </div>
     <!-- SKINS GAME -->
     <section class="game-section" id="skinsSection" role="tabpanel" aria-labelledby="toggleSkins" aria-hidden="true">
-      <h2>Skins</h2>
-      <div class="controls" style="margin: 0 0 8px 0;">
-        <button id="clearSkinsDataBtn" class="btn">Clear Skins Data</button>
-        <button type="button" class="btn game-options-toggle" data-target="skinsOptionsPanel" aria-controls="skinsOptionsPanel" aria-expanded="false">Skins Options</button>
+      <div class="game-section-header">
+        <h2>Skins</h2>
+        <div class="controls">
+          <button id="clearSkinsDataBtn" class="btn">Clear Skins Data</button>
+          <button type="button" class="btn game-options-toggle" data-target="skinsOptionsPanel" aria-controls="skinsOptionsPanel" aria-expanded="false">Skins Options</button>
+        </div>
       </div>
       <div id="skinsOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
@@ -299,10 +303,12 @@
     </section>
     <!-- VEGAS GAME -->
     <section class="game-section" id="vegasSection" role="tabpanel" aria-labelledby="toggleVegas" aria-hidden="true">
-      <h2>Vegas Game</h2>
-      <div class="controls" style="margin: 0 0 8px 0;">
-        <button id="clearVegasDataBtn" class="btn">Clear Vegas Data</button>
-        <button type="button" class="btn game-options-toggle" data-target="vegasOptionsPanel" aria-controls="vegasOptionsPanel" aria-expanded="false">Vegas Options</button>
+      <div class="game-section-header">
+        <h2>Vegas Game</h2>
+        <div class="controls">
+          <button id="clearVegasDataBtn" class="btn">Clear Vegas Data</button>
+          <button type="button" class="btn game-options-toggle" data-target="vegasOptionsPanel" aria-controls="vegasOptionsPanel" aria-expanded="false">Vegas Options</button>
+        </div>
       </div>
       <div id="vegasOptionsPanel" class="game-options-panel" hidden>
       <div class="vegas-controls">
@@ -387,10 +393,12 @@
     </section>
     <!-- BANKER GAME -->
     <section class="game-section" id="bankerSection" role="tabpanel" aria-labelledby="toggleBanker" aria-hidden="true">
-      <h2>🏦 Banker</h2>
-      <div class="controls" style="margin: 0 0 8px 0; flex-wrap: nowrap;">
-        <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
-        <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
+      <div class="game-section-header">
+        <h2>🏦 Banker</h2>
+        <div class="controls">
+          <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
+          <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
+        </div>
       </div>
       <div id="bankerOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
@@ -446,9 +454,11 @@
     </section>
     <!-- HI-LO GAME -->
     <section class="game-section" id="hiloSection" role="tabpanel" aria-labelledby="toggleHilo" aria-hidden="true">
-      <h2>Hi-Lo</h2>
-      <div class="controls" style="margin: 0 0 8px 0; flex-wrap: nowrap;">
-        <button type="button" class="btn game-options-toggle" data-target="hiloOptionsPanel" aria-controls="hiloOptionsPanel" aria-expanded="false">Hi-Lo Description</button>
+      <div class="game-section-header">
+        <h2>Hi-Lo</h2>
+        <div class="controls">
+          <button type="button" class="btn game-options-toggle" data-target="hiloOptionsPanel" aria-controls="hiloOptionsPanel" aria-expanded="false">Hi-Lo Description</button>
+        </div>
       </div>
       <div id="hiloOptionsPanel" class="game-options-panel" hidden>
       <p class="note"><strong>How It Works:</strong> Requires exactly 4 players. Teams are auto-assigned: <strong>Team A</strong> = Lowest + Highest handicap, <strong>Team B</strong> = Middle two handicaps. Strokes are equalized by giving the difference to the worst player on the team with the lower combined handicap.</p>
@@ -499,10 +509,12 @@
     </section>
     <!-- JUNK GAME -->
     <section class="game-section" id="junkSection" role="tabpanel" aria-labelledby="toggleJunk" aria-hidden="true">
-      <h2>Junk (Dots)</h2>
-      <div class="controls" style="margin: 0 0 8px 0;">
-        <button id="clearJunkDataBtn" class="btn">Clear Junk Data</button>
-        <button type="button" class="btn game-options-toggle" data-target="junkOptionsPanel" aria-controls="junkOptionsPanel" aria-expanded="false">Junk Options</button>
+      <div class="game-section-header">
+        <h2>Junk (Dots)</h2>
+        <div class="controls">
+          <button id="clearJunkDataBtn" class="btn">Clear Junk Data</button>
+          <button type="button" class="btn game-options-toggle" data-target="junkOptionsPanel" aria-controls="junkOptionsPanel" aria-expanded="false">Junk Options</button>
+        </div>
       </div>
       <div id="junkOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
