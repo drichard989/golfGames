@@ -160,7 +160,12 @@
       editBtn.hidden = !show;
       if (show) {
         editBtn.disabled = false;
-        editBtn.textContent = `Edit ${editCode}`;
+        const textSpan = editBtn.querySelector('.badge-text');
+        if (textSpan) {
+          textSpan.textContent = `Edit ${editCode}`;
+        } else {
+          editBtn.textContent = `Edit ${editCode}`;
+        }
         editBtn.title = 'Tap to share edit link';
       }
     }
@@ -172,7 +177,12 @@
       viewBtn.hidden = !show;
       if (show) {
         viewBtn.disabled = false;
-        viewBtn.textContent = `View ${viewCode}`;
+        const textSpan = viewBtn.querySelector('.badge-text');
+        if (textSpan) {
+          textSpan.textContent = `View ${viewCode}`;
+        } else {
+          viewBtn.textContent = `View ${viewCode}`;
+        }
         viewBtn.title = 'Tap to share view-only link';
       }
     }

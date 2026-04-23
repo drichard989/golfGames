@@ -776,6 +776,26 @@ input[type="text"] {
   cursor: default;
 }
 
+.cloud-code-badge-btn-share {
+  gap: 4px;
+}
+
+.cloud-code-badge-btn-share .badge-text {
+  display: inline;
+}
+
+.cloud-code-badge-btn-share .badge-icon {
+  display: inline-block;
+  font-size: 0.85em;
+  opacity: 0.8;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.cloud-code-badge-btn-share:hover:not(:disabled) .badge-icon {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
 /* Light theme overrides for badge */
 :root[data-theme="light"] .cloud-status-badge[data-live="true"] {
   color: #0f5b35;
