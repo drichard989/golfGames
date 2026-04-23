@@ -3103,6 +3103,13 @@ input[type="text"] {
   table {
     min-width: 880px;
   }
+
+  /* Keep scorecard compact by default; it grows naturally with player rows. */
+  .scorecard-fixed,
+  .scorecard-scroll {
+    height: auto;
+    max-height: min(52vh, 460px);
+  }
 }
 
 /* Mobile landscape / Small tablet (768px and below) */
@@ -3259,6 +3266,12 @@ input[type="text"] {
 
   table {
     min-width: 820px;
+  }
+
+  /* On phones, bias toward showing scorecard option buttons above the fold. */
+  .scorecard-fixed,
+  .scorecard-scroll {
+    max-height: min(46vh, 380px);
   }
 
   .vegas-table th:first-child,

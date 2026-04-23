@@ -2691,19 +2691,17 @@
 
           syncPrimaryTabUi(preferredPrimaryTab);
 
-          const optionsPanels = s.localUi?.optionsPanels;
-          if (optionsPanels && typeof optionsPanels === 'object') {
-            Object.entries(optionsPanels).forEach(([targetId, isOpen]) => {
-              const panel = document.getElementById(targetId);
-              const toggleBtn = document.querySelector(`.game-options-toggle[data-target="${targetId}"]`);
-              if (!panel || !toggleBtn) return;
-
-              const open = !!isOpen;
-              panel.hidden = !open;
-              toggleBtn.classList.toggle('is-open', open);
-              toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            });
-          }
+          // Always start game option panels collapsed on reload, including
+          // live-results popouts, regardless of last saved UI state.
+          document.querySelectorAll('.game-options-toggle[data-target]').forEach((toggleBtn) => {
+            const targetId = toggleBtn.getAttribute('data-target');
+            if (!targetId) return;
+            const panel = document.getElementById(targetId);
+            if (!panel) return;
+            panel.hidden = true;
+            toggleBtn.classList.remove('is-open');
+            toggleBtn.setAttribute('aria-expanded', 'false');
+          });
         }
 
         // Recalculate all games with restored data
