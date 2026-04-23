@@ -919,10 +919,12 @@ body.mode-score #main-scorecard {
   min-width: var(--scorecard-fixed-width);
   max-width: var(--scorecard-fixed-width);
   width: var(--scorecard-fixed-width);
+  height: min(62vh, 560px);
+  max-height: min(62vh, 560px);
   border-right: 2px solid rgba(168, 179, 191, 0.4);
   background: var(--panel);
   z-index: 10;
-  box-shadow: 4px 0 8px rgba(0, 0, 0, 0.2);
+  box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
   scrollbar-gutter: stable;
 }
@@ -930,6 +932,8 @@ body.mode-score #main-scorecard {
 .scorecard-scroll {
   flex: 1;
   position: relative;
+  height: min(62vh, 560px);
+  max-height: min(62vh, 560px);
   overflow-x: auto;
   overflow-y: auto;
   scrollbar-gutter: stable;
@@ -981,13 +985,28 @@ thead th {
   z-index: var(--z-sticky-header);
 }
 
+#scorecard thead,
+#scorecardFixed thead {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+}
+
+#scorecard th,
+#scorecardFixed th {
+  position: sticky;
+  top: 0;
+  background: var(--panel-alt);
+  z-index: 5;
+}
+
 #scorecard #parRow td,
 #scorecard #parRow th,
 #scorecardFixed #parRowFixed td,
 #scorecardFixed #parRowFixed th {
   position: sticky;
   top: var(--score-sticky-par-top, 44px);
-  z-index: 2;
+  z-index: 4;
   background: var(--panel-alt);
 }
 
@@ -997,7 +1016,7 @@ thead th {
 #scorecardFixed #hcpRowFixed th {
   position: sticky;
   top: var(--score-sticky-hcp-top, 88px);
-  z-index: 2;
+  z-index: 3;
   background: var(--panel-alt);
 }
 
