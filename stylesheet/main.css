@@ -929,7 +929,7 @@ body.mode-score .entry-switcher {
   overflow-y: hidden;
   position: relative;
   background: var(--panel);
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .scorecard-frozen-scroll-proxy {
@@ -942,6 +942,7 @@ body.mode-score .entry-switcher {
   touch-action: pan-x;
   overscroll-behavior-x: contain;
   user-select: none;
+  pointer-events: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
@@ -963,6 +964,10 @@ body.mode-score .entry-switcher {
   border-spacing: 0;
   background: var(--panel);
   table-layout: fixed;
+}
+
+#scorecardFrozenTable {
+  pointer-events: none;
 }
 
 /* Prevent responsive `table { min-width }` rules from expanding the narrow fixed clone */
