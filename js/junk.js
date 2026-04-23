@@ -371,6 +371,8 @@
         const el = document.getElementById(`junkTotP${p+1}`);
         if(el) el.textContent = Number.isFinite(totals[p]) ? totals[p] : '—';
       }
+
+      renderJunkLiveResults(totals);
     }
   };
 
@@ -407,6 +409,31 @@
       const el = document.getElementById(`junkP${i+1}`);
       if(el) el.textContent = names[i] || `P${i+1}`;
     }
+  }
+
+  function renderJunkLiveResults(totals = []) {
+    const container = document.getElementById('junkLiveResults');
+    if (!container) return;
+
+    const names = getPlayerNames();
+    const playerCount = getPlayerCount();
+    if (!playerCount) {
+      container.innerHTML = '';
+      return;
+    }
+
+    const headerCells = Array.from({ length: playerCount }, (_, p) => `<td>${names[p] || `P${p+1}`}</td>`).join('');
+    const totalCells = Array.from({ length: playerCount }, (_, p) => `<td>${Number.isFinite(totals[p]) ? totals[p] : '—'}</td>`).join('');
+
+    container.innerHTML = `
+      <table class="live-results-table" aria-label="Live Junk results">
+        <tbody>
+          <tr class="live-results-title-row"><th colspan="${playerCount + 1}">Totals</th></tr>
+          <tr class="live-results-data-row"><td class="live-results-label">Player</td>${headerCells}</tr>
+          <tr class="live-results-data-row"><td class="live-results-label">Net</td>${totalCells}</tr>
+        </tbody>
+      </table>
+    `;
   }
 
   function updateJunk(){
@@ -686,6 +713,8 @@
       const el = document.getElementById(`junkTotP${i+1}`);
       if(el) el.textContent = totals[i];
     }
+
+    renderJunkLiveResults(totals);
   }
 
   function initJunkAchievements(){

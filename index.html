@@ -303,9 +303,13 @@
       <div class="game-section-header">
         <h2>Vegas Game</h2>
         <div class="controls">
+          <button type="button" class="btn game-options-toggle" data-target="vegasLiveResultsPanel" aria-controls="vegasLiveResultsPanel" aria-expanded="false">Live Vegas Results</button>
           <button id="clearVegasDataBtn" class="btn">Clear Vegas Data</button>
           <button type="button" class="btn game-options-toggle" data-target="vegasOptionsPanel" aria-controls="vegasOptionsPanel" aria-expanded="false">Vegas Options</button>
         </div>
+      </div>
+      <div id="vegasLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
+        <div id="vegasLiveResults" class="live-results-card" aria-live="polite"></div>
       </div>
       <div id="vegasOptionsPanel" class="game-options-panel" hidden>
       <div class="vegas-controls">
@@ -390,9 +394,13 @@
       <div class="game-section-header">
         <h2>🏦 Banker</h2>
         <div class="controls">
+          <button type="button" class="btn game-options-toggle" data-target="bankerLiveResultsPanel" aria-controls="bankerLiveResultsPanel" aria-expanded="false">Live Banker Results</button>
           <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
           <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
         </div>
+      </div>
+      <div id="bankerLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
+        <div id="bankerHeaderTotals" class="banker-header-totals" aria-live="polite"></div>
       </div>
       <div id="bankerOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
@@ -503,9 +511,13 @@
       <div class="game-section-header">
         <h2>Junk (Dots)</h2>
         <div class="controls">
+          <button type="button" class="btn game-options-toggle" data-target="junkLiveResultsPanel" aria-controls="junkLiveResultsPanel" aria-expanded="false">Live Junk Results</button>
           <button id="clearJunkDataBtn" class="btn">Clear Junk Data</button>
           <button type="button" class="btn game-options-toggle" data-target="junkOptionsPanel" aria-controls="junkOptionsPanel" aria-expanded="false">Junk Options</button>
         </div>
+      </div>
+      <div id="junkLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
+        <div id="junkLiveResults" class="live-results-card" aria-live="polite"></div>
       </div>
       <div id="junkOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">

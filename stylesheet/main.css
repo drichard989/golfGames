@@ -1510,6 +1510,90 @@ tfoot td {
   gap: 8px;
 }
 
+.live-results-panel {
+  margin: 0 0 10px;
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.live-results-card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.live-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.live-results-table th,
+.live-results-table td {
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.live-results-title-row th {
+  height: 34px;
+  font-size: var(--text-xl);
+  background: var(--panel-alt);
+}
+
+.live-results-data-row td {
+  height: var(--touch-min);
+  background: transparent;
+}
+
+.live-results-label {
+  text-align: left;
+  font-weight: 700;
+}
+
+.live-results-table tr:last-child td {
+  border-bottom: none;
+}
+
+.banker-header-totals {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.banker-header-totals-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.banker-header-totals-table th,
+.banker-header-totals-table td {
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.banker-header-title-row th {
+  height: 34px;
+  font-size: var(--text-xl);
+  background: var(--panel-alt);
+}
+
+.banker-header-data-row td {
+  height: var(--touch-min);
+  background: transparent;
+}
+
+.banker-header-totals-table tr:last-child td {
+  border-bottom: none;
+}
+
 .game-options-panel {
   margin-bottom: 10px;
 }
