@@ -506,9 +506,30 @@
   function syncHeaderCollapseBtn() {
     const btn = document.getElementById('headerCollapseBtn');
     if (!btn) return;
-    btn.textContent = headerVisible ? '▲ Hide' : '▼ Show';
+    const compact = window.matchMedia?.('(max-width: 600px)')?.matches;
+    btn.textContent = compact
+      ? (headerVisible ? '▲' : '▼')
+      : (headerVisible ? '▲ Hide' : '▼ Show');
     btn.setAttribute('aria-label', headerVisible ? 'Hide header' : 'Show header');
     btn.setAttribute('aria-expanded', headerVisible ? 'true' : 'false');
+  }
+
+  function syncHeaderBadgeButtonLabels() {
+    const compact = window.matchMedia?.('(max-width: 600px)')?.matches;
+    const labels = [
+      { id: 'cloudCreateBadgeBtn', full: 'Go live', compact: 'Live' },
+      { id: 'cloudQrBadgeBtn', full: 'Share QR', compact: 'QR' },
+      { id: 'cloudEditCodeBadgeBtn', full: 'Edit code', compact: 'Edit' },
+      { id: 'cloudViewCodeBadgeBtn', full: 'View code', compact: 'View' }
+    ];
+
+    labels.forEach(({ id, full, compact: short }) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.textContent = compact ? short : full;
+    });
+
+    syncHeaderCollapseBtn();
   }
 
   const PRIMARY_TAB_SCROLL_POSITIONS = { score: 0, games: 0 };
@@ -4004,6 +4025,8 @@
     setupIOSScorecardOverscrollGuard();
     setupIOSStickyHeaders();
     setupGamesPanelScrollSync();
+    syncHeaderBadgeButtonLabels();
+    window.addEventListener('resize', syncHeaderBadgeButtonLabels, { passive: true });
     
     // Sync row heights after tables are built (skip highlighting on init - will be applied after data loads)
     requestAnimationFrame(() => {

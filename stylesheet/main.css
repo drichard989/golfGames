@@ -279,7 +279,7 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
 .header-collapse-bar .cloud-status-badge,
 .header-collapse-bar .cloud-code-badge-btn {
   min-height: 36px;
-  padding: 8px 24px;
+  padding: 8px 14px;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
@@ -2621,6 +2621,33 @@ input[type="text"] {
 
 /* Tablet portrait (900px and below) */
 @media (max-width: 900px) {
+  .header-collapse-bar {
+    gap: 6px;
+    padding: 2px var(--space-md) 0;
+    flex-wrap: nowrap;
+  }
+
+  .header-cloud-status-group {
+    flex-wrap: nowrap;
+    gap: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .header-collapse-bar .cloud-status-badge,
+  .header-collapse-bar .cloud-code-badge-btn,
+  .header-collapse-btn {
+    min-height: 32px;
+    padding: 6px 10px;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+  }
+
+  .header-collapse-btn {
+    flex: 0 0 auto;
+  }
+
   th, td {
     padding: var(--space-sm) 5px;
   }
