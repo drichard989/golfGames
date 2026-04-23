@@ -190,7 +190,7 @@
    * Calculate net score for a player on a hole using FULL handicap (not play-off-low)
    * This is used for Banker NET mode scoring
    */
-  function getNetScore(playerIdx, holeIdx, netHcpMode = 'fullHandicap') {
+  function getNetScore(playerIdx, holeIdx, netHcpMode = 'rawHandicap') {
     const gross = getGross(playerIdx, holeIdx);
     if (gross === 0) return 0;
     
@@ -224,9 +224,9 @@
    * @param {number} holeIdx - Zero-based hole index
    * @returns {{strokes:number, displayText:string, title:string}|null}
    */
-  function getStrokeDisplayData(playerIdx, holeIdx, netHcpMode = 'fullHandicap') {
+  function getStrokeDisplayData(playerIdx, holeIdx, netHcpMode = 'rawHandicap') {
     const activeBtn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
-    const mode = activeBtn?.dataset.value || 'fullHandicap';
+    const mode = activeBtn?.dataset.value || 'rawHandicap';
     const useNet = mode !== 'gross';
     if (!useNet) return null;
 
@@ -771,9 +771,9 @@
     compute() {
       const playerCount = getPlayerCount();
       const activeBtn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
-      const mode = activeBtn?.dataset.value || 'fullHandicap';
+      const mode = activeBtn?.dataset.value || 'rawHandicap';
       const useNet = mode !== 'gross';
-      const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : mode === 'playOffLow' ? 'playOffLow' : 'fullHandicap';
+      const netHcpMode = mode === 'rawHandicap' ? 'rawHandicap' : mode === 'playOffLow' ? 'playOffLow' : 'rawHandicap';
 
       const sourceState = sanitizeBankerState(this.getState() || { holes: [] }, playerCount);
 

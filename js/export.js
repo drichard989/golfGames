@@ -1878,7 +1878,7 @@ input[type="text"] {
       // Skins options
       const skinsModeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
       const skinsModeVal = skinsModeBtn?.dataset.value || 'gross';
-      const skinsMode = skinsModeVal === 'gross' ? 'Gross' : skinsModeVal === 'fullHandicap' ? 'Full Handicap' : 'Play Off Low';
+      const skinsMode = skinsModeVal === 'gross' ? 'Gross' : skinsModeVal === 'rawHandicap' ? 'Raw Handicap' : 'Play Off Low';
       const skinsCarry = document.getElementById('skinsCarry')?.checked ?? true;
       const skinsHalf = document.getElementById('skinsHalf')?.checked ?? false;
       const skinsBuyIn = Number(document.getElementById('skinsBuyIn')?.value) || 10;

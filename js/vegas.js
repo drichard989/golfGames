@@ -119,7 +119,7 @@
     const validCHs = chs.filter((ch) => ch !== null && Number.isFinite(ch));
     if (validCHs.length === 0) return chs.map(() => 0);
 
-    if (netHcpMode === 'fullHandicap') {
+    if (netHcpMode === 'rawHandicap') {
       return chs.map((ch) => (ch !== null && Number.isFinite(ch) ? ch : 0));
     }
 
@@ -785,7 +785,7 @@ function vegas_getOptions() {
   const mode = activeBtn?.dataset.value || 'gross';
   return {
     useNet: mode !== 'gross',
-    netHcpMode: mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow',
+    netHcpMode: mode === 'rawHandicap' ? 'rawHandicap' : 'playOffLow',
     doubleBirdie: $(ids.optDoubleBirdie)?.checked || false,
     tripleEagle: $(ids.optTripleEagle)?.checked || false,
     pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value) || 0)
@@ -793,14 +793,14 @@ function vegas_getOptions() {
 }
 function vegas_setOptions(o) {
   if ('useNet' in o || 'netHcpMode' in o) {
-    const mode = o.netHcpMode === 'fullHandicap' ? 'fullHandicap'
+    const mode = o.netHcpMode === 'rawHandicap' ? 'rawHandicap'
       : (o.useNet || o.netHcpMode === 'playOffLow') && o.useNet ? 'playOffLow'
       : 'gross';
-    // Resolve: if useNet=false → gross; if useNet=true + netHcpMode=fullHandicap → fullHandicap; else → playOffLow
+    // Resolve: if useNet=false → gross; if useNet=true + netHcpMode=rawHandicap → rawHandicap; else → playOffLow
     const resolved = !o.useNet ? 'gross'
-      : o.netHcpMode === 'fullHandicap' ? 'fullHandicap'
+      : o.netHcpMode === 'rawHandicap' ? 'rawHandicap'
       : 'playOffLow';
-    const btnId = resolved === 'fullHandicap' ? 'vegasHcpModeFullHandicap'
+    const btnId = resolved === 'rawHandicap' ? 'vegasHcpModeRawHandicap'
       : resolved === 'playOffLow' ? 'vegasHcpModePlayOffLow'
       : 'vegasHcpModeGross';
     document.querySelectorAll('#vegasHcpModeGroup .hcp-mode-btn').forEach((btn) => {

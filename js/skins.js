@@ -207,11 +207,11 @@
    * @param {number} playerIdx - Zero-based player index
    * @param {number} holeIdx - Zero-based hole index
    * @param {boolean} half - Whether half-pops mode is enabled
-   * @param {string} netHcpMode - 'playOffLow' or 'fullHandicap'
+   * @param {string} netHcpMode - 'playOffLow' or 'rawHandicap'
    * @returns {number} Net score with NDB cap
    */
   function getNetForSkins(playerIdx, holeIdx, half, netHcpMode = 'playOffLow') {
-    const adjCHs = netHcpMode === 'fullHandicap' ? getRawCHs() : getAdjustedCHs();
+    const adjCHs = netHcpMode === 'rawHandicap' ? getRawCHs() : getAdjustedCHs();
     const gross = getGross(playerIdx, holeIdx);
     if (!gross) return 0;
     
@@ -413,7 +413,7 @@
     const activeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
     const mode = activeBtn?.dataset.value || 'gross';
     const useNet = mode !== 'gross';
-    const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+    const netHcpMode = mode === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
     const carry = document.getElementById('skinsCarry')?.checked ?? true;
     const half = document.getElementById('skinsHalf')?.checked ?? false;
     const buyIn = Math.max(0, Number(document.getElementById('skinsBuyIn')?.value) || 0);
