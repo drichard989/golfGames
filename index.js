@@ -875,89 +875,136 @@
 
     const scrollPane = document.querySelector('.scorecard-scroll');
     const fixedPane  = document.querySelector('.scorecard-fixed');
-    if (!scrollPane || !fixedPane) return;
-
-    let stickyEls = [];
-    let fallbackEnabled = false;
-    let listenersBound = false;
-
-    function refreshCells() {
-      stickyEls = [
-        ...scrollPane.querySelectorAll('thead th'),
-        ...scrollPane.querySelectorAll('#parRow td, #parRow th'),
-        ...scrollPane.querySelectorAll('#hcpRow td, #hcpRow th'),
-        ...fixedPane.querySelectorAll('thead th'),
-        ...fixedPane.querySelectorAll('#parRowFixed td, #parRowFixed th'),
-        ...fixedPane.querySelectorAll('#hcpRowFixed td, #hcpRowFixed th'),
-      ];
-      stickyEls.forEach((el) => {
-        el.style.willChange = fallbackEnabled ? 'transform' : 'auto';
-        if (!fallbackEnabled) {
-          el.style.transform = '';
-        }
-      });
-    }
+    const scorecardContainer = document.getElementById('main-scorecard');
+    const fixedTable = document.getElementById('scorecardFixed');
+    const scrollTable = document.getElementById('scorecard');
+    if (!scrollPane || !fixedPane || !scorecardContainer || !fixedTable || !scrollTable) return;
 
     let rafId = null;
-    function applyTranslate() {
+    let scrollCloneTable = null;
+    let fixedCloneTable = null;
+
+    const ensureCloneHost = (pane, className) => {
+      const classTokens = className.split(/\s+/).filter(Boolean);
+      const selector = classTokens.map((token) => `.${token}`).join('');
+      let host = pane.querySelector(selector);
+      if (host) return host;
+      host = document.createElement('div');
+      host.className = className;
+      pane.prepend(host);
+      return host;
+    };
+
+    const fixedCloneHost = ensureCloneHost(fixedPane, 'scorecard-ios-header-clone scorecard-ios-header-clone-fixed');
+    const scrollCloneHost = ensureCloneHost(scrollPane, 'scorecard-ios-header-clone scorecard-ios-header-clone-scroll');
+
+    const buildCloneTable = (sourceTable, cloneClassName) => {
+      const sourceHeadRow = sourceTable.tHead?.rows?.[0];
+      if (!sourceHeadRow) return null;
+
+      const cloneTable = document.createElement('table');
+      cloneTable.className = `${sourceTable.className} ${cloneClassName}`.trim();
+
+      const cloneThead = document.createElement('thead');
+      const cloneRow = document.createElement('tr');
+      Array.from(sourceHeadRow.cells).forEach((sourceTh) => {
+        const cloneTh = sourceTh.cloneNode(true);
+        cloneTh.style.removeProperty('display');
+        cloneRow.appendChild(cloneTh);
+      });
+
+      cloneThead.appendChild(cloneRow);
+      cloneTable.appendChild(cloneThead);
+      return cloneTable;
+    };
+
+    const syncNow = () => {
       rafId = null;
-      if (!fallbackEnabled) return;
-      const st = scrollPane.scrollTop;
-      stickyEls.forEach(el => { el.style.transform = `translateY(${st}px)`; });
+
+      const nextFixedClone = buildCloneTable(fixedTable, 'scorecard-ios-header-clone-table');
+      const nextScrollClone = buildCloneTable(scrollTable, 'scorecard-ios-header-clone-table');
+      if (!nextFixedClone || !nextScrollClone) return;
+
+      fixedCloneHost.innerHTML = '';
+      scrollCloneHost.innerHTML = '';
+      fixedCloneHost.appendChild(nextFixedClone);
+      scrollCloneHost.appendChild(nextScrollClone);
+      fixedCloneTable = nextFixedClone;
+      scrollCloneTable = nextScrollClone;
+
+      const fixedSourceThs = Array.from(fixedTable.tHead?.rows?.[0]?.cells || []);
+      const scrollSourceThs = Array.from(scrollTable.tHead?.rows?.[0]?.cells || []);
+      const fixedCloneThs = Array.from(fixedCloneTable.querySelectorAll('th'));
+      const scrollCloneThs = Array.from(scrollCloneTable.querySelectorAll('th'));
+
+      const fixedTableWidth = Math.ceil(fixedTable.getBoundingClientRect().width);
+      const scrollTableWidth = Math.ceil(scrollTable.getBoundingClientRect().width);
+
+      if (fixedTableWidth > 0) fixedCloneTable.style.width = `${fixedTableWidth}px`;
+      if (scrollTableWidth > 0) scrollCloneTable.style.width = `${scrollTableWidth}px`;
+
+      fixedSourceThs.forEach((sourceTh, idx) => {
+        const cloneTh = fixedCloneThs[idx];
+        const width = Math.ceil(sourceTh.getBoundingClientRect().width);
+        if (!cloneTh || width <= 0) return;
+        cloneTh.style.width = `${width}px`;
+        cloneTh.style.minWidth = `${width}px`;
+        cloneTh.style.maxWidth = `${width}px`;
+      });
+
+      scrollSourceThs.forEach((sourceTh, idx) => {
+        const cloneTh = scrollCloneThs[idx];
+        const width = Math.ceil(sourceTh.getBoundingClientRect().width);
+        if (!cloneTh || width <= 0) return;
+        cloneTh.style.width = `${width}px`;
+        cloneTh.style.minWidth = `${width}px`;
+        cloneTh.style.maxWidth = `${width}px`;
+      });
+
+      scrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
+      scorecardContainer.classList.add('scorecard-ios-header-clone-active');
+    };
+
+    const scheduleSync = () => {
+      if (rafId != null) return;
+      rafId = requestAnimationFrame(syncNow);
+    };
+
+    const onScrollPaneScroll = () => {
+      if (!scrollCloneTable) return;
+      scrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
+    };
+
+    scrollPane.addEventListener('scroll', onScrollPaneScroll, { passive: true });
+
+    const resizeObserver = 'ResizeObserver' in window
+      ? new ResizeObserver(() => scheduleSync())
+      : null;
+    if (resizeObserver) {
+      resizeObserver.observe(fixedPane);
+      resizeObserver.observe(scrollPane);
+      resizeObserver.observe(fixedTable);
+      resizeObserver.observe(scrollTable);
     }
 
-    function onScroll() {
-      if (!fallbackEnabled) return;
-      if (rafId) return;
-      rafId = requestAnimationFrame(applyTranslate);
+    const mutationObserver = 'MutationObserver' in window
+      ? new MutationObserver(() => scheduleSync())
+      : null;
+    if (mutationObserver) {
+      mutationObserver.observe(fixedTable, { childList: true, subtree: true, characterData: true });
+      mutationObserver.observe(scrollTable, { childList: true, subtree: true, characterData: true });
     }
 
-    function detectNativeStickyWorks() {
-      const probe = scrollPane.querySelector('thead th') || fixedPane.querySelector('thead th');
-      if (!probe) return true;
+    window.addEventListener('resize', scheduleSync, { passive: true });
+    window.addEventListener('orientationchange', scheduleSync, { passive: true });
 
-      const maxScroll = Math.max(0, scrollPane.scrollHeight - scrollPane.clientHeight);
-      if (maxScroll < 12) return true;
+    scheduleSync();
+    setTimeout(scheduleSync, 120);
+    setTimeout(scheduleSync, 320);
 
-      const startTop = scrollPane.scrollTop;
-      const targetTop = Math.min(maxScroll, startTop + 16);
-      const beforeTop = probe.getBoundingClientRect().top;
-
-      scrollPane.scrollTop = targetTop;
-      fixedPane.scrollTop = targetTop;
-      const afterTop = probe.getBoundingClientRect().top;
-
-      scrollPane.scrollTop = startTop;
-      fixedPane.scrollTop = startTop;
-
-      return Math.abs(afterTop - beforeTop) <= 1.5;
-    }
-
-    function ensureFallbackMode() {
-      const nativeStickyWorks = detectNativeStickyWorks();
-      fallbackEnabled = !nativeStickyWorks;
-      refreshCells();
-
-      if (fallbackEnabled && !listenersBound) {
-        listenersBound = true;
-        scrollPane.addEventListener('scroll', onScroll, { passive: true });
-        fixedPane.addEventListener('scroll', onScroll, { passive: true });
-      }
-
-      if (fallbackEnabled) {
-        applyTranslate();
-      }
-    }
-
-    refreshCells();
-    ensureFallbackMode();
-    setTimeout(ensureFallbackMode, 200);
-    setTimeout(ensureFallbackMode, 700);
-
-    // Expose so syncRowHeights() can call after DOM rebuilds / player count changes.
-    // This re-checks whether native sticky works at the current layout size.
+    // Expose so syncRowHeights()/course switches can request a header clone refresh.
     window._iosStickyRefresh = () => {
-      ensureFallbackMode();
+      scheduleSync();
     };
   }
 

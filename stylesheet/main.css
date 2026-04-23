@@ -1203,6 +1203,38 @@ thead th {
   pointer-events: none;
 }
 
+.scorecard-ios-header-clone {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  overflow: hidden;
+  background: var(--panel);
+  border-bottom: 2px solid var(--line);
+}
+
+.scorecard-ios-header-clone-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+}
+
+.scorecard-ios-header-clone-table thead th {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  background: var(--panel-alt);
+  color: var(--ink);
+  font-weight: 700;
+  border-bottom: 2px solid var(--line);
+  pointer-events: none;
+}
+
+/* iOS header-clone mode: hide native sticky theads and render cloned strip. */
+.scorecard-container.scorecard-ios-header-clone-active #scorecard thead,
+.scorecard-container.scorecard-ios-header-clone-active #scorecardFixed thead {
+  visibility: hidden;
+}
+
 th,
 td {
   border-bottom: 2px solid var(--line);
