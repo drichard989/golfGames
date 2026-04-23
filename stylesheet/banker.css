@@ -222,29 +222,33 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
   body.banker-sheet-active .bss-bet-line > .bss-bet-name { padding-left: 6px; }
 
-  body.banker-sheet-active .bss-bet-stroke-down > .bss-bet-name,
-  body.banker-sheet-active .bss-bet-stroke-down > .bss-bet-amt {
-    background: rgba(0, 188, 140, 0.18);
-    color: var(--accent);
-    font-weight: 700;
-  }
-  body.banker-sheet-active .bss-bet-stroke-up > .bss-bet-name,
-  body.banker-sheet-active .bss-bet-stroke-up > .bss-bet-amt {
-    background: rgba(220, 53, 69, 0.18);
-    color: var(--danger, #dc3545);
-    font-weight: 700;
-  }
-
-  /* Tint the banker name itself when the banker strokes on this hole. */
-  body.banker-sheet-active .bss-col-banker.bss-bet-stroke-down .bss-banker-name {
-    color: var(--accent);
-  }
-  body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
-    color: var(--danger, #dc3545);
-  }
+  /* Stroke-tint name+amount rules now live outside this @media block so
+     they apply on narrow phones (≤480px) as well — see below. */
 }
 
-/* Narrow phones \u2264480px: handled by block earlier in file. */
+/* ---------------- Stroke-tinting on bss compact rows (all widths) ----------------
+   Green = receives strokes (negative CH). Red = gives strokes (plus handicap).
+   Mirrors the unconditional .banker-sheet-bet-card-stroke-{up,down} treatment
+   used inside the bet entry modal. The bss-bet-line uses display:contents,
+   so the `>` combinator still matches the rendered children. */
+body.banker-sheet-active .bss-bet-stroke-down > .bss-bet-name,
+body.banker-sheet-active .bss-bet-stroke-down > .bss-bet-amt {
+  background: rgba(0, 188, 140, 0.18);
+  color: var(--accent);
+  font-weight: 700;
+}
+body.banker-sheet-active .bss-bet-stroke-up > .bss-bet-name,
+body.banker-sheet-active .bss-bet-stroke-up > .bss-bet-amt {
+  background: rgba(220, 53, 69, 0.18);
+  color: var(--danger, #dc3545);
+  font-weight: 700;
+}
+body.banker-sheet-active .bss-col-banker.bss-bet-stroke-down .bss-banker-name {
+  color: var(--accent);
+}
+body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
+  color: var(--danger, #dc3545);
+}
 
 /* ---------------- Sheet container ---------------- */
 .banker-sheet-backdrop {
