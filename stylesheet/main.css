@@ -1644,6 +1644,11 @@ tfoot td {
   padding: 0;
 }
 
+/* Add breathing room between the button row and the live results card border. */
+.game-section .live-results-panel:not([hidden]) > :first-child {
+  margin-top: 8px;
+}
+
 .live-results-header-clone {
   margin-top: 0;
   overflow: hidden;
