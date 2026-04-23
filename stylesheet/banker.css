@@ -628,6 +628,18 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   color: var(--ink);
   box-shadow: 0 0 0 2px rgba(0, 188, 140, 0.28);
 }
+.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] {
+  /* Keep selected border green, add a subtle green sheen for stroke-down */
+  background:
+    linear-gradient(135deg, rgba(0, 188, 140, 0.18), rgba(0, 188, 140, 0.06) 45%, transparent 72%),
+    var(--panel-alt);
+}
+.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] {
+  /* Keep selected border green, add a subtle red sheen for stroke-up */
+  background:
+    linear-gradient(135deg, rgba(220, 53, 69, 0.20), rgba(220, 53, 69, 0.08) 45%, transparent 72%),
+    var(--panel-alt);
+}
 .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-name,
 .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke {
   color: var(--accent);
