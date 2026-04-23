@@ -535,11 +535,15 @@
     body.appendChild(bankerDblBlock);
 
     // ---- Live result ----
+    // Use the same rich markup as the inline summary so styles match
+    // (colored player rows, ±$ payout, banker total).
     const resultBlock = document.createElement('section');
-    resultBlock.className = 'banker-sheet-block banker-sheet-result-block';
+    resultBlock.className = 'banker-sheet-block banker-sheet-result-block bss-result-block';
+    const liveResultCell = document.getElementById(DOM_IDS.resultCell(hole));
+    const liveResultHtml = liveResultCell ? liveResultCell.innerHTML.trim() : '';
     resultBlock.innerHTML = `
       <div class="banker-sheet-block-title">Result</div>
-      <div class="banker-sheet-result-text" aria-live="polite">${escapeHtml(getResultText(hole))}</div>
+      <div class="banker-sheet-result-text" aria-live="polite">${liveResultHtml || '—'}</div>
     `;
     body.appendChild(resultBlock);
 
@@ -555,7 +559,12 @@
     }
     function updateLiveResult(){
       const txt = resultBlock.querySelector('.banker-sheet-result-text');
-      if (txt) txt.textContent = getResultText(hole);
+      if (!txt) return;
+      // Mirror the live result cell's rich HTML when available so the
+      // sheet's Result block matches the desktop / inline summary style.
+      const cell = document.getElementById(DOM_IDS.resultCell(hole));
+      const html = cell ? cell.innerHTML.trim() : '';
+      txt.innerHTML = html || escapeHtml(getResultText(hole));
     }
   }
 
