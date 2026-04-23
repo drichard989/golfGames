@@ -4998,7 +4998,7 @@ body.banker-sheet-active #bankerBody .bss-result-block,
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-row,
 .banker-sheet-result-block .banker-sheet-result-text .banker-result-row {
   display: flex !important;
-  flex-wrap: nowrap !important;
+  flex-wrap: wrap !important;            /* allow 2 lines if cramped, name still wins */
   justify-content: space-between !important;
   align-items: center !important;
   width: 100% !important;
@@ -5007,20 +5007,21 @@ body.banker-sheet-active #bankerBody .bss-result-block .banker-result-row,
   box-sizing: border-box !important;
   padding: 3px 6px !important;
   margin: 0 0 2px 0 !important;
-  gap: 6px !important;
-  white-space: nowrap !important;
+  gap: 4px 6px !important;
+  white-space: normal !important;
 }
 
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-name,
 .banker-sheet-result-block .banker-sheet-result-text .banker-result-name {
   flex: 1 1 auto !important;
-  min-width: 0 !important;
-  max-width: none !important;
+  min-width: 70px !important;            /* always reserve room for the name */
+  max-width: 100% !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
   word-break: normal !important;
   margin-right: 0 !important;
+  font-weight: 700 !important;           /* bolder so the name stands out */
 }
 
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-right,
@@ -5031,6 +5032,7 @@ body.banker-sheet-active #bankerBody .bss-result-block .banker-result-right,
   align-items: center !important;
   gap: 6px !important;
   white-space: nowrap !important;
+  margin-left: auto !important;          /* keep right cluster right-aligned even when row wraps */
 }
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-score,
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-payout,
