@@ -880,8 +880,12 @@
     fixedWrap.style.width = `${fixedWidth}px`;
     fixedWrap.style.minWidth = `${fixedWidth}px`;
     fixedWrap.style.maxWidth = `${fixedWidth}px`;
+    // Lock the fixed table element width so responsive min-width rules can't expand it
+    fixedTarget.style.width = `${fixedWidth}px`;
+    fixedTarget.style.minWidth = '0';
 
-    const scrollTableWidth = Math.ceil(scrollSource.getBoundingClientRect().width);
+    // Use scrollWidth (full content width) not getBoundingClientRect (viewport-clipped)
+    const scrollTableWidth = Math.ceil(scrollSource.scrollWidth);
     scrollTarget.style.width = `${scrollTableWidth}px`;
     scrollTarget.style.minWidth = `${scrollTableWidth}px`;
 
