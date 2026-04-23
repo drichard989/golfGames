@@ -195,6 +195,13 @@ body::before {
 }
 
 /* ---- Header / Controls ---- */
+.top-pinned-shell {
+  position: sticky;
+  top: var(--safe-top-inset);
+  z-index: 41;
+  background: var(--bg);
+}
+
 header {
   padding: var(--space-md) var(--space-lg) var(--space-sm);
   display: grid;
@@ -224,9 +231,9 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
 }
 
 .sticky-nav-bar {
-  position: sticky;
-  top: var(--safe-top-inset);
-  z-index: 41;
+  position: relative;
+  top: auto;
+  z-index: 1;
   background: var(--bg);
 }
 
@@ -1402,6 +1409,28 @@ tfoot td {
 .game-section h2 {
   margin: 0 0 var(--space-sm);
   font-size: var(--text-2xl);
+}
+
+.game-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;
+  gap: 12px;
+  margin: 0 0 8px;
+}
+
+.game-section-header h2 {
+  margin: 0;
+  flex: 1 1 auto;
+}
+
+.game-section-header .controls {
+  margin: 0;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .game-options-panel {
@@ -2624,6 +2653,14 @@ input[type="text"] {
   h2 {
     font-size: 19px;
     margin: 10px 0;
+  }
+
+  .game-section-header {
+    gap: 10px;
+  }
+
+  .game-section-header .controls {
+    gap: 6px;
   }
 
   #junkTable th:not(:first-child),
