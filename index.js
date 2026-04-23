@@ -462,6 +462,7 @@
       try { window.Junk?.update();   } catch (e) { /* junk may not be initialized yet */ }
       try { window.HiLo?.update();   } catch (e) { /* hilo may not be initialized yet */ }
       try { window.Banker?.update(); } catch (e) { /* banker may not be initialized yet */ }
+      try { window.Wolf?.update();   } catch (e) { /* wolf may not be initialized yet */ }
     }
   };
   try { window.AppManager = AppManager; } catch {}
@@ -474,8 +475,8 @@
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",clearEverythingBtn:"#clearEverythingBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
-    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleHilo:"#toggleHilo",
-    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", hiloSection:"#hiloSection", junkSection:"#junkSection",
+    toggleVegas:"#toggleVegas", toggleBanker:"#toggleBanker", toggleSkins:"#toggleSkins", toggleHilo:"#toggleHilo", toggleWolf:"#toggleWolf",
+    vegasSection:"#vegasSection", bankerSection:"#bankerSection", skinsSection:"#skinsSection", hiloSection:"#hiloSection", junkSection:"#junkSection", wolfSection:"#wolfSection",
 
     // Vegas
     vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
@@ -487,12 +488,10 @@
     skinsCarry:"#skinsCarry", skinsHalf:"#skinsHalf",
     skinsBody:"#skinsBody",
     skinsSummary:"#skinsSummary",
-    // CSV
-    csvInput:"#csvInput", dlTemplateBtn:"#dlTemplateBtn",
     fontSizeSmall:"#fontSizeSmall", fontSizeMedium:"#fontSizeMedium", fontSizeLarge:"#fontSizeLarge",
   };
 
-  const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker'];
+  const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker', 'wolf'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
   let headerVisible = true;             // true = header shown
   let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
@@ -576,7 +575,8 @@
           }
         }
       },
-      hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init?.() }
+      hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init?.() },
+      wolf: { section: ids.wolfSection, toggle: ids.toggleWolf, init: () => window.Wolf?.init?.() }
     }[which] || null;
   }
 
@@ -1928,6 +1928,19 @@
           },
           hilo: {
             unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10
+          },
+          wolf: {
+            mode: (() => {
+              const btn = document.querySelector('#wolfHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return (btn?.dataset.value || 'gross') === 'gross' ? 'gross' : 'net';
+            })(),
+            netHcpMode: (() => {
+              const btn = document.querySelector('#wolfHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+            })(),
+            state: (typeof window.Wolf?.getState === 'function')
+              ? (window.Wolf.getState() ?? existingState?.wolf?.state ?? null)
+              : (existingState?.wolf?.state ?? null)
           }
         }
       };
@@ -1940,7 +1953,8 @@
           banker: $(ids.bankerSection)?.classList.contains("open") || false,
           skins: $(ids.skinsSection)?.classList.contains("open") || false,
           junk: $(ids.junkSection)?.classList.contains("open") || false,
-          hilo: $(ids.hiloSection)?.classList.contains("open") || false
+          hilo: $(ids.hiloSection)?.classList.contains("open") || false,
+          wolf: $(ids.wolfSection)?.classList.contains("open") || false
         },
         optionsPanels: (() => {
           const state = {};
@@ -2031,6 +2045,13 @@
           ...(rawState.hilo || {}),
           unitValue: games.hilo?.unitValue ?? rawState.hilo?.unitValue,
           open: localUi.sections?.hilo ?? rawState.hilo?.open
+        },
+        wolf: {
+          ...(rawState.wolf || {}),
+          mode: games.wolf?.mode ?? rawState.wolf?.mode ?? 'gross',
+          netHcpMode: games.wolf?.netHcpMode ?? rawState.wolf?.netHcpMode ?? 'playOffLow',
+          state: games.wolf?.state ?? rawState.wolf?.state ?? null,
+          open: localUi.sections?.wolf ?? rawState.wolf?.open
         }
       };
     },
@@ -2211,6 +2232,21 @@
         hilo: {
           unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10,
           open: $(ids.hiloSection)?.classList.contains("open")
+        },
+        wolf: {
+          open: $(ids.wolfSection)?.classList.contains("open"),
+          mode: (() => {
+            const btn = document.querySelector('#wolfHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return (btn?.dataset.value || 'gross') === 'gross' ? 'gross' : 'net';
+          })(),
+          netHcpMode: (() => {
+            const btn = document.querySelector('#wolfHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+          })(),
+          state: (() => {
+            const current = (typeof window.Wolf?.getState === 'function') ? window.Wolf.getState() : null;
+            return current ?? existingState?.wolf?.state ?? null;
+          })()
         },
         sync: {
           schemaVersion: this.SYNC_SCHEMA_VERSION,
@@ -2608,6 +2644,22 @@
           if(unitValueEl) unitValueEl.value = s.hilo.unitValue;
         }
 
+        // Restore Wolf options
+        if (s.wolf?.mode != null) {
+          const wMode = s.wolf.mode;
+          const wHcpMode = s.wolf?.netHcpMode || 'playOffLow';
+          const wolfBtnId = wMode !== 'net' ? 'wolfHcpModeGross'
+            : wHcpMode === 'fullHandicap' ? 'wolfHcpModeFullHandicap'
+            : 'wolfHcpModePlayOffLow';
+          setWolfModeBtn(wolfBtnId);
+        }
+        if (s.wolf?.state && typeof window.Wolf?.setState === 'function') {
+          const wolfStateSnapshot = s.wolf.state;
+          setTimeout(() => {
+            window.Wolf?.setState?.(wolfStateSnapshot);
+          }, 160);
+        }
+
         if (applyLocalUi) {
           const savedOpenGame = GAME_TAB_ORDER.find((gameKey) => !!s[gameKey]?.open) || null;
           const preferredGame = GAME_TAB_ORDER.includes(s.localUi?.activeGame)
@@ -2764,11 +2816,17 @@
         window.HiLo?.update?.();
       };
 
+      const resetWolf = () => {
+        setWolfModeBtn('wolfHcpModeGross');
+        window.Wolf?.clearState?.();
+      };
+
       if (key === 'all' || key === 'vegas') resetVegas();
       if (key === 'all' || key === 'banker') resetBanker();
       if (key === 'all' || key === 'skins') resetSkins();
       if (key === 'all' || key === 'junk') resetJunk();
       if (key === 'all' || key === 'hilo') resetHilo();
+      if (key === 'all' || key === 'wolf') resetWolf();
 
       AppManager.recalcGames();
       this.save();
@@ -2981,6 +3039,26 @@
     });
     if (!matched) {
       const fallback = document.getElementById('bankerHcpModeFullHandicap');
+      if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
+    }
+  }
+
+  /**
+   * Set active button in the Wolf scoring mode button group.
+   * @param {string} activeId - Target button id
+   */
+  function setWolfModeBtn(activeId) {
+    const buttons = document.querySelectorAll('#wolfHcpModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('wolfHcpModeGross');
       if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
     }
   }
@@ -3577,26 +3655,6 @@
     setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
   }
 
-  // Export functions moved to js/export.js module
-  // These are wrapper functions that call the Export module
-  function exportCurrentScorecard() {
-    if(window.Export && typeof window.Export.exportCurrentScorecard === 'function') {
-      window.Export.exportCurrentScorecard();
-    } else {
-      console.error('[Export] Export module not loaded or exportCurrentScorecard not found');
-      announce('Export module not ready. Please refresh the page.');
-    }
-  }
-
-  function emailCurrentScorecard() {
-    if(window.Export && typeof window.Export.emailCurrentScorecard === 'function') {
-      window.Export.emailCurrentScorecard();
-    } else {
-      console.error('[Export] Export module not loaded or emailCurrentScorecard not found');
-      announce('Export module not ready. Please refresh the page.');
-    }
-  }
-
   // =============================================================================
   // PLAYER MANAGEMENT (ADD/REMOVE)
   // =============================================================================
@@ -4082,6 +4140,7 @@
       window.Skins?.refreshForPlayerChange();
       window.Junk?.refreshForPlayerChange();
       window.Banker?.refreshForPlayerChange();
+      window.Wolf?.refreshForPlayerChange?.();
     }, 0);
   }
 
@@ -4164,6 +4223,12 @@
 
   async function syncDisplayedAppVersion() {
     const APP_NAME = 'Golf Games';
+    const setTitle = (version) => {
+      const titleText = version ? `${APP_NAME} ${version}` : APP_NAME;
+      document.title = titleText;
+      const heading = document.querySelector('header .header-title-row h1');
+      if (heading) heading.textContent = titleText;
+    };
     try {
       const response = await fetch('sw.js', { cache: 'no-store' });
       if (!response.ok) return;
@@ -4172,14 +4237,10 @@
       const match = swSource.match(/CACHE_VERSION\s*=\s*['"]v?([0-9]+\.[0-9]+\.[0-9]+)['"]/i);
       if (!match) return;
 
-      const version = `v${match[1]}`;
-      const titleText = `${APP_NAME} ${version}`;
-      document.title = titleText;
-
-      const heading = document.querySelector('header .header-title-row h1');
-      if (heading) {
-        heading.textContent = titleText;
-      }
+      const semantic = match[1];
+      const version = `v${semantic}`;
+      window.APP_VERSION = { semantic, display: version, cache: `golf-${version}` };
+      setTitle(version);
     } catch (_) {
       // If sw.js cannot be fetched (for example on restricted file:// contexts), keep static title.
     }
@@ -4442,6 +4503,7 @@
   wireGameClearButton('clearBankerDataBtn', 'banker', 'Banker');
   wireGameClearButton('clearHiloDataBtn', 'hilo', 'Hi-Lo');
   wireGameClearButton('clearJunkDataBtn', 'junk', 'Junk');
+  wireGameClearButton('clearWolfDataBtn', 'wolf', 'Wolf');
 
   $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
   
@@ -4516,6 +4578,7 @@
     $(ids.toggleHilo).addEventListener("click", ()=>setGameTab("hilo"));
     $(ids.toggleSkins).addEventListener("click", ()=>setGameTab("skins"));
     document.getElementById('toggleJunk')?.addEventListener('click', () => setGameTab('junk'));
+    document.getElementById('toggleWolf')?.addEventListener('click', () => setGameTab('wolf'));
 
     const bindGameOptionsToggles = () => {
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
@@ -4564,33 +4627,6 @@
   $(ids.vegasPointValue)?.addEventListener("input", ()=>{ window.Vegas?.recalc?.(); saveDebounced(); });
 
     // Banker: no UI wiring (stub only)
-
-    // Deprecated transfer/archive tools (kept for easy rollback)
-    // Includes: CSV import/export, HTML snapshot share, and QR scan import.
-    // Flip to true to restore old bindings instantly.
-    const ENABLE_DEPRECATED_TRANSFER_TOOLS = false;
-    if (ENABLE_DEPRECATED_TRANSFER_TOOLS) {
-      const csvInput = $(ids.csvInput);
-      if (csvInput) csvInput.addEventListener("change", (e) => {
-        const f = e.target.files && e.target.files[0];
-        if (f) handleCSVFile(f);
-        e.target.value = ""; // allow re-upload same file
-      });
-
-      const dlBtn = $(ids.dlTemplateBtn);
-      if (dlBtn) dlBtn.addEventListener("click", downloadCSVTemplate);
-
-      const exportBtn = document.getElementById('exportCSVBtn');
-      if (exportBtn) exportBtn.addEventListener("click", exportCurrentScorecard);
-
-      const emailBtn = document.getElementById('emailCSVBtn');
-      if (emailBtn) emailBtn.addEventListener("click", emailCurrentScorecard);
-
-      const legacyShareBtn = document.getElementById('shareHtmlArchiveBtn');
-      if (legacyShareBtn && window.Export && window.Export.shareHtmlSnapshot) {
-        legacyShareBtn.addEventListener("click", () => window.Export.shareHtmlSnapshot());
-      }
-    }
 
     // New share flow: create/reuse cloud session and share a view-link URL.
     const shareLiveBtn = document.getElementById('shareHtmlBtn');
@@ -4703,13 +4739,6 @@
         }
       });
     }
-    
-    if (ENABLE_DEPRECATED_TRANSFER_TOOLS) {
-      const scanQRBtn = document.getElementById('scanQRBtn');
-      if (scanQRBtn && window.QRShare && window.QRShare.scan) {
-        scanQRBtn.addEventListener("click", () => window.QRShare.scan());
-      }
-    }
 
     // Player management buttons
     const addPlayerBtn = document.getElementById('addPlayerBtn');
@@ -4758,16 +4787,6 @@
           utilitiesControls.prepend(control);
         }
       }
-    }
-
-    // Archived tools section toggle
-    const archivedToolsToggle = document.getElementById('archivedToolsToggle');
-    const archivedToolsSection = document.getElementById('archivedToolsSection');
-    if (archivedToolsToggle && archivedToolsSection) {
-      archivedToolsToggle.addEventListener('click', () => {
-        const isOpen = archivedToolsSection.style.display !== 'none';
-        archivedToolsSection.style.display = isOpen ? 'none' : '';
-      });
     }
 
     document.getElementById('fontSizeSmall')?.addEventListener('click', () => {

@@ -60,7 +60,11 @@
     '#hiloSection input',
     '#hiloSection select',
     '#hiloSection textarea',
-    '#hiloSection button'
+    '#hiloSection button',
+    '#wolfSection input',
+    '#wolfSection select',
+    '#wolfSection textarea',
+    '#wolfSection button'
   ];
 
   const VIEWER_ALLOWED_CLICK_IDS = new Set([
@@ -69,6 +73,7 @@
     'toggleSkins',
     'toggleJunk',
     'toggleHilo',
+    'toggleWolf',
     'gamesLauncherBtn',
     'scorecardLauncherBtn'
   ]);

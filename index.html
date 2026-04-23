@@ -2,7 +2,7 @@
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
-    <title>Golf Games v3.0.56</title>
+    <title>Golf Games</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
     <!-- Aggressive cache prevention for iOS -->
@@ -25,7 +25,7 @@
     <div class="top-pinned-shell">
     <header>
       <div class="header-title-row">
-        <h1>Golf Games v3.0.56</h1>
+        <h1>Golf Games</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
@@ -64,25 +64,6 @@
             <button id="clearEverythingBtn" class="btn" style="background: var(--danger); color: white;">Clear Everything</button>
             <button id="resetBtn" class="btn">Reset Scores</button>
             <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
-          </div>
-
-          <div class="utilities-row utilities-row-export">
-            <button id="archivedToolsToggle" class="btn" type="button">🗄️ Archived Tools</button>
-          </div>
-
-          <div id="archivedToolsSection" class="control archived-tools" style="display:none;">
-            <div class="small archived-tools-title">Deprecated tools (archived for easy rollback)</div>
-            <div class="utilities-row archived-tools-row">
-              <div class="control utilities-control csv-control">
-                <label for="csvInput">CSV Import</label>
-                <input id="csvInput" type="file" accept=".csv" />
-              </div>
-              <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
-              <button id="exportCSVBtn" class="btn">📤 Export Current Scorecard</button>
-              <button id="emailCSVBtn" class="btn">📧 Email Scorecard</button>
-              <button id="shareHtmlArchiveBtn" class="btn">📄 Share HTML Snapshot</button>
-              <button id="scanQRBtn" class="btn">📸 Scan QR Code (Import)</button>
-            </div>
           </div>
 
         </div>
@@ -231,6 +212,7 @@
       <button id="toggleVegas" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="vegasSection">🎲 Vegas</button>
       <button id="toggleHilo" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="hiloSection">🎯 Hi-Lo</button>
       <button id="toggleBanker" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="bankerSection">🏦 Banker</button>
+      <button id="toggleWolf" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="wolfSection">🐺 Wolf</button>
     </div>
     <!-- SKINS GAME -->
     <section class="game-section" id="skinsSection" role="tabpanel" aria-labelledby="toggleSkins" aria-hidden="true">
@@ -591,6 +573,67 @@
         </table>
       </div>
     </section>
+    <!-- WOLF GAME -->
+    <section class="game-section" id="wolfSection" role="tabpanel" aria-labelledby="toggleWolf" aria-hidden="true">
+      <div class="game-section-header">
+        <h2>🐺 Wolf</h2>
+        <div class="controls">
+          <button type="button" class="btn game-options-toggle" data-target="wolfLiveResultsPanel" aria-controls="wolfLiveResultsPanel" aria-expanded="false">Live Wolf Results</button>
+          <button type="button" class="btn game-options-toggle" data-target="wolfOptionsPanel" aria-controls="wolfOptionsPanel" aria-expanded="false">Wolf Options</button>
+        </div>
+      </div>
+      <div id="wolfLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
+        <div id="wolfLiveResults" class="live-results-card" aria-live="polite"></div>
+      </div>
+      <div id="wolfOptionsPanel" class="game-options-panel" hidden>
+        <div class="banker-controls">
+          <div class="control-box">
+            <div class="pill">Scoring Mode</div>
+            <div class="hcp-mode-btn-group" id="wolfHcpModeGroup" role="radiogroup" aria-label="Wolf scoring mode">
+              <button type="button" class="btn hcp-mode-btn" id="wolfHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
+              <button type="button" class="btn hcp-mode-btn" id="wolfHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
+              <button type="button" class="btn hcp-mode-btn" id="wolfHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+            </div>
+          </div>
+          <div class="control-box">
+            <div class="pill">How It Works</div>
+            <p class="small" style="margin: 0; line-height: 1.4;">
+              Requires <strong>4 players</strong>. Each hole a different player is the <strong>Wolf</strong> (rotates P1→P4).
+              The Wolf picks a <strong>Partner</strong> (2v2) or plays alone as <strong>Lone Wolf</strong> (1v3),
+              or declares <strong>Blind Wolf</strong> before anyone tees off (1v3, doubled).
+              Lower team ball wins the hole; ties push.
+            </p>
+          </div>
+          <div class="control-box">
+            <div class="pill">Scoring</div>
+            <div class="small">Partner win: <strong>+1</strong> each partner.</div>
+            <div class="small">Partner loss: <strong>+1</strong> each opponent.</div>
+            <div class="small">Lone Wolf wins: <strong>+3</strong> to Wolf.</div>
+            <div class="small">Lone Wolf loses: <strong>+1</strong> each opponent.</div>
+            <div class="small">Blind Wolf wins: <strong>+4</strong> to Wolf.</div>
+            <div class="small">Blind Wolf loses: <strong>+2</strong> each opponent.</div>
+          </div>
+          <div class="control-box">
+            <button id="clearWolfDataBtn" class="btn">Clear Wolf Data</button>
+          </div>
+        </div>
+      </div>
+      <p id="wolfRosterWarning" class="warn" hidden>Wolf requires exactly 4 players. Add or remove players on the scorecard.</p>
+      <div class="banker-wrap">
+        <table class="banker-table" id="wolfTable">
+          <thead>
+            <tr>
+              <th>Hole</th>
+              <th>Wolf</th>
+              <th>Decision</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody id="wolfBody"></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+    </section>
     <div class="controls games-actions-row">
       <button id="clearGamesDataBtn" class="btn">Clear All Game Data</button>
     </div>
@@ -603,6 +646,7 @@
     <script src="js/hilo.js" defer></script>
     <script src="js/skins.js" defer></script>
     <script src="js/junk.js" defer></script>
+    <script src="js/wolf.js" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
