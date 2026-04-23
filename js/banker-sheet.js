@@ -767,10 +767,15 @@
           if (payoutEl?.classList.contains('banker-payout-positive')) payoutCls = 'bsr-pos';
           else if (payoutEl?.classList.contains('banker-payout-negative')) payoutCls = 'bsr-neg';
           const multTxt = (row.querySelector('.banker-result-mult')?.textContent || '').trim();
+          // Force layout via inline styles so no legacy CSS can shrink the
+          // bar. The colored bar must always span the cell width.
+          const rowStyle = 'display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:space-between;width:100%;box-sizing:border-box;padding:3px 8px;margin:0 0 3px 0;gap:8px;border-radius:4px;border-left:3px solid;white-space:nowrap;overflow:hidden;min-height:22px;';
+          const nameStyle = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;';
+          const infoStyle = 'flex:0 0 auto;text-align:right;white-space:nowrap;margin-left:auto;';
           parts.push(
-            `<div class="bsr-row ${outcomeCls}">` +
-              `<span class="bsr-name">${escapeHtml(nameTxt)}</span>` +
-              `<span class="bsr-info">` +
+            `<div class="bsr-row ${outcomeCls}" style="${rowStyle}">` +
+              `<span class="bsr-name" style="${nameStyle}">${escapeHtml(nameTxt)}</span>` +
+              `<span class="bsr-info" style="${infoStyle}">` +
                 `<span class="bsr-score">${escapeHtml(scoreTxt)}</span> ` +
                 `<span class="bsr-payout ${payoutCls}">${escapeHtml(payoutTxt)}</span>` +
                 (multTxt ? ` <span class="bsr-mult">${escapeHtml(multTxt)}</span>` : '') +
@@ -782,16 +787,18 @@
           let summCls = 'bsr-summ-push';
           if (summaryEl.classList.contains('banker-result-summary-positive')) summCls = 'bsr-summ-pos';
           else if (summaryEl.classList.contains('banker-result-summary-negative')) summCls = 'bsr-summ-neg';
+          const summStyle = 'display:block;width:100%;box-sizing:border-box;padding:4px 8px;margin-top:4px;font-weight:700;font-size:13px;border-top:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
           parts.push(
-            `<div class="bsr-summary ${summCls}">${escapeHtml((summaryEl.textContent || '').trim())}</div>`
+            `<div class="bsr-summary ${summCls}" style="${summStyle}">${escapeHtml((summaryEl.textContent || '').trim())}</div>`
           );
         }
         if (noBetsEl && parts.length === 0) {
           parts.push(`<div class="bsr-empty">${escapeHtml((noBetsEl.textContent || 'No bets').trim())}</div>`);
         }
+        const blockStyle = 'display:block;width:100%;max-width:100%;box-sizing:border-box;';
         resultBlock = parts.length
-          ? `<div class="bss-result-block">${parts.join('')}</div>`
-          : `<div class="bss-result-block bss-result-empty">—</div>`;
+          ? `<div class="bss-result-block" style="${blockStyle}">${parts.join('')}</div>`
+          : `<div class="bss-result-block bss-result-empty" style="${blockStyle}">—</div>`;
       } else {
         resultBlock = `<div class="bss-result-block bss-result-empty">—</div>`;
       }
