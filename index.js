@@ -760,7 +760,6 @@
   function setupScorecardScrollSync() {
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
-    const frozenHost = document.getElementById('scorecardFrozenHost');
     const frozenScroll = document.getElementById('scorecardFrozenScroll');
     const frozenProxy = document.getElementById('scorecardFrozenScrollProxy');
     if (!fixedPane || !scrollPane) return;
@@ -796,21 +795,14 @@
         if (frozenScroll) frozenScroll.scrollLeft = frozenProxy.scrollLeft;
         syncingHorizontal = false;
       }, { passive: true });
-    }
 
-    if (frozenHost) {
-      const applyHorizontalDelta = (delta) => {
-        if (!delta) return;
-        scrollPane.scrollLeft += delta;
-        if (frozenScroll) frozenScroll.scrollLeft = scrollPane.scrollLeft;
-        if (frozenProxy) frozenProxy.scrollLeft = scrollPane.scrollLeft;
-      };
-
-      // Desktop mouse wheel emits vertical delta in this area; map it to horizontal pan.
-      frozenHost.addEventListener('wheel', (event) => {
+      // Desktop mouse wheel over proxy: map vertical wheel to horizontal pan.
+      frozenProxy.addEventListener('wheel', (event) => {
         const horizontalDelta = Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
         if (!horizontalDelta) return;
-        applyHorizontalDelta(horizontalDelta);
+        scrollPane.scrollLeft += horizontalDelta;
+        if (frozenScroll) frozenScroll.scrollLeft = scrollPane.scrollLeft;
+        frozenProxy.scrollLeft = scrollPane.scrollLeft;
         event.preventDefault();
       }, { passive: false });
     }
