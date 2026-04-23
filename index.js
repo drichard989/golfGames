@@ -792,11 +792,11 @@
     const overlay = document.getElementById('scorecardLabelOverlay');
     if (!overlay) return;
 
+    const holesHeader = document.getElementById('holesHeader');
     const parRow = document.getElementById('parRow');
     const hcpRow = document.getElementById('hcpRow');
-    const firstPlayerRow = document.querySelector('#scorecard tbody tr.player-row');
     const measure = (el) => el ? el.getBoundingClientRect().height : 0;
-    const overlayHeight = measure(parRow) + measure(hcpRow) + measure(firstPlayerRow);
+    const overlayHeight = measure(holesHeader) + measure(parRow) + measure(hcpRow);
 
     if (overlayHeight <= 0) {
       overlay.style.height = '0px';
