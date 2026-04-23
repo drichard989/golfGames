@@ -1035,7 +1035,7 @@ body.mode-score #main-scorecard {
   scroll-behavior: smooth;
 }
 
-.scorecard-overlay-row th {
+.scorecard-overlay-row td {
   position: sticky;
   top: 0;
   height: 0;
@@ -1043,8 +1043,9 @@ body.mode-score #main-scorecard {
   border: none;
   background: transparent;
   overflow: visible;
-  pointer-events: none;
-  z-index: 12;
+  pointer-events: auto;
+  touch-action: pan-x pan-y;
+  z-index: 20;
 }
 
 .scorecard-overlay-band {
