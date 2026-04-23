@@ -275,6 +275,16 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   transition: opacity 0.15s, background 0.15s, border-color 0.15s;
 }
 
+/* Match cloud status and code buttons to Hide/Show control sizing */
+.header-collapse-bar .cloud-status-badge,
+.header-collapse-bar .cloud-code-badge-btn {
+  min-height: 36px;
+  padding: 8px 24px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
 .header-collapse-btn:hover {
   opacity: 1;
   background: var(--panel);
@@ -919,7 +929,7 @@ body.mode-score .entry-switcher {
 }
 
 body.mode-score #main-scorecard {
-  margin-top: 0;
+  margin-top: var(--space-sm);
 }
 
 .scorecard-fixed {
