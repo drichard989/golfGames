@@ -680,8 +680,8 @@
         const multHtml = dbl ? `<span class="bss-bet-mult">${multLabel}</span>` : '';
         betItems.push(`
           <div class="bss-bet-line${b>0?'':' bss-bet-empty'}${dbl?' bss-bet-dbl':''}">
-            <span class="bss-bet-name">${nm}</span>
             <span class="bss-bet-stroke-slot">${strokeHtml}</span>
+            <span class="bss-bet-name">${nm}</span>
             <span class="bss-bet-amt">${amt}</span>
             <span class="bss-bet-mult-slot">${multHtml}</span>
           </div>

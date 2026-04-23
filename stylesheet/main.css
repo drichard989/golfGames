@@ -4191,8 +4191,8 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 }
 .bss-bet-list {
   display: grid;
-  /* name | stroke | amount (right-aligned, $ aligns across rows) | 2× */
-  grid-template-columns: 1fr auto auto auto;
+  /* stroke | name (flex) | amount (right-aligned, $ aligns across rows) | 2× */
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   column-gap: 6px;
   row-gap: 0;
   align-items: center;
@@ -4211,7 +4211,7 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 .bss-bet-line:last-child > * {
   border-bottom: 0;
 }
-.bss-bet-line > .bss-bet-name { padding-left: 6px; }
+.bss-bet-line > .bss-bet-stroke-slot { padding-left: 6px; }
 .bss-bet-line > .bss-bet-mult-slot { padding-right: 6px; }
 .bss-bet-dbl > * {
   background: rgba(240, 173, 78, 0.08);
