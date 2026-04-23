@@ -3316,24 +3316,32 @@ input[type="text"] {
     min-width: 36px !important;
   }
 
-  /* Banker result rows inside the mobile inline summary: let them wrap so
-     scores + payout stay on screen on small phones. */
+  /* Banker result rows inside the mobile inline summary: result now sits
+     on its own full-width row below the grid, so each player's line has
+     the full table width — keep them on one line, no wrap. */
   .bss-result-block .banker-result-row {
-    flex-wrap: wrap;
-    row-gap: 2px;
+    flex-wrap: nowrap;
     padding: 2px 4px;
-    white-space: normal;
+    white-space: nowrap;
+    gap: 6px;
   }
   .bss-result-block .banker-result-right {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     min-width: 0;
+    flex: 0 0 auto;
   }
-  .bss-result-block .banker-result-name,
+  .bss-result-block .banker-result-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .bss-result-block .banker-result-score,
   .bss-result-block .banker-result-payout,
   .bss-result-block .banker-result-mult {
-    white-space: normal;
-    word-break: break-word;
+    white-space: nowrap;
+    flex: 0 0 auto;
   }
 }
 
@@ -4304,24 +4312,31 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 }
 
 /* Tablets / narrow desktops (421–899px): drop the standalone Max column,
-   stack "Max $X" under the banker name, and shrink the Banker 2× column
-   to a terse "BX" to reclaim horizontal space for per-player bets. */
+   stack "Max $X" under the banker name, shrink Banker 2× to a terse "BX",
+   and push Result onto its own full-width row below so each player's
+   result line fills the table (one line per player, no empty right gutter). */
 @media (min-width: 421px) and (max-width: 899px) {
   .bss-grid {
     grid-template-columns:
       minmax(72px, auto)   /* banker (with max stacked) */
       1fr                  /* bets */
-      minmax(32px, auto)   /* BX */
-      minmax(96px, 1.3fr); /* result */
+      minmax(32px, auto);  /* BX */
   }
   .bss-grid .bss-col-max { display: none; }
   .bss-max-inline { display: block; }
   .bss-col-bdbl { text-align: center; }
   .bss-col-bdbl .bss-col-label { letter-spacing: 0.06em; }
+  /* Result spans every column on its own row */
+  .bss-grid .bss-col-result {
+    grid-column: 1 / -1;
+    margin-top: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--line);
+  }
+  .bss-col-result .bss-col-label { display: none; }
 }
 
-/* Narrow phones ≤420px: handled by the block above that hides all
-   non-result columns in the inline summary. */
+/* Narrow phones ≤420px: handled by block earlier in file. */
 
 /* ---------------- Sheet container ---------------- */
 .banker-sheet-backdrop {
