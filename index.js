@@ -780,9 +780,8 @@
   }
 
   /**
-   * iOS edge handoff for score panes.
-   * When pane scroll hits top/bottom, transfer drag motion to page scroll
-   * instead of rubberbanding the pane itself.
+   * Disable iOS rubberband overscroll inside score panes.
+   * Pane drags are clamped at edges (no bounce, no handoff).
    */
   function setupIOSScorecardOverscrollGuard() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -828,14 +827,10 @@
 
         const atTop = pane.scrollTop <= 0;
         const atBottom = pane.scrollTop >= maxTop - 1;
-        const pageMaxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-        const pageCanScroll = pageMaxTop > 1;
 
-        // Finger moving down at top, or up at bottom:
-        // prevent pane bounce and hand motion off to page scroll.
-        if (pageCanScroll && ((atTop && dyStep > 0) || (atBottom && dyStep < 0))) {
+        // Finger moving down at top, or up at bottom => prevent iOS bounce.
+        if ((atTop && dyStep > 0) || (atBottom && dyStep < 0)) {
           e.preventDefault();
-          window.scrollBy({ top: -dyStep, left: 0, behavior: 'auto' });
         }
 
         lastY = t.clientY;
