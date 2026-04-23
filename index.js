@@ -780,8 +780,9 @@
   }
 
   /**
-   * Prevent iOS rubberband overscroll inside score panes.
-   * Keeps pan/drag constrained to the scorecard container at top/bottom edges.
+   * iOS edge handoff for score panes.
+   * When pane scroll hits top/bottom, transfer drag motion to page scroll
+   * instead of rubberbanding the pane itself.
    */
   function setupIOSScorecardOverscrollGuard() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -795,12 +796,14 @@
     const installGuard = (pane) => {
       let startX = 0;
       let startY = 0;
+      let lastY = 0;
 
       pane.addEventListener('touchstart', (e) => {
         const t = e.touches && e.touches[0];
         if (!t) return;
         startX = t.clientX;
         startY = t.clientY;
+        lastY = t.clientY;
       }, { passive: true });
 
       pane.addEventListener('touchmove', (e) => {
@@ -809,17 +812,25 @@
 
         const dx = t.clientX - startX;
         const dy = t.clientY - startY;
+        const dyStep = t.clientY - lastY;
         const mostlyVertical = Math.abs(dy) > Math.abs(dx);
-        if (!mostlyVertical) return;
+        if (!mostlyVertical) {
+          lastY = t.clientY;
+          return;
+        }
 
         const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
         const atTop = pane.scrollTop <= 0;
         const atBottom = pane.scrollTop >= maxTop - 1;
 
-        // Finger moving down at top, or up at bottom => iOS bounce. Block it.
-        if ((atTop && dy > 0) || (atBottom && dy < 0)) {
+        // Finger moving down at top, or up at bottom:
+        // prevent pane bounce and hand motion off to page scroll.
+        if ((atTop && dyStep > 0) || (atBottom && dyStep < 0)) {
           e.preventDefault();
+          window.scrollBy({ top: -dyStep, left: 0, behavior: 'auto' });
         }
+
+        lastY = t.clientY;
       }, { passive: false });
     };
 
