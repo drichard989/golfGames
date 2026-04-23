@@ -214,14 +214,18 @@
       return v || `Player ${i + 1}`;
     });
 
-    // Build initials label (e.g. "DJ" for Daniel + John). Falls back to
-    // P# style for empty names.
+    // Desktop (>= 900px AND mouse pointer) gets full "Daniel + John" labels.
+    // Mobile / tablet / touch devices get compact initials ("DJ") so the
+    // narrow result columns stay readable.
+    const isDesktop = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)').matches;
     const initialOf = (idx) => {
       const nm = (names[idx] || '').trim();
       if (nm) return nm.charAt(0).toUpperCase();
       return `${idx + 1}`;
     };
-    const fmtTeam = (team) => `${initialOf(team[0])}${initialOf(team[1])}`;
+    const fmtTeam = (team) => isDesktop
+      ? `${names[team[0]] || `P${team[0] + 1}`} + ${names[team[1]] || `P${team[1] + 1}`}`
+      : `${initialOf(team[0])}${initialOf(team[1])}`;
 
     setLabels(fmtTeam(teams.A), fmtTeam(teams.B));
   }
@@ -864,5 +868,14 @@ function vegas_renderTable(){
     recalc: vegas_recalc,
     renderTable: vegas_renderTable
   };
+
+  // Re-render team labels (full names <-> initials) when crossing the
+  // desktop/mobile breakpoint so the column headers stay correct.
+  try {
+    const desktopMQ = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
+    const onChange = () => { try { vegas_recalc(); } catch(_) {} };
+    if (desktopMQ.addEventListener) desktopMQ.addEventListener('change', onChange);
+    else if (desktopMQ.addListener) desktopMQ.addListener(onChange);
+  } catch(_) {}
 
 })();
