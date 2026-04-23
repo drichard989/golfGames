@@ -760,30 +760,71 @@
   function setupScorecardScrollSync() {
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
+    const frozenScroll = document.getElementById('scorecardFrozenScroll');
     if (!fixedPane || !scrollPane) return;
 
-    let syncing = false;
+    let syncingVertical = false;
+    let syncingHorizontal = false;
 
     const syncScrollTop = (source, target) => {
-      if (syncing) return;
-      syncing = true;
+      if (syncingVertical) return;
+      syncingVertical = true;
       target.scrollTop = source.scrollTop;
       requestAnimationFrame(() => {
-        syncing = false;
+        syncingVertical = false;
       });
     };
 
-    const syncFrozenHorizontal = () => {
-      const frozenScroll = document.getElementById('scorecardFrozenScroll');
-      if (frozenScroll) {
-        frozenScroll.scrollLeft = scrollPane.scrollLeft;
-      }
+    const syncScrollLeft = (source, target) => {
+      if (!target || syncingHorizontal) return;
+      syncingHorizontal = true;
+      target.scrollLeft = source.scrollLeft;
+      requestAnimationFrame(() => {
+        syncingHorizontal = false;
+      });
     };
 
     scrollPane.addEventListener('scroll', () => {
       syncScrollTop(scrollPane, fixedPane);
-      syncFrozenHorizontal();
+      syncScrollLeft(scrollPane, frozenScroll);
     }, { passive: true });
+
+    if (frozenScroll) {
+      frozenScroll.addEventListener('scroll', () => {
+        syncScrollLeft(frozenScroll, scrollPane);
+      }, { passive: true });
+
+      let touchStartX = null;
+      let touchStartLeft = 0;
+
+      frozenScroll.addEventListener('touchstart', (event) => {
+        const touch = event.touches?.[0];
+        if (!touch) return;
+        touchStartX = touch.clientX;
+        touchStartLeft = scrollPane.scrollLeft;
+      }, { passive: true });
+
+      frozenScroll.addEventListener('touchmove', (event) => {
+        const touch = event.touches?.[0];
+        if (!touch || touchStartX === null) return;
+
+        const deltaX = touch.clientX - touchStartX;
+        const nextLeft = touchStartLeft - deltaX;
+        scrollPane.scrollLeft = nextLeft;
+        syncScrollLeft(scrollPane, frozenScroll);
+
+        // Keep touch gesture dedicated to horizontal scorecard panning.
+        event.preventDefault();
+      }, { passive: false });
+
+      const clearTouchState = () => {
+        touchStartX = null;
+      };
+
+      frozenScroll.addEventListener('touchend', clearTouchState, { passive: true });
+      frozenScroll.addEventListener('touchcancel', clearTouchState, { passive: true });
+    }
+
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
   }
 
