@@ -381,16 +381,20 @@
   }
 
   function getStrokeTone(strokes) {
+    // strokes > 0 => score is reduced (good): green sheen
+    // strokes < 0 => score is increased (plus handicap gives strokes): red sheen
     return strokes > 0
       ? {
-          color: '#4ade80',
-          borderColor: 'rgba(74, 222, 128, 0.45)',
-          background: 'rgba(74, 222, 128, 0.12)'
+          color: '#2bd48f',
+          borderColor: 'rgba(43, 212, 143, 0.62)',
+          background: 'linear-gradient(135deg, rgba(43, 212, 143, 0.28), rgba(43, 212, 143, 0.10) 55%, rgba(43, 212, 143, 0.03))',
+          boxShadow: 'inset 0 0 0 1px rgba(43, 212, 143, 0.30), 0 0 0 1px rgba(43, 212, 143, 0.16)'
         }
       : {
           color: '#ff6b6b',
-          borderColor: 'rgba(255, 107, 107, 0.45)',
-          background: 'rgba(255, 107, 107, 0.12)'
+          borderColor: 'rgba(255, 107, 107, 0.62)',
+          background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.30), rgba(255, 107, 107, 0.12) 55%, rgba(255, 107, 107, 0.03))',
+          boxShadow: 'inset 0 0 0 1px rgba(255, 107, 107, 0.30), 0 0 0 1px rgba(255, 107, 107, 0.16)'
         };
   }
 
@@ -400,6 +404,7 @@
     indicator.style.color = tone.color;
     indicator.style.borderColor = tone.borderColor;
     indicator.style.background = tone.background;
+    indicator.style.boxShadow = tone.boxShadow;
   }
 
   function setBetInputValidity(betInput, isInvalid, maxBet) {
