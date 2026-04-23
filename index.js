@@ -4594,38 +4594,122 @@
     document.getElementById('toggleWolf')?.addEventListener('click', () => setGameTab('wolf'));
 
     const bindGameOptionsToggles = () => {
-      let livePanelOffsetRaf = null;
-      const syncGameLivePanelOffsets = () => {
-        livePanelOffsetRaf = null;
-        document.querySelectorAll('.game-section').forEach((section) => {
-          const openLivePanel = section.querySelector('.live-results-panel:not([hidden])');
-          if (!openLivePanel) {
-            section.style.setProperty('--game-live-header-top', '0px');
-            return;
-          }
-          // Use the rendered card/totals element height only, not wrapper
-          // overlap/margins, so table headers pin directly below live results.
-          const visibleCard = openLivePanel.firstElementChild;
-          const visiblePanelHeight = Math.max(
-            0,
-            Math.ceil((visibleCard || openLivePanel).getBoundingClientRect().height)
-          );
+      const liveHeaderClones = new Map();
 
-          // Stable, scroll-independent header anchor: card height only.
-          // This keeps headers flush under live results instead of drifting
-          // into the table when the panel has not fully reached sticky state.
-          section.style.setProperty('--game-live-header-top', `${visiblePanelHeight}px`);
+      const findSectionTable = (section) =>
+        section.querySelector('#vegasTable, #bankerTable, #junkTable, #wolfTable');
+
+      const findSectionTableWrap = (section) =>
+        section.querySelector('.vegas-wrap, .banker-wrap');
+
+      const clearLiveHeaderClone = (section) => {
+        const state = liveHeaderClones.get(section);
+        if (state) {
+          state.cleanup?.();
+          liveHeaderClones.delete(section);
+        }
+        section.classList.remove('live-header-clone-active');
+        const host = section.querySelector('.live-results-header-clone');
+        if (host) host.remove();
+      };
+
+      const ensureLiveHeaderClone = (section, panel) => {
+        const table = findSectionTable(section);
+        if (!table || !table.tHead) return;
+
+        let state = liveHeaderClones.get(section);
+        if (state) {
+          state.syncNow();
+          return;
+        }
+
+        const wrap = findSectionTableWrap(section);
+        let rafId = null;
+        let cloneTable = null;
+
+        const host = document.createElement('div');
+        host.className = 'live-results-header-clone';
+        panel.appendChild(host);
+
+        const syncNow = () => {
+          rafId = null;
+          const sourceHead = table.tHead;
+          if (!sourceHead) return;
+
+          const newCloneTable = document.createElement('table');
+          newCloneTable.className = `${table.className} live-results-header-clone-table`;
+          newCloneTable.appendChild(sourceHead.cloneNode(true));
+
+          host.innerHTML = '';
+          host.appendChild(newCloneTable);
+          cloneTable = newCloneTable;
+
+          const sourceThs = Array.from(sourceHead.querySelectorAll('th'));
+          const cloneThs = Array.from(cloneTable.querySelectorAll('th'));
+          sourceThs.forEach((sourceTh, idx) => {
+            const width = Math.ceil(sourceTh.getBoundingClientRect().width);
+            const cloneTh = cloneThs[idx];
+            if (!cloneTh || width <= 0) return;
+            cloneTh.style.width = `${width}px`;
+            cloneTh.style.minWidth = `${width}px`;
+            cloneTh.style.maxWidth = `${width}px`;
+          });
+
+          const tableWidth = Math.ceil(table.getBoundingClientRect().width);
+          if (tableWidth > 0) {
+            cloneTable.style.width = `${tableWidth}px`;
+          }
+
+          if (wrap) {
+            cloneTable.style.transform = `translateX(${-wrap.scrollLeft}px)`;
+          }
+        };
+
+        const scheduleSync = () => {
+          if (rafId != null) return;
+          rafId = requestAnimationFrame(syncNow);
+        };
+
+        const onWrapScroll = () => {
+          if (!cloneTable || !wrap) return;
+          cloneTable.style.transform = `translateX(${-wrap.scrollLeft}px)`;
+        };
+
+        const tableResizeObserver = 'ResizeObserver' in window
+          ? new ResizeObserver(() => scheduleSync())
+          : null;
+        if (tableResizeObserver) {
+          tableResizeObserver.observe(table);
+          tableResizeObserver.observe(panel);
+        }
+
+        if (wrap) {
+          wrap.addEventListener('scroll', onWrapScroll, { passive: true });
+        }
+        window.addEventListener('resize', scheduleSync, { passive: true });
+        window.addEventListener('orientationchange', scheduleSync, { passive: true });
+
+        section.classList.add('live-header-clone-active');
+        scheduleSync();
+
+        liveHeaderClones.set(section, {
+          syncNow: scheduleSync,
+          cleanup: () => {
+            if (rafId != null) {
+              cancelAnimationFrame(rafId);
+              rafId = null;
+            }
+            if (tableResizeObserver) {
+              tableResizeObserver.disconnect();
+            }
+            if (wrap) {
+              wrap.removeEventListener('scroll', onWrapScroll);
+            }
+            window.removeEventListener('resize', scheduleSync);
+            window.removeEventListener('orientationchange', scheduleSync);
+          }
         });
       };
-
-      const scheduleGameLivePanelOffsets = () => {
-        if (livePanelOffsetRaf != null) return;
-        livePanelOffsetRaf = requestAnimationFrame(syncGameLivePanelOffsets);
-      };
-
-      const livePanelResizeObserver = 'ResizeObserver' in window
-        ? new ResizeObserver(() => scheduleGameLivePanelOffsets())
-        : null;
 
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
       toggles.forEach((toggleBtn) => {
@@ -4634,15 +4718,22 @@
 
         const panel = document.getElementById(targetId);
         if (!panel) return;
-        if (panel.classList.contains('live-results-panel') && livePanelResizeObserver) {
-          livePanelResizeObserver.observe(panel);
-        }
 
         const syncState = (isOpen) => {
           panel.hidden = !isOpen;
           toggleBtn.classList.toggle('is-open', isOpen);
           toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-          scheduleGameLivePanelOffsets();
+
+          if (panel.classList.contains('live-results-panel')) {
+            const section = panel.closest('.game-section');
+            if (section) {
+              if (isOpen) {
+                ensureLiveHeaderClone(section, panel);
+              } else {
+                clearLiveHeaderClone(section);
+              }
+            }
+          }
         };
 
         syncState(!panel.hidden);
@@ -4651,10 +4742,6 @@
           Storage.saveDebounced();
         });
       });
-
-      window.addEventListener('resize', scheduleGameLivePanelOffsets, { passive: true });
-      window.addEventListener('orientationchange', scheduleGameLivePanelOffsets, { passive: true });
-      scheduleGameLivePanelOffsets();
     };
     bindGameOptionsToggles();
     

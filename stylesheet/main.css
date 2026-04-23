@@ -1581,7 +1581,6 @@ tfoot td {
 }
 
 .game-section {
-  --game-live-header-top: 0px;
   display: none;
   margin: var(--space-lg) var(--space-lg) 32px;
   padding: var(--space-lg);
@@ -1645,13 +1644,35 @@ tfoot td {
   padding: 0;
 }
 
-/* Keep game table headers visible below any pinned live-results panel. */
-.game-section .vegas-table thead th,
-.game-section .banker-table thead th,
-.game-section .junk-table thead th,
-.game-section .skins-table thead th {
-  top: var(--game-live-header-top, 0px) !important;
-  z-index: 29;
+.live-results-header-clone {
+  margin-top: 0;
+  overflow: hidden;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.live-results-header-clone-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--panel);
+}
+
+.live-results-header-clone-table thead th {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  background: var(--panel-alt);
+  border-bottom: 2px solid var(--line);
+}
+
+/* When cloned headers are active, hide the original sticky table headers so
+   rows scroll cleanly under the live-results card + clone strip. */
+.game-section.live-header-clone-active .vegas-table thead,
+.game-section.live-header-clone-active .banker-table thead,
+.game-section.live-header-clone-active .junk-table thead,
+.game-section.live-header-clone-active .skins-table thead {
+  visibility: hidden;
 }
 
 @media (max-width: 640px) {
