@@ -792,15 +792,15 @@
     const overlayBand = document.getElementById('scorecardOverlayBand');
     if (!overlayBand) return;
 
+    const holesHeader = document.getElementById('holesHeader');
     const parRow = document.getElementById('parRow');
     const hcpRow = document.getElementById('hcpRow');
-    const firstPlayerRow = document.querySelector('#scorecard tbody tr.player-row');
     const measure = (el) => el ? el.getBoundingClientRect().height : 0;
     const frozenRows = Array.from(document.querySelectorAll('#scorecardFrozenTable tr'));
+    const holesHeight = measure(holesHeader) || measure(frozenRows[0]);
     const parHeight = measure(parRow) || measure(frozenRows[1]);
     const hcpHeight = measure(hcpRow) || measure(frozenRows[2]);
-    const firstPlayerHeight = measure(firstPlayerRow);
-    const overlayHeight = parHeight + hcpHeight + firstPlayerHeight;
+    const overlayHeight = holesHeight + parHeight + hcpHeight;
 
     if (overlayHeight <= 0) {
       overlayBand.style.height = '0px';
