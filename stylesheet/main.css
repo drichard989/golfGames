@@ -1619,7 +1619,6 @@ tfoot td {
 
 .live-results-table {
   width: auto;
-  min-width: 100%;
   border-collapse: collapse;
   table-layout: auto;
 }
@@ -1707,7 +1706,6 @@ tfoot td {
 
 .banker-header-totals-table {
   width: auto;
-  min-width: 100%;
   border-collapse: collapse;
   table-layout: auto;
 }
