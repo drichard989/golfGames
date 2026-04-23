@@ -161,7 +161,7 @@
       if (show) {
         editBtn.disabled = false;
         editBtn.textContent = `Edit ${editCode}`;
-        editBtn.title = 'Tap to copy edit code';
+        editBtn.title = 'Tap to share edit link';
       }
     }
 
@@ -173,12 +173,12 @@
       if (show) {
         viewBtn.disabled = false;
         viewBtn.textContent = `View ${viewCode}`;
-        viewBtn.title = 'Tap to copy view-only code';
+        viewBtn.title = 'Tap to share view-only link';
       }
     }
   }
 
-  async function copySessionCodeToClipboard(codeType) {
+  async function shareSessionLink(codeType) {
     const key = codeType === 'edit' ? 'editCode' : 'viewCode';
     const label = codeType === 'edit' ? 'Edit' : 'View';
     const code = normalizeCode(state.session?.[key] || '');
@@ -186,15 +186,23 @@
       throw new Error(`${label} code unavailable`);
     }
 
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(code);
+    const link = codeType === 'edit'
+      ? buildEditShareUrl(code)
+      : buildViewShareUrl(code);
+
+    if (navigator.share) {
+      await navigator.share({
+        title: `Manito Golf Games ${label} Link`,
+        text: `${label} access link`,
+        url: link
+      });
     } else {
-      window.prompt(`Copy ${label.toLowerCase()} code`, code);
+      window.prompt(`Share ${label.toLowerCase()} link`, link);
     }
 
-    setStatus(`Cloud: ${label.toLowerCase()} code copied`);
+    setStatus(`Cloud: ${label.toLowerCase()} link shared`);
     if (typeof window.announce === 'function') {
-      window.announce(`${label} code copied.`);
+      window.announce(`${label} link shared.`);
     }
   }
 
@@ -1453,10 +1461,10 @@
       }));
 
     EL.editCodeBadgeBtn()?.addEventListener('click',
-      withCloudOp('copy edit code (badge)', null, () => copySessionCodeToClipboard('edit')));
+      withCloudOp('share edit link (badge)', null, () => shareSessionLink('edit')));
 
     EL.viewCodeBadgeBtn()?.addEventListener('click',
-      withCloudOp('copy view code (badge)', null, () => copySessionCodeToClipboard('view')));
+      withCloudOp('share view link (badge)', null, () => shareSessionLink('view')));
 
     EL.snapshotSelect()?.addEventListener('change', () => {
       state.activeSnapshotId = EL.snapshotSelect()?.value || '';
