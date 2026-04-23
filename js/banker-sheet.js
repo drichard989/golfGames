@@ -824,7 +824,7 @@
             <div class="bss-col-label">BX</div>
             <div class="bss-bdbl-val${bankerDbl?' is-on':''}">${bankerDbl ? multLabel : '—'}</div>
           </div>
-          <div class="bss-col bss-col-result">
+          <div class="bss-col bss-col-result" style="grid-column:1 / -1;width:100%;max-width:100%;box-sizing:border-box;padding-left:0;padding-right:0;">
             <div class="bss-col-label">Result</div>
             ${resultBlock}
           </div>

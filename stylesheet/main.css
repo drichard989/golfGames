@@ -3370,10 +3370,10 @@ input[type="text"] {
   }
 }
 
-/* Narrow phones (≤420px): show ONLY the Result block in the inline summary.
-   (Other columns are still accessible by tapping the row to open the sheet.)
-   This avoids the cramped wrap that pushed Result to a second line. */
-@media (max-width: 420px) {
+/* Narrow phones (≤480px): show ONLY the Result block in the inline summary.
+   480px catches all modern iPhones (iPhone SE 375, iPhone 12/13/14 390,
+   iPhone Plus 414, iPhone Pro Max 430). */
+@media (max-width: 480px) {
   .bss-grid {
     display: block;
     font-size: 11px;
@@ -4415,7 +4415,9 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
    row below so each player's result line fills the table (one line per
    player, no empty right gutter). Scoped to `body.banker-sheet-active` so
    wide touch tablets (1024–1366px) get the same treatment as 768px tablets. */
-@media (min-width: 421px) {
+/* Tablet / large phone (≥481px) compact tablet layout. Phones ≤480 use the
+   block above. */
+@media (min-width: 481px) {
   body.banker-sheet-active .bss-grid {
     grid-template-columns:
       minmax(72px, auto)   /* banker (with max stacked) */
@@ -5095,8 +5097,8 @@ body.banker-sheet-open { overflow: hidden; }
   padding: 4px 6px;
 }
 
-/* Phone tightening */
-@media (max-width: 420px) {
+/* Phone tightening (all iPhones up to Pro Max 430px) */
+@media (max-width: 480px) {
   .bss-result-block,
   .banker-sheet-result-block .banker-sheet-result-text {
     font-size: 11px;
