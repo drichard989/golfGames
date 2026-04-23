@@ -4594,6 +4594,29 @@
     document.getElementById('toggleWolf')?.addEventListener('click', () => setGameTab('wolf'));
 
     const bindGameOptionsToggles = () => {
+      let livePanelOffsetRaf = null;
+      const syncGameLivePanelOffsets = () => {
+        livePanelOffsetRaf = null;
+        document.querySelectorAll('.game-section').forEach((section) => {
+          const openLivePanel = section.querySelector('.live-results-panel:not([hidden])');
+          if (!openLivePanel) {
+            section.style.setProperty('--game-live-header-top', '0px');
+            return;
+          }
+          const panelHeight = Math.max(0, Math.ceil(openLivePanel.getBoundingClientRect().height));
+          section.style.setProperty('--game-live-header-top', `${panelHeight + 4}px`);
+        });
+      };
+
+      const scheduleGameLivePanelOffsets = () => {
+        if (livePanelOffsetRaf != null) return;
+        livePanelOffsetRaf = requestAnimationFrame(syncGameLivePanelOffsets);
+      };
+
+      const livePanelResizeObserver = 'ResizeObserver' in window
+        ? new ResizeObserver(() => scheduleGameLivePanelOffsets())
+        : null;
+
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
       toggles.forEach((toggleBtn) => {
         const targetId = toggleBtn.getAttribute('data-target');
@@ -4601,11 +4624,15 @@
 
         const panel = document.getElementById(targetId);
         if (!panel) return;
+        if (panel.classList.contains('live-results-panel') && livePanelResizeObserver) {
+          livePanelResizeObserver.observe(panel);
+        }
 
         const syncState = (isOpen) => {
           panel.hidden = !isOpen;
           toggleBtn.classList.toggle('is-open', isOpen);
           toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          scheduleGameLivePanelOffsets();
         };
 
         syncState(!panel.hidden);
@@ -4614,6 +4641,10 @@
           Storage.saveDebounced();
         });
       });
+
+      window.addEventListener('resize', scheduleGameLivePanelOffsets, { passive: true });
+      window.addEventListener('orientationchange', scheduleGameLivePanelOffsets, { passive: true });
+      scheduleGameLivePanelOffsets();
     };
     bindGameOptionsToggles();
     
