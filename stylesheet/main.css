@@ -806,7 +806,7 @@ input[type="text"] {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  overflow: hidden;
+  overflow: visible;
   margin: var(--space-md) 0 0;
   border-bottom: none;
 }
@@ -1027,12 +1027,13 @@ body.mode-score #main-scorecard {
   flex: 1;
   position: relative;
   overflow-x: auto;
-  overflow-y: auto;
+  overflow-y: visible;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
+  z-index: 60;
 }
 
 .scorecard-overlay-row td {
@@ -1045,7 +1046,7 @@ body.mode-score #main-scorecard {
   overflow: visible;
   pointer-events: auto;
   touch-action: pan-x pan-y;
-  z-index: 20;
+  z-index: 90;
 }
 
 .scorecard-overlay-band {
@@ -1057,7 +1058,7 @@ body.mode-score #main-scorecard {
   background: rgba(255, 140, 0, 0.12);
   pointer-events: auto;
   touch-action: pan-x pan-y;
-  z-index: 21;
+  z-index: 91;
 }
 
 /* Scrollbar styling */
