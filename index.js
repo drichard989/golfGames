@@ -1911,7 +1911,20 @@
                 return window.Junk.getAchievementState();
               }
               return existingState?.junk?.achievements ?? [];
-            })()
+            })(),
+            skinsDots: {
+              mode: (() => {
+                const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
+                return activeBtn?.dataset.value || 'gross';
+              })(),
+              netHcpMode: (() => {
+                const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
+                return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+              })(),
+              carry: document.getElementById('junkSkinsCarry')?.checked ?? true,
+              half: document.getElementById('junkSkinsHalf')?.checked ?? false,
+              buyIn: Number(document.getElementById('junkSkinsBuyIn')?.value) || 1
+            }
           },
           hilo: {
             unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10
@@ -2005,6 +2018,13 @@
             ?? ((games.junk?.mode ?? rawState.junk?.mode) === 'net'),
           netHcpMode: games.junk?.netHcpMode ?? rawState.junk?.netHcpMode ?? 'playOffLow',
           achievements: games.junk?.achievements ?? rawState.junk?.achievements,
+          skinsDots: games.junk?.skinsDots ?? rawState.junk?.skinsDots ?? {
+            mode: 'gross',
+            netHcpMode: 'playOffLow',
+            carry: true,
+            half: false,
+            buyIn: 1
+          },
           open: localUi.sections?.junk ?? rawState.junk?.open
         },
         hilo: {
@@ -2173,7 +2193,20 @@
               return window.Junk.getAchievementState();
             }
             return existingState?.junk?.achievements ?? [];
-          })()
+          })(),
+          skinsDots: {
+            mode: (() => {
+              const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
+              return activeBtn?.dataset.value || 'gross';
+            })(),
+            netHcpMode: (() => {
+              const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
+              return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+            })(),
+            carry: document.getElementById('junkSkinsCarry')?.checked ?? true,
+            half: document.getElementById('junkSkinsHalf')?.checked ?? false,
+            buyIn: Number(document.getElementById('junkSkinsBuyIn')?.value) || 1
+          }
         },
         hilo: {
           unitValue: Number(document.getElementById('hiloUnitValue')?.value) || 10,
@@ -2553,6 +2586,17 @@
           : junkNetHcpMode === 'fullHandicap' ? 'junkHcpModeFullHandicap'
           : 'junkHcpModePlayOffLow';
         setJunkModeBtnState(junkBtnId);
+        const junkSkinsMode = s.junk?.skinsDots?.mode || 'gross';
+        const junkSkinsBtnId = junkSkinsMode === 'fullHandicap' ? 'junkSkinsModeFullHandicap'
+          : junkSkinsMode === 'playOffLow' ? 'junkSkinsModePlayOffLow'
+          : 'junkSkinsModeGross';
+        setJunkSkinsModeBtnState(junkSkinsBtnId);
+        const junkSkinsCarryEl = document.getElementById('junkSkinsCarry');
+        if (junkSkinsCarryEl) junkSkinsCarryEl.checked = s.junk?.skinsDots?.carry ?? true;
+        const junkSkinsHalfEl = document.getElementById('junkSkinsHalf');
+        if (junkSkinsHalfEl) junkSkinsHalfEl.checked = s.junk?.skinsDots?.half ?? false;
+        const junkSkinsBuyInEl = document.getElementById('junkSkinsBuyIn');
+        if (junkSkinsBuyInEl) junkSkinsBuyInEl.value = String(s.junk?.skinsDots?.buyIn ?? 1);
         // Restore achievements even if section is closed
         if(s.junk?.achievements) {
           setTimeout(() => {
@@ -2710,6 +2754,13 @@
 
       const resetJunk = () => {
         setJunkModeBtnState('junkHcpModeGross');
+        setJunkSkinsModeBtnState('junkSkinsModeGross');
+        const junkSkinsCarry = document.getElementById('junkSkinsCarry');
+        const junkSkinsHalf = document.getElementById('junkSkinsHalf');
+        const junkSkinsBuyIn = document.getElementById('junkSkinsBuyIn');
+        if (junkSkinsCarry) junkSkinsCarry.checked = true;
+        if (junkSkinsHalf) junkSkinsHalf.checked = false;
+        if (junkSkinsBuyIn) junkSkinsBuyIn.value = '1';
         window.Junk?.clearAllAchievements?.();
       };
 
@@ -2864,6 +2915,33 @@
     if (!matched) {
       const fallback = document.getElementById('junkHcpModeGross');
       if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
+    }
+  }
+
+  /**
+   * Set active button in the Junk Skins Dots scoring mode button group.
+   * @param {string} activeId - Target button id
+   */
+  function setJunkSkinsModeBtnState(activeId) {
+    const buttons = document.querySelectorAll('#junkSkinsModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('junkSkinsModeGross');
+      if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
+    }
+    const activeBtn = document.querySelector('#junkSkinsModeGroup .hcp-mode-btn[data-active="true"]');
+    const isNet = (activeBtn?.dataset.value || 'gross') !== 'gross';
+    const halfEl = document.getElementById('junkSkinsHalf');
+    if (halfEl) {
+      halfEl.disabled = !isNet;
+      if (!isNet) halfEl.checked = false;
     }
   }
 
@@ -4374,6 +4452,14 @@
     const btn = e.target.closest('.hcp-mode-btn');
     if (!btn) return;
     setJunkModeBtnState(btn.id);
+    window.Junk?.update?.();
+    Storage.saveDebounced();
+  });
+
+  document.getElementById('junkSkinsModeGroup')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.hcp-mode-btn');
+    if (!btn) return;
+    setJunkSkinsModeBtnState(btn.id);
     window.Junk?.update?.();
     Storage.saveDebounced();
   });
