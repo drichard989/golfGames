@@ -422,26 +422,6 @@
     betsBlock.className = 'banker-sheet-block';
     betsBlock.innerHTML = `<div class="banker-sheet-block-title">Bets</div>`;
 
-    const repeatRow = document.createElement('div');
-    repeatRow.className = 'banker-sheet-suggestions';
-    // Repeat last hole's bets
-    if (hole > 1) {
-      const repeatBtn = document.createElement('button');
-      repeatBtn.type = 'button';
-      repeatBtn.className = 'banker-sheet-suggestion';
-      repeatBtn.textContent = 'Repeat last hole\'s bets';
-      repeatBtn.addEventListener('click', () => {
-        for (let p = 0; p < playerCount; p++){
-          if (p === bankerIdx) continue;
-          const prev = getBet(p, hole - 1);
-          if (prev > 0) setBet(p, hole, prev);
-        }
-        renderSheet(hole);
-      });
-      repeatRow.appendChild(repeatBtn);
-    }
-    if (repeatRow.children.length) betsBlock.appendChild(repeatRow);
-
     // Default each opponent's bet to the banker's max when empty — do this
     // once on open so players can adjust down instead of up from zero.
     {
