@@ -1648,6 +1648,20 @@ tfoot td {
   background: transparent;
 }
 
+/* Keep the Live Banker Results panel pinned below the top shell while
+   the banker table scrolls underneath it. The --top-pinned-shell-h var
+   is set from JS (see index.html) so the offset tracks the shell's
+   actual rendered height. */
+#bankerLiveResultsPanel:not([hidden]) {
+  position: sticky;
+  top: var(--top-pinned-shell-h, 0px);
+  z-index: 30;
+  /* Solid bg so banker table rows don't show through behind the card. */
+  background: var(--panel-alt);
+  padding: 8px 0;
+  margin: 0 0 10px;
+}
+
 .live-results-card {
   display: block;
   width: 100%;

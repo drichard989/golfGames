@@ -626,6 +626,40 @@
     <script src="js/qrcode.js"></script>
 
     <!-- =====================================================================
+         TOP-PINNED-SHELL HEIGHT TRACKER
+         Publishes the current rendered height of `.top-pinned-shell` to a
+         CSS variable `--top-pinned-shell-h` on :root. Used by sticky
+         elements (e.g. #bankerLiveResultsPanel) so they pin BELOW the
+         shell instead of being hidden underneath it. The shell collapses
+         when a game tab is opened, so we track changes via ResizeObserver.
+         ===================================================================== -->
+    <script>
+      (function () {
+        function updateTopShellHeight() {
+          try {
+            var shell = document.querySelector('.top-pinned-shell');
+            var h = shell ? Math.round(shell.getBoundingClientRect().height) : 0;
+            document.documentElement.style.setProperty('--top-pinned-shell-h', h + 'px');
+          } catch (e) { /* no-op */ }
+        }
+        function init() {
+          updateTopShellHeight();
+          var shell = document.querySelector('.top-pinned-shell');
+          if (shell && 'ResizeObserver' in window) {
+            try { new ResizeObserver(updateTopShellHeight).observe(shell); } catch (e) {}
+          }
+          window.addEventListener('resize', updateTopShellHeight, { passive: true });
+          window.addEventListener('orientationchange', updateTopShellHeight, { passive: true });
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init, { once: true });
+        } else {
+          init();
+        }
+      })();
+    </script>
+
+    <!-- =====================================================================
          MOBILE DEVTOOLS (eruda) — ENABLE WITH ?debug=1 IN URL
          Adds an in-page DevTools console (Elements, Console, Network, etc.)
          that can be opened on the iPhone itself. Tap the floating gear
