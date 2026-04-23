@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.0.130" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.0.131" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.0.130" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.0.130" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.0.131" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.0.131" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -628,30 +628,53 @@
     <script src="js/qrcode.js"></script>
 
     <!-- =====================================================================
-         TOP-PINNED-SHELL HEIGHT TRACKER
-         Publishes the current rendered height of `.top-pinned-shell` to a
-         CSS variable `--top-pinned-shell-h` on :root. Used by sticky
-         elements (e.g. #bankerLiveResultsPanel) so they pin BELOW the
-         shell instead of being hidden underneath it. The shell collapses
-         when a game tab is opened, so we track changes via ResizeObserver.
+         TOP-PINNED-SHELL HEIGHT TRACKER + BANKER LIVE RESULTS PIN
+         Publishes the rendered BOTTOM of `.top-pinned-shell` (in viewport
+         coords) to a CSS variable `--top-pinned-shell-h` on :root. Used
+         by #bankerLiveResultsPanel (position: sticky) so it pins right
+         below the shell as the banker section scrolls.
+
+         Why bottom and not height? The shell is itself sticky at top:0
+         with optional safe-area padding above. Reading `bottom` of its
+         bounding rect gives the exact y-coord of the line beneath which
+         we want the panel to pin — even when the shell isn't yet pinned.
+
+         Also writes the same value as inline `top` directly on
+         #bankerLiveResultsPanel so cascade weirdness can never strip it.
+         Fires on scroll + resize + ResizeObserver so the offset is always
+         current as the header collapses or expands.
          ===================================================================== -->
     <script>
       (function () {
-        function updateTopShellHeight() {
+        var rafScheduled = false;
+        function updateTopShellOffset() {
+          rafScheduled = false;
           try {
             var shell = document.querySelector('.top-pinned-shell');
-            var h = shell ? Math.round(shell.getBoundingClientRect().height) : 0;
-            document.documentElement.style.setProperty('--top-pinned-shell-h', h + 'px');
+            if (!shell) return;
+            var rect = shell.getBoundingClientRect();
+            // bottom can be negative if scrolled past, but shell is sticky
+            // so it normally pins at top — clamp at >=0 just in case.
+            var offset = Math.max(0, Math.round(rect.bottom));
+            document.documentElement.style.setProperty('--top-pinned-shell-h', offset + 'px');
+            var panel = document.getElementById('bankerLiveResultsPanel');
+            if (panel) panel.style.top = offset + 'px';
           } catch (e) { /* no-op */ }
         }
+        function schedule() {
+          if (rafScheduled) return;
+          rafScheduled = true;
+          requestAnimationFrame(updateTopShellOffset);
+        }
         function init() {
-          updateTopShellHeight();
+          updateTopShellOffset();
           var shell = document.querySelector('.top-pinned-shell');
           if (shell && 'ResizeObserver' in window) {
-            try { new ResizeObserver(updateTopShellHeight).observe(shell); } catch (e) {}
+            try { new ResizeObserver(schedule).observe(shell); } catch (e) {}
           }
-          window.addEventListener('resize', updateTopShellHeight, { passive: true });
-          window.addEventListener('orientationchange', updateTopShellHeight, { passive: true });
+          window.addEventListener('scroll', schedule, { passive: true });
+          window.addEventListener('resize', schedule, { passive: true });
+          window.addEventListener('orientationchange', schedule, { passive: true });
         }
         if (document.readyState === 'loading') {
           document.addEventListener('DOMContentLoaded', init, { once: true });
