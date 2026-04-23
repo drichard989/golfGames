@@ -1494,6 +1494,8 @@
         if(tds[base+0]) tds[base+0].textContent=OUT||"—"; 
         if(tds[base+1]) tds[base+1].textContent=INN||"—"; 
         if(tds[base+2]) tds[base+2].textContent=TOT||"—";
+
+        requestAnimationFrame(() => syncFrozenScorecardHeader());
       },
 
       /**
