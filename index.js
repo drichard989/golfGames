@@ -1197,16 +1197,16 @@
           const headerRowFixed = fixedTable.querySelector('thead tr');
           const parRowScroll = document.getElementById('parRow');
           const parRowFixed = document.getElementById('parRowFixed');
-          const headerHeight = Math.ceil(Math.max(
+          const measuredHeaderHeight = Math.max(
             headerRowScroll?.getBoundingClientRect().height || 0,
-            headerRowFixed?.getBoundingClientRect().height || 0,
-            44
-          ));
-          const parHeight = Math.ceil(Math.max(
+            headerRowFixed?.getBoundingClientRect().height || 0
+          );
+          const measuredParHeight = Math.max(
             parRowScroll?.getBoundingClientRect().height || 0,
-            parRowFixed?.getBoundingClientRect().height || 0,
-            44
-          ));
+            parRowFixed?.getBoundingClientRect().height || 0
+          );
+          const headerHeight = Math.ceil(measuredHeaderHeight || 44);
+          const parHeight = Math.ceil(measuredParHeight || 44);
           const rootStyle = document.documentElement?.style;
           if (rootStyle) {
             rootStyle.setProperty('--score-sticky-par-top', `${headerHeight}px`);
@@ -3892,6 +3892,10 @@
     requestAnimationFrame(() => {
       Scorecard.build.syncRowHeights(true);
     });
+    // iOS/PWA can complete layout after first rAF; run follow-up passes so
+    // sticky header/par/hcp offsets are always locked to actual row heights.
+    setTimeout(() => Scorecard.build.syncRowHeights(true), 120);
+    setTimeout(() => Scorecard.build.syncRowHeights(true), 320);
 
   $(ids.resetBtn).addEventListener("click", async () => {
     const cloudSession = window.CloudSync?.getSession?.();

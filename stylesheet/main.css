@@ -77,6 +77,8 @@
   --table-input-width: 44px;
   --table-ch-width: 60px;
   --scorecard-fixed-width: 175px;
+  --score-sticky-par-top: 39px;
+  --score-sticky-hcp-top: 100px;
   --safe-top-dynamic: 0px;
   --safe-top-inset: max(env(safe-area-inset-top, 0px), var(--safe-top-dynamic));
 }
