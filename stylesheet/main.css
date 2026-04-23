@@ -904,91 +904,9 @@ body.mode-score .entry-switcher {
   background: var(--panel-alt);
 }
 
-.scorecard-frozen-host {
-  display: none;
-  margin: 0;
-  border-left: 1px solid var(--line);
-  border-right: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
-  background: var(--panel);
-  overflow: hidden;
-  pointer-events: auto;
-}
-
-.scorecard-frozen-fixed {
-  flex: 0 0 auto;
-  overflow: hidden;
-  border-right: 2px solid rgba(168, 179, 191, 0.4);
-  background: var(--panel);
-  pointer-events: none;
-}
-
-.scorecard-frozen-scroll {
-  flex: 1 1 auto;
-  overflow-x: auto;
-  overflow-y: hidden;
-  position: relative;
-  background: var(--panel);
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
-  pointer-events: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.scorecard-frozen-scroll::-webkit-scrollbar {
-  display: none;
-  width: 0;
-  height: 0;
-}
-
-#scorecardFrozenFixed,
-#scorecardFrozenTable {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--panel);
-  table-layout: fixed;
-}
-
-#scorecardFrozenTable {
-  pointer-events: none;
-}
-
-/* Prevent responsive `table { min-width }` rules from expanding the narrow fixed clone */
-#scorecardFrozenFixed {
-  min-width: 0;
-}
-
-#scorecardFrozenFixed th,
-#scorecardFrozenFixed td,
-#scorecardFrozenTable th,
-#scorecardFrozenTable td {
-  border-bottom: 1px solid var(--line);
-  text-align: center;
-  vertical-align: middle;
-  white-space: nowrap;
-  padding: var(--space-xs) 3px;
-  overflow: hidden;
-}
-
 /* Utility class — preserves text-align from cloned source cells */
 .align-left {
   text-align: left !important;
-}
-
-body.mode-score #scorecardFrozenHost {
-  display: flex;
-}
-
-body.mode-score.frozen-ready #main-scorecard #scorecardFixed thead tr,
-body.mode-score.frozen-ready #main-scorecard #parRowFixed,
-body.mode-score.frozen-ready #main-scorecard #hcpRowFixed,
-body.mode-score.frozen-ready #main-scorecard #holesHeader,
-body.mode-score.frozen-ready #main-scorecard #parRow,
-body.mode-score.frozen-ready #main-scorecard #hcpRow {
-  display: none;
 }
 
 body.mode-score #main-scorecard {
@@ -1061,6 +979,26 @@ thead th {
   top: 0;
   background: var(--panel-alt);
   z-index: var(--z-sticky-header);
+}
+
+#scorecard #parRow td,
+#scorecard #parRow th,
+#scorecardFixed #parRowFixed td,
+#scorecardFixed #parRowFixed th {
+  position: sticky;
+  top: var(--score-sticky-par-top, 44px);
+  z-index: 2;
+  background: var(--panel-alt);
+}
+
+#scorecard #hcpRow td,
+#scorecard #hcpRow th,
+#scorecardFixed #hcpRowFixed td,
+#scorecardFixed #hcpRowFixed th {
+  position: sticky;
+  top: var(--score-sticky-hcp-top, 88px);
+  z-index: 2;
+  background: var(--panel-alt);
 }
 
 th,
@@ -1182,9 +1120,7 @@ tr:last-child td {
 
 /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
 #scorecard th:nth-child(10),
-#scorecard td:nth-child(10),
-#scorecardFrozenTable th:nth-child(10),
-#scorecardFrozenTable td:nth-child(10) {
+#scorecard td:nth-child(10) {
   border-left: 3px solid rgba(168, 179, 191, 0.4) !important;
 }
 
@@ -1247,37 +1183,27 @@ tr:last-child td {
 
 /* Divider after hole 18 */
 .hole-18,
-#scorecardFrozenTable th:nth-child(18),
-#scorecardFrozenTable td:nth-child(18) {
+#scorecard th:nth-child(18),
+#scorecard td:nth-child(18) {
   border-right: 2px solid rgba(255, 255, 255, 0.4) !important;
 }
 
 /* Keep summary columns stable even when values change from "—" to numbers */
 #scorecard th:nth-child(19),
 #scorecard td:nth-child(19),
-#scorecardFrozenTable th:nth-child(19),
-#scorecardFrozenTable td:nth-child(19),
 #scorecard th:nth-child(20),
 #scorecard td:nth-child(20),
-#scorecardFrozenTable th:nth-child(20),
-#scorecardFrozenTable td:nth-child(20),
 #scorecard th:nth-child(21),
 #scorecard td:nth-child(21),
-#scorecardFrozenTable th:nth-child(21),
-#scorecardFrozenTable td:nth-child(21),
 #scorecard th:nth-child(23),
-#scorecard td:nth-child(23),
-#scorecardFrozenTable th:nth-child(23),
-#scorecardFrozenTable td:nth-child(23) {
+#scorecard td:nth-child(23) {
   width: 56px;
   min-width: 56px;
   max-width: 56px;
 }
 
 #scorecard th:nth-child(22),
-#scorecard td:nth-child(22),
-#scorecardFrozenTable th:nth-child(22),
-#scorecardFrozenTable td:nth-child(22) {
+#scorecard td:nth-child(22) {
   width: 70px;
   min-width: 70px;
   max-width: 70px;
