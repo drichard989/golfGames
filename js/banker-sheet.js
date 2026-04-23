@@ -275,24 +275,12 @@
     }
     bankerBlock.appendChild(bankerPills);
 
-    // Suggestions: rotate + repeat last
+    // Suggestions: "Same as last" only (rotate removed per product decision)
     const suggestions = document.createElement('div');
     suggestions.className = 'banker-sheet-suggestions';
     if (hole > 1) {
       const prevBanker = getBankerIdx(hole - 1);
       if (prevBanker >= 0 && playerCount > 0) {
-        const rotated = (prevBanker + 1) % playerCount;
-        if (rotated !== bankerIdx) {
-          const rotateBtn = document.createElement('button');
-          rotateBtn.type = 'button';
-          rotateBtn.className = 'banker-sheet-suggestion';
-          rotateBtn.textContent = `Rotate → ${names[rotated]}`;
-          rotateBtn.addEventListener('click', () => {
-            setBankerIdx(hole, rotated);
-            renderSheet(hole);
-          });
-          suggestions.appendChild(rotateBtn);
-        }
         if (prevBanker !== bankerIdx) {
           const sameBtn = document.createElement('button');
           sameBtn.type = 'button';
@@ -442,22 +430,19 @@
       });
       repeatRow.appendChild(repeatBtn);
     }
-    // Set all to max bet
-    const allMaxBtn = document.createElement('button');
-    allMaxBtn.type = 'button';
-    allMaxBtn.className = 'banker-sheet-suggestion banker-sheet-suggestion-muted';
-    allMaxBtn.textContent = `All in · $${getMaxBet(hole)}`;
-    allMaxBtn.addEventListener('click', () => {
-      const m = getMaxBet(hole);
-      if (m <= 0) return;
-      for (let p = 0; p < playerCount; p++){
-        if (p === bankerIdx) continue;
-        setBet(p, hole, m);
-      }
-      renderSheet(hole);
-    });
-    repeatRow.appendChild(allMaxBtn);
     if (repeatRow.children.length) betsBlock.appendChild(repeatRow);
+
+    // Default each opponent's bet to the banker's max when empty — do this
+    // once on open so players can adjust down instead of up from zero.
+    {
+      const m = getMaxBet(hole);
+      if (m > 0) {
+        for (let p = 0; p < playerCount; p++){
+          if (p === bankerIdx) continue;
+          if (getBet(p, hole) === 0) setBet(p, hole, m);
+        }
+      }
+    }
 
     const cards = document.createElement('div');
     cards.className = 'banker-sheet-bet-cards';
@@ -483,6 +468,11 @@
           </div>
           <button type="button" class="banker-sheet-stepbtn banker-sheet-stepbtn-sm" data-step="1">+</button>
           <button type="button" class="banker-sheet-mult-toggle" data-active="${doubled ? 'true' : 'false'}">${multText}</button>
+        </div>
+        <div class="banker-sheet-bet-quickchips">
+          <button type="button" class="banker-sheet-bet-chip" data-quick="5">$5</button>
+          <button type="button" class="banker-sheet-bet-chip" data-quick="10">$10</button>
+          <button type="button" class="banker-sheet-bet-chip" data-quick="20">$20</button>
         </div>
         <div class="banker-sheet-bet-cap"></div>
       `;
@@ -524,6 +514,19 @@
         togglePlayerDouble(p, hole);
         multBtn.dataset.active = isPlayerDoubled(p, hole) ? 'true' : 'false';
         updateLiveResult();
+      });
+
+      // Quick-bet chips: $5 / $10 / $20 (tap to set exact value, capped to max)
+      card.querySelectorAll('.banker-sheet-bet-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          const v = Number(chip.dataset.quick) || 0;
+          const m = getMaxBet(hole);
+          const next = m > 0 ? Math.min(m, v) : v;
+          betInput.value = String(next);
+          setBet(p, hole, next);
+          updateCardCap(card, p, hole);
+          updateLiveResult();
+        });
       });
 
       updateCardCap(card, p, hole);
@@ -698,6 +701,7 @@
           <div class="bss-col bss-col-banker">
             <div class="bss-col-label">Banker</div>
             <div class="bss-banker-name">🏦 ${bankerName}</div>
+            <div class="bss-max-inline">Max $${maxBet || 0}</div>
           </div>
           <div class="bss-col bss-col-max">
             <div class="bss-col-label">Max</div>
@@ -708,7 +712,7 @@
             <div class="bss-bet-list">${betItems.join('') || '<span class="bss-bet-empty">—</span>'}</div>
           </div>
           <div class="bss-col bss-col-bdbl">
-            <div class="bss-col-label">Banker ${multLabel}</div>
+            <div class="bss-col-label">BX</div>
             <div class="bss-bdbl-val${bankerDbl?' is-on':''}">${bankerDbl ? multLabel : '—'}</div>
           </div>
           <div class="bss-col bss-col-result">
