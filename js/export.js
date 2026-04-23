@@ -1876,7 +1876,9 @@ input[type="text"] {
       textTable += '='.repeat(60) + '\n\n';
       
       // Skins options
-      const skinsMode = document.getElementById('skinsModeNet')?.checked ? 'Net' : 'Gross';
+      const skinsModeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+      const skinsModeVal = skinsModeBtn?.dataset.value || 'gross';
+      const skinsMode = skinsModeVal === 'gross' ? 'Gross' : skinsModeVal === 'fullHandicap' ? 'Full Handicap' : 'Play Off Low';
       const skinsCarry = document.getElementById('skinsCarry')?.checked ?? true;
       const skinsHalf = document.getElementById('skinsHalf')?.checked ?? false;
       const skinsBuyIn = Number(document.getElementById('skinsBuyIn')?.value) || 10;

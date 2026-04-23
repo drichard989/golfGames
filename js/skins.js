@@ -43,7 +43,7 @@
   // =============================================================================
 
   /**
-   * Get adjusted handicaps from main scorecard
+   * Get adjusted handicaps from main scorecard (play-off-low)
    * @returns {number[]} Array of adjusted handicaps
    */
   function getAdjustedCHs() {
@@ -61,6 +61,26 @@
       return chs.map(ch => ch !== null ? ch - minCH : 0);
     } catch (error) {
       console.error('[Skins] Error getting adjusted CHs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get raw (full) handicaps from main scorecard
+   * @returns {number[]} Array of raw handicaps
+   */
+  function getRawCHs() {
+    try {
+      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      return Array.from(playerRows).map(row => {
+        const chInput = row.querySelector('.ch-input');
+        const v = typeof window.getActualHandicapValue === 'function'
+          ? window.getActualHandicapValue(chInput)
+          : parseFloat(chInput?.value);
+        return Number.isFinite(v) ? v : 0;
+      });
+    } catch (error) {
+      console.error('[Skins] Error getting raw CHs:', error);
       return [];
     }
   }
@@ -187,10 +207,11 @@
    * @param {number} playerIdx - Zero-based player index
    * @param {number} holeIdx - Zero-based hole index
    * @param {boolean} half - Whether half-pops mode is enabled
+   * @param {string} netHcpMode - 'playOffLow' or 'fullHandicap'
    * @returns {number} Net score with NDB cap
    */
-  function getNetForSkins(playerIdx, holeIdx, half) {
-    const adjCHs = getAdjustedCHs();
+  function getNetForSkins(playerIdx, holeIdx, half, netHcpMode = 'playOffLow') {
+    const adjCHs = netHcpMode === 'fullHandicap' ? getRawCHs() : getAdjustedCHs();
     const gross = getGross(playerIdx, holeIdx);
     if (!gross) return 0;
     
@@ -245,7 +266,7 @@
       for (let h = 0; h < HOLES; h++) {
         // Use gross or net scores based on mode
         const scores = Array.from({ length: playerCount }, (_, p) => 
-          useNet ? getNetForSkins(p, h, half) : getGross(p, h)
+          useNet ? getNetForSkins(p, h, half, opts.netHcpMode || 'playOffLow') : getGross(p, h)
         );
         const filled = scores.map((n, p) => ({ n, p })).filter(x => x.n > 0);
         if (filled.length < 2) {
@@ -389,11 +410,14 @@
    * Update Skins calculations and render
    */
   function updateSkins() {
-    const useNet = document.getElementById('skinsModeNet')?.checked ?? false;
+    const activeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+    const mode = activeBtn?.dataset.value || 'gross';
+    const useNet = mode !== 'gross';
+    const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
     const carry = document.getElementById('skinsCarry')?.checked ?? true;
     const half = document.getElementById('skinsHalf')?.checked ?? false;
     const buyIn = Math.max(0, Number(document.getElementById('skinsBuyIn')?.value) || 0);
-    const data = Skins.compute({ carry, half, buyIn, useNet });
+    const data = Skins.compute({ carry, half, buyIn, useNet, netHcpMode });
     Skins.render(data);
   }
 
@@ -416,77 +440,51 @@
     buildSkinsTable();
     refreshSkinsHeaderNames();
     
-    // Set initial state of Half-Pops based on mode
-    const grossRadio = document.getElementById('skinsModeGross');
-    const halfEl = document.getElementById('skinsHalf');
-    if (grossRadio?.checked && halfEl) {
-      halfEl.checked = false;
-      halfEl.disabled = true;
-    }
+    // Sync half-pop disabled state with current mode
+    const syncHalfPopState = () => {
+      const activeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+      const isNet = (activeBtn?.dataset.value || 'gross') !== 'gross';
+      const halfEl = document.getElementById('skinsHalf');
+      if (halfEl) halfEl.disabled = !isNet;
+    };
+    syncHalfPopState();
     
     updateSkins();
 
     if (!skinsListenersBound) {
       skinsListenersBound = true;
 
-      // Recompute on mode change (gross/net radio buttons)
-      document.getElementById('skinsModeGross')?.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          // Clear and disable Half-Pops when Gross is selected
-          const halfEl = document.getElementById('skinsHalf');
-          if (halfEl) {
-            const wasChecked = halfEl.checked;
-            halfEl.checked = false;
-            halfEl.disabled = true;
-            
-            // If half-pop was enabled, we need to force a recalc
-            // since unchecking programmatically doesn't trigger change event
-            if (wasChecked) {
-              // Force immediate recalculation
-              updateSkins();
-            }
-          }
-          // Always recalculate when switching to GROSS
-          updateSkins();
+      document.getElementById('skinsHcpModeGroup')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.hcp-mode-btn');
+        if (!btn) return;
+        // Update active state
+        document.querySelectorAll('#skinsHcpModeGroup .hcp-mode-btn').forEach((b) => {
+          const isActive = b === btn;
+          b.dataset.active = isActive ? 'true' : 'false';
+          b.setAttribute('aria-checked', isActive ? 'true' : 'false');
+        });
+        const isNet = btn.dataset.value !== 'gross';
+        const halfEl = document.getElementById('skinsHalf');
+        if (halfEl) {
+          halfEl.disabled = !isNet;
+          if (!isNet) halfEl.checked = false;
         }
-        if (typeof window.saveDebounced === 'function') {
-          window.saveDebounced();
-        }
-      });
-      document.getElementById('skinsModeNet')?.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          // Enable Half-Pops when Net is selected
-          const halfEl = document.getElementById('skinsHalf');
-          if (halfEl) {
-            halfEl.disabled = false;
-          }
-          // Force recalculation after state change
-          updateSkins();
-        }
-        if (typeof window.saveDebounced === 'function') {
-          window.saveDebounced();
-        }
+        updateSkins();
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
       });
       
       // Recompute on option change
       document.getElementById('skinsCarry')?.addEventListener('change', () => {
         updateSkins();
-        if (typeof window.saveDebounced === 'function') {
-          window.saveDebounced();
-        }
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
       });
       document.getElementById('skinsHalf')?.addEventListener('change', () => {
         updateSkins();
-        if (typeof window.saveDebounced === 'function') {
-          window.saveDebounced();
-        }
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
       });
       document.getElementById('skinsBuyIn')?.addEventListener('input', () => {
         updateSkins();
-        // Call saveDebounced if available
-        if (typeof window.saveDebounced === 'function') {
-          window.saveDebounced();
-        }
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
       });
 
       // Recompute on any score/par/ch input

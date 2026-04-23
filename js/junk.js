@@ -152,10 +152,10 @@
   }
 
   function getJunkScoringConfig() {
-    const scoreMode = document.querySelector('input[name="junkScoreMode"]:checked')?.value
-      || (document.getElementById('junkUseNet')?.checked ? 'net' : 'gross');
-    const useNet = scoreMode === 'net';
-    const netHcpMode = document.querySelector('input[name="junkNetHcpMode"]:checked')?.value || 'playOffLow';
+    const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
+    const mode = activeBtn?.dataset.value || 'gross';
+    const useNet = mode !== 'gross';
+    const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
     return { useNet, netHcpMode };
   }
 
@@ -185,11 +185,7 @@
   }
 
   function syncJunkNetModeVisibility() {
-    const wrap = document.getElementById('junkNetHcpModeWrap');
-    const show = document.getElementById('junkScoreModeNet')?.checked;
-    if (wrap) {
-      wrap.style.display = show ? 'flex' : 'none';
-    }
+    // No-op: mode is now a single button group, no secondary panel to show/hide.
   }
 
   function dotsFor(score, par){
@@ -606,15 +602,13 @@
     if (!junkCoreListenersBound) {
       junkCoreListenersBound = true;
 
-      const scoringModeInputs = document.querySelectorAll('input[name="junkScoreMode"], input[name="junkNetHcpMode"]');
-      scoringModeInputs.forEach((input) => {
-        input.addEventListener('change', ()=> {
-          syncJunkNetModeVisibility();
-          updateJunk();
-          if (typeof window.saveDebounced === 'function') {
-            window.saveDebounced();
-          }
-        });
+      document.getElementById('junkHcpModeGroup')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.hcp-mode-btn');
+        if (!btn) return;
+        updateJunk();
+        if (typeof window.saveDebounced === 'function') {
+          window.saveDebounced();
+        }
       });
 
       // Listen for score/par/name changes

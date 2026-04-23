@@ -133,6 +133,13 @@
   }
 
   /**
+   * Get raw handicaps (full handicap mode)
+   */
+  function getRawCHs() {
+    return getHandicaps();
+  }
+
+  /**
    * Calculate strokes on a hole based on adjusted handicap
    */
   function strokesOnHole(adjCH, holeIdx) {
@@ -181,18 +188,26 @@
    * Calculate net score for a player on a hole using FULL handicap (not play-off-low)
    * This is used for Banker NET mode scoring
    */
-  function getNetScore(playerIdx, holeIdx) {
+  function getNetScore(playerIdx, holeIdx, netHcpMode = 'fullHandicap') {
     const gross = getGross(playerIdx, holeIdx);
     if (gross === 0) return 0;
     
-    // Get player's raw CH (not adjusted/play-off-low)
+    // Get player's handicap based on mode
     const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
     if (playerIdx >= playerRows.length) return gross;
     
-    const chInput = playerRows[playerIdx].querySelector('.ch-input');
-    const rawCH = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
+    let rawCH;
+    if (netHcpMode === 'playOffLow') {
+      // Use adjusted handicaps (play off low)
+      const adjCHs = getAdjustedCHs();
+      rawCH = adjCHs[playerIdx];
+    } else {
+      // Use raw handicaps (full handicap - default)
+      const chInput = playerRows[playerIdx].querySelector('.ch-input');
+      rawCH = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
+    }
     
-    // Calculate strokes based on raw CH
+    // Calculate strokes based on CH (adjusted or raw)
     const strokes = strokesOnHoleRawCH(rawCH, holeIdx);
     
     // Net = gross - strokes (if + handicap, strokes are negative so they add)
@@ -207,15 +222,24 @@
    * @param {number} holeIdx - Zero-based hole index
    * @returns {{strokes:number, displayText:string, title:string}|null}
    */
-  function getStrokeDisplayData(playerIdx, holeIdx) {
-    const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
+  function getStrokeDisplayData(playerIdx, holeIdx, netHcpMode = 'fullHandicap') {
+    const activeBtn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+    const mode = activeBtn?.dataset.value || 'fullHandicap';
+    const useNet = mode !== 'gross';
     if (!useNet) return null;
 
     const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
     if (playerIdx < 0 || playerIdx >= playerRows.length) return null;
 
-    const chInput = playerRows[playerIdx].querySelector('.ch-input');
-    const rawCH = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
+    let rawCH;
+    if (mode === 'playOffLow') {
+      const adjCHs = getAdjustedCHs();
+      rawCH = adjCHs[playerIdx];
+    } else {
+      // Full handicap
+      const chInput = playerRows[playerIdx].querySelector('.ch-input');
+      rawCH = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;
+    }
     if (rawCH === 0) return null;
 
     const strokes = strokesOnHoleRawCH(rawCH, holeIdx);
@@ -744,7 +768,10 @@
      */
     compute() {
       const playerCount = getPlayerCount();
-      const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
+      const activeBtn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+      const mode = activeBtn?.dataset.value || 'fullHandicap';
+      const useNet = mode !== 'gross';
+      const netHcpMode = mode === 'fullHandicap' ? 'fullHandicap' : mode === 'playOffLow' ? 'playOffLow' : 'fullHandicap';
 
       const sourceState = sanitizeBankerState(this.getState() || { holes: [] }, playerCount);
 
@@ -757,7 +784,7 @@
         const netScores = [];
         for (let p = 0; p < playerCount; p++) {
           grossScores.push(getGross(p, h));
-          netScores.push(getNetScore(p, h));
+          netScores.push(getNetScore(p, h, netHcpMode));
         }
         grossByHole.push(grossScores);
         netByHole.push(netScores);
@@ -765,7 +792,7 @@
       }
 
       return computeFromState(
-        { playerCount, holes: sourceState.holes },
+        { playerCount, holes: sourceState.holes, netHcpMode },
         { grossByHole, netByHole, pars },
         useNet
       );
@@ -1420,21 +1447,20 @@
           }
         }, { passive: true });
         
-        // Listen for NET/GROSS mode changes
-        const modeGross = document.getElementById('bankerModeGross');
-        const modeNet = document.getElementById('bankerModeNet');
-        if (modeGross && modeNet) {
-          modeGross.addEventListener('change', () => {
-            this.updateBetInputs(); // Refresh to show/hide stroke indicators
-            this.update();
-            queueSave();
+        // Listen for scoring mode button group changes
+        document.getElementById('bankerHcpModeGroup')?.addEventListener('click', (e) => {
+          const btn = e.target.closest('.hcp-mode-btn');
+          if (!btn) return;
+          // Update active state
+          document.querySelectorAll('#bankerHcpModeGroup .hcp-mode-btn').forEach((b) => {
+            const isActive = b === btn;
+            b.dataset.active = isActive ? 'true' : 'false';
+            b.setAttribute('aria-checked', isActive ? 'true' : 'false');
           });
-          modeNet.addEventListener('change', () => {
-            this.updateBetInputs(); // Refresh to show/hide stroke indicators
-            this.update();
-            queueSave();
-          });
-        }
+          this.updateBetInputs(); // Refresh to show/hide stroke indicators
+          this.update();
+          queueSave();
+        });
 
         // Listen for app handicap mode changes to keep banker view in sync
         document.addEventListener('change', (e) => {

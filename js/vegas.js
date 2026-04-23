@@ -168,7 +168,7 @@
     vegasDollarA: '#vegasDollarA',
     vegasDollarB: '#vegasDollarB',
     optUseNet: '#optUseNet',
-    vegasNetHcpMode: '#vegasNetHcpMode',
+    vegasNetHcpMode: '#vegasHcpModeGroup',
     optDoubleBirdie: '#optDoubleBirdie',
     optTripleEagle: '#optTripleEagle',
     vegasPointValue: '#vegasPointValue'
@@ -707,8 +707,39 @@ function vegas_setTeamAssignments(t){
     if(ghostCheck) ghostCheck.checked = true;
   });
 }
-function vegas_getOptions(){ return { useNet:$(ids.optUseNet)?.checked||false, netHcpMode:$(ids.vegasNetHcpMode)?.value||'playOffLow', doubleBirdie:$(ids.optDoubleBirdie)?.checked||false, tripleEagle:$(ids.optTripleEagle)?.checked||false, pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value)||0) }; }
-function vegas_setOptions(o){ if('useNet'in o) $(ids.optUseNet).checked=!!o.useNet; if('netHcpMode' in o && $(ids.vegasNetHcpMode)) $(ids.vegasNetHcpMode).value = o.netHcpMode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow'; if('doubleBirdie'in o) $(ids.optDoubleBirdie).checked=!!o.doubleBirdie; if('tripleEagle'in o) $(ids.optTripleEagle).checked=!!o.tripleEagle; if('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue; }
+function vegas_getOptions() {
+  const activeBtn = document.querySelector('#vegasHcpModeGroup .hcp-mode-btn[data-active="true"]');
+  const mode = activeBtn?.dataset.value || 'gross';
+  return {
+    useNet: mode !== 'gross',
+    netHcpMode: mode === 'fullHandicap' ? 'fullHandicap' : 'playOffLow',
+    doubleBirdie: $(ids.optDoubleBirdie)?.checked || false,
+    tripleEagle: $(ids.optTripleEagle)?.checked || false,
+    pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value) || 0)
+  };
+}
+function vegas_setOptions(o) {
+  if ('useNet' in o || 'netHcpMode' in o) {
+    const mode = o.netHcpMode === 'fullHandicap' ? 'fullHandicap'
+      : (o.useNet || o.netHcpMode === 'playOffLow') && o.useNet ? 'playOffLow'
+      : 'gross';
+    // Resolve: if useNet=false → gross; if useNet=true + netHcpMode=fullHandicap → fullHandicap; else → playOffLow
+    const resolved = !o.useNet ? 'gross'
+      : o.netHcpMode === 'fullHandicap' ? 'fullHandicap'
+      : 'playOffLow';
+    const btnId = resolved === 'fullHandicap' ? 'vegasHcpModeFullHandicap'
+      : resolved === 'playOffLow' ? 'vegasHcpModePlayOffLow'
+      : 'vegasHcpModeGross';
+    document.querySelectorAll('#vegasHcpModeGroup .hcp-mode-btn').forEach((btn) => {
+      const isActive = btn.id === btnId;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+  }
+  if ('doubleBirdie' in o) $(ids.optDoubleBirdie).checked = !!o.doubleBirdie;
+  if ('tripleEagle' in o) $(ids.optTripleEagle).checked = !!o.tripleEagle;
+  if ('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue;
+}
 
 function vegas_recalc(){
   const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();
