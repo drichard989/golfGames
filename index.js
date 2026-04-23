@@ -844,7 +844,7 @@
     const fixedTargetRows = Array.from(fixedTarget.querySelectorAll('tr'));
     const scrollTargetRows = Array.from(scrollTarget.querySelectorAll('tr'));
 
-    const applyCellMetrics = (sourceRow, targetRow, rowHeight) => {
+    const applyCellMetrics = (sourceRow, targetRow, rowHeight, referenceCells = []) => {
       if (!sourceRow || !targetRow) return;
       const sourceCells = Array.from(sourceRow.children);
       const targetCells = Array.from(targetRow.children);
@@ -853,7 +853,10 @@
       sourceCells.forEach((sourceCell, cellIndex) => {
         const targetCell = targetCells[cellIndex];
         if (!targetCell) return;
-        const width = Math.ceil(sourceCell.getBoundingClientRect().width);
+        const referenceCell = referenceCells[cellIndex] || sourceCell;
+        // Use exact fractional px — Math.ceil() accumulates rounding error across
+        // 9+ cells, shifting divider columns visibly off by several pixels.
+        const width = referenceCell.getBoundingClientRect().width;
         targetCell.style.width = `${width}px`;
         targetCell.style.minWidth = `${width}px`;
         targetCell.style.maxWidth = `${width}px`;
@@ -862,21 +865,44 @@
     };
 
     const rowCount = Math.max(fixedSourceRows.length, scrollSourceRows.length);
+    const sharedRowHeights = [];
+    for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+      const fixedSourceRow = fixedSourceRows[rowIndex];
+      const scrollSourceRow = scrollSourceRows[rowIndex];
+      const fixedHeight = fixedSourceRow?.getBoundingClientRect().height || 0;
+      const scrollHeight = scrollSourceRow?.getBoundingClientRect().height || 0;
+      sharedRowHeights[rowIndex] = Math.max(fixedHeight, scrollHeight, 1);
+    }
+
+    // Switch to final layout (source header rows hidden) before width sampling.
+    // This prevents 1px-per-column drift caused by measuring against pre-hide auto layout.
+    body?.classList.add('frozen-ready');
+
+    // Use visible player rows as width references so frozen columns match the
+    // live body grid exactly (header/par rows can be wider under auto layout).
+    const fixedReferenceCells = Array.from(
+      fixedSource.querySelector('tbody tr.player-row')?.children ||
+      fixedSourceRows[0]?.children ||
+      []
+    );
+    const scrollReferenceCells = Array.from(
+      scrollSource.querySelector('tbody tr.player-row')?.children ||
+      scrollSourceRows[0]?.children ||
+      []
+    );
+
     for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
       const fixedSourceRow = fixedSourceRows[rowIndex];
       const scrollSourceRow = scrollSourceRows[rowIndex];
       const fixedTargetRow = fixedTargetRows[rowIndex];
       const scrollTargetRow = scrollTargetRows[rowIndex];
+      const sharedRowHeight = sharedRowHeights[rowIndex] || 1;
 
-      const fixedHeight = Math.ceil(fixedSourceRow?.getBoundingClientRect().height || 0);
-      const scrollHeight = Math.ceil(scrollSourceRow?.getBoundingClientRect().height || 0);
-      const sharedRowHeight = Math.max(fixedHeight, scrollHeight, 1);
-
-      applyCellMetrics(fixedSourceRow, fixedTargetRow, sharedRowHeight);
-      applyCellMetrics(scrollSourceRow, scrollTargetRow, sharedRowHeight);
+      applyCellMetrics(fixedSourceRow, fixedTargetRow, sharedRowHeight, fixedReferenceCells);
+      applyCellMetrics(scrollSourceRow, scrollTargetRow, sharedRowHeight, scrollReferenceCells);
     }
 
-    const fixedWidth = Math.ceil(fixedPane.getBoundingClientRect().width);
+    const fixedWidth = fixedPane.getBoundingClientRect().width;
     fixedWrap.style.width = `${fixedWidth}px`;
     fixedWrap.style.minWidth = `${fixedWidth}px`;
     fixedWrap.style.maxWidth = `${fixedWidth}px`;
@@ -885,12 +911,11 @@
     fixedTarget.style.minWidth = '0';
 
     // Use scrollWidth (full content width) not getBoundingClientRect (viewport-clipped)
-    const scrollTableWidth = Math.ceil(scrollSource.scrollWidth);
+    const scrollTableWidth = scrollSource.scrollWidth;
     scrollTarget.style.width = `${scrollTableWidth}px`;
     scrollTarget.style.minWidth = `${scrollTableWidth}px`;
 
     scrollWrap.scrollLeft = scrollPane.scrollLeft;
-    body?.classList.add('frozen-ready');
   }
 
   function setupGamesPanelScrollSync() {
