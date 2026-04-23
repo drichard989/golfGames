@@ -3377,27 +3377,55 @@ input[type="text"] {
   .bss-grid {
     display: block;
     font-size: 11px;
+    width: 100%;
   }
   .bss-grid .bss-col:not(.bss-col-result) {
     display: none;
   }
+  .bss-col-result {
+    display: block !important;
+    width: 100% !important;
+  }
   .bss-col-result .bss-col-label { display: none; }
-  .bss-result-block { font-size: 11px; }
+  .bss-result-block {
+    display: block;
+    width: 100%;
+    font-size: 11px;
+  }
   .banker-sheet-summary-cell { padding: 4px 6px !important; }
 
   /* Compact result rows on narrow phones: drop colons / spacing so the
      player name + score + payout all fit on one line. Keep the colored
-     row background, one line per player. */
+     row background, one line per player, stretched edge-to-edge. */
   .bss-result-block .banker-result-row {
-    padding: 2px 4px;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 2px 6px;
     font-size: 11px;
     gap: 4px;
+    white-space: nowrap;
   }
   .bss-result-block .banker-result-name {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 11px;
     font-weight: 600;
-    flex-shrink: 0;
-    max-width: 42%;
+    margin-right: 0;
+  }
+  .bss-result-block .banker-result-right {
+    flex: 0 0 auto !important;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
   }
   .bss-result-block .banker-result-score { font-size: 10px; }
   .bss-result-block .banker-result-payout { font-size: 11px; }
@@ -3406,6 +3434,8 @@ input[type="text"] {
     font-size: 12px;
     padding: 3px 4px;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }
 
