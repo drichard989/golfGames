@@ -480,11 +480,10 @@
     // Vegas
     vegasTeams:"#vegasTeams", vegasTeamWarning:"#vegasTeamWarning",
     vegasTableBody:"#vegasBody", vegasTotalA:"#vegasTotalA", vegasTotalB:"#vegasTotalB", vegasPtsA:"#vegasPtsA", vegasPtsB:"#vegasPtsB",
-    optUseNet:"#optUseNet", optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
-    vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB", vegasNetHcpMode:"#vegasNetHcpMode",
+    optDoubleBirdie:"#optDoubleBirdie", optTripleEagle:"#optTripleEagle",
+    vegasPointValue:"#vegasPointValue", vegasDollarA:"#vegasDollarA", vegasDollarB:"#vegasDollarB",
 
     // Skins
-    skinsModeGross:"#skinsModeGross", skinsModeNet:"#skinsModeNet",
     skinsCarry:"#skinsCarry", skinsHalf:"#skinsHalf",
     skinsBody:"#skinsBody",
     skinsSummary:"#skinsSummary",
@@ -1868,28 +1867,45 @@
             opts: window.Vegas?.getOptions() || {}
           },
           banker: {
+            mode: (() => {
+              const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return (btn?.dataset.value || 'fullHandicap') === 'gross' ? 'gross' : 'net';
+            })(),
+            netHcpMode: (() => {
+              const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return btn?.dataset.value === 'playOffLow' ? 'playOffLow' : 'fullHandicap';
+            })(),
             state: (typeof window.Banker?.getState === 'function')
               ? (window.Banker.getState() ?? existingState?.banker?.state ?? null)
               : (existingState?.banker?.state ?? null)
           },
           skins: {
-            mode: document.getElementById('skinsModeNet')?.checked ? 'net' : 'gross',
+            mode: (() => {
+              const btn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return (btn?.dataset.value || 'gross') === 'gross' ? 'gross' : 'net';
+            })(),
+            netHcpMode: (() => {
+              const btn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+            })(),
             buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
             carry: document.getElementById('skinsCarry')?.checked ?? true,
             half: document.getElementById('skinsHalf')?.checked ?? false
           },
           junk: {
             mode: (() => {
-              const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
-              if (selected) return selected;
-              return (document.getElementById('junkUseNet')?.checked ?? false) ? 'net' : 'gross';
+              const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              const v = activeBtn?.dataset.value || 'gross';
+              return v === 'gross' ? 'gross' : 'net';
             })(),
             useNet: (() => {
-              const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
-              if (selected) return selected === 'net';
-              return document.getElementById('junkUseNet')?.checked ?? false;
+              const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return (activeBtn?.dataset.value || 'gross') !== 'gross';
             })(),
-            netHcpMode: document.querySelector('input[name="junkNetHcpMode"]:checked')?.value || 'playOffLow',
+            netHcpMode: (() => {
+              const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
+              return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+            })(),
             achievements: (() => {
               if (typeof window.Junk?.getAchievementState === 'function') {
                 return window.Junk.getAchievementState();
@@ -1965,12 +1981,15 @@
         },
         banker: {
           ...(rawState.banker || {}),
+          mode: games.banker?.mode ?? rawState.banker?.mode ?? 'net',
+          netHcpMode: games.banker?.netHcpMode ?? rawState.banker?.netHcpMode ?? 'fullHandicap',
           state: games.banker?.state ?? rawState.banker?.state,
           open: localUi.sections?.banker ?? rawState.banker?.open
         },
         skins: {
           ...(rawState.skins || {}),
           mode: games.skins?.mode ?? rawState.skins?.mode,
+          netHcpMode: games.skins?.netHcpMode ?? rawState.skins?.netHcpMode ?? 'playOffLow',
           buyIn: games.skins?.buyIn ?? rawState.skins?.buyIn,
           carry: games.skins?.carry ?? rawState.skins?.carry,
           half: games.skins?.half ?? rawState.skins?.half,
@@ -2107,13 +2126,28 @@
         },
         banker: { 
           open: $(ids.bankerSection).classList.contains("open"),
+          mode: (() => {
+            const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return (btn?.dataset.value || 'fullHandicap') === 'gross' ? 'gross' : 'net';
+          })(),
+          netHcpMode: (() => {
+            const btn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return btn?.dataset.value === 'playOffLow' ? 'playOffLow' : 'fullHandicap';
+          })(),
           state: (() => {
             const current = (typeof window.Banker?.getState === 'function') ? window.Banker.getState() : null;
             return current ?? existingState?.banker?.state ?? null;
           })()
         },
         skins: { 
-          mode: document.getElementById('skinsModeNet')?.checked ? 'net' : 'gross',
+          mode: (() => {
+            const btn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return (btn?.dataset.value || 'gross') === 'gross' ? 'gross' : 'net';
+          })(),
+          netHcpMode: (() => {
+            const btn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return btn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+          })(),
           buyIn: Number(document.getElementById('skinsBuyIn')?.value) || 10,
           carry: document.getElementById('skinsCarry')?.checked ?? true,
           half: document.getElementById('skinsHalf')?.checked ?? false,
@@ -2121,16 +2155,18 @@
         },
         junk: {
           mode: (() => {
-            const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
-            if (selected) return selected;
-            return (document.getElementById('junkUseNet')?.checked ?? false) ? 'net' : 'gross';
+            const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            const v = activeBtn?.dataset.value || 'gross';
+            return v === 'gross' ? 'gross' : 'net';
           })(),
           useNet: (() => {
-            const selected = document.querySelector('input[name="junkScoreMode"]:checked')?.value;
-            if (selected) return selected === 'net';
-            return document.getElementById('junkUseNet')?.checked ?? false;
+            const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return (activeBtn?.dataset.value || 'gross') !== 'gross';
           })(),
-          netHcpMode: document.querySelector('input[name="junkNetHcpMode"]:checked')?.value || 'playOffLow',
+          netHcpMode: (() => {
+            const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
+            return activeBtn?.dataset.value === 'fullHandicap' ? 'fullHandicap' : 'playOffLow';
+          })(),
           open: $(ids.junkSection)?.classList.contains("open"),
           achievements: (() => {
             if (typeof window.Junk?.getAchievementState === 'function') {
@@ -2274,27 +2310,15 @@
       });
 
       if (resetSharedGames) {
-        const skinsModeGross = document.getElementById('skinsModeGross');
-        const skinsModeNet = document.getElementById('skinsModeNet');
+        setSkinsModeBtn('skinsHcpModeGross');
         const skinsBuyIn = document.getElementById('skinsBuyIn');
         const skinsCarry = document.getElementById('skinsCarry');
         const skinsHalf = document.getElementById('skinsHalf');
-        if (skinsModeGross) skinsModeGross.checked = true;
-        if (skinsModeNet) skinsModeNet.checked = false;
         if (skinsBuyIn) skinsBuyIn.value = '10';
         if (skinsCarry) skinsCarry.checked = true;
-        if (skinsHalf) skinsHalf.checked = false;
+        if (skinsHalf) { skinsHalf.checked = false; }
 
-        const junkModeGross = document.getElementById('junkScoreModeGross');
-        const junkModeNet = document.getElementById('junkScoreModeNet');
-        const junkNetPlayOffLow = document.getElementById('junkNetHcpModePlayOffLow');
-        const junkNetFullHandicap = document.getElementById('junkNetHcpModeFullHandicap');
-        const junkNetWrap = document.getElementById('junkNetHcpModeWrap');
-        if (junkModeGross) junkModeGross.checked = true;
-        if (junkModeNet) junkModeNet.checked = false;
-        if (junkNetPlayOffLow) junkNetPlayOffLow.checked = true;
-        if (junkNetFullHandicap) junkNetFullHandicap.checked = false;
-        if (junkNetWrap) junkNetWrap.style.display = 'none';
+        setJunkModeBtnState('junkHcpModeGross');
         document.querySelectorAll('#junkTable input.junk-ach').forEach((checkbox) => {
           checkbox.checked = false;
         });
@@ -2488,16 +2512,25 @@
             }
           }, 160);
         };
+        
+        // Restore Banker button state (mode and netHcpMode)
+        if (s.banker?.mode != null) {
+          const bMode = s.banker.mode;
+          const bHcpMode = s.banker?.netHcpMode || 'fullHandicap';
+          const bankerBtnId = bMode !== 'net' ? 'bankerHcpModeGross'
+            : bHcpMode === 'fullHandicap' ? 'bankerHcpModeFullHandicap'
+            : 'bankerHcpModePlayOffLow';
+          setBankerModeBtn(bankerBtnId);
+        }
 
         // Restore Skins options
-        if(s.skins?.mode != null) {
-          const modeGrossEl = document.getElementById('skinsModeGross');
-          const modeNetEl = document.getElementById('skinsModeNet');
-          if(s.skins.mode === 'net') {
-            if(modeNetEl) modeNetEl.checked = true;
-          } else {
-            if(modeGrossEl) modeGrossEl.checked = true;
-          }
+        if (s.skins?.mode != null) {
+          const sMode = s.skins.mode;
+          const sHcpMode = s.skins?.netHcpMode || 'playOffLow';
+          const skinsBtnId = sMode !== 'net' ? 'skinsHcpModeGross'
+            : sHcpMode === 'fullHandicap' ? 'skinsHcpModeFullHandicap'
+            : 'skinsHcpModePlayOffLow';
+          setSkinsModeBtn(skinsBtnId);
         }
         if(s.skins?.buyIn != null) {
           const buyInEl = document.getElementById('skinsBuyIn');
@@ -2516,17 +2549,10 @@
         // Restore Junk options
         const junkMode = s.junk?.mode || (s.junk?.useNet ? 'net' : 'gross');
         const junkNetHcpMode = s.junk?.netHcpMode || 'playOffLow';
-        const junkModeGross = document.getElementById('junkScoreModeGross');
-        const junkModeNet = document.getElementById('junkScoreModeNet');
-        const junkNetPlayOffLow = document.getElementById('junkNetHcpModePlayOffLow');
-        const junkNetFullHandicap = document.getElementById('junkNetHcpModeFullHandicap');
-        const junkNetWrap = document.getElementById('junkNetHcpModeWrap');
-
-        if (junkModeGross) junkModeGross.checked = junkMode !== 'net';
-        if (junkModeNet) junkModeNet.checked = junkMode === 'net';
-        if (junkNetPlayOffLow) junkNetPlayOffLow.checked = junkNetHcpMode !== 'fullHandicap';
-        if (junkNetFullHandicap) junkNetFullHandicap.checked = junkNetHcpMode === 'fullHandicap';
-        if (junkNetWrap) junkNetWrap.style.display = junkMode === 'net' ? 'flex' : 'none';
+        const junkBtnId = junkMode !== 'net' ? 'junkHcpModeGross'
+          : junkNetHcpMode === 'fullHandicap' ? 'junkHcpModeFullHandicap'
+          : 'junkHcpModePlayOffLow';
+        setJunkModeBtnState(junkBtnId);
         // Restore achievements even if section is closed
         if(s.junk?.achievements) {
           setTimeout(() => {
@@ -2668,33 +2694,22 @@
       };
 
       const resetBanker = () => {
+        setBankerModeBtn('bankerHcpModeFullHandicap');
         window.Banker?.setState?.({ holes: [] });
       };
 
       const resetSkins = () => {
-        const skinsModeGross = document.getElementById('skinsModeGross');
-        const skinsModeNet = document.getElementById('skinsModeNet');
+        setSkinsModeBtn('skinsHcpModeGross');
         const skinsBuyIn = document.getElementById('skinsBuyIn');
         const skinsCarry = document.getElementById('skinsCarry');
         const skinsHalf = document.getElementById('skinsHalf');
-        if (skinsModeGross) skinsModeGross.checked = true;
-        if (skinsModeNet) skinsModeNet.checked = false;
         if (skinsBuyIn) skinsBuyIn.value = '10';
         if (skinsCarry) skinsCarry.checked = true;
-        if (skinsHalf) skinsHalf.checked = false;
+        if (skinsHalf) { skinsHalf.checked = false; }
       };
 
       const resetJunk = () => {
-        const junkModeGross = document.getElementById('junkScoreModeGross');
-        const junkModeNet = document.getElementById('junkScoreModeNet');
-        const junkNetPlayOffLow = document.getElementById('junkNetHcpModePlayOffLow');
-        const junkNetFullHandicap = document.getElementById('junkNetHcpModeFullHandicap');
-        const junkNetWrap = document.getElementById('junkNetHcpModeWrap');
-        if (junkModeGross) junkModeGross.checked = true;
-        if (junkModeNet) junkModeNet.checked = false;
-        if (junkNetPlayOffLow) junkNetPlayOffLow.checked = true;
-        if (junkNetFullHandicap) junkNetFullHandicap.checked = false;
-        if (junkNetWrap) junkNetWrap.style.display = 'none';
+        setJunkModeBtnState('junkHcpModeGross');
         window.Junk?.clearAllAchievements?.();
       };
 
@@ -2830,6 +2845,91 @@
         console.warn('[FontSize] delayed syncRowHeights failed:', error);
       }
     }, 120);
+  }
+
+  /**
+   * Set active button in the Junk scoring mode button group.
+   * @param {string} activeId - Target button id
+   */
+  function setJunkModeBtnState(activeId) {
+    const buttons = document.querySelectorAll('#junkHcpModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('junkHcpModeGross');
+      if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
+    }
+  }
+
+  /**
+   * Set active button in the Skins scoring mode button group.
+   * @param {string} activeId - Target button id
+   */
+  function setSkinsModeBtn(activeId) {
+    const buttons = document.querySelectorAll('#skinsHcpModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('skinsHcpModeGross');
+      if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
+    }
+    // Sync half-pop disabled state
+    const activeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
+    const isNet = (activeBtn?.dataset.value || 'gross') !== 'gross';
+    const halfEl = document.getElementById('skinsHalf');
+    if (halfEl) halfEl.disabled = !isNet;
+  }
+
+  /**
+   * Set active button in the Vegas scoring mode button group.
+   * @param {string} activeId - Target button id
+   */
+  function setVegasHcpModeBtnState(activeId) {
+    const buttons = document.querySelectorAll('#vegasHcpModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('vegasHcpModeGross');
+      if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
+    }
+  }
+
+  /**
+   * Set active button in the Banker scoring mode button group.
+   * @param {string} activeId - Target button id
+   */
+  function setBankerModeBtn(activeId) {
+    const buttons = document.querySelectorAll('#bankerHcpModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('bankerHcpModeFullHandicap');
+      if (fallback) { fallback.dataset.active = 'true'; fallback.setAttribute('aria-checked', 'true'); }
+    }
   }
 
   /**
@@ -4269,6 +4369,15 @@
   $(ids.saveBtn).addEventListener("click", () => { Storage.save(); });
   
   // Auto-advance direction toggle
+  // Junk scoring mode button group
+  document.getElementById('junkHcpModeGroup')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.hcp-mode-btn');
+    if (!btn) return;
+    setJunkModeBtnState(btn.id);
+    window.Junk?.update?.();
+    Storage.saveDebounced();
+  });
+
   // Handicap mode button group
   document.getElementById('handicapModeGroup')?.addEventListener('click', (e) => {
     const btn = e.target.closest('.hcp-mode-btn');
@@ -4363,22 +4472,19 @@
       }
     });
 
-    const updateVegasNetModeVisibility = () => {
-      const wrap = document.getElementById('vegasNetHcpModeWrap');
-      const useNet = document.getElementById('optUseNet')?.checked;
-      if (!wrap) return;
-      wrap.style.display = useNet ? 'flex' : 'none';
-    };
-
     // Vegas UI + wiring
     window.Vegas?.renderTeamControls();
     window.Vegas?.renderTable();
-  $(ids.optUseNet).addEventListener("change", ()=>{ updateVegasNetModeVisibility(); AppManager.recalcGames(); saveDebounced(); });
+  document.getElementById('vegasHcpModeGroup')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.hcp-mode-btn');
+    if (!btn) return;
+    setVegasHcpModeBtnState(btn.id);
+    AppManager.recalcGames();
+    saveDebounced();
+  });
   $(ids.optDoubleBirdie).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.optTripleEagle).addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
   $(ids.vegasPointValue)?.addEventListener("input", ()=>{ AppManager.recalcGames(); saveDebounced(); });
-  $(ids.vegasNetHcpMode)?.addEventListener("change", ()=>{ AppManager.recalcGames(); saveDebounced(); });
-  updateVegasNetModeVisibility();
 
     // Banker: no UI wiring (stub only)
 

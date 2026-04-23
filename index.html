@@ -2,7 +2,7 @@
 <html lang="en-US">
   <head>
     <meta charset="UTF-8" />
-    <title>Manito Golf Games v3.0.48</title>
+    <title>Manito Golf Games v3.0.49</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
     <meta name="description" content="Interactive golf scorecard with Vegas & Banker side games" />
     <!-- Aggressive cache prevention for iOS -->
@@ -25,7 +25,7 @@
     <div class="top-pinned-shell">
     <header>
       <div class="header-title-row">
-        <h1>Manito Golf Games v3.0.48</h1>
+        <h1>Manito Golf Games v3.0.49</h1>
         <div class="header-action-buttons">
           <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
           <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
@@ -252,20 +252,17 @@
         </div>
         <div class="control-box">
           <div class="pill">Scoring Mode</div>
-          <div class="skins-mode-buttons" role="radiogroup" aria-label="Skins scoring mode">
-            <label class="skins-toggle-btn skins-mode-btn" for="skinsModeGross">
-              <input type="radio" name="skinsMode" id="skinsModeGross" value="gross" checked />
-              <span>Gross (raw scores)</span>
-            </label>
-            <label class="skins-toggle-btn skins-mode-btn" for="skinsModeNet">
-              <input type="radio" name="skinsMode" id="skinsModeNet" value="net" />
-              <span>Net (with handicaps)</span>
-            </label>
+          <div class="control handicap-mode-control">
+            <div class="hcp-mode-btn-group" id="skinsHcpModeGroup" role="radiogroup" aria-label="Skins scoring mode">
+              <button type="button" class="btn hcp-mode-btn" id="skinsHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
+              <button type="button" class="btn hcp-mode-btn" id="skinsHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
+              <button type="button" class="btn hcp-mode-btn" id="skinsHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+            </div>
           </div>
-          <div class="skins-half-wrap">
+          <div class="skins-half-wrap" style="margin-top: 8px;">
             <label class="skins-toggle-btn skins-half-btn" for="skinsHalf">
-              <input type="checkbox" id="skinsHalf" />
-              <span>Half-Pops (0.5 strokes)</span>
+              <input type="checkbox" id="skinsHalf" disabled />
+              <span>Half-Pop (0.5 strokes)</span>
             </label>
           </div>
         </div>
@@ -319,16 +316,13 @@
         </div>
         <div class="opts-box">
           <div class="team-pill">Options</div>
-          <label class="vegas-toggle-btn" for="optUseNet">
-            <input type="checkbox" id="optUseNet" />
-            <span>Use Net (NDB)</span>
-          </label>
-          <div id="vegasNetHcpModeWrap" class="control" style="margin-top: 8px; padding: 8px; display: flex; gap: 8px; align-items: center;">
-            <label for="vegasNetHcpMode" style="margin: 0; text-transform: none; letter-spacing: normal;">NET Handicap:</label>
-            <select id="vegasNetHcpMode" style="padding: 6px 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
-              <option value="playOffLow" selected>Play Off Low</option>
-              <option value="fullHandicap">Full Handicap</option>
-            </select>
+          <div class="control handicap-mode-control">
+            <label>Scoring Mode:</label>
+            <div class="hcp-mode-btn-group" id="vegasHcpModeGroup" role="radiogroup" aria-label="Vegas scoring mode">
+              <button type="button" class="btn hcp-mode-btn" id="vegasHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
+              <button type="button" class="btn hcp-mode-btn" id="vegasHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
+              <button type="button" class="btn hcp-mode-btn" id="vegasHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
+            </div>
           </div>
           <div class="vegas-option-buttons">
             <label class="vegas-toggle-btn vegas-opt-flag" for="optDoubleBirdie">
@@ -404,15 +398,12 @@
       <div class="banker-controls">
         <div class="control-box">
           <div class="pill">Scoring Mode</div>
-          <div class="banker-mode-buttons" role="radiogroup" aria-label="Banker scoring mode">
-            <label class="banker-mode-toggle-btn" for="bankerModeGross">
-              <input type="radio" name="bankerMode" id="bankerModeGross" value="gross" />
-              <span>Gross (raw scores)</span>
-            </label>
-            <label class="banker-mode-toggle-btn" for="bankerModeNet">
-              <input type="radio" name="bankerMode" id="bankerModeNet" value="net" checked />
-              <span>Net (with handicaps)</span>
-            </label>
+          <div class="control handicap-mode-control">
+            <div class="hcp-mode-btn-group" id="bankerHcpModeGroup" role="radiogroup" aria-label="Banker scoring mode">
+              <button type="button" class="btn hcp-mode-btn" id="bankerHcpModeGross" data-value="gross" role="radio" aria-checked="false">Gross</button>
+              <button type="button" class="btn hcp-mode-btn" id="bankerHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
+              <button type="button" class="btn hcp-mode-btn" id="bankerHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="true" data-active="true">Full Handicap</button>
+            </div>
           </div>
         </div>
         <div class="control-box">
@@ -519,30 +510,12 @@
       <div id="junkOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
         <div class="control-box">
-          <div class="pill">Scoring</div>
-          <div class="junk-mode-buttons" role="radiogroup" aria-label="Junk scoring mode">
-            <label class="junk-toggle-btn" for="junkScoreModeGross">
-              <input type="radio" name="junkScoreMode" id="junkScoreModeGross" value="gross" checked />
-              <span>Gross</span>
-            </label>
-            <label class="junk-toggle-btn" for="junkScoreModeNet">
-              <input type="radio" name="junkScoreMode" id="junkScoreModeNet" value="net" />
-              <span>Net</span>
-            </label>
+          <div class="pill">Scoring Mode</div>
+          <div class="hcp-mode-btn-group" id="junkHcpModeGroup" role="radiogroup" aria-label="Junk scoring mode">
+            <button type="button" class="btn hcp-mode-btn" id="junkHcpModeGross" data-value="gross" role="radio" aria-checked="true" data-active="true">Gross</button>
+            <button type="button" class="btn hcp-mode-btn" id="junkHcpModePlayOffLow" data-value="playOffLow" role="radio" aria-checked="false">Play Off Low</button>
+            <button type="button" class="btn hcp-mode-btn" id="junkHcpModeFullHandicap" data-value="fullHandicap" role="radio" aria-checked="false">Full Handicap</button>
           </div>
-          <div id="junkNetHcpModeWrap" class="control" style="margin-top: 8px; padding: 8px; display: none; gap: 8px; align-items: center;">
-            <label class="junk-toggle-btn" for="junkNetHcpModePlayOffLow" style="margin: 0; text-transform: none; letter-spacing: normal;">
-              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModePlayOffLow" value="playOffLow" checked />
-              <span>Play Off Low</span>
-            </label>
-            <label class="junk-toggle-btn" for="junkNetHcpModeFullHandicap" style="margin: 0; text-transform: none; letter-spacing: normal;">
-              <input type="radio" name="junkNetHcpMode" id="junkNetHcpModeFullHandicap" value="fullHandicap" />
-              <span>Full Handicap</span>
-            </label>
-          </div>
-          <label class="small" for="junkNetHcpModePlayOffLow" style="display: block; margin-top: 6px; text-transform: none; letter-spacing: normal; color: var(--muted);">
-            Net scoring handicap mode
-          </label>
           <button id="clearJunkAchievements" class="btn" style="margin-top: 8px;">Clear All Achievements</button>
         </div>
       </div>
