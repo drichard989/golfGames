@@ -3381,6 +3381,29 @@ input[type="text"] {
   .bss-col-result .bss-col-label { display: none; }
   .bss-result-block { font-size: 11px; }
   .banker-sheet-summary-cell { padding: 4px 6px !important; }
+
+  /* Compact result rows on narrow phones: drop colons / spacing so the
+     player name + score + payout all fit on one line. Keep the colored
+     row background, one line per player. */
+  .bss-result-block .banker-result-row {
+    padding: 2px 4px;
+    font-size: 11px;
+    gap: 4px;
+  }
+  .bss-result-block .banker-result-name {
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+    max-width: 42%;
+  }
+  .bss-result-block .banker-result-score { font-size: 10px; }
+  .bss-result-block .banker-result-payout { font-size: 11px; }
+  .bss-result-block .banker-result-mult { font-size: 9px; }
+  .bss-result-block .banker-result-summary {
+    font-size: 12px;
+    padding: 3px 4px;
+    white-space: nowrap;
+  }
 }
 
 /* =========================
@@ -4367,12 +4390,22 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 
   .bss-bet-stroke-down > .bss-bet-name,
   .bss-bet-stroke-down > .bss-bet-amt {
-    background: rgba(0, 188, 140, 0.14);
+    background: rgba(0, 188, 140, 0.18);
     color: var(--accent);
+    font-weight: 700;
   }
   .bss-bet-stroke-up > .bss-bet-name,
   .bss-bet-stroke-up > .bss-bet-amt {
-    background: rgba(220, 53, 69, 0.14);
+    background: rgba(220, 53, 69, 0.18);
+    color: var(--danger, #dc3545);
+    font-weight: 700;
+  }
+
+  /* Tint the banker name itself when the banker strokes on this hole. */
+  .bss-col-banker.bss-bet-stroke-down .bss-banker-name {
+    color: var(--accent);
+  }
+  .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
     color: var(--danger, #dc3545);
   }
 }
@@ -4685,11 +4718,10 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 .banker-sheet-bet-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   margin-bottom: 8px;
 }
-.banker-sheet-bet-name { font-weight: 700; font-size: var(--text-md); }
+.banker-sheet-bet-name { font-weight: 700; font-size: var(--text-md); flex: 1 1 auto; }
 .banker-sheet-bet-stroke {
   display: inline-flex;
   align-items: center;
@@ -4701,6 +4733,52 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   font-weight: 700;
   background: var(--panel);
   border: 2px solid var(--line);
+  flex: 0 0 auto;
+}
+
+/* Stroke tint for the whole bet card + the banker pill. Applied
+   unconditionally (all viewports) inside the bet sheet modal. */
+.banker-sheet-bet-card-stroke-down {
+  border-color: var(--accent);
+  background: rgba(0, 188, 140, 0.08);
+}
+.banker-sheet-bet-card-stroke-down .banker-sheet-bet-name,
+.banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.banker-sheet-bet-card-stroke-up {
+  border-color: var(--danger, #dc3545);
+  background: rgba(220, 53, 69, 0.08);
+}
+.banker-sheet-bet-card-stroke-up .banker-sheet-bet-name,
+.banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke {
+  color: var(--danger, #dc3545);
+  border-color: var(--danger, #dc3545);
+}
+
+.banker-sheet-pill-stroke {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  margin-right: 6px;
+  background: rgba(255,255,255,0.08);
+}
+:root[data-theme="light"] .banker-sheet-pill-stroke {
+  background: rgba(0,0,0,0.06);
+}
+.banker-sheet-pill-stroke-down:not([data-active="true"]) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.banker-sheet-pill-stroke-up:not([data-active="true"]) {
+  border-color: var(--danger, #dc3545);
+  color: var(--danger, #dc3545);
 }
 
 .banker-sheet-bet-controls {

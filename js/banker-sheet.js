@@ -266,7 +266,17 @@
       pill.type = 'button';
       pill.className = 'banker-sheet-pill banker-sheet-player-pill';
       pill.dataset.active = (p === bankerIdx) ? 'true' : 'false';
-      pill.textContent = names[p];
+      // Tint the pill if this player strokes on this hole and show the
+      // stroke pill right next to their name so it is visible whether or
+      // not they are currently the banker.
+      const pillStroke = getStrokeIndicatorFor(p, hole);
+      if (pillStroke && pillStroke.text) {
+        if (pillStroke.text.startsWith('-')) pill.classList.add('banker-sheet-pill-stroke-down');
+        else if (pillStroke.text.startsWith('+')) pill.classList.add('banker-sheet-pill-stroke-up');
+        pill.innerHTML = `<span class="banker-sheet-pill-stroke" title="${escapeHtml(pillStroke.title)}">${escapeHtml(pillStroke.text)}</span><span class="banker-sheet-pill-name">${escapeHtml(names[p])}</span>`;
+      } else {
+        pill.textContent = names[p];
+      }
       pill.addEventListener('click', () => {
         setBankerIdx(hole, p);
         renderSheet(hole); // rebuild to show bets
@@ -455,10 +465,15 @@
 
       const card = document.createElement('div');
       card.className = 'banker-sheet-bet-card';
+      // Tint the card when the player strokes — green (receives), red (gives).
+      if (stroke && stroke.text) {
+        if (stroke.text.startsWith('-')) card.classList.add('banker-sheet-bet-card-stroke-down');
+        else if (stroke.text.startsWith('+')) card.classList.add('banker-sheet-bet-card-stroke-up');
+      }
       card.innerHTML = `
         <div class="banker-sheet-bet-head">
-          <span class="banker-sheet-bet-name">${names[p]}</span>
           ${stroke ? `<span class="banker-sheet-bet-stroke" title="${stroke.title}">${stroke.text}</span>` : ''}
+          <span class="banker-sheet-bet-name">${names[p]}</span>
         </div>
         <div class="banker-sheet-bet-controls">
           <button type="button" class="banker-sheet-stepbtn banker-sheet-stepbtn-sm" data-step="-1">−</button>
@@ -663,6 +678,13 @@
 
       tr.classList.remove('banker-sheet-row-empty');
       const bankerName = escapeHtml(names[bankerIdx] || `P${bankerIdx+1}`);
+      // Banker's own stroke status (green tint when receiving, red when giving)
+      const bankerStroke = getStrokeIndicatorFor(bankerIdx, h);
+      let bankerStrokeCls = '';
+      if (bankerStroke && bankerStroke.text) {
+        if (bankerStroke.text.startsWith('-')) bankerStrokeCls = ' bss-bet-stroke-down';
+        else if (bankerStroke.text.startsWith('+')) bankerStrokeCls = ' bss-bet-stroke-up';
+      }
 
       // Per-opponent bets table (aligned 4-column grid: name | stroke | amount | 2x).
       // Each row uses `display: contents` so columns align across all rows.
@@ -705,7 +727,7 @@
 
       summary.innerHTML = `
         <div class="bss-grid">
-          <div class="bss-col bss-col-banker">
+          <div class="bss-col bss-col-banker${bankerStrokeCls}">
             <div class="bss-col-label">Banker</div>
             <div class="bss-banker-name">🏦 ${bankerName}</div>
             <div class="bss-max-inline">Max $${maxBet || 0}</div>
