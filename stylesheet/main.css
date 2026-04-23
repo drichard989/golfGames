@@ -934,6 +934,12 @@ body.mode-score .entry-switcher {
   border-collapse: separate;
   border-spacing: 0;
   background: var(--panel);
+  table-layout: fixed;
+}
+
+/* Prevent responsive `table { min-width }` rules from expanding the narrow fixed clone */
+#scorecardFrozenFixed {
+  min-width: 0;
 }
 
 #scorecardFrozenFixed th,
@@ -945,6 +951,12 @@ body.mode-score .entry-switcher {
   vertical-align: middle;
   white-space: nowrap;
   padding: var(--space-xs) 3px;
+  overflow: hidden;
+}
+
+/* Utility class — preserves text-align from cloned source cells */
+.align-left {
+  text-align: left !important;
 }
 
 body.mode-score #scorecardFrozenHost {
