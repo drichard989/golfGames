@@ -742,9 +742,23 @@
     return state.functions;
   }
 
+  async function ensureAppCheckToken() {
+    if (!state.appCheck || typeof state.appCheck.getToken !== 'function') return;
+    try {
+      await state.appCheck.getToken(false);
+    } catch (err) {
+      const msg = String(err?.message || err || '').toLowerCase();
+      if (msg.includes('app-check') || msg.includes('appcheck') || msg.includes('attestation')) {
+        throw new Error('App Check token unavailable. Refresh and try again.');
+      }
+      throw err;
+    }
+  }
+
   async function callFunction(name, data) {
     const fns = getFunctions();
     if (!fns) throw new Error('Cloud Functions unavailable');
+    await ensureAppCheckToken();
     const callable = fns.httpsCallable(name);
     const result = await callable(data || {});
     return result?.data;
