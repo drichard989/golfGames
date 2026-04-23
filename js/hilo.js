@@ -431,7 +431,7 @@
     // Add total row
     tableHtml += `
       <tr style="border-top: 2px solid var(--line); font-weight: bold;">
-        <td>Total Units</td>
+        <td>Net Result</td>
         <td>${totalUnitsA}</td>
         <td>${totalUnitsB}</td>
         <td>—</td>
