@@ -2068,15 +2068,15 @@ input[type="text"] {
         rows.forEach((tr, idx) => {
           const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
           textTable += '  ' + cells.join(' | ') + '\n';
-          // Track total units from the Total Units row
-          if (cells[0] && cells[0].toLowerCase().includes('total units')) {
+          // Track total units from the Net Result row
+          if (cells[0] && (cells[0].toLowerCase().includes('net result') || cells[0].toLowerCase().includes('total units'))) {
             // Try to parse the numbers for A and B
             totalUnitsA = parseInt(cells[1], 10) || 0;
             totalUnitsB = parseInt(cells[2], 10) || 0;
           }
         });
-        // Add a clear summary line for total units
-        textTable += `\n  Total Units: Team A = ${totalUnitsA}, Team B = ${totalUnitsB}\n`;
+        // Add a clear summary line for net result
+        textTable += `\n  Net Result: Team A = ${totalUnitsA}, Team B = ${totalUnitsB}\n`;
         if (totalUnitsA > totalUnitsB) {
           textTable += `  Winner: Team A (+${totalUnitsA - totalUnitsB} units)\n`;
         } else if (totalUnitsB > totalUnitsA) {
