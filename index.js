@@ -779,6 +779,55 @@
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
   }
 
+  /**
+   * iOS Safari ignores position:sticky on th/td inside overflow:scroll containers.
+   * Work around with translateY(scrollTop) applied via rAF on each scroll event.
+   * Refreshes its cell cache whenever the scorecard is rebuilt (syncRowHeights calls
+   * window._iosStickyRefresh if present).
+   */
+  function setupIOSStickyHeaders() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+
+    const scrollPane = document.querySelector('.scorecard-scroll');
+    const fixedPane  = document.querySelector('.scorecard-fixed');
+    if (!scrollPane || !fixedPane) return;
+
+    let stickyEls = [];
+
+    function refreshCells() {
+      stickyEls = [
+        ...scrollPane.querySelectorAll('thead th'),
+        ...scrollPane.querySelectorAll('#parRow td, #parRow th'),
+        ...scrollPane.querySelectorAll('#hcpRow td, #hcpRow th'),
+        ...fixedPane.querySelectorAll('thead th'),
+        ...fixedPane.querySelectorAll('#parRowFixed td, #parRowFixed th'),
+        ...fixedPane.querySelectorAll('#hcpRowFixed td, #hcpRowFixed th'),
+      ];
+      stickyEls.forEach(el => { el.style.willChange = 'transform'; });
+    }
+
+    refreshCells();
+    // Expose so syncRowHeights() can call after DOM rebuilds
+    window._iosStickyRefresh = refreshCells;
+
+    let rafId = null;
+    function applyTranslate() {
+      rafId = null;
+      const st = scrollPane.scrollTop;
+      stickyEls.forEach(el => { el.style.transform = `translateY(${st}px)`; });
+    }
+
+    function onScroll() {
+      if (rafId) return;
+      rafId = requestAnimationFrame(applyTranslate);
+    }
+
+    scrollPane.addEventListener('scroll', onScroll, { passive: true });
+    fixedPane.addEventListener('scroll', onScroll, { passive: true });
+  }
+
   function setupGamesPanelScrollSync() {
     const panel = getGamesScrollContainer();
     if (!panel) return;
@@ -1163,6 +1212,9 @@
             rootStyle.setProperty('--score-sticky-par-top', `${headerHeight}px`);
             rootStyle.setProperty('--score-sticky-hcp-top', `${headerHeight + parHeight}px`);
           }
+
+          // Refresh iOS sticky-by-transform cell cache after any DOM rebuild
+          window._iosStickyRefresh?.();
 
         });
 
@@ -3833,6 +3885,7 @@
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
     Scorecard.player.syncOverlay();
     setupScorecardScrollSync();
+    setupIOSStickyHeaders();
     setupGamesPanelScrollSync();
     
     // Sync row heights after tables are built (skip highlighting on init - will be applied after data loads)
