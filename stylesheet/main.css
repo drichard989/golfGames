@@ -4985,6 +4985,7 @@ body.banker-sheet-open { overflow: hidden; }
      - inline summary cell  (`.bss-result-block` inside `#bankerBody`)
      - bet sheet popup      (`.banker-sheet-result-block .banker-sheet-result-text`)
    ---------------------------------------------------------------------------- */
+/* Container: always block, full width, no clipping */
 body.banker-sheet-active #bankerBody .bss-result-block,
 .banker-sheet-result-block .banker-sheet-result-text {
   display: block !important;
@@ -4995,44 +4996,60 @@ body.banker-sheet-active #bankerBody .bss-result-block,
   overflow: visible !important;
 }
 
+/* Each player row: ONE LINE of inline text spanning the full cell.
+   Name + score + payout + mult all flow inline so the colored background
+   covers the entire row width edge-to-edge with no wasted space.
+   Uses display:block + text-align spans so the name sits left and the
+   right cluster floats to the right via margin-left:auto inside an inline
+   flex helper — but keeping outer as block means the colored bg fills 100%. */
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-row,
 .banker-sheet-result-block .banker-sheet-result-text .banker-result-row {
   display: flex !important;
-  flex-wrap: wrap !important;            /* allow 2 lines if cramped, name still wins */
-  justify-content: space-between !important;
-  align-items: center !important;
+  flex-wrap: nowrap !important;
+  align-items: baseline !important;
   width: 100% !important;
   max-width: 100% !important;
-  min-width: 0 !important;
   box-sizing: border-box !important;
-  padding: 3px 6px !important;
+  padding: 3px 8px !important;
   margin: 0 0 2px 0 !important;
-  gap: 4px 6px !important;
-  white-space: normal !important;
+  gap: 6px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  min-height: 22px !important;
 }
 
+/* Player name: natural width, never shrinks below content, bold */
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-name,
 .banker-sheet-result-block .banker-sheet-result-text .banker-result-name {
-  flex: 1 1 auto !important;
-  min-width: 70px !important;            /* always reserve room for the name */
-  max-width: 100% !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  max-width: 50% !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   white-space: nowrap !important;
   word-break: normal !important;
-  margin-right: 0 !important;
-  font-weight: 700 !important;           /* bolder so the name stands out */
+  margin: 0 !important;
+  padding: 0 !important;
+  font-weight: 700 !important;
+  font-size: inherit !important;
 }
 
+/* Right cluster: takes remaining space, right-aligned, may shrink/ellipsize */
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-right,
 .banker-sheet-result-block .banker-sheet-result-text .banker-result-right {
   display: flex !important;
-  flex: 0 0 auto !important;
+  flex: 1 1 auto !important;
   flex-wrap: nowrap !important;
-  align-items: center !important;
+  align-items: baseline !important;
+  justify-content: flex-end !important;
   gap: 6px !important;
+  min-width: 0 !important;
   white-space: nowrap !important;
-  margin-left: auto !important;          /* keep right cluster right-aligned even when row wraps */
+  overflow: hidden !important;
+  margin-left: auto !important;
 }
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-score,
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-payout,
@@ -5043,14 +5060,16 @@ body.banker-sheet-active #bankerBody .bss-result-block .banker-result-mult,
   flex: 0 0 auto !important;
   white-space: nowrap !important;
   word-break: normal !important;
+  font-size: inherit !important;
 }
 
+/* Banker total summary: full-width, single-line, ellipsized if needed */
 body.banker-sheet-active #bankerBody .bss-result-block .banker-result-summary,
 .banker-sheet-result-block .banker-sheet-result-text .banker-result-summary {
   display: block !important;
   width: 100% !important;
   box-sizing: border-box !important;
-  padding: 3px 6px !important;
+  padding: 3px 8px !important;
   margin-top: 3px !important;
   white-space: nowrap !important;
   overflow: hidden !important;
@@ -5060,30 +5079,22 @@ body.banker-sheet-active #bankerBody .bss-result-block .banker-result-summary,
 /* Phone-specific tightening (≤420px): smaller fonts so everything fits
    comfortably in 320–430 CSS pixels. */
 @media (max-width: 420px) {
-  #bankerBody .bss-result-block .banker-result-row,
+  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-row,
   .banker-sheet-result-block .banker-sheet-result-text .banker-result-row {
     padding: 2px 6px !important;
     gap: 4px !important;
-    font-size: 11px !important;
+    font-size: 10.5px !important;
+    min-height: 20px !important;
   }
-  #bankerBody .bss-result-block .banker-result-name,
+  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-name,
   .banker-sheet-result-block .banker-sheet-result-text .banker-result-name {
-    font-size: 11px !important;
-    font-weight: 600 !important;
+    max-width: 35% !important;            /* leave more room for the score+payout */
   }
-  #bankerBody .bss-result-block .banker-result-score,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-score {
-    font-size: 10px !important;
-  }
-  #bankerBody .bss-result-block .banker-result-payout,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-payout {
-    font-size: 11px !important;
-  }
-  #bankerBody .bss-result-block .banker-result-mult,
+  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-mult,
   .banker-sheet-result-block .banker-sheet-result-text .banker-result-mult {
     font-size: 9px !important;
   }
-  #bankerBody .bss-result-block .banker-result-summary,
+  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-summary,
   .banker-sheet-result-block .banker-sheet-result-text .banker-result-summary {
     font-size: 12px !important;
     padding: 3px 6px !important;
