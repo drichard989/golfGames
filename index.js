@@ -820,12 +820,20 @@
         }
 
         const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
+        // If pane has no vertical overflow yet, don't intercept gesture.
+        if (maxTop < 2) {
+          lastY = t.clientY;
+          return;
+        }
+
         const atTop = pane.scrollTop <= 0;
         const atBottom = pane.scrollTop >= maxTop - 1;
+        const pageMaxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        const pageCanScroll = pageMaxTop > 1;
 
         // Finger moving down at top, or up at bottom:
         // prevent pane bounce and hand motion off to page scroll.
-        if ((atTop && dyStep > 0) || (atBottom && dyStep < 0)) {
+        if (pageCanScroll && ((atTop && dyStep > 0) || (atBottom && dyStep < 0))) {
           e.preventDefault();
           window.scrollBy({ top: -dyStep, left: 0, behavior: 'auto' });
         }
