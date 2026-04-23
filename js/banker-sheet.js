@@ -661,7 +661,8 @@
       tr.classList.remove('banker-sheet-row-empty');
       const bankerName = escapeHtml(names[bankerIdx] || `P${bankerIdx+1}`);
 
-      // Per-opponent bets mini-grid (compact "Name  $bet  2×?  stroke?")
+      // Per-opponent bets table (aligned 4-column grid: name | stroke | amount | 2x).
+      // Each row uses `display: contents` so columns align across all rows.
       const betItems = [];
       for (let p = 0; p < pc; p++){
         if (p === bankerIdx) continue;
@@ -670,12 +671,16 @@
         const stroke = getStrokeIndicatorFor(p, h);
         const nm = escapeHtml(names[p] || `P${p+1}`);
         const amt = b > 0 ? `$${b}` : '—';
+        const strokeHtml = stroke
+          ? `<span class="bss-bet-stroke" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>`
+          : '';
+        const multHtml = dbl ? `<span class="bss-bet-mult">${multLabel}</span>` : '';
         betItems.push(`
           <div class="bss-bet-line${b>0?'':' bss-bet-empty'}${dbl?' bss-bet-dbl':''}">
             <span class="bss-bet-name">${nm}</span>
-            ${stroke ? `<span class="bss-bet-stroke" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>` : ''}
+            <span class="bss-bet-stroke-slot">${strokeHtml}</span>
             <span class="bss-bet-amt">${amt}</span>
-            ${dbl ? `<span class="bss-bet-mult">${multLabel}</span>` : ''}
+            <span class="bss-bet-mult-slot">${multHtml}</span>
           </div>
         `);
       }

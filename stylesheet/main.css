@@ -3966,8 +3966,8 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
     1fr                  /* bets */
     minmax(42px, auto)   /* banker 2× */
     minmax(90px, 1.2fr); /* result */
-  gap: 4px 8px;
-  align-items: center;
+  gap: 2px 6px;
+  align-items: start;
   font-size: 12px;
   line-height: 1.25;
 }
@@ -3993,14 +3993,30 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 }
 .bss-bet-list {
   display: grid;
-  gap: 1px;
+  /* name | stroke | amount (right-aligned, $ aligns across rows) | 2× */
+  grid-template-columns: 1fr auto auto auto;
+  column-gap: 6px;
+  row-gap: 0;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
 }
 .bss-bet-line {
-  display: grid;
-  grid-template-columns: 1fr auto auto auto;
-  gap: 4px;
-  align-items: center;
-  min-width: 0;
+  /* Let children participate in the parent grid so columns align across rows */
+  display: contents;
+}
+.bss-bet-line > * {
+  padding: 3px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.bss-bet-line:last-child > * {
+  border-bottom: 0;
+}
+.bss-bet-line > .bss-bet-name { padding-left: 6px; }
+.bss-bet-line > .bss-bet-mult-slot { padding-right: 6px; }
+.bss-bet-dbl > * {
+  background: rgba(240, 173, 78, 0.08);
 }
 .bss-bet-name {
   font-weight: 600;
@@ -4009,10 +4025,19 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   text-overflow: ellipsis;
   min-width: 0;
 }
+.bss-bet-stroke-slot,
+.bss-bet-mult-slot {
+  /* fixed-width alignment slots; empty slots still hold a column */
+  min-width: 20px;
+  text-align: center;
+}
 .bss-bet-amt {
   font-weight: 700;
   color: var(--ink);
   white-space: nowrap;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-width: 36px;
 }
 .bss-bet-empty .bss-bet-amt { color: var(--muted); font-weight: 500; }
 .bss-bet-mult {
