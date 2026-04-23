@@ -4595,6 +4595,7 @@
 
     const bindGameOptionsToggles = () => {
       const liveHeaderClones = new Map();
+      const liveHeaderCloneRetryTimers = new Map();
 
       const findSectionTable = (section) =>
         section.querySelector('#vegasTable, #bankerTable, #junkTable, #wolfTable');
@@ -4603,6 +4604,12 @@
         section.querySelector('.vegas-wrap, .banker-wrap');
 
       const clearLiveHeaderClone = (section) => {
+        const retryTimer = liveHeaderCloneRetryTimers.get(section);
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+          liveHeaderCloneRetryTimers.delete(section);
+        }
+
         const state = liveHeaderClones.get(section);
         if (state) {
           state.cleanup?.();
@@ -4615,12 +4622,12 @@
 
       const ensureLiveHeaderClone = (section, panel) => {
         const table = findSectionTable(section);
-        if (!table || !table.tHead) return;
+        if (!table || !table.tHead) return false;
 
         let state = liveHeaderClones.get(section);
         if (state) {
           state.syncNow();
-          return;
+          return true;
         }
 
         const wrap = findSectionTableWrap(section);
@@ -4683,6 +4690,17 @@
           tableResizeObserver.observe(panel);
         }
 
+        const tableMutationObserver = 'MutationObserver' in window
+          ? new MutationObserver(() => scheduleSync())
+          : null;
+        if (tableMutationObserver) {
+          tableMutationObserver.observe(table, {
+            childList: true,
+            subtree: true,
+            characterData: true
+          });
+        }
+
         if (wrap) {
           wrap.addEventListener('scroll', onWrapScroll, { passive: true });
         }
@@ -4702,6 +4720,9 @@
             if (tableResizeObserver) {
               tableResizeObserver.disconnect();
             }
+            if (tableMutationObserver) {
+              tableMutationObserver.disconnect();
+            }
             if (wrap) {
               wrap.removeEventListener('scroll', onWrapScroll);
             }
@@ -4709,6 +4730,40 @@
             window.removeEventListener('orientationchange', scheduleSync);
           }
         });
+
+        return true;
+      };
+
+      const ensureLiveHeaderCloneWhenReady = (section, panel, attempt = 0) => {
+        if (!section || !panel || panel.hidden) {
+          return;
+        }
+
+        const created = ensureLiveHeaderClone(section, panel);
+        if (created) {
+          const timer = liveHeaderCloneRetryTimers.get(section);
+          if (timer) {
+            clearTimeout(timer);
+            liveHeaderCloneRetryTimers.delete(section);
+          }
+          return;
+        }
+
+        // Table for this game may not be built yet during initial restore.
+        if (attempt >= 30) {
+          return;
+        }
+
+        const existing = liveHeaderCloneRetryTimers.get(section);
+        if (existing) {
+          clearTimeout(existing);
+        }
+
+        const next = setTimeout(() => {
+          liveHeaderCloneRetryTimers.delete(section);
+          ensureLiveHeaderCloneWhenReady(section, panel, attempt + 1);
+        }, 100);
+        liveHeaderCloneRetryTimers.set(section, next);
       };
 
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
@@ -4728,7 +4783,7 @@
             const section = panel.closest('.game-section');
             if (section) {
               if (isOpen) {
-                ensureLiveHeaderClone(section, panel);
+                ensureLiveHeaderCloneWhenReady(section, panel);
               } else {
                 clearLiveHeaderClone(section);
               }

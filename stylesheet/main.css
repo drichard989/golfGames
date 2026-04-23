@@ -1669,6 +1669,10 @@ tfoot td {
   z-index: auto !important;
   background: var(--panel-alt);
   border-bottom: 2px solid var(--line);
+  color: var(--ink);
+  font-weight: 700;
+  opacity: 1;
+  visibility: visible;
 }
 
 /* When cloned headers are active, hide the original sticky table headers so
