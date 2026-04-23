@@ -4355,10 +4355,12 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   left: 0;
   right: 0;
   bottom: 0;
-  /* Respect the iOS status bar / notch so the sheet header isn't clipped
-     when content is tall. Uses dvh so mobile URL bar collapse is handled. */
+  /* Keep the sheet top BELOW the iOS status bar / notch so the close +
+     prev/next buttons are always tappable. Use the larger of the safe-area
+     inset or a 56px floor (covers browsers that report 0 for safe-area in
+     non-standalone mode). Uses dvh so collapsing URL bars don't clip it. */
   top: auto;
-  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 8px);
+  max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 56px));
   display: flex;
   flex-direction: column;
   background: var(--panel);
