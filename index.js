@@ -520,6 +520,15 @@
     banker: 0
   };
   let syncRowHeightsFrame = null;
+  let frozenHeaderSyncFrame = null;
+
+  function scheduleFrozenHeaderSync() {
+    if (frozenHeaderSyncFrame) return;
+    frozenHeaderSyncFrame = requestAnimationFrame(() => {
+      frozenHeaderSyncFrame = null;
+      syncFrozenScorecardHeader();
+    });
+  }
 
   function resolveTargetElement(target) {
     return typeof target === 'string'
@@ -699,7 +708,7 @@
     gamesBtn.setAttribute('aria-selected', !isScore ? 'true' : 'false');
     scorePanel.hidden = !isScore;
     gamesPanel.hidden = isScore;
-    requestAnimationFrame(() => syncFrozenScorecardHeader());
+    scheduleFrozenHeaderSync();
   }
 
   function syncGameTabUi(activeGame) {
@@ -935,7 +944,7 @@
     const syncLayout = () => {
       syncSafeTopInset();
       syncGamesPanelHeight();
-      syncFrozenScorecardHeader();
+      scheduleFrozenHeaderSync();
     };
 
     const syncOnScroll = () => {
@@ -1293,7 +1302,7 @@
 
         });
 
-        syncFrozenScorecardHeader();
+        scheduleFrozenHeaderSync();
         
         // Note: Stroke highlighting is managed by recalcAll() with proper timing
         // Do not call applyStrokeHighlighting() here to avoid race conditions
@@ -1511,7 +1520,7 @@
         if(tds[base+1]) tds[base+1].textContent=INN||"—"; 
         if(tds[base+2]) tds[base+2].textContent=TOT||"—";
 
-        requestAnimationFrame(() => syncFrozenScorecardHeader());
+        scheduleFrozenHeaderSync();
       },
 
       /**
