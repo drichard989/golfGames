@@ -4340,7 +4340,10 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   left: 0;
   right: 0;
   bottom: 0;
-  max-height: 92vh;
+  /* Respect the iOS status bar / notch so the sheet header isn't clipped
+     when content is tall. Uses dvh so mobile URL bar collapse is handled. */
+  top: auto;
+  max-height: calc(100dvh - env(safe-area-inset-top, 0px) - 8px);
   display: flex;
   flex-direction: column;
   background: var(--panel);
@@ -4739,6 +4742,56 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 .banker-sheet-done { min-width: 120px; }
 
 body.banker-sheet-open { overflow: hidden; }
+
+/* ---------------- Mobile compactness (≤719px) ----------------
+   Tighten vertical rhythm so Banker + Max + Bets + BX + Result all
+   fit in one screen without scrolling on typical phones. */
+@media (max-width: 719px) {
+  .banker-sheet-header {
+    padding: 8px 12px;
+  }
+  .banker-sheet-title { font-size: var(--text-lg); min-width: 110px; }
+  .banker-sheet-navbtn,
+  .banker-sheet-close { width: 32px; height: 32px; font-size: 16px; }
+
+  .banker-sheet-body {
+    padding: 6px 12px 4px;
+  }
+  .banker-sheet-block {
+    padding: 6px 0 8px;
+  }
+  .banker-sheet-block-title {
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+  .banker-sheet-pills { gap: 6px; }
+  .banker-sheet-pill { padding: 6px 12px; font-size: var(--text-sm); min-height: 34px; }
+  .banker-sheet-suggestions { gap: 6px; margin-top: 6px; }
+  .banker-sheet-suggestion,
+  .banker-sheet-suggestion-muted { padding: 5px 10px; font-size: var(--text-sm); min-height: 30px; }
+
+  .banker-sheet-stepper { gap: 8px; }
+  .banker-sheet-stepbtn { width: 38px; height: 38px; font-size: 18px; }
+  .banker-sheet-amount { min-height: 38px; padding: 0 8px; }
+  .banker-sheet-amount-input { font-size: var(--text-md); padding: 4px 2px; }
+
+  .banker-sheet-dblbtn { padding: 8px 12px; }
+
+  .banker-sheet-bet-cards { gap: 6px; }
+  .banker-sheet-bet-card { padding: 6px 8px; }
+  .banker-sheet-bet-head { margin-bottom: 4px; }
+  .banker-sheet-bet-controls { gap: 4px; }
+  .banker-sheet-stepbtn-sm { width: 32px; height: 32px; font-size: 16px; }
+  .banker-sheet-amount-sm { min-height: 32px; padding: 0 6px; max-width: 100px; }
+  .banker-sheet-mult-toggle { min-width: 42px; height: 32px; font-size: var(--text-sm); }
+  .banker-sheet-bet-quickchips { gap: 4px; margin-top: 4px; }
+  .banker-sheet-bet-chip { padding: 3px 10px; font-size: var(--text-xs); min-height: 28px; }
+  .banker-sheet-bet-cap { margin-top: 3px; }
+
+  .banker-sheet-footer {
+    padding: 6px 12px calc(6px + env(safe-area-inset-bottom, 0px));
+  }
+}
 
 /* ============================================================================
    END BANKER BOTTOM SHEET
