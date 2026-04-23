@@ -503,10 +503,14 @@ input[type="text"] {
 .vegas-table,
 .skins-table,
 .junk-table,
+.live-results-table,
+.banker-header-totals-table,
 .banker-table *,
 .vegas-table *,
 .skins-table *,
-.junk-table * {
+.junk-table *,
+.live-results-table *,
+.banker-header-totals-table * {
   font-size: calc(12px + var(--font-data-adjust) + var(--font-size-step)) !important;
 }
 
