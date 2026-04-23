@@ -1365,11 +1365,22 @@ tr:last-child td {
   touch-action: manipulation;
 }
 
-/* Divider after hole 18 */
-.hole-18,
-#scorecard th:nth-child(18),
-#scorecard td:nth-child(18) {
-  border-right: 2px solid rgba(255, 255, 255, 0.4) !important;
+/* Divider between hole 18 and Out — matches the front/back 9 divider weight */
+#scorecard th:nth-child(19),
+#scorecard td:nth-child(19) {
+  border-left: 3px solid rgba(168, 179, 191, 0.4) !important;
+}
+
+/* Thin dividers between summary columns (Out | In | Total | To Par | Net) */
+#scorecard th:nth-child(20),
+#scorecard td:nth-child(20),
+#scorecard th:nth-child(21),
+#scorecard td:nth-child(21),
+#scorecard th:nth-child(22),
+#scorecard td:nth-child(22),
+#scorecard th:nth-child(23),
+#scorecard td:nth-child(23) {
+  border-left: 1px solid rgba(168, 179, 191, 0.3) !important;
 }
 
 /* Keep summary columns stable even when values change from "—" to numbers */
@@ -3223,8 +3234,22 @@ input[type="text"] {
   border-bottom: 2px solid rgba(0, 0, 0, 0.3);
 }
 
-:root[data-theme="light"] .hole-18 {
-  border-right: 2px solid rgba(0, 0, 0, 0.4) !important;
+/* Light theme: heavy divider between hole 18 and Out */
+:root[data-theme="light"] #scorecard th:nth-child(19),
+:root[data-theme="light"] #scorecard td:nth-child(19) {
+  border-left: 3px solid rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Light theme: thin dividers between summary columns */
+:root[data-theme="light"] #scorecard th:nth-child(20),
+:root[data-theme="light"] #scorecard td:nth-child(20),
+:root[data-theme="light"] #scorecard th:nth-child(21),
+:root[data-theme="light"] #scorecard td:nth-child(21),
+:root[data-theme="light"] #scorecard th:nth-child(22),
+:root[data-theme="light"] #scorecard td:nth-child(22),
+:root[data-theme="light"] #scorecard th:nth-child(23),
+:root[data-theme="light"] #scorecard td:nth-child(23) {
+  border-left: 1px solid rgba(0, 0, 0, 0.2) !important;
 }
 
 /* Light theme stroke highlighting */
