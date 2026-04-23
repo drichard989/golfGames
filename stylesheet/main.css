@@ -496,6 +496,70 @@ input[type="text"] {
   font-size: calc(12px + var(--font-data-adjust) + var(--font-size-step)) !important;
 }
 
+/* =========================
+   Form controls: <select> (Bootstrap-like)
+   Unified styling for all <select> elements in both themes.
+   Uses a theme-aware SVG caret. Use .select-plain to opt out.
+   ========================= */
+:root {
+  --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23adb5bd'%3E%3Cpath d='M8 11.5a.75.75 0 0 1-.53-.22l-4-4a.75.75 0 1 1 1.06-1.06L8 9.69l3.47-3.47a.75.75 0 0 1 1.06 1.06l-4 4a.75.75 0 0 1-.53.22z'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="light"] {
+  --select-caret: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%237b8a8b'%3E%3Cpath d='M8 11.5a.75.75 0 0 1-.53-.22l-4-4a.75.75 0 1 1 1.06-1.06L8 9.69l3.47-3.47a.75.75 0 0 1 1.06 1.06l-4 4a.75.75 0 0 1-.53.22z'/%3E%3C/svg%3E");
+}
+
+select:not(.select-plain) {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: var(--panel);
+  color: var(--ink);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  padding: 6px 32px 6px 10px;
+  line-height: 1.4;
+  font-weight: 500;
+  background-image: var(--select-caret);
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px 16px;
+  transition: border-color var(--transition-fast) ease, box-shadow var(--transition-fast) ease;
+  cursor: pointer;
+}
+
+select:not(.select-plain):hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, var(--line));
+}
+
+select:not(.select-plain):focus,
+select:not(.select-plain):focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+select:not(.select-plain):disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+select:not(.select-plain) option {
+  background: var(--panel);
+  color: var(--ink);
+}
+
+/* In-table selects: keep compact height, preserve styling */
+.banker-table select:not(.select-plain),
+.vegas-table select:not(.select-plain),
+.skins-table select:not(.select-plain),
+.junk-table select:not(.select-plain) {
+  padding: 4px 28px 4px 8px;
+  background-size: 14px 14px;
+  background-position: right 6px center;
+  border-radius: var(--radius-sm);
+}
+
 /* ---- Utilities Section ---- */
 .utilities-toggle-btn {
   display: block;
@@ -2025,6 +2089,32 @@ tfoot td {
 .junk-table tfoot td {
   background: var(--panel-alt);
   font-weight: 700;
+  height: var(--touch-min);
+  padding: 8px;
+  font-size: var(--text-md);
+}
+
+.vegas-table tfoot tr:first-child td,
+.banker-table tfoot tr:first-child td,
+.skins-table tfoot tr:first-child td,
+.junk-table tfoot tr:first-child td {
+  border-top: 2px solid var(--line);
+}
+
+.vegas-table tfoot tr:last-child td,
+.banker-table tfoot tr:last-child td,
+.skins-table tfoot tr:last-child td,
+.junk-table tfoot tr:last-child td {
+  border-bottom: none;
+}
+
+.vegas-table tfoot td:first-child,
+.banker-table tfoot td:first-child,
+.skins-table tfoot td:first-child,
+.junk-table tfoot td:first-child {
+  text-align: left;
+  padding-left: 12px;
+  background: var(--panel-alt);
 }
 
 .vegas-table th:first-child,
