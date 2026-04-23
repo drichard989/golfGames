@@ -622,6 +622,40 @@
     <!-- QR Code Share Module -->
     <script src="js/qrcode.js"></script>
 
+    <!-- =====================================================================
+         MOBILE DEVTOOLS (eruda) — ENABLE WITH ?debug=1 IN URL
+         Adds an in-page DevTools console (Elements, Console, Network, etc.)
+         that can be opened on the iPhone itself. Tap the floating gear
+         button to open. Disabled by default to keep production lean.
+         Also enable with: localStorage.setItem('debug','1')
+         ===================================================================== -->
+    <script>
+      (function(){
+        try {
+          var enabled = /[?&]debug=1\b/.test(location.search) ||
+                        localStorage.getItem('debug') === '1';
+          if (!enabled) return;
+          var s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+          s.onload = function(){
+            try {
+              window.eruda && window.eruda.init();
+              console.log('[debug] eruda mobile devtools loaded');
+              // Outline the banker result block so we can see what's
+              // constraining the colored bars on iPhone.
+              var st = document.createElement('style');
+              st.textContent =
+                '.banker-sheet-summary-cell{outline:2px dashed magenta!important;}' +
+                '.bss-result-block{outline:2px dashed orange!important;}' +
+                '.bsr-row{outline:1px dashed lime!important;}';
+              document.head.appendChild(st);
+            } catch(e){ console.error(e); }
+          };
+          document.head.appendChild(s);
+        } catch(e){}
+      })();
+    </script>
+
     <!-- PWA Service Worker Registration -->
     <script>
       // EMERGENCY FIX: Unregister all service workers to stop refresh loop

@@ -769,7 +769,9 @@
           const multTxt = (row.querySelector('.banker-result-mult')?.textContent || '').trim();
           // Force layout via inline styles so no legacy CSS can shrink the
           // bar. The colored bar must always span the cell width.
-          const rowStyle = 'display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:space-between;width:100%;box-sizing:border-box;padding:3px 8px;margin:0 0 3px 0;gap:8px;border-radius:4px;border-left:3px solid;white-space:nowrap;overflow:hidden;min-height:22px;';
+          // Negative horizontal margin absorbs the .bss-col-result/.bss-grid
+          // padding so the bar literally touches the table cell border.
+          const rowStyle = 'display:flex;flex-wrap:nowrap;align-items:baseline;justify-content:space-between;width:auto;box-sizing:border-box;padding:4px 10px;margin:0 -8px 3px;gap:8px;border-radius:0;border-left:4px solid;white-space:nowrap;overflow:hidden;min-height:24px;';
           const nameStyle = 'flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700;';
           const infoStyle = 'flex:0 0 auto;text-align:right;white-space:nowrap;margin-left:auto;';
           parts.push(
