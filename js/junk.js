@@ -425,6 +425,11 @@
           // restore if previously stored on the TD
           cb.checked = td.dataset[id] === '1';
           cb.addEventListener('change', ()=>{
+            // Skin awards are one-way once granted; do not allow manual uncheck.
+            if (id === 'skin' && !cb.checked) {
+              cb.checked = true;
+              return;
+            }
             td.dataset[id] = cb.checked ? '1' : '';
             updateAchievementLabels(p, holeIdx+1);
             updateJunkTotalsWeighted();
