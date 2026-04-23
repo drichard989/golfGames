@@ -780,6 +780,54 @@
   }
 
   /**
+   * Prevent iOS rubberband overscroll inside score panes.
+   * Keeps pan/drag constrained to the scorecard container at top/bottom edges.
+   */
+  function setupIOSScorecardOverscrollGuard() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+
+    const scrollPane = document.querySelector('.scorecard-scroll');
+    const fixedPane = document.querySelector('.scorecard-fixed');
+    if (!scrollPane || !fixedPane) return;
+
+    const installGuard = (pane) => {
+      let startX = 0;
+      let startY = 0;
+
+      pane.addEventListener('touchstart', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        startX = t.clientX;
+        startY = t.clientY;
+      }, { passive: true });
+
+      pane.addEventListener('touchmove', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        const mostlyVertical = Math.abs(dy) > Math.abs(dx);
+        if (!mostlyVertical) return;
+
+        const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
+        const atTop = pane.scrollTop <= 0;
+        const atBottom = pane.scrollTop >= maxTop - 1;
+
+        // Finger moving down at top, or up at bottom => iOS bounce. Block it.
+        if ((atTop && dy > 0) || (atBottom && dy < 0)) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+    };
+
+    installGuard(scrollPane);
+    installGuard(fixedPane);
+  }
+
+  /**
    * iOS Safari ignores position:sticky on th/td inside overflow:scroll containers.
    * Work around with translateY(scrollTop) applied via rAF on each scroll event.
    * Refreshes its cell cache whenever the scorecard is rebuilt (syncRowHeights calls
@@ -3935,6 +3983,7 @@
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
     Scorecard.player.syncOverlay();
     setupScorecardScrollSync();
+    setupIOSScorecardOverscrollGuard();
     setupIOSStickyHeaders();
     setupGamesPanelScrollSync();
     
