@@ -12,16 +12,16 @@
 
 /* ---- CSS Custom Properties ---- */
 :root {
-  /* Theme colors (dark default) */
-  --bg: #0b0d10;
-  --panel: #11151a;
-  --panel-alt: #0f151b;
-  --ink: #e8eef5;
-  --muted: #a8b3bf;
-  --accent: #68d391;
-  --line: #1e242b;
-  --warn: #ffb454;
-  --danger: #ff6b6b;
+  /* Theme colors (dark default) — based on Bootswatch Darkly */
+  --bg: #222222;
+  --panel: #303030;
+  --panel-alt: #2b2b2b;
+  --ink: #ffffff;
+  --muted: #adb5bd;
+  --accent: #00bc8c;
+  --line: #444444;
+  --warn: #f39c12;
+  --danger: #e74c3c;
   --shadow: rgba(0, 0, 0, .35);
   
   /* Spacing tokens */
@@ -3005,16 +3005,18 @@ input[type="text"] {
 }
 
 /* =========================
-   Light Theme
+   Light Theme — based on Bootswatch Flatly
    ========================= */
 :root[data-theme="light"] {
-  --bg: #f4f6f8;
+  --bg: #ecf0f1;
   --panel: #ffffff;
-  --panel-alt: #f8fafc;
-  --ink: #1a1c1f;
-  --muted: #5a5f66;
-  --accent: #28a745;
-  --line: #d3d7dc;
+  --panel-alt: #f8f9fa;
+  --ink: #212529;
+  --muted: #7b8a8b;
+  --accent: #18bc9c;
+  --line: #dee2e6;
+  --warn: #f39c12;
+  --danger: #e74c3c;
   --shadow: rgba(0, 0, 0, .08);
 }
 
