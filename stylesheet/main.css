@@ -1651,6 +1651,7 @@ tfoot td {
   left: 0;
   background: var(--panel);
   z-index: 1;
+  width: 1px;
 }
 
 .live-results-title-row .live-results-label {
@@ -1740,6 +1741,7 @@ tfoot td {
   left: 0;
   background: var(--panel);
   z-index: 1;
+  width: 1px;
 }
 
 @media (max-width: 600px) {
