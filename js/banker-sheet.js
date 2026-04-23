@@ -338,12 +338,16 @@
     amountInput.value = String(maxBet || 0);
     const stepBy = (d) => {
       const cur = Number(amountInput.value) || 0;
-      const step = cur >= 100 ? 10 : cur >= 20 ? 5 : 1;
-      const next = Math.max(0, cur + d * step);
+      // Fixed $5 increments (user can still type any exact value)
+      const step = 5;
+      // Snap down to nearest multiple of 5 before stepping, so +5 from $7 goes to $10 (not $12)
+      const base = d > 0 ? Math.floor(cur / step) * step : Math.ceil(cur / step) * step;
+      const next = Math.max(0, base + d * step);
       amountInput.value = String(next);
       setMaxBet(hole, next);
       prefs.lastMaxBet = next;
       savePrefs();
+      renderBetCaps();
     };
     minus.addEventListener('click', () => stepBy(-1));
     plus.addEventListener('click', () => stepBy(1));
@@ -399,6 +403,8 @@
     body.appendChild(maxBlock);
 
     // ---- Banker 2× / 3× ----
+    // (Appended AFTER the bets block below so it sits visually under the
+    // per-player bet cards, per product decision.)
     const bankerDblBlock = document.createElement('section');
     bankerDblBlock.className = 'banker-sheet-block';
     const bankerDblBtn = document.createElement('button');
@@ -411,7 +417,7 @@
       bankerDblBtn.dataset.active = isBankerDoubled(hole) ? 'true' : 'false';
     });
     bankerDblBlock.appendChild(bankerDblBtn);
-    body.appendChild(bankerDblBlock);
+    // NOTE: appended later, after betsBlock
 
     // ---- Per-opponent cards ----
     const betsBlock = document.createElement('section');
@@ -491,9 +497,10 @@
       });
       card.querySelector('[data-step="-1"]').addEventListener('click', () => {
         const cur = Number(betInput.value) || 0;
-        const m = getMaxBet(hole);
-        const step = cur >= 50 ? 5 : 1;
-        const next = Math.max(0, cur - step);
+        const step = 5;
+        // Snap up to nearest $5 first so -5 from $7 goes to $5 (not $2)
+        const base = Math.ceil(cur / step) * step;
+        const next = Math.max(0, base - step);
         betInput.value = next > 0 ? String(next) : '';
         setBet(p, hole, next);
         updateCardCap(card, p, hole);
@@ -502,8 +509,11 @@
       card.querySelector('[data-step="1"]').addEventListener('click', () => {
         const cur = Number(betInput.value) || 0;
         const m = getMaxBet(hole);
-        const step = cur >= 50 ? 5 : 1;
-        const next = m > 0 ? Math.min(m, cur + step) : cur + step;
+        const step = 5;
+        // Snap down to nearest $5 first so +5 from $7 goes to $10 (not $12)
+        const base = Math.floor(cur / step) * step;
+        const raw = base + step;
+        const next = m > 0 ? Math.min(m, raw) : raw;
         betInput.value = String(next);
         setBet(p, hole, next);
         updateCardCap(card, p, hole);
@@ -522,6 +532,9 @@
 
     betsBlock.appendChild(cards);
     body.appendChild(betsBlock);
+
+    // Banker 2×/3× now sits BELOW the bets (created earlier, appended here)
+    body.appendChild(bankerDblBlock);
 
     // ---- Live result ----
     const resultBlock = document.createElement('section');
