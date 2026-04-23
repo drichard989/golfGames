@@ -1501,10 +1501,10 @@
       /**
        * Recalculate all player rows and totals row
        */
-      recalcAll(){ 
+      recalcAll(force = false){ 
         // Throttle to prevent rapid repeated calls
         const now = Date.now();
-        if(this._lastRecalcAll && (now - this._lastRecalcAll) < 100) {
+        if(!force && this._lastRecalcAll && (now - this._lastRecalcAll) < 100) {
           return;
         }
         this._lastRecalcAll = now;
@@ -2240,7 +2240,7 @@
         window.Banker?.setState?.({ holes: [] });
       }
 
-      Scorecard.calc.recalcAll();
+      Scorecard.calc.recalcAll(true);
       Scorecard.player.syncOverlay();
       recalculateEverything();
     },
@@ -2505,6 +2505,10 @@
 
         // Recalculate all games with restored data
         AppManager.recalcGames();
+
+        // Run once more on the next frame so row summaries (Out/In/Total/To Par/Net)
+        // are populated after any restore-time DOM churn from game/UI modules.
+        requestAnimationFrame(() => Scorecard.calc.recalcAll(true));
 
         // Sync row heights after data is restored (names/scores change cell sizes)
         requestAnimationFrame(() => Scorecard.build.syncRowHeights(true));

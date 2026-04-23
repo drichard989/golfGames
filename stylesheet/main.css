@@ -812,7 +812,6 @@ input[type="text"] {
 }
 
 .scorecard-card-footer {
-  position: relative;
   background: var(--panel-alt);
   border: 1px solid var(--line);
   border-top: 1px solid rgba(168, 179, 191, 0.15);
@@ -822,17 +821,6 @@ input[type="text"] {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-}
-
-.scorecard-card-footer::before {
-  content: '';
-  position: absolute;
-  left: calc(var(--scorecard-fixed-width) - 1px);
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: rgba(168, 179, 191, 0.4);
-  pointer-events: none;
 }
 
 .scorecard-add-player-btn {
