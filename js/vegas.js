@@ -186,19 +186,26 @@
   function renderTeamColumnLabels(data) {
     const colA = $(ids.vegasColA);
     const colB = $(ids.vegasColB);
+    const ptsColA = document.getElementById('vegasPtsColA');
+    const ptsColB = document.getElementById('vegasPtsColB');
     if (!colA || !colB) return;
+
+    const setLabels = (a, b) => {
+      colA.textContent = a;
+      colB.textContent = b;
+      if (ptsColA) ptsColA.textContent = `Pts (${a.replace(/^Team\s+/, '')})`;
+      if (ptsColB) ptsColB.textContent = `Pts (${b.replace(/^Team\s+/, '')})`;
+    };
 
     // Only swap labels to names in standard 4-player mode
     if (data?.rotation || getPlayers() !== 4) {
-      colA.textContent = 'Team A';
-      colB.textContent = 'Team B';
+      setLabels('Team A', 'Team B');
       return;
     }
 
     const teams = vegas_getTeamAssignments();
     if (!teams || teams.A.length !== 2 || teams.B.length !== 2) {
-      colA.textContent = 'Team A';
-      colB.textContent = 'Team B';
+      setLabels('Team A', 'Team B');
       return;
     }
 
@@ -207,10 +214,16 @@
       return v || `Player ${i + 1}`;
     });
 
-    const fmtTeam = (team) => `(${names[team[0]] || `P${team[0] + 1}`} + ${names[team[1]] || `P${team[1] + 1}`})`;
+    // Build initials label (e.g. "DJ" for Daniel + John). Falls back to
+    // P# style for empty names.
+    const initialOf = (idx) => {
+      const nm = (names[idx] || '').trim();
+      if (nm) return nm.charAt(0).toUpperCase();
+      return `${idx + 1}`;
+    };
+    const fmtTeam = (team) => `${initialOf(team[0])}${initialOf(team[1])}`;
 
-    colA.textContent = fmtTeam(teams.A);
-    colB.textContent = fmtTeam(teams.B);
+    setLabels(fmtTeam(teams.A), fmtTeam(teams.B));
   }
 
   function renderVegasLiveResults(data) {

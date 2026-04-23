@@ -560,11 +560,48 @@
     function updateLiveResult(){
       const txt = resultBlock.querySelector('.banker-sheet-result-text');
       if (!txt) return;
-      // Mirror the live result cell's rich HTML when available so the
-      // sheet's Result block matches the desktop / inline summary style.
+      // Render compact rows with our own classnames (no legacy CSS conflicts).
       const cell = document.getElementById(DOM_IDS.resultCell(hole));
-      const html = cell ? cell.innerHTML.trim() : '';
-      txt.innerHTML = html || escapeHtml(getResultText(hole));
+      if (!cell) { txt.innerHTML = '—'; return; }
+      const rowEls = cell.querySelectorAll('.banker-result-row');
+      const summaryEl = cell.querySelector('.banker-result-summary');
+      const noBetsEl = cell.querySelector('.banker-result-muted');
+      const parts = [];
+      rowEls.forEach(row => {
+        let outcomeCls = 'bsr-tie';
+        if (row.classList.contains('is-player-win')) outcomeCls = 'bsr-player-win';
+        else if (row.classList.contains('is-banker-win')) outcomeCls = 'bsr-banker-win';
+        const nameTxt = (row.querySelector('.banker-result-name')?.textContent || '').trim();
+        const scoreTxt = (row.querySelector('.banker-result-score')?.textContent || '').trim();
+        const payoutEl = row.querySelector('.banker-result-payout');
+        const payoutTxt = (payoutEl?.textContent || '').trim();
+        let payoutCls = 'bsr-push';
+        if (payoutEl?.classList.contains('banker-payout-positive')) payoutCls = 'bsr-pos';
+        else if (payoutEl?.classList.contains('banker-payout-negative')) payoutCls = 'bsr-neg';
+        const multTxt = (row.querySelector('.banker-result-mult')?.textContent || '').trim();
+        parts.push(
+          `<div class="bsr-row ${outcomeCls}">` +
+            `<span class="bsr-name">${escapeHtml(nameTxt)}</span>` +
+            `<span class="bsr-info">` +
+              `<span class="bsr-score">${escapeHtml(scoreTxt)}</span> ` +
+              `<span class="bsr-payout ${payoutCls}">${escapeHtml(payoutTxt)}</span>` +
+              (multTxt ? ` <span class="bsr-mult">${escapeHtml(multTxt)}</span>` : '') +
+            `</span>` +
+          `</div>`
+        );
+      });
+      if (summaryEl) {
+        let summCls = 'bsr-summ-push';
+        if (summaryEl.classList.contains('banker-result-summary-positive')) summCls = 'bsr-summ-pos';
+        else if (summaryEl.classList.contains('banker-result-summary-negative')) summCls = 'bsr-summ-neg';
+        parts.push(
+          `<div class="bsr-summary ${summCls}">${escapeHtml((summaryEl.textContent || '').trim())}</div>`
+        );
+      }
+      if (noBetsEl && parts.length === 0) {
+        parts.push(`<div class="bsr-empty">${escapeHtml((noBetsEl.textContent || 'No bets').trim())}</div>`);
+      }
+      txt.innerHTML = parts.length ? parts.join('') : escapeHtml(getResultText(hole));
     }
   }
 
@@ -706,13 +743,58 @@
         `);
       }
 
-      // Result: reuse the existing result cell's HTML when present so we get
-      // the same rich markup (player rows, ±$ styling, banker total).
+      // Result: parse the existing result cell's DOM and re-render with our
+      // OWN compact classnames (.bsr-row / .bsr-name / .bsr-info / .bsr-summary)
+      // so no legacy CSS can interfere with the layout. Each row is a single
+      // line spanning the full cell width with name + result on one line.
       const resultCellEl = document.getElementById(DOM_IDS.resultCell(h));
-      const resultHtml = resultCellEl ? resultCellEl.innerHTML.trim() : '';
-      const resultBlock = resultHtml
-        ? `<div class="bss-result-block">${resultHtml}</div>`
-        : `<div class="bss-result-block bss-result-empty">—</div>`;
+      let resultBlock;
+      if (resultCellEl) {
+        const rowEls = resultCellEl.querySelectorAll('.banker-result-row');
+        const summaryEl = resultCellEl.querySelector('.banker-result-summary');
+        const noBetsEl = resultCellEl.querySelector('.banker-result-muted');
+        const parts = [];
+        rowEls.forEach(row => {
+          // Determine outcome class for color
+          let outcomeCls = 'bsr-tie';
+          if (row.classList.contains('is-player-win')) outcomeCls = 'bsr-player-win';
+          else if (row.classList.contains('is-banker-win')) outcomeCls = 'bsr-banker-win';
+          const nameTxt = (row.querySelector('.banker-result-name')?.textContent || '').trim();
+          const scoreTxt = (row.querySelector('.banker-result-score')?.textContent || '').trim();
+          const payoutEl = row.querySelector('.banker-result-payout');
+          const payoutTxt = (payoutEl?.textContent || '').trim();
+          let payoutCls = 'bsr-push';
+          if (payoutEl?.classList.contains('banker-payout-positive')) payoutCls = 'bsr-pos';
+          else if (payoutEl?.classList.contains('banker-payout-negative')) payoutCls = 'bsr-neg';
+          const multTxt = (row.querySelector('.banker-result-mult')?.textContent || '').trim();
+          parts.push(
+            `<div class="bsr-row ${outcomeCls}">` +
+              `<span class="bsr-name">${escapeHtml(nameTxt)}</span>` +
+              `<span class="bsr-info">` +
+                `<span class="bsr-score">${escapeHtml(scoreTxt)}</span> ` +
+                `<span class="bsr-payout ${payoutCls}">${escapeHtml(payoutTxt)}</span>` +
+                (multTxt ? ` <span class="bsr-mult">${escapeHtml(multTxt)}</span>` : '') +
+              `</span>` +
+            `</div>`
+          );
+        });
+        if (summaryEl) {
+          let summCls = 'bsr-summ-push';
+          if (summaryEl.classList.contains('banker-result-summary-positive')) summCls = 'bsr-summ-pos';
+          else if (summaryEl.classList.contains('banker-result-summary-negative')) summCls = 'bsr-summ-neg';
+          parts.push(
+            `<div class="bsr-summary ${summCls}">${escapeHtml((summaryEl.textContent || '').trim())}</div>`
+          );
+        }
+        if (noBetsEl && parts.length === 0) {
+          parts.push(`<div class="bsr-empty">${escapeHtml((noBetsEl.textContent || 'No bets').trim())}</div>`);
+        }
+        resultBlock = parts.length
+          ? `<div class="bss-result-block">${parts.join('')}</div>`
+          : `<div class="bss-result-block bss-result-empty">—</div>`;
+      } else {
+        resultBlock = `<div class="bss-result-block bss-result-empty">—</div>`;
+      }
 
       summary.innerHTML = `
         <div class="bss-grid">

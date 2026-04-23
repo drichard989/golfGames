@@ -3961,6 +3961,26 @@ body.junk-mobile-summary-active #junkBody tr > td:not(:first-child):not(.junk-mo
 body.junk-mobile-summary-active #junkTable tfoot tr > td:not(:first-child) {
   display: none !important;
 }
+/* Shrink the Hole label column hard so the summary cell gets the rest. */
+body.junk-mobile-summary-active #junkTable {
+  table-layout: fixed !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+body.junk-mobile-summary-active #junkTable th:first-child,
+body.junk-mobile-summary-active #junkTable td:first-child {
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  padding: 4px 2px !important;
+  text-align: center !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 700 !important;
+}
+body.junk-mobile-summary-active #junkBody td.junk-mobile-summary-cell {
+  width: auto !important;
+  max-width: none !important;
+}
 body.junk-mobile-summary-active #junkTable thead tr th:first-child::after {
   content: 'Tap a row to score';
   display: inline-block;
@@ -3979,7 +3999,7 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
 }
 .junk-mini-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   column-gap: 8px;
   align-items: center;
   padding: 2px 4px;
@@ -3994,12 +4014,13 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
 }
 .junk-mini-dot {
   font-weight: 700;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  min-width: 32px;
+  min-width: 28px;
   text-align: right;
 }
 .junk-mini-empty {
@@ -4975,130 +4996,118 @@ body.banker-sheet-open { overflow: hidden; }
 }
 
 /* ----------------------------------------------------------------------------
-   CONSOLIDATED RESULT-ROW LAYOUT (any width, whenever bottom sheet is active)
+   COMPACT BANKER RESULT ROWS (.bsr-*)
 
-   Scoped to `body.banker-sheet-active` instead of a width media query so it
-   triggers on ALL touch devices regardless of viewport width — including
-   wide Android / iPad tablets (1024–1366px) which would otherwise miss any
-   `max-width: 899px` rule. Forces per-player result rows full-width with the
-   player name visible, score/payout pinned right. Applies to BOTH:
-     - inline summary cell  (`.bss-result-block` inside `#bankerBody`)
-     - bet sheet popup      (`.banker-sheet-result-block .banker-sheet-result-text`)
+   Renders the per-player banker hole result as a single-line full-width
+   colored bar inside the inline summary cell AND the bet sheet popup.
+
+   New `.bsr-*` classnames are used (instead of reusing `.banker-result-*`)
+   to avoid the dozens of legacy CSS rules elsewhere in this file that
+   would otherwise override layout. Banker-sheet.js parses the original
+   result cell DOM and re-emits these compact elements.
    ---------------------------------------------------------------------------- */
-/* Container: always block, full width, no clipping */
-body.banker-sheet-active #bankerBody .bss-result-block,
+.bss-result-block,
 .banker-sheet-result-block .banker-sheet-result-text {
-  display: block !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  min-width: 0 !important;
-  box-sizing: border-box !important;
-  overflow: visible !important;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow: visible;
+  font-size: 12px;
+  line-height: 1.35;
 }
 
-/* Each player row: ONE LINE of inline text spanning the full cell.
-   Name + score + payout + mult all flow inline so the colored background
-   covers the entire row width edge-to-edge with no wasted space.
-   Uses display:block + text-align spans so the name sits left and the
-   right cluster floats to the right via margin-left:auto inside an inline
-   flex helper — but keeping outer as block means the colored bg fills 100%. */
-body.banker-sheet-active #bankerBody .bss-result-block .banker-result-row,
-.banker-sheet-result-block .banker-sheet-result-text .banker-result-row {
-  display: flex !important;
-  flex-wrap: nowrap !important;
-  align-items: baseline !important;
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 3px 8px !important;
-  margin: 0 0 2px 0 !important;
-  gap: 6px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  font-size: 12px !important;
-  line-height: 1.35 !important;
-  min-height: 22px !important;
+.bsr-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 3px 8px;
+  margin: 0 0 3px 0;
+  gap: 8px;
+  border-radius: 4px;
+  border-left: 3px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  min-height: 22px;
+}
+.bsr-row.bsr-player-win {
+  background: rgba(104, 211, 145, 0.18);
+  border-left-color: var(--accent);
+}
+.bsr-row.bsr-banker-win {
+  background: rgba(255, 107, 107, 0.18);
+  border-left-color: var(--danger);
+}
+.bsr-row.bsr-tie {
+  background: rgba(255, 180, 84, 0.14);
+  border-left-color: var(--warn);
+}
+.bsr-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 50%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 700;
+  color: var(--ink);
+}
+.bsr-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: auto;
+}
+.bsr-score { color: var(--muted); font-size: 0.92em; }
+.bsr-payout { font-weight: 700; }
+.bsr-payout.bsr-pos { color: var(--accent); }
+.bsr-payout.bsr-neg { color: var(--danger); }
+.bsr-payout.bsr-push { color: var(--warn); }
+.bsr-mult { color: var(--muted); font-size: 0.85em; margin-left: 2px; }
+
+.bsr-summary {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 8px;
+  margin-top: 4px;
+  font-weight: 700;
+  font-size: 13px;
+  border-top: 1px solid var(--line);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bsr-summary.bsr-summ-pos { color: var(--accent); }
+.bsr-summary.bsr-summ-neg { color: var(--danger); }
+.bsr-summary.bsr-summ-push { color: var(--warn); }
+
+.bsr-empty {
+  color: var(--muted);
+  font-style: italic;
+  padding: 4px 6px;
 }
 
-/* Player name: natural width, never shrinks below content, bold */
-body.banker-sheet-active #bankerBody .bss-result-block .banker-result-name,
-.banker-sheet-result-block .banker-sheet-result-text .banker-result-name {
-  flex: 0 0 auto !important;
-  min-width: 0 !important;
-  max-width: 50% !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  white-space: nowrap !important;
-  word-break: normal !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  font-weight: 700 !important;
-  font-size: inherit !important;
-}
-
-/* Right cluster: takes remaining space, right-aligned, may shrink/ellipsize */
-body.banker-sheet-active #bankerBody .bss-result-block .banker-result-right,
-.banker-sheet-result-block .banker-sheet-result-text .banker-result-right {
-  display: flex !important;
-  flex: 1 1 auto !important;
-  flex-wrap: nowrap !important;
-  align-items: baseline !important;
-  justify-content: flex-end !important;
-  gap: 6px !important;
-  min-width: 0 !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  margin-left: auto !important;
-}
-body.banker-sheet-active #bankerBody .bss-result-block .banker-result-score,
-body.banker-sheet-active #bankerBody .bss-result-block .banker-result-payout,
-body.banker-sheet-active #bankerBody .bss-result-block .banker-result-mult,
-.banker-sheet-result-block .banker-sheet-result-text .banker-result-score,
-.banker-sheet-result-block .banker-sheet-result-text .banker-result-payout,
-.banker-sheet-result-block .banker-sheet-result-text .banker-result-mult {
-  flex: 0 0 auto !important;
-  white-space: nowrap !important;
-  word-break: normal !important;
-  font-size: inherit !important;
-}
-
-/* Banker total summary: full-width, single-line, ellipsized if needed */
-body.banker-sheet-active #bankerBody .bss-result-block .banker-result-summary,
-.banker-sheet-result-block .banker-sheet-result-text .banker-result-summary {
-  display: block !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  padding: 3px 8px !important;
-  margin-top: 3px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-}
-
-/* Phone-specific tightening (≤420px): smaller fonts so everything fits
-   comfortably in 320–430 CSS pixels. */
+/* Phone tightening */
 @media (max-width: 420px) {
-  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-row,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-row {
-    padding: 2px 6px !important;
-    gap: 4px !important;
-    font-size: 10.5px !important;
-    min-height: 20px !important;
+  .bss-result-block,
+  .banker-sheet-result-block .banker-sheet-result-text {
+    font-size: 11px;
   }
-  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-name,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-name {
-    max-width: 35% !important;            /* leave more room for the score+payout */
+  .bsr-row {
+    padding: 2px 6px;
+    gap: 4px;
+    min-height: 20px;
   }
-  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-mult,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-mult {
-    font-size: 9px !important;
-  }
-  body.banker-sheet-active #bankerBody .bss-result-block .banker-result-summary,
-  .banker-sheet-result-block .banker-sheet-result-text .banker-result-summary {
-    font-size: 12px !important;
-    padding: 3px 6px !important;
-  }
+  .bsr-name { max-width: 45%; }
+  .bsr-summary { font-size: 12px; padding: 3px 6px; }
 }
 
 /* ============================================================================
