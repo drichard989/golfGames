@@ -2871,6 +2871,18 @@ input[type="text"] {
 
 /* =========================
    Responsive Design
+
+   CANONICAL BREAKPOINT SCALE (use these exact values for all new media queries):
+     phone:    max-width: 480px  (iPhones SE 375 .. Pro Max 430, all phones)
+     tablet:   max-width: 768px  (small tablets / large phones in landscape)
+     desktop:  min-width: 769px
+     large:    min-width: 1200px (extra-wide layouts)
+
+   Adjacent boundary pairs to use:
+     phone end / non-phone start:    max-width: 480px / min-width: 481px
+     tablet end / desktop start:     max-width: 768px / min-width: 769px
+
+   Existing 600px and 900px queries are legacy; new code should not add them.
    ========================= */
 
 /* Large desktop — extra compactness */
@@ -3184,8 +3196,8 @@ input[type="text"] {
   }
 }
 
-/* Small mobile (420px and below) */
-@media (max-width: 420px) {
+/* Small mobile (480px and below) */
+@media (max-width: 480px) {
   .junk-dd > summary {
     min-height: var(--touch-comfortable);
     padding: var(--space-md) var(--text-md);
