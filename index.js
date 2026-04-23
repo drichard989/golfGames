@@ -788,6 +788,26 @@
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
   }
 
+  function syncScorecardLabelOverlay() {
+    const overlay = document.getElementById('scorecardLabelOverlay');
+    if (!overlay) return;
+
+    const parRow = document.getElementById('parRow');
+    const hcpRow = document.getElementById('hcpRow');
+    const firstPlayerRow = document.querySelector('#scorecard tbody tr.player-row');
+    const measure = (el) => el ? el.getBoundingClientRect().height : 0;
+    const overlayHeight = measure(parRow) + measure(hcpRow) + measure(firstPlayerRow);
+
+    if (overlayHeight <= 0) {
+      overlay.style.height = '0px';
+      overlay.hidden = true;
+      return;
+    }
+
+    overlay.style.height = `${overlayHeight}px`;
+    overlay.hidden = false;
+  }
+
   function syncFrozenScorecardHeader() {
     const body = document.body;
     const host = document.getElementById('scorecardFrozenHost');
@@ -926,6 +946,8 @@
     if (scrollProxy) {
       scrollProxy.scrollLeft = scrollPane.scrollLeft;
     }
+
+    syncScorecardLabelOverlay();
   }
 
   function setupGamesPanelScrollSync() {
@@ -1290,6 +1312,8 @@
             if (fixedRow.style.height !== nextHeight) fixedRow.style.height = nextHeight;
             if (scrollRow.style.height !== nextHeight) scrollRow.style.height = nextHeight;
           }
+
+          syncScorecardLabelOverlay();
         });
 
         syncFrozenScorecardHeader();
