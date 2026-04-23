@@ -890,7 +890,7 @@ input[type="text"] {
   border-radius: var(--radius-3xl);
   background: color-mix(in srgb, var(--panel) 86%, transparent);
   backdrop-filter: blur(14px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.22), inset 0 0 0 1px rgba(255, 255, 255, 0.03);
 }
 
 /* Score mode: keep sticky bar attached with no visual gap underneath */

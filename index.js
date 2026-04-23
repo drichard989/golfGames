@@ -501,6 +501,7 @@
   function applyHeaderVisibility() {
     const appHeader = document.querySelector('header');
     appHeader?.classList.toggle('header-collapsed', !headerVisible);
+    window.CloudSync?.refreshHeaderBadgeButtons?.();
   }
 
   function syncHeaderCollapseBtn() {

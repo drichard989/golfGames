@@ -155,7 +155,8 @@
 
     if (editBtn) {
       const editCode = normalizeCode(state.session?.editCode || '');
-      const show = !!editCode;
+      const headerExpanded = !document.querySelector('header')?.classList.contains('header-collapsed');
+      const show = !!editCode && headerExpanded;
       editBtn.hidden = !show;
       if (show) {
         editBtn.disabled = false;
@@ -166,7 +167,8 @@
 
     if (viewBtn) {
       const viewCode = normalizeCode(state.session?.viewCode || '');
-      const show = !!viewCode;
+      const headerExpanded = !document.querySelector('header')?.classList.contains('header-collapsed');
+      const show = !!viewCode && headerExpanded;
       viewBtn.hidden = !show;
       if (show) {
         viewBtn.disabled = false;
@@ -1630,6 +1632,7 @@
     queuePush,
     getSession: () => state.session,
     isApplyingRemote: () => state.isApplyingRemote,
+    refreshHeaderBadgeButtons: syncHeaderCodeBadgeButtons,
     /**
      * Block all outgoing cloud pushes immediately (cancels any pending push timer too).
      * Call this before beginning a destructive local operation so no stale or partial
