@@ -46,18 +46,18 @@
     try {
       if (typeof window.getPlayerCount === 'function') return window.getPlayerCount();
     } catch(_){}
-    const row = document.querySelector('#junkBody tr');
-    return row ? Math.max(0, row.children.length - 1) : 0;
+    return document.querySelectorAll('#scorecardFixed .player-row').length;
   }
 
   function getPlayerNames(){
     try {
       if (typeof window.getPlayerNames === 'function') return window.getPlayerNames();
     } catch(_){}
-    const n = getPlayerCount();
-    return Array.from({length: n}, (_, i) => {
-      const el = document.getElementById(`junkP${i+1}`);
-      return (el && el.textContent) ? el.textContent.trim() : `P${i+1}`;
+    const rows = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    return rows.map((row, i) => {
+      const nameInput = row.querySelector('.name-edit');
+      const v = nameInput?.value?.trim();
+      return v || `P${i+1}`;
     });
   }
 

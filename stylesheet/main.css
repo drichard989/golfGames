@@ -1641,6 +1641,23 @@ tfoot td {
   margin: 0 0 10px;
 }
 
+@media (hover: none), (pointer: coarse) {
+  #bankerLiveResultsPanel:not([hidden]) {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: var(--top-pinned-shell-h, 0px);
+    z-index: 38;
+    margin: 0;
+    padding: 8px var(--space-lg) 10px;
+    background: var(--bg);
+  }
+
+  #bankerSection {
+    padding-top: var(--banker-live-offset, 0px);
+  }
+}
+
 .live-results-card {
   display: block;
   width: 100%;

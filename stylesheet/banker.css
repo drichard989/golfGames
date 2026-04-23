@@ -619,25 +619,36 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   color: var(--danger, #dc3545);
 }
 
-/* When the BANKER picker pill is currently selected (data-active="true"),
-   the default rule above forces the green accent fill. That hid the red
-   stroke-up state for plus-handicap bankers. Override here so a selected
-   plus-handicap banker shows the red danger fill (and keeps the inline
-   stroke pill text legible against it). The stroke-down active state
-   is already green by coincidence, so we leave it as-is. */
+/* Selected stroked pills keep their stroke tone (red/green) and use a
+   green outline to indicate selection, instead of collapsing to solid green. */
+.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"],
 .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] {
-  background: var(--danger, #dc3545);
-  border-color: var(--danger, #dc3545);
-  color: #fff;
+  background: var(--panel-alt);
+  border-color: var(--accent);
+  color: var(--ink);
+  box-shadow: 0 0 0 2px rgba(0, 188, 140, 0.28);
 }
+.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-name,
+.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke {
+  color: var(--accent);
+}
+.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-name,
 .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
+  color: var(--danger, #dc3545);
 }
-:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] {
-  background: var(--danger, #dc3545);
-  border-color: var(--danger, #dc3545);
-  color: #fff;
+.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
+.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
+  border-color: currentColor;
+  background: rgba(255, 255, 255, 0.12);
+}
+:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
+:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.bss-bet-stroke-inline {
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 .banker-sheet-bet-controls {
