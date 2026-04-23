@@ -237,7 +237,6 @@
       <div class="game-section-header">
         <h2>Skins</h2>
         <div class="controls">
-          <button id="clearSkinsDataBtn" class="btn">Clear Skins Data</button>
           <button type="button" class="btn game-options-toggle" data-target="skinsOptionsPanel" aria-controls="skinsOptionsPanel" aria-expanded="false">Skins Options</button>
         </div>
       </div>
@@ -279,6 +278,9 @@
           <div class="small">Winnings = Total skins won × Value per skin.</div>
           <div class="small"><strong>Carryover Format:</strong> Holes won with carryover show the tied holes in curly braces. Example: "4 {2,3}" means hole 4 won the pot that included holes 2 and 3.</div>
         </div>
+        <div class="control-box">
+          <button id="clearSkinsDataBtn" class="btn">Clear Skins Data</button>
+        </div>
       </div>
       </div>
       <div class="banker-wrap">
@@ -304,7 +306,6 @@
         <h2>Vegas Game</h2>
         <div class="controls">
           <button type="button" class="btn game-options-toggle" data-target="vegasLiveResultsPanel" aria-controls="vegasLiveResultsPanel" aria-expanded="false">Live Vegas Results</button>
-          <button id="clearVegasDataBtn" class="btn">Clear Vegas Data</button>
           <button type="button" class="btn game-options-toggle" data-target="vegasOptionsPanel" aria-controls="vegasOptionsPanel" aria-expanded="false">Vegas Options</button>
         </div>
       </div>
@@ -342,6 +343,9 @@
             $/point
             <input type="number" id="vegasPointValue" min="0" step="0.25" value="1" inputmode="decimal" autocomplete="off" class="ch-input" style="width:96px; margin-left:8px" />
           </label>
+          <div style="margin-top: 10px;">
+            <button id="clearVegasDataBtn" class="btn">Clear Vegas Data</button>
+          </div>
         </div>
       </div>
       <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
@@ -395,7 +399,6 @@
         <h2>🏦 Banker</h2>
         <div class="controls">
           <button type="button" class="btn game-options-toggle" data-target="bankerLiveResultsPanel" aria-controls="bankerLiveResultsPanel" aria-expanded="false">Live Banker Results</button>
-          <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
           <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
         </div>
       </div>
@@ -430,6 +433,9 @@
           <div class="small">Banker 2×: Banker doubles all outstanding bets</div>
           <div class="small"><strong>Gross:</strong> Raw scores without handicap adjustment</div>
           <div class="small"><strong>Net:</strong> Scores adjusted by each player's full handicap (+ handicaps add strokes)</div>
+        </div>
+        <div class="control-box">
+          <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
         </div>
       </div>
       <p class="small">Select a banker per hole, set max bet, then enter player bets. Check 2× to double. Lower net score wins (with handicap strokes).</p>
@@ -512,7 +518,6 @@
         <h2>Junk (Dots)</h2>
         <div class="controls">
           <button type="button" class="btn game-options-toggle" data-target="junkLiveResultsPanel" aria-controls="junkLiveResultsPanel" aria-expanded="false">Live Junk Results</button>
-          <button id="clearJunkDataBtn" class="btn">Clear Junk Data</button>
           <button type="button" class="btn game-options-toggle" data-target="junkOptionsPanel" aria-controls="junkOptionsPanel" aria-expanded="false">Junk Options</button>
         </div>
       </div>
@@ -545,6 +550,7 @@
             Value per skin: <input type="number" id="junkSkinsBuyIn" min="0" step="0.01" value="1" inputmode="decimal" autocomplete="off"
               style="width: 80px; display: inline-block; margin-left: 4px; -moz-appearance: textfield; appearance: textfield;" />
           </label>
+          <button id="clearJunkDataBtn" class="btn" style="margin-top: 8px;">Clear Junk Data</button>
           <button id="clearJunkAchievements" class="btn" style="margin-top: 8px;">Clear All Achievements</button>
         </div>
       </div>
