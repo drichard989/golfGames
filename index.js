@@ -789,23 +789,27 @@
   }
 
   function syncScorecardLabelOverlay() {
-    const overlay = document.getElementById('scorecardLabelOverlay');
-    if (!overlay) return;
+    const overlayBand = document.getElementById('scorecardOverlayBand');
+    if (!overlayBand) return;
 
     const holesHeader = document.getElementById('holesHeader');
     const parRow = document.getElementById('parRow');
     const hcpRow = document.getElementById('hcpRow');
     const measure = (el) => el ? el.getBoundingClientRect().height : 0;
-    const overlayHeight = measure(holesHeader) + measure(parRow) + measure(hcpRow);
+    const frozenRows = Array.from(document.querySelectorAll('#scorecardFrozenTable tr'));
+    const holesHeight = measure(holesHeader) || measure(frozenRows[0]);
+    const parHeight = measure(parRow) || measure(frozenRows[1]);
+    const hcpHeight = measure(hcpRow) || measure(frozenRows[2]);
+    const overlayHeight = holesHeight + parHeight + hcpHeight;
 
     if (overlayHeight <= 0) {
-      overlay.style.height = '0px';
-      overlay.hidden = true;
+      overlayBand.style.height = '0px';
+      overlayBand.hidden = true;
       return;
     }
 
-    overlay.style.height = `${overlayHeight}px`;
-    overlay.hidden = false;
+    overlayBand.style.height = `${overlayHeight}px`;
+    overlayBand.hidden = false;
   }
 
   function syncFrozenScorecardHeader() {
@@ -1288,7 +1292,7 @@
           syncRowHeightsFrame = null;
 
           const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
-          const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
+          const scrollRows = Array.from(scrollTable.querySelectorAll('tr')).filter((row) => !row.classList.contains('scorecard-overlay-row'));
           const allRows = [...fixedRows, ...scrollRows];
 
           allRows.forEach((row) => {

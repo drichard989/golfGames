@@ -999,7 +999,7 @@ body.mode-score #scorecardFrozenHost {
 body.mode-score.frozen-ready #main-scorecard #scorecardFixed thead tr,
 body.mode-score.frozen-ready #main-scorecard #parRowFixed,
 body.mode-score.frozen-ready #main-scorecard #hcpRowFixed,
-body.mode-score.frozen-ready #main-scorecard #scorecard thead tr,
+body.mode-score.frozen-ready #main-scorecard #holesHeader,
 body.mode-score.frozen-ready #main-scorecard #parRow,
 body.mode-score.frozen-ready #main-scorecard #hcpRow {
   display: none;
@@ -1035,7 +1035,19 @@ body.mode-score #main-scorecard {
   scroll-behavior: smooth;
 }
 
-.scorecard-label-overlay {
+.scorecard-overlay-row th {
+  position: sticky;
+  top: 0;
+  height: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: visible;
+  pointer-events: none;
+  z-index: 12;
+}
+
+.scorecard-overlay-band {
   position: absolute;
   top: 0;
   left: 0;
@@ -1043,7 +1055,6 @@ body.mode-score #main-scorecard {
   height: 0;
   background: rgba(255, 140, 0, 0.16);
   pointer-events: none;
-  z-index: 12;
 }
 
 /* Scrollbar styling */
