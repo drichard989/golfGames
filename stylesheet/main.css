@@ -197,7 +197,7 @@ body::before {
 /* ---- Header / Controls ---- */
 .top-pinned-shell {
   position: sticky;
-  top: var(--safe-top-inset);
+  top: 0;
   z-index: 41;
   background: var(--bg);
 }
@@ -933,6 +933,8 @@ body.mode-score #main-scorecard {
   z-index: 10;
   box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   scrollbar-gutter: stable;
 }
 
@@ -1025,6 +1027,20 @@ thead th {
   top: var(--score-sticky-hcp-top, 88px);
   z-index: 3;
   background: var(--panel-alt);
+}
+
+/* Let touch drags started on sticky header/par/hcp rows scroll the pane on iOS. */
+#scorecard thead th,
+#scorecardFixed thead th,
+#scorecard #parRow td,
+#scorecard #parRow th,
+#scorecardFixed #parRowFixed td,
+#scorecardFixed #parRowFixed th,
+#scorecard #hcpRow td,
+#scorecard #hcpRow th,
+#scorecardFixed #hcpRowFixed td,
+#scorecardFixed #hcpRowFixed th {
+  pointer-events: none;
 }
 
 th,
