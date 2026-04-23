@@ -761,7 +761,6 @@
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
     const frozenScroll = document.getElementById('scorecardFrozenScroll');
-    const frozenProxy = document.getElementById('scorecardFrozenScrollProxy');
     if (!fixedPane || !scrollPane) return;
 
     let syncingVertical = false;
@@ -778,34 +777,13 @@
 
     scrollPane.addEventListener('scroll', () => {
       syncScrollTop(scrollPane, fixedPane);
-      if (frozenScroll || frozenProxy) {
+      if (frozenScroll) {
         if (syncingHorizontal) return;
         syncingHorizontal = true;
-        if (frozenScroll) frozenScroll.scrollLeft = scrollPane.scrollLeft;
-        if (frozenProxy) frozenProxy.scrollLeft = scrollPane.scrollLeft;
+        frozenScroll.scrollLeft = scrollPane.scrollLeft;
         syncingHorizontal = false;
       }
     }, { passive: true });
-
-    if (frozenProxy) {
-      frozenProxy.addEventListener('scroll', () => {
-        if (syncingHorizontal) return;
-        syncingHorizontal = true;
-        scrollPane.scrollLeft = frozenProxy.scrollLeft;
-        if (frozenScroll) frozenScroll.scrollLeft = frozenProxy.scrollLeft;
-        syncingHorizontal = false;
-      }, { passive: true });
-
-      // Desktop mouse wheel over proxy: map vertical wheel to horizontal pan.
-      frozenProxy.addEventListener('wheel', (event) => {
-        const horizontalDelta = Math.abs(event.deltaX) > 0 ? event.deltaX : event.deltaY;
-        if (!horizontalDelta) return;
-        scrollPane.scrollLeft += horizontalDelta;
-        if (frozenScroll) frozenScroll.scrollLeft = scrollPane.scrollLeft;
-        frozenProxy.scrollLeft = scrollPane.scrollLeft;
-        event.preventDefault();
-      }, { passive: false });
-    }
 
     fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
   }
