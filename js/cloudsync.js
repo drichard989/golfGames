@@ -377,6 +377,9 @@
     nodes.forEach((el) => {
       if (!(el instanceof HTMLElement)) return;
 
+      // Never disable buttons that viewers are explicitly allowed to click
+      if (el instanceof HTMLButtonElement && el.id && VIEWER_ALLOWED_CLICK_IDS.has(el.id)) return;
+
       if (enabled) {
         if (el.dataset.cloudPrevDisabled === undefined) {
           el.dataset.cloudPrevDisabled = el.disabled ? '1' : '0';
