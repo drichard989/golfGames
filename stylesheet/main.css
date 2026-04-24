@@ -71,6 +71,11 @@
     --font-descriptive-adjust: 1px;
     --font-data-adjust: 3px;
     --font-size-step: 0px;
+
+  /* Scorecard typography tokens (fixed + scroll panes stay in sync) */
+  --scorecard-header-font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
+  --scorecard-data-font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+  --scorecard-name-font-size: var(--scorecard-data-font-size);
   
   /* Table dimensions */
   --table-cell-width: 48px;
@@ -1254,7 +1259,7 @@ td {
   max-width: 120px;
   width: 120px;
   background-color: var(--panel);
-  font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: var(--scorecard-header-font-size);
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1266,7 +1271,7 @@ td {
   width: 55px;
   padding: var(--space-xs) 3px;
   background-color: var(--panel);
-  font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: var(--scorecard-header-font-size);
 }
 
 /* Name cell container with delete button */
@@ -1313,7 +1318,7 @@ td {
   flex: 1;
   min-width: 0;
   max-width: none;
-  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step)) !important;
+  font-size: var(--scorecard-name-font-size) !important;
   line-height: 1.2;
   padding: 6px 3px;
   background: transparent;
@@ -1324,7 +1329,7 @@ td {
 
 #scorecardFixed .ch-input {
   width: 49px;
-  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: var(--scorecard-data-font-size);
   padding: 6px 3px;
   text-align: center;
 }
@@ -1428,7 +1433,7 @@ tr:last-child td {
   -moz-appearance: textfield;
   appearance: textfield;
   min-height: var(--touch-min);
-  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: var(--scorecard-data-font-size);
   touch-action: manipulation;
 }
 

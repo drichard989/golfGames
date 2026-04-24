@@ -41,16 +41,13 @@
 (() => {
   'use strict';
 
-  let fixedRowsCache = null;
+  const SHARED_TIMING = window.GolfApp?.constants?.TIMING;
+  const VEGAS_CONTROL_RECALC_MS = SHARED_TIMING?.NAME_INPUT_SYNC_MS || 120;
 
   const getFixedPlayerRows = () => {
-    if (fixedRowsCache) return fixedRowsCache;
-    fixedRowsCache = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
-    queueMicrotask(() => { fixedRowsCache = null; });
-    return fixedRowsCache;
+    const rows = window.GolfApp?.utils?.getFixedPlayerRowsCached?.();
+    return Array.isArray(rows) ? rows : Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
   };
-
-  const isVegasSectionOpen = () => !!document.getElementById('vegasSection')?.classList.contains('open');
 
   // Access game constants with fallbacks
   const getMultipliers = () => window.GAME_CONSTANTS?.VEGAS?.MULTIPLIERS || { DEFAULT: 1, BIRDIE: 2, EAGLE: 3 };
@@ -728,7 +725,8 @@ const Vegas = {
 };
 
 function vegas_refreshTeamNames(){
-  if (!isVegasSectionOpen()) return;
+  const vegasSection = document.getElementById('vegasSection');
+  if (!vegasSection?.classList.contains('open')) return;
 
   const box=$(ids.vegasTeams);
   if(!box) return;
@@ -755,7 +753,7 @@ function vegas_refreshTeamNames(){
 let vegasControlRecalcTimer = null;
 function scheduleVegasControlRecalc() {
   clearTimeout(vegasControlRecalcTimer);
-  vegasControlRecalcTimer = setTimeout(() => vegas_recalc(), 120);
+  vegasControlRecalcTimer = setTimeout(() => vegas_recalc(), VEGAS_CONTROL_RECALC_MS);
 }
 
 function vegas_renderTeamControls(){
@@ -960,7 +958,6 @@ function vegas_syncColumnLabelsHard() {
 }
 
 function vegas_recalc(){
-  if (!isVegasSectionOpen()) return;
   const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();
   const data = Vegas.compute(teams, opts, createVegasComputeContext(opts));
   Vegas.render(data);
@@ -1004,7 +1001,13 @@ function vegas_renderTable(){
   // desktop/mobile breakpoint so the column headers stay correct.
   try {
     const desktopMQ = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
-    const onChange = () => { try { vegas_recalc(); } catch(_) {} };
+    const onChange = () => {
+      try {
+        if (document.getElementById('vegasSection')?.classList.contains('open')) {
+          vegas_recalc();
+        }
+      } catch(_) {}
+    };
     if (desktopMQ.addEventListener) desktopMQ.addEventListener('change', onChange);
     else if (desktopMQ.addListener) desktopMQ.addListener(onChange);
   } catch(_) {}

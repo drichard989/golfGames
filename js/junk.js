@@ -44,12 +44,13 @@
   'use strict';
   
   const HOLES = 18;
+  const SHARED_TIMING = window.GolfApp?.constants?.TIMING;
+  const JUNK_ACH_INPUT_DEBOUNCE_MS = SHARED_TIMING?.NAME_INPUT_SYNC_MS || 120;
   let junkCoreListenersBound = false;
   let junkAchievementListenersBound = false;
   let persistedAchievementState = [];
   let junkInitialized = false;
   let lastBuiltPlayerCount = 0;
-  let fixedRowsCache = null;
   
   // Access game constants with fallbacks
   const getJunkConstants = () => {
@@ -128,14 +129,8 @@
   }
 
   function getFixedPlayerRows() {
-    if (fixedRowsCache) return fixedRowsCache;
-    fixedRowsCache = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
-    queueMicrotask(() => { fixedRowsCache = null; });
-    return fixedRowsCache;
-  }
-
-  function isJunkSectionOpen() {
-    return !!document.getElementById('junkSection')?.classList.contains('open');
+    const rows = window.GolfApp?.utils?.getFixedPlayerRowsCached?.();
+    return Array.isArray(rows) ? rows : Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
   }
 
   function getScoreMatrix(players = getPlayerCount(), holes = HOLES) {
@@ -533,11 +528,9 @@
     });
   }
 
-  function updateJunk(){
-    if (!isJunkSectionOpen()) return;
-
+  function ensureJunkRenderState(){
     const tbody = document.getElementById('junkBody');
-    if(!tbody) return;
+    if(!tbody) return null;
 
     // Keep header labels synced with the scorecard names on every refresh,
     // including restores/programmatic changes that do not emit name input.
@@ -555,6 +548,12 @@
       setTimeout(() => { try { initJunkAchievements(); } catch (e) {} }, 0);
     }
 
+    return tbody;
+  }
+
+  function renderJunkCurrentMode(tbody) {
+    if(!tbody) return;
+
     // Check if achievements are active (cells are enhanced)
     const hasEnhancedCells = tbody.querySelector('.junk-cell') !== null;
     
@@ -566,6 +565,11 @@
       const data = Junk.compute();
       Junk.render(data);
     }
+  }
+
+  function updateJunk(){
+    const tbody = ensureJunkRenderState();
+    renderJunkCurrentMode(tbody);
   }
 
   function rebuildJunkTableHeader(){
@@ -871,7 +875,7 @@
       const t = e.target;
       if(t.classList?.contains('junk-ach')){
         clearTimeout(_junkAchScoreInputTimer);
-        _junkAchScoreInputTimer = setTimeout(() => updateJunkTotalsWeighted(), 120);
+        _junkAchScoreInputTimer = setTimeout(() => updateJunkTotalsWeighted(), JUNK_ACH_INPUT_DEBOUNCE_MS);
       }
     }, { passive: true });
 

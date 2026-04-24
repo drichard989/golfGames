@@ -102,7 +102,9 @@
   const TIMING = {
     FOCUS_DELAY_MS: 50,
     RECALC_DEBOUNCE_MS: 300,
+    GAME_RECALC_DEBOUNCE_MS: 150,
     SAVE_DEBOUNCE_MS: 900,
+    NAME_INPUT_SYNC_MS: 120,
     INIT_RETRY_DELAY_MS: 150,
     RESIZE_DEBOUNCE_MS: 150
   };
@@ -178,6 +180,32 @@
       scrollable: Array.from(document.querySelectorAll('#scorecard .player-row')),
       fixed: Array.from(document.querySelectorAll('#scorecardFixed .player-row'))
     }),
+
+    _queryCache: new Map(),
+    _queryCacheResetQueued: false,
+
+    getCachedQueryAll(selector, cacheKey = selector) {
+      if (Utils._queryCache.has(cacheKey)) {
+        return Utils._queryCache.get(cacheKey);
+      }
+
+      const rows = Array.from(document.querySelectorAll(selector));
+      Utils._queryCache.set(cacheKey, rows);
+
+      if (!Utils._queryCacheResetQueued) {
+        Utils._queryCacheResetQueued = true;
+        queueMicrotask(() => {
+          Utils._queryCache.clear();
+          Utils._queryCacheResetQueued = false;
+        });
+      }
+
+      return rows;
+    },
+
+    getFixedPlayerRowsCached() {
+      return Utils.getCachedQueryAll('#scorecardFixed .player-row', 'scorecardFixedRows');
+    },
     
     /**
      * Debounce function execution
@@ -477,7 +505,7 @@
       let _timer = null;
       return function() {
         clearTimeout(_timer);
-        _timer = setTimeout(() => AppManager.recalcGames(), 150);
+        _timer = setTimeout(() => AppManager.recalcGames(), TIMING.GAME_RECALC_DEBOUNCE_MS);
       };
     })()
   };
@@ -1196,7 +1224,7 @@
             clearTimeout(nameInputSyncTimer);
             nameInputSyncTimer = setTimeout(() => {
               AppManager.recalcGamesDebounced();
-            }, 120);
+            }, TIMING.NAME_INPUT_SYNC_MS);
             Storage.saveDebounced(); 
           });
           
@@ -1488,6 +1516,41 @@
       },
 
       /**
+       * Apply stroke-based visual state to an input element
+       * @param {HTMLInputElement} input
+       * @param {number} sr - Strokes received (negative for gives)
+       */
+      applyStrokeVisualState(input, sr) {
+        if(!input) return;
+
+        if(sr > 0) {
+          if (!input.classList.contains("receives-stroke")) input.classList.add("receives-stroke");
+          if (input.classList.contains("gives-stroke")) input.classList.remove("gives-stroke");
+          const nextStrokes = String(sr);
+          if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
+          const nextTitle = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
+          if (input.title !== nextTitle) input.title = nextTitle;
+          return;
+        }
+
+        if(sr < 0) {
+          if (!input.classList.contains("gives-stroke")) input.classList.add("gives-stroke");
+          if (input.classList.contains("receives-stroke")) input.classList.remove("receives-stroke");
+          const nextStrokes = String(Math.abs(sr));
+          if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
+          const nextTitle = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
+          if (input.title !== nextTitle) input.title = nextTitle;
+          return;
+        }
+
+        if (input.classList.contains("receives-stroke") || input.classList.contains("gives-stroke")) {
+          input.classList.remove("receives-stroke", "gives-stroke");
+        }
+        if (input.hasAttribute("data-strokes")) input.removeAttribute("data-strokes");
+        if (input.hasAttribute("title")) input.removeAttribute("title");
+      },
+
+      /**
        * Get gross score for a player on a hole
        * @param {number} playerIdx - Zero-based player index
        * @param {number} holeIdx - Zero-based hole index
@@ -1576,28 +1639,7 @@
           // Apply stroke highlighting to all holes (not just those with scores)
           const input = scoreInputs[h];
           if(!input) continue;
-          
-          if(sr > 0) {
-            if (!input.classList.contains("receives-stroke")) input.classList.add("receives-stroke");
-            if (input.classList.contains("gives-stroke")) input.classList.remove("gives-stroke");
-            const nextStrokes = String(sr);
-            if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
-            const nextTitle = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
-            if (input.title !== nextTitle) input.title = nextTitle;
-          } else if(sr < 0) {
-            if (!input.classList.contains("gives-stroke")) input.classList.add("gives-stroke");
-            if (input.classList.contains("receives-stroke")) input.classList.remove("receives-stroke");
-            const nextStrokes = String(Math.abs(sr));
-            if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
-            const nextTitle = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
-            if (input.title !== nextTitle) input.title = nextTitle;
-          } else {
-            if (input.classList.contains("receives-stroke") || input.classList.contains("gives-stroke")) {
-              input.classList.remove("receives-stroke", "gives-stroke");
-            }
-            if (input.hasAttribute("data-strokes")) input.removeAttribute("data-strokes");
-            if (input.hasAttribute("title")) input.removeAttribute("title");
-          }
+          Scorecard.calc.applyStrokeVisualState(input, sr);
         }
         
         const netEl = $(".net", rowEl);
@@ -1685,28 +1727,7 @@
             const sr = Scorecard.calc.strokesOnHole(playerAdjCH, h);
             const input = scoreInputs[h];
             if(!input) continue;
-            
-            if(sr > 0) {
-              if (!input.classList.contains("receives-stroke")) input.classList.add("receives-stroke");
-              if (input.classList.contains("gives-stroke")) input.classList.remove("gives-stroke");
-              const nextStrokes = String(sr);
-              if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
-              const nextTitle = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
-              if (input.title !== nextTitle) input.title = nextTitle;
-            } else if(sr < 0) {
-              if (!input.classList.contains("gives-stroke")) input.classList.add("gives-stroke");
-              if (input.classList.contains("receives-stroke")) input.classList.remove("receives-stroke");
-              const nextStrokes = String(Math.abs(sr));
-              if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
-              const nextTitle = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
-              if (input.title !== nextTitle) input.title = nextTitle;
-            } else {
-              if (input.classList.contains("receives-stroke") || input.classList.contains("gives-stroke")) {
-                input.classList.remove("receives-stroke", "gives-stroke");
-              }
-              if (input.hasAttribute("data-strokes")) input.removeAttribute("data-strokes");
-              if (input.hasAttribute("title")) input.removeAttribute("title");
-            }
+            Scorecard.calc.applyStrokeVisualState(input, sr);
           }
         });
       }
@@ -4220,17 +4241,29 @@
   /**
    * Recalculate everything - all totals, games, and UI
    */
-  function recalculateEverything() {
+  function recalcScorecardPhase() {
     Scorecard.calc.recalcTotalsRow();
+  }
+
+  function recalcGameStructurePhase() {
     window.Vegas?.renderTeamControls();
+    window.Skins?.refreshForPlayerChange();
+    window.Junk?.refreshForPlayerChange();
+    window.Banker?.refreshForPlayerChange();
+    window.Wolf?.refreshForPlayerChange?.();
+  }
+
+  function recalcGamesPhase() {
+    AppManager.recalcGames();
+  }
+
+  function recalculateEverything() {
+    recalcScorecardPhase();
+    recalcGameStructurePhase();
     // Defer game recalcs by one microtask so Vegas team-control DOM changes
     // from renderTeamControls() are fully applied before we read them.
     setTimeout(() => {
-      AppManager.recalcGames();
-      window.Skins?.refreshForPlayerChange();
-      window.Junk?.refreshForPlayerChange();
-      window.Banker?.refreshForPlayerChange();
-      window.Wolf?.refreshForPlayerChange?.();
+      recalcGamesPhase();
     }, 0);
   }
 

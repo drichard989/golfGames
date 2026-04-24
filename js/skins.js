@@ -39,17 +39,12 @@
   let skinsListenersBound = false;
   let skinsInitialized = false;
   let lastSkinsPlayerCount = 0;
-  let fixedRowsCache = null;
+  const SHARED_TIMING = window.GolfApp?.constants?.TIMING;
+  const SKINS_INPUT_DEBOUNCE_MS = SHARED_TIMING?.GAME_RECALC_DEBOUNCE_MS || 160;
 
   function getFixedPlayerRows() {
-    if (fixedRowsCache) return fixedRowsCache;
-    fixedRowsCache = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
-    queueMicrotask(() => { fixedRowsCache = null; });
-    return fixedRowsCache;
-  }
-
-  function isSkinsSectionOpen() {
-    return !!document.getElementById('skinsSection')?.classList.contains('open');
+    const rows = window.GolfApp?.utils?.getFixedPlayerRowsCached?.();
+    return Array.isArray(rows) ? rows : Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
   }
 
   // =============================================================================
@@ -214,29 +209,6 @@
     
     // Half pops: get 0.5 strokes instead of 1
     return half ? (fullStrokes * 0.5) : fullStrokes;
-  }
-
-  /**
-   * Calculate net score for Skins game with optional half-pops
-   * @param {number} playerIdx - Zero-based player index
-   * @param {number} holeIdx - Zero-based hole index
-   * @param {boolean} half - Whether half-pops mode is enabled
-   * @param {string} netHcpMode - 'playOffLow' or 'rawHandicap'
-   * @returns {number} Net score with NDB cap
-   */
-  function getNetForSkins(playerIdx, holeIdx, half, netHcpMode = 'playOffLow') {
-    const adjCHs = netHcpMode === 'rawHandicap' ? getRawCHs() : getAdjustedCHs();
-    const gross = getGross(playerIdx, holeIdx);
-    if (!gross) return 0;
-    
-    const adj = adjCHs[playerIdx];
-    const sr = strokesOnHoleHalfAware(adj, holeIdx, half);
-    const NDB_BUFFER = 2;
-    const par = getPar(holeIdx);
-    const ndb = par + NDB_BUFFER + sr;
-    const adjGross = Math.min(gross, ndb);
-    const netScore = adjGross - sr;
-    return netScore;
   }
 
   /**
@@ -461,8 +433,6 @@
    * Update Skins calculations and render
    */
   function updateSkins() {
-    if (!isSkinsSectionOpen()) return;
-
     ensureSkinsTableBuilt();
 
     const activeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
@@ -556,7 +526,7 @@
             t.classList?.contains('ch-input') || 
             t.closest('#scorecard')) {
           clearTimeout(_skinsScoreInputTimer);
-          _skinsScoreInputTimer = setTimeout(() => updateSkins(), 160);
+          _skinsScoreInputTimer = setTimeout(() => updateSkins(), SKINS_INPUT_DEBOUNCE_MS);
         }
       }, { passive: true });
     }
