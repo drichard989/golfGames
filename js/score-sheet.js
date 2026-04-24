@@ -269,6 +269,8 @@
     const isExplicit = reason === 'explicit';
     if (!isExplicit && elapsed >= 0 && elapsed < AUTO_CLOSE_LOCK_MS) return;
 
+    commitCurrentHoleDraft();
+
     sheetEl.classList.remove('is-open');
     backdropEl.classList.remove('is-open');
     document.body.classList.remove('score-sheet-open');
@@ -299,6 +301,27 @@
     input.classList.remove('invalid');
 
     queueRecalcAndSave();
+  }
+
+  function commitCurrentHoleDraft() {
+    if (!Number.isFinite(currentHole)) return;
+
+    let changed = false;
+    const playerCount = getPlayerCount();
+    for (let p = 0; p < playerCount; p++) {
+      const input = getScoreInput(p, currentHole);
+      if (!input) continue;
+
+      const score = toScoreOrNull(draftScoresByPlayer[p]);
+      const next = score == null ? '' : String(score);
+      if (String(input.value || '') !== next) {
+        input.value = next;
+        changed = true;
+      }
+      input.classList.remove('invalid');
+    }
+
+    if (changed) queueRecalcAndSave();
   }
 
   function updatePlayerDraft(playerIdx, nextValue, applyNow = true) {
@@ -395,6 +418,8 @@
 
   function navigateHole(delta, playerToFocus) {
     if (!Number.isFinite(currentHole)) return;
+    commitCurrentHoleDraft();
+
     const nextHole = currentHole + delta;
     if (nextHole < 1 || nextHole > HOLES) return;
     currentHole = nextHole;
