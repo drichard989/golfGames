@@ -30,7 +30,7 @@
     { id: 'hoover',  label: 'Hoover',  pts: 10,  emoji: '🧹' },
     { id: 'skin',    label: 'Skin',    pts: 1,   emoji: '🟢', auto: true },
     { id: 'pulley',  label: 'Pully',   pts: 1,   emoji: '🪢' },
-    { id: 'gcbc',    label: 'GCBC',    pts: 3,   emoji: '🍻' },
+    { id: 'gcbc',    label: 'GCBC',    pts: 3,   emoji: '�' },
     { id: 'dod',     label: 'DOD',     pts: 1,   emoji: '💀' },
     { id: 'hogan',   label: 'Hogan',   pts: 1,   emoji: '🎩' },
     { id: 'woodie',  label: 'Woodie',  pts: 1,   emoji: '🌲' },
