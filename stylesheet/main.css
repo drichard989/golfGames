@@ -1321,11 +1321,23 @@ td {
 }
 
 #scorecardFixed thead th:first-child {
+  background-color: var(--panel-alt);
   z-index: var(--z-sticky-first-col);
+}
+
+#scorecardFixed thead th:nth-child(2) {
+  background-color: var(--panel-alt);
 }
 
 tr:last-child td {
   border-bottom: none;
+}
+
+#scorecard tr.player-row:last-child td,
+#scorecardFixed tr.player-row:last-child td,
+#scorecard tr.player-row:last-child th,
+#scorecardFixed tr.player-row:last-child th {
+  border-bottom: 2px solid var(--line);
 }
 
 /* Scrollable table - reset first-child styling (hole 1 should not be special) */
@@ -1341,6 +1353,10 @@ tr:last-child td {
   border-right: none;
   -webkit-transform: none;
   transform: none;
+}
+
+#scorecard thead th:first-child {
+  background-color: var(--panel-alt);
 }
 
 /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
@@ -3704,16 +3720,16 @@ input[type="text"] {
    Light Theme — based on Bootswatch Flatly
    ========================= */
 :root[data-theme="light"] {
-  --bg: #ecf0f1;
+  --bg: #dbe3ea;
   --panel: #ffffff;
-  --panel-alt: #f8f9fa;
+  --panel-alt: #e8eef4;
   --ink: #212529;
   --muted: #7b8a8b;
   --accent: #18bc9c;
-  --line: #dee2e6;
+  --line: #b7c2cd;
   --warn: #f39c12;
   --danger: #e74c3c;
-  --shadow: rgba(0, 0, 0, .08);
+  --shadow: rgba(0, 0, 0, .13);
 }
 
 :root[data-theme="light"] .view-mode-banner {
@@ -3796,7 +3812,7 @@ input[type="text"] {
 :root[data-theme="light"] .ch-input {
   background: #ffffff;
   color: #1a1c1f;
-  border: 2px solid #d3d7dc;
+  border: 2px solid #bcc7d2;
 }
 
 :root[data-theme="light"] .score-input:focus,
@@ -3808,13 +3824,13 @@ input[type="text"] {
 :root[data-theme="light"] .control input[type="text"] {
   background: #ffffff;
   color: #1a1c1f;
-  border: 2px solid #d3d7dc;
+  border: 2px solid #bcc7d2;
 }
 
 /* Light theme button/toggle fixes */
 :root[data-theme="light"] .game-toggle {
-  background: #ffffff;
-  border-color: #d3d7dc;
+  background: #edf2f6;
+  border-color: #b3bfcc;
   color: #1a1c1f;
 }
 
@@ -3826,13 +3842,13 @@ input[type="text"] {
 }
 
 :root[data-theme="light"] .game-options-toggle {
-  background: #edf3f9;
-  border-color: #b9c9d8;
+  background: #d7e1ea;
+  border-color: #aebdcb;
   color: #1a1c1f;
 }
 
 :root[data-theme="light"] .game-options-toggle:hover {
-  background: #e2ebf3;
+  background: #cdd9e4;
 }
 
 :root[data-theme="light"] .game-options-toggle.is-open {
@@ -3849,14 +3865,14 @@ input[type="text"] {
 }
 
 :root[data-theme="light"] .entry-switcher-btn {
-  background: #f3f5f8;
-  border-color: #cfd3d8;
+  background: #dee5ec;
+  border-color: #b9c4cf;
   color: #3c454d;
 }
 
 :root[data-theme="light"] .entry-switcher-btn:hover {
-  background: #e7eaed;
-  border-color: #cfd3d8;
+  background: #d1dbe5;
+  border-color: #b9c4cf;
   color: #2d3640;
 }
 
@@ -3883,21 +3899,21 @@ input[type="text"] {
 }
 
 :root[data-theme="light"] .game-section {
-  background: #f8fafc;
-  border-color: #d3d7dc;
+  background: #e2e9f0;
+  border-color: #bcc7d2;
 }
 
 :root[data-theme="light"] .control-box,
 :root[data-theme="light"] .team-box,
 :root[data-theme="light"] .opts-box {
   background: #ffffff;
-  border-color: #d3d7dc;
+  border-color: #bcc7d2;
 }
 
 /* Light theme table headers/footers */
 :root[data-theme="light"] thead th,
 :root[data-theme="light"] tfoot td {
-  background: #f8fafc;
+  background: #e5ecf2;
   color: #1a1c1f;
 }
 
@@ -3909,7 +3925,7 @@ input[type="text"] {
 :root[data-theme="light"] .banker-table tfoot td,
 :root[data-theme="light"] .skins-table tfoot td,
 :root[data-theme="light"] .junk-table tfoot td {
-  background: #f8fafc;
+  background: #e5ecf2;
   color: #1a1c1f;
 }
 
@@ -3938,15 +3954,15 @@ input[type="text"] {
 :root[data-theme="light"] .btn,
 :root[data-theme="light"] .theme-toggle,
 :root[data-theme="light"] button {
-  background: #f3f5f8;
-  border-color: #cfd3d8;
+  background: #d4dee8;
+  border-color: #aebac7;
   color: #1a1c1f;
 }
 
 :root[data-theme="light"] .btn:hover,
 :root[data-theme="light"] .theme-toggle:hover,
 :root[data-theme="light"] button:hover {
-  background: #e7eaed;
+  background: #c8d4e1;
 }
 
 :root[data-theme="light"] .btn.accent {
@@ -3957,14 +3973,14 @@ input[type="text"] {
 
 /* Light theme Banker selected toggle emphasis */
 :root[data-theme="light"] .banker-toggle-btn {
-  background: #f3f5f8;
-  border-color: #cfd3d8;
+  background: #d4dee8;
+  border-color: #aebac7;
   color: #2d3640;
 }
 
 :root[data-theme="light"] .banker-toggle-btn:hover {
-  background: #e7eaed;
-  border-color: #b8c0c8;
+  background: #c8d4e1;
+  border-color: #a3afbc;
 }
 
 :root[data-theme="light"] .banker-toggle-btn.is-active,
@@ -4007,8 +4023,8 @@ input[type="text"] {
 /* Light theme Junk "Dots" button */
 :root[data-theme="light"] .junk-cell summary,
 :root[data-theme="light"] .junk-cell button {
-  background: #f3f5f8;
-  border: 2px solid #cfd3d8;
+  background: #d4dee8;
+  border: 2px solid #aebac7;
   color: #1a1c1f;
 }
 

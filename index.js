@@ -4966,6 +4966,14 @@
               }
             }
           }
+
+          // Options panel height changes affect visible games area; re-measure
+          // and rerender active game content after the panel state settles.
+          requestAnimationFrame(() => {
+            syncGamesPanelHeight();
+            syncAllStandaloneGameHeaderClones();
+            AppManager.recalcGamesDebounced?.();
+          });
         };
 
         syncState(!panel.hidden);
