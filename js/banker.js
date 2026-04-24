@@ -87,8 +87,31 @@
     } catch (_) {}
   }
 
+  function isHoleConsumed(hole) {
+    return isBankerHoleLocked(hole);
+  }
+
+  function consumeBankerHole(hole) {
+    lockBankerHole(hole);
+  }
+
+  function getBankerSelectionWarning(hole, bankerIdx, names) {
+    const leaders = getPrevHoleLowNetLeaders(hole);
+    if (leaders.length > 1) {
+      const tieNames = leaders.map((idx) => names[idx] || `P${idx + 1}`);
+      return `Tie on Hole ${hole - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
+    }
+
+    if (leaders.length === 1) {
+      return `Scorecard says Hole ${hole - 1} low net makes ${names[leaders[0]] || `P${leaders[0] + 1}`} banker. Override if needed.`;
+    }
+
+    return '';
+  }
+
   const DOM_IDS = {
     bankerSelect: (hole) => `banker_h${hole}`,
+    bankerWarning: (hole) => `banker_warning_h${hole}`,
     maxBet: (hole) => `banker_maxbet_h${hole}`,
     bankerDouble: (hole) => `banker_double_h${hole}`,
     betsCell: (hole) => `banker_bets_h${hole}`,
@@ -772,9 +795,6 @@
           const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
           if (bankerSelect && holeState.banker !== undefined) {
             bankerSelect.value = String(holeState.banker);
-            if (Number(holeState.banker) >= 0) {
-              lockBankerHole(h);
-            }
           }
 
           const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
@@ -1084,6 +1104,9 @@
         const bankerTd = document.createElement('td');
         bankerTd.className = 'banker-cell-pad';
 
+        const bankerCell = document.createElement('div');
+        bankerCell.className = 'banker-select-cell';
+
         const bankerWrap = document.createElement('div');
         bankerWrap.className = 'banker-inline-wrap';
 
@@ -1107,7 +1130,7 @@
         
         bankerSelect.addEventListener('change', () => {
           if (Number(bankerSelect.value) >= 0) {
-            lockBankerHole(h);
+            consumeBankerHole(h);
           }
           this.updateBetInputs();
           this.update();
@@ -1118,9 +1141,16 @@
         bankerStrokeIndicator.id = DOM_IDS.bankerStroke(h);
         bankerStrokeIndicator.className = 'banker-stroke-indicator';
 
+        const bankerWarning = document.createElement('span');
+        bankerWarning.id = DOM_IDS.bankerWarning(h);
+        bankerWarning.className = 'banker-selection-warning banker-result-muted banker-result-muted-sm banker-result-warning';
+        bankerWarning.hidden = true;
+
         bankerWrap.appendChild(bankerSelect);
         bankerWrap.appendChild(bankerStrokeIndicator);
-        bankerTd.appendChild(bankerWrap);
+        bankerCell.appendChild(bankerWrap);
+        bankerCell.appendChild(bankerWarning);
+        bankerTd.appendChild(bankerCell);
         tr.appendChild(bankerTd);
         
         // Max Bet
@@ -1142,6 +1172,7 @@
         maxBetInput.value = '10';
         maxBetInput.className = 'banker-number-input banker-maxbet-input';
         maxBetInput.addEventListener('input', () => {
+          consumeBankerHole(h);
           // Re-validate all player bets for this hole when max bet changes
           const maxBet = Number(maxBetInput.value) || 0;
           const betsTd = document.getElementById(DOM_IDS.betsCell(h));
@@ -1188,6 +1219,7 @@
         bankerDoubleBtn.title = isPar3 ? 'Banker triples all bets (Par 3)' : 'Banker doubles all bets';
         
         bankerDoubleBtn.addEventListener('click', () => {
+          consumeBankerHole(h);
           setToggleButtonState(bankerDoubleBtn, !isToggleActive(bankerDoubleBtn));
           
           this.update();
@@ -1239,29 +1271,37 @@
 
         // Desktop parity with bottom-sheet flow:
         // preselect this hole's banker from previous-hole low-net winner.
-        if ((bankerIdx < 0 || bankerIdx >= playerCount) && bankerSelect && !isBankerHoleLocked(h)) {
+        if ((bankerIdx < 0 || bankerIdx >= playerCount) && bankerSelect && !isHoleConsumed(h)) {
           const leaders = getPrevHoleLowNetLeaders(h);
           if (leaders.length === 1) {
             bankerSelect.value = String(leaders[0]);
             bankerIdx = leaders[0];
-            lockBankerHole(h);
           }
         }
         
         if (bankerIdx < 0 || bankerIdx >= playerCount) {
           betsTd.innerHTML = '';
           const selectMsg = document.createElement('span');
-          const tieLeaders = getPrevHoleLowNetLeaders(h);
-          if (tieLeaders.length > 1) {
-            const tieNames = tieLeaders.map((idx) => names[idx] || `P${idx + 1}`);
-            selectMsg.className = 'banker-result-muted banker-result-muted-sm banker-result-warning';
-            selectMsg.textContent = `Tie on Hole ${h - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
-          } else {
-            selectMsg.className = 'banker-result-muted banker-result-muted-sm';
-            selectMsg.textContent = 'Select banker';
+          const warningText = getBankerSelectionWarning(h, bankerIdx, names);
+          const bankerWarning = document.getElementById(DOM_IDS.bankerWarning(h));
+          if (bankerWarning) {
+            bankerWarning.textContent = warningText;
+            bankerWarning.hidden = !warningText;
           }
+          if (warningText) {
+            continue;
+          }
+          selectMsg.className = 'banker-result-muted banker-result-muted-sm';
+          selectMsg.textContent = 'Select banker';
           betsTd.appendChild(selectMsg);
           continue;
+        }
+
+        const bankerWarning = document.getElementById(DOM_IDS.bankerWarning(h));
+        const warningText = getBankerSelectionWarning(h, bankerIdx, names);
+        if (bankerWarning) {
+          bankerWarning.textContent = warningText;
+          bankerWarning.hidden = !warningText;
         }
         
         // Create bet inputs for each non-banker player
@@ -1352,6 +1392,7 @@
           betInput.placeholder = '0';
           betInput.className = 'banker-number-input banker-bet-input';
           betInput.addEventListener('input', () => {
+            consumeBankerHole(h);
             // Validate bet against max bet
             const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
             const maxBet = maxBetInput ? Number(maxBetInput.value) : 0;
@@ -1380,6 +1421,7 @@
           setToggleButtonState(doubleBtn, isToggleActive(doubleBtn));
           
           doubleBtn.addEventListener('click', () => {
+            consumeBankerHole(h);
             setToggleButtonState(doubleBtn, !isToggleActive(doubleBtn));
             
             this.update();
@@ -1635,6 +1677,7 @@
 
           if (t.classList?.contains('score-input') || 
               t.classList?.contains('ch-input')) {
+            this.updateBetInputs();
             this.update();
           }
         }, { passive: true });

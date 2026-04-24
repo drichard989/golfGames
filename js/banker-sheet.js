@@ -117,6 +117,10 @@
     saveBankerPreselectMeta(meta);
   }
 
+  function consumeBankerHole(hole){
+    lockBankerHole(hole);
+  }
+
   function getPlayerCount(){
     try { if (typeof window.getPlayerCount === 'function') return window.getPlayerCount(); } catch(_){}
     const rows = document.querySelectorAll('#scorecardFixed .player-row');
@@ -142,11 +146,11 @@
     const v = sel ? Number(sel.value) : -1;
     return Number.isFinite(v) ? v : -1;
   }
-  function setBankerIdx(h, idx){
+  function setBankerIdx(h, idx, options = {}){
     const sel = document.getElementById(DOM_IDS.bankerSelect(h));
     if (!sel) return;
     sel.value = String(idx);
-    fireChange(sel);
+    if (options.dispatch !== false) fireChange(sel);
   }
   function getMaxBet(h){
     const el = document.getElementById(DOM_IDS.maxBet(h));
@@ -305,6 +309,33 @@
     return !!(prefs.bankerManualOverrideByHole && prefs.bankerManualOverrideByHole[key]);
   }
 
+  function setAutoSelectedFromPrevHole(hole, fromHole){
+    if (!prefs.bankerAutoSelectedFromPrevHole || typeof prefs.bankerAutoSelectedFromPrevHole !== 'object') {
+      prefs.bankerAutoSelectedFromPrevHole = {};
+    }
+    prefs.bankerAutoSelectedFromPrevHole[String(Number(hole))] = Number(fromHole);
+  }
+
+  function clearAutoSelectedFromPrevHole(hole){
+    if (!prefs.bankerAutoSelectedFromPrevHole || typeof prefs.bankerAutoSelectedFromPrevHole !== 'object') {
+      prefs.bankerAutoSelectedFromPrevHole = {};
+      return;
+    }
+    delete prefs.bankerAutoSelectedFromPrevHole[String(Number(hole))];
+  }
+
+  function getBankerSelectionWarning(hole, bankerIdx, names){
+    const leaders = hole > 1 ? getPrevHoleLowNetLeaders(hole) : [];
+    if (leaders.length > 1) {
+      const tieNames = leaders.map((idx) => names[idx] || `Player ${idx + 1}`);
+      return `Tie on Hole ${hole - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
+    }
+    if (leaders.length === 1) {
+      return `Scorecard says Hole ${hole - 1} low net makes ${names[leaders[0]] || `Player ${leaders[0] + 1}`} banker. Override if needed.`;
+    }
+    return '';
+  }
+
   function getNetScoreForAuto(p, h){
     const gross = getHoleGross(p, h);
     if (!gross) return null;
@@ -356,9 +387,13 @@
 
     const leaders = getPrevHoleLowNetLeaders(h);
     if (leaders.length === 1) {
-      setBankerIdx(h, leaders[0]);
-      lockBankerHole(h);
-      prefs.bankerAutoSelectedFromPrevHole[String(h)] = h - 1;
+      setBankerIdx(h, leaders[0], { dispatch: false });
+      window.Banker?.updateBetInputs?.();
+      window.Banker?.update?.();
+      setAutoSelectedFromPrevHole(h, h - 1);
+      savePrefs();
+    } else if (getBankerIdx(h) < 0) {
+      clearAutoSelectedFromPrevHole(h);
       savePrefs();
     }
   }
@@ -477,6 +512,7 @@
     const autoFromPrev = Number(prefs.bankerAutoSelectedFromPrevHole?.[String(hole)]);
     if (
       bankerIdx >= 0 &&
+      !isBankerHoleLocked(hole) &&
       !hasBankerManualOverride(hole) &&
       Number.isFinite(autoFromPrev)
     ) {
@@ -486,7 +522,7 @@
       bankerBlock.appendChild(autoLabel);
     }
 
-    const tieLeaders = (hole > 1) ? getPrevHoleLowNetLeaders(hole) : [];
+    const warningText = getBankerSelectionWarning(hole, bankerIdx, names);
 
     const bankerPills = document.createElement('div');
     bankerPills.className = 'banker-sheet-pills';
@@ -518,12 +554,11 @@
     // Suggestions row now carries persistent tie warnings when needed.
     const suggestions = document.createElement('div');
     suggestions.className = 'banker-sheet-suggestions';
-    if (tieLeaders.length > 1) {
-      const tieNames = tieLeaders.map((idx) => names[idx] || `Player ${idx + 1}`);
-      const tieWarning = document.createElement('span');
-      tieWarning.className = 'banker-sheet-suggestion banker-sheet-suggestion-warning';
-      tieWarning.textContent = `Tie on Hole ${hole - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
-      suggestions.appendChild(tieWarning);
+    if (warningText) {
+      const warning = document.createElement('span');
+      warning.className = 'banker-sheet-suggestion banker-sheet-suggestion-warning';
+      warning.textContent = warningText;
+      suggestions.appendChild(warning);
     }
     if (suggestions.children.length) bankerBlock.appendChild(suggestions);
     body.appendChild(bankerBlock);
@@ -556,6 +591,7 @@
     const amountInput = amount.querySelector('input');
     amountInput.value = String(maxBet || 0);
     const stepBy = (d) => {
+      consumeBankerHole(hole);
       const cur = Number(amountInput.value) || 0;
       // Fixed $5 increments (user can still type any exact value)
       const step = 5;
@@ -571,6 +607,7 @@
     minus.addEventListener('click', () => stepBy(-1));
     plus.addEventListener('click', () => stepBy(1));
     amountInput.addEventListener('input', () => {
+      consumeBankerHole(hole);
       const v = Math.max(0, Math.round(Number(amountInput.value) || 0));
       setMaxBet(hole, v);
       prefs.lastMaxBet = v;
@@ -594,6 +631,7 @@
         sameMax.className = 'banker-sheet-suggestion';
         sameMax.textContent = `Same as last · $${prevMax}`;
         sameMax.addEventListener('click', () => {
+          consumeBankerHole(hole);
           amountInput.value = String(prevMax);
           pulseAmountShell(amountInput);
           setMaxBet(hole, prevMax);
@@ -611,6 +649,7 @@
       chip.className = 'banker-sheet-suggestion banker-sheet-suggestion-muted';
       chip.textContent = `$${v}`;
       chip.addEventListener('click', () => {
+        consumeBankerHole(hole);
         amountInput.value = String(v);
         pulseAmountShell(amountInput);
         setMaxBet(hole, v);
@@ -634,6 +673,7 @@
     bankerDblBtn.dataset.active = isBankerDoubled(hole) ? 'true' : 'false';
     bankerDblBtn.innerHTML = `<span class="banker-sheet-dblbtn-mult">${multText}</span> <span class="banker-sheet-dblbtn-label">Banker doubles all bets</span>`;
     bankerDblBtn.addEventListener('click', () => {
+      consumeBankerHole(hole);
       toggleBankerDouble(hole);
       bankerDblBtn.dataset.active = isBankerDoubled(hole) ? 'true' : 'false';
       updateLiveResult();
@@ -699,12 +739,14 @@
       const betInput = card.querySelector('.banker-sheet-bet-input');
       betInput.value = bet > 0 ? String(bet) : '';
       betInput.addEventListener('input', () => {
+        consumeBankerHole(hole);
         const v = Math.max(0, Math.round(Number(betInput.value) || 0));
         setBet(p, hole, v);
         updateCardCap(card, p, hole);
         updateLiveResult();
       });
       card.querySelector('[data-step="-1"]').addEventListener('click', () => {
+        consumeBankerHole(hole);
         const cur = Number(betInput.value) || 0;
         const step = 5;
         // Snap up to nearest $5 first so -5 from $7 goes to $5 (not $2)
@@ -716,6 +758,7 @@
         updateLiveResult();
       });
       card.querySelector('[data-step="1"]').addEventListener('click', () => {
+        consumeBankerHole(hole);
         const cur = Number(betInput.value) || 0;
         const m = getMaxBet(hole);
         const step = 5;
@@ -730,6 +773,7 @@
       });
       const multBtn = card.querySelector('.banker-sheet-mult-toggle');
       multBtn.addEventListener('click', () => {
+        consumeBankerHole(hole);
         togglePlayerDouble(p, hole);
         multBtn.dataset.active = isPlayerDoubled(p, hole) ? 'true' : 'false';
         updateLiveResult();
@@ -738,6 +782,7 @@
       // Quick-bet chips: $5 / $10 / $20 (tap to set exact value, capped to max)
       card.querySelectorAll('.banker-sheet-bet-chip').forEach(chip => {
         chip.addEventListener('click', () => {
+          consumeBankerHole(hole);
           const v = Number(chip.dataset.quick) || 0;
           const m = getMaxBet(hole);
           const next = m > 0 ? Math.min(m, v) : v;
@@ -1092,6 +1137,11 @@
     scheduleSummaryUpdate._t = requestAnimationFrame(buildSummaryRows);
   }
 
+  function refreshOpenSheetForScorecardChange(){
+    scheduleSummaryUpdate();
+    if (currentHole != null) renderSheet(currentHole);
+  }
+
   let _active = false;
   let _listenersBound = false;
   let _tbodyObserver = null;
@@ -1109,13 +1159,31 @@
       // Also update on any save event the app fires
       document.addEventListener('input', (e) => {
         if (!_active) return;
-        if (!e.target || !e.target.id) return;
-        if (e.target.id.startsWith('banker_')) scheduleSummaryUpdate();
+        const target = e.target;
+        if (!target) return;
+        if (target.id && target.id.startsWith('banker_')) {
+          scheduleSummaryUpdate();
+          return;
+        }
+        if (target.classList?.contains('score-input') ||
+            target.classList?.contains('ch-input') ||
+            target.classList?.contains('name-edit')) {
+          refreshOpenSheetForScorecardChange();
+        }
       }, { passive: true });
       document.addEventListener('change', (e) => {
         if (!_active) return;
-        if (!e.target || !e.target.id) return;
-        if (e.target.id.startsWith('banker_')) scheduleSummaryUpdate();
+        const target = e.target;
+        if (!target) return;
+        if (target.id && target.id.startsWith('banker_')) {
+          scheduleSummaryUpdate();
+          return;
+        }
+        if (target.classList?.contains('score-input') ||
+            target.classList?.contains('ch-input') ||
+            target.classList?.contains('name-edit')) {
+          refreshOpenSheetForScorecardChange();
+        }
       }, { passive: true });
     }
 
