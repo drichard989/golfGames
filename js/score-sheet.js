@@ -20,7 +20,7 @@
   const MAX_SCORE = 20;
   const MOBILE_QUERY = '(max-width: 1024px)';
   const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
-  const OPEN_TO_BACKDROP_GUARD_MS = 500;
+  const OPEN_TO_BACKDROP_GUARD_MS = 900;
 
   let isMobileMode = false;
   let currentHole = null;
@@ -28,9 +28,30 @@
   let draftScoresByPlayer = {};
   let syncFrame = null;
   let lastOpenedAt = 0;
+  let viewportMq = null;
+  let coarseTouchMq = null;
 
   let backdropEl = null;
   let sheetEl = null;
+
+  function supportsTouchInput() {
+    try {
+      return (
+        ('ontouchstart' in window) ||
+        Number(navigator.maxTouchPoints || 0) > 0 ||
+        Number(navigator.msMaxTouchPoints || 0) > 0
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function shouldEnableSheetMode() {
+    const byViewport = !!viewportMq?.matches;
+    const byCoarsePointer = !!coarseTouchMq?.matches;
+    const byTouchCapability = supportsTouchInput();
+    return byViewport || byCoarsePointer || byTouchCapability;
+  }
 
   function onBackdropClick() {
     const elapsed = Date.now() - lastOpenedAt;
@@ -440,10 +461,11 @@
     // Keep native focus behavior during drag/scroll; modal opens from deliberate tap.
   }
 
-  function applyMode(isMobile) {
-    isMobileMode = !!isMobile;
+  function applyMode() {
+    isMobileMode = shouldEnableSheetMode();
     document.body.classList.toggle('score-sheet-active', isMobileMode);
-    if (!isMobileMode) {
+    // Do not force-close an already open sheet on transient mode flips.
+    if (!isMobileMode && !sheetEl?.classList.contains('is-open')) {
       closeSheet();
     }
   }
@@ -451,16 +473,16 @@
   function activate() {
     ensureSheet();
 
-    const mq = window.matchMedia(MOBILE_QUERY);
-    const touchMq = window.matchMedia(TOUCH_QUERY);
-    const onMqChange = () => applyMode(mq.matches || touchMq.matches);
+    viewportMq = window.matchMedia(MOBILE_QUERY);
+    coarseTouchMq = window.matchMedia(TOUCH_QUERY);
+    const onMqChange = () => applyMode();
 
-    try { mq.addEventListener('change', onMqChange); }
-    catch (_) { mq.addListener(onMqChange); }
-    try { touchMq.addEventListener('change', onMqChange); }
-    catch (_) { touchMq.addListener(onMqChange); }
+    try { viewportMq.addEventListener('change', onMqChange); }
+    catch (_) { viewportMq.addListener(onMqChange); }
+    try { coarseTouchMq.addEventListener('change', onMqChange); }
+    catch (_) { coarseTouchMq.addListener(onMqChange); }
 
-    applyMode(mq.matches || touchMq.matches);
+    applyMode();
 
     document.addEventListener('click', onScoreInputClick, true);
     document.addEventListener('focusin', onScoreInputFocusIn, true);
