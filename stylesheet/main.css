@@ -2364,6 +2364,8 @@ tfoot td {
   -webkit-line-clamp: 3;
   overflow: hidden;
   line-height: 1.25;
+  white-space: normal;
+  text-wrap: pretty;
 }
 
 .banker-selection-warning[hidden] {
@@ -2378,6 +2380,20 @@ tfoot td {
   background: rgba(240, 173, 78, 0.08);
 }
 
+.banker-selection-guidance {
+  align-self: flex-start;
+  width: min(100%, 360px);
+}
+
+.banker-selection-guidance .banker-sheet-guidance {
+  padding: 6px 10px;
+  margin-top: 4px;
+}
+
+.banker-selection-guidance .banker-sheet-guidance-label {
+  margin-bottom: 2px;
+}
+
 .banker-sheet-guidance-label {
   font-size: 11px;
   font-weight: 700;
@@ -2388,10 +2404,15 @@ tfoot td {
 }
 
 .banker-sheet-guidance-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
   font-size: 13px;
   line-height: 1.35;
   color: var(--warn, #f0ad4e);
   font-weight: 600;
+  text-wrap: pretty;
 }
 
 .banker-sheet-guidance-text.is-empty {
