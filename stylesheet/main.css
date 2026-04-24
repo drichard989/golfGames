@@ -1661,7 +1661,9 @@ tfoot td {
   position: sticky;
   top: 0;
   z-index: 30;
-  margin: 0 0 6px;
+  margin: -6px 0 6px;
+  padding-top: 6px;
+  background: var(--panel-alt);
 }
 
 .live-results-header-clone-table {
