@@ -1,0 +1,332 @@
+/* ============================================================================
+   WOLF BOTTOM SHEET
+   Additive UI layer. To remove: delete this file and js/wolf-sheet.js.
+   ============================================================================ */
+
+body.wolf-sheet-active #wolfTable thead tr th:not(:first-child) {
+  display: none !important;
+}
+
+body.wolf-sheet-active #wolfBody tr > td:not(:first-child):not(.wolf-sheet-summary-cell) {
+  display: none !important;
+}
+
+body.wolf-sheet-active #wolfTable tfoot {
+  display: none !important;
+}
+
+body.wolf-sheet-active #wolfBody tr {
+  cursor: pointer;
+}
+
+body.wolf-sheet-active #wolfBody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="light"] body.wolf-sheet-active #wolfBody tr:hover td {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.wolf-sheet-summary-cell {
+  display: none;
+  padding: 6px 8px !important;
+  text-align: left !important;
+  vertical-align: middle !important;
+}
+
+body.wolf-sheet-active .wolf-sheet-summary-cell {
+  display: table-cell;
+}
+
+.wolf-summary-grid {
+  display: grid;
+  gap: 3px;
+}
+
+.wolf-summary-line {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  gap: 8px;
+  align-items: baseline;
+  min-width: 0;
+}
+
+.wolf-summary-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.wolf-summary-value {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wolf-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: 9100;
+}
+
+.wolf-sheet-backdrop.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.wolf-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: calc(100dvh - max(env(safe-area-inset-top, 0px), 56px));
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  color: var(--ink);
+  border-top: 2px solid var(--line);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  box-shadow: 0 -12px 32px rgba(0, 0, 0, 0.4);
+  transform: translateY(100%);
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 9101;
+}
+
+.wolf-sheet.is-open {
+  transform: translateY(0);
+}
+
+@media (min-width: 720px) {
+  .wolf-sheet {
+    left: 50%;
+    right: auto;
+    bottom: 24px;
+    transform: translate(-50%, 120%);
+    width: min(680px, calc(100vw - 32px));
+    max-height: min(86vh, 760px);
+    border-radius: var(--radius-lg);
+    border: 2px solid var(--line);
+  }
+
+  .wolf-sheet.is-open {
+    transform: translate(-50%, 0);
+  }
+}
+
+.wolf-sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 2px solid var(--line);
+  background: var(--panel-alt);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+.wolf-sheet-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wolf-sheet-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 700;
+  min-width: 140px;
+  text-align: center;
+}
+
+.wolf-sheet-navbtn,
+.wolf-sheet-close {
+  background: transparent;
+  border: 2px solid var(--line);
+  color: var(--ink);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.wolf-sheet-navbtn {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.wolf-sheet-navbtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.wolf-sheet-navbtn:not(:disabled):hover,
+.wolf-sheet-close:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:root[data-theme="light"] .wolf-sheet-navbtn:not(:disabled):hover,
+:root[data-theme="light"] .wolf-sheet-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.wolf-sheet-body {
+  padding: 12px 16px 4px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+}
+
+.wolf-sheet-block {
+  padding: 10px 0 14px;
+  border-bottom: 2px solid var(--line);
+}
+
+.wolf-sheet-block:last-child {
+  border-bottom: none;
+}
+
+.wolf-sheet-block-title {
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.wolf-sheet-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.wolf-sheet-overview-item {
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  padding: 8px;
+  background: var(--panel-alt);
+  min-width: 0;
+}
+
+.wolf-sheet-overview-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.wolf-sheet-overview-value {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wolf-sheet-decisions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.wolf-sheet-decision-btn,
+.wolf-sheet-clear-btn {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  background: var(--panel-alt);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: var(--text-md);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.wolf-sheet-decision-btn[data-active="true"] {
+  border-color: var(--accent);
+  background: rgba(0, 188, 140, 0.2);
+  color: #e5fff7;
+}
+
+:root[data-theme="light"] .wolf-sheet-decision-btn[data-active="true"] {
+  color: #0a3a2e;
+}
+
+.wolf-sheet-clear-btn {
+  margin-top: 8px;
+  text-align: center;
+}
+
+.wolf-sheet-clear-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.wolf-sheet-scores {
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.wolf-sheet-score-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.wolf-sheet-score-row:last-child {
+  border-bottom: none;
+}
+
+.wolf-sheet-score-name {
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.wolf-sheet-score-val {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.wolf-sheet-empty {
+  color: var(--muted);
+  font-style: italic;
+  font-size: var(--text-sm);
+}
+
+.wolf-sheet-footer {
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  border-top: 2px solid var(--line);
+  background: var(--panel-alt);
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (max-width: 480px) {
+  .wolf-sheet-overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
