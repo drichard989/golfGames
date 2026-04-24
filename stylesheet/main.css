@@ -302,7 +302,16 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
 }
 
 :root[data-theme="light"] .header-collapse-btn {
-  color: var(--muted);
+  color: #5f6e80;
+  background: rgba(148, 163, 184, 0.2);
+  border-color: rgba(148, 163, 184, 0.58);
+  opacity: 1;
+}
+
+:root[data-theme="light"] .header-collapse-btn:hover {
+  color: #475569;
+  background: rgba(148, 163, 184, 0.3);
+  border-color: rgba(100, 116, 139, 0.68);
 }
 
 h1 {
