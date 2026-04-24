@@ -47,6 +47,9 @@
   let junkCoreListenersBound = false;
   let junkAchievementListenersBound = false;
   let persistedAchievementState = [];
+  let junkInitialized = false;
+  let lastBuiltPlayerCount = 0;
+  let fixedRowsCache = null;
   
   // Access game constants with fallbacks
   const getJunkConstants = () => {
@@ -125,7 +128,24 @@
   }
 
   function getFixedPlayerRows() {
-    return Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    if (fixedRowsCache) return fixedRowsCache;
+    fixedRowsCache = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    queueMicrotask(() => { fixedRowsCache = null; });
+    return fixedRowsCache;
+  }
+
+  function isJunkSectionOpen() {
+    return !!document.getElementById('junkSection')?.classList.contains('open');
+  }
+
+  function getScoreMatrix(players = getPlayerCount(), holes = HOLES) {
+    const matrix = Array.from({ length: players }, () => Array(holes).fill(NaN));
+    for (let p = 0; p < players; p++) {
+      for (let h = 1; h <= holes; h++) {
+        matrix[p][h - 1] = getScore(p, h);
+      }
+    }
+    return matrix;
   }
 
   function getAdjustedCHs() {
@@ -211,7 +231,8 @@
   }
 
   function getJunkScoreForHole(playerIdx, hole, config, cache = {}) {
-    const gross = getScore(playerIdx, hole);
+    const cachedGross = cache.scores?.[playerIdx]?.[hole - 1];
+    const gross = Number.isFinite(cachedGross) ? cachedGross : getScore(playerIdx, hole);
     if (!Number.isFinite(gross) || !config.useNet) return gross;
 
     const holeHcp = (cache.HCPMEN || window.HCPMEN || Array(18).fill(1))[hole - 1] || 1;
@@ -224,7 +245,8 @@
   }
 
   function getJunkSkinsScoreForHole(playerIdx, hole, config, cache = {}) {
-    const gross = getScore(playerIdx, hole);
+    const cachedGross = cache.scores?.[playerIdx]?.[hole - 1];
+    const gross = Number.isFinite(cachedGross) ? cachedGross : getScore(playerIdx, hole);
     if (!Number.isFinite(gross) || !config.useNet) return gross;
 
     const handicap = config.netHcpMode === 'rawHandicap'
@@ -245,7 +267,8 @@
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
       adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : [],
+      scores: getScoreMatrix(playerCount, HOLES)
     };
 
     for (let h = 1; h <= HOLES; h++) {
@@ -325,12 +348,14 @@
       const perHole = Array.from({length: HOLES}, ()=> Array(playerCount).fill(0));
       const totals = Array(playerCount).fill(0);
       const config = getJunkScoringConfig();
+      const scoreMatrix = getScoreMatrix(playerCount, HOLES);
       const cache = {
         HCPMEN: window.HCPMEN || Array(18).fill(1),
         adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
-        rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
+        rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : [],
+        scores: scoreMatrix
       };
-      
+
       for(let h=1; h<=HOLES; h++){
         const par = getPar(h);
         for(let p=0; p<playerCount; p++){
@@ -380,6 +405,30 @@
   // =============================================================================
   // TABLE BUILDING
   // =============================================================================
+
+  function ensureJunkTableBuilt(force = false){
+    const tbody = document.getElementById('junkBody');
+    if(!tbody) return false;
+
+    const playerCount = getPlayerCount();
+    const expectedRows = HOLES;
+    const actualRows = tbody.querySelectorAll('tr').length;
+    const thead = document.querySelector('#junkTable thead tr');
+    const headerPlayerCells = thead ? Math.max(0, thead.children.length - 1) : 0;
+
+    const needsRebuild = force ||
+      !junkInitialized ||
+      playerCount !== lastBuiltPlayerCount ||
+      actualRows !== expectedRows ||
+      headerPlayerCells !== playerCount;
+
+    if(!needsRebuild) return false;
+
+    rebuildJunkTableHeader();
+    buildJunkTable();
+    lastBuiltPlayerCount = playerCount;
+    return true;
+  }
   
   function buildJunkTable(){
     const tbody = document.getElementById('junkBody');
@@ -477,10 +526,16 @@
         </tbody>
       </table>
     `;
-    containers.forEach(c => { c.innerHTML = html; });
+    containers.forEach(c => {
+      if (c.dataset.renderCache === html) return;
+      c.innerHTML = html;
+      c.dataset.renderCache = html;
+    });
   }
 
   function updateJunk(){
+    if (!isJunkSectionOpen()) return;
+
     const tbody = document.getElementById('junkBody');
     if(!tbody) return;
 
@@ -494,12 +549,7 @@
     // callers (player-add, course-switch, name-edit) all funnel through
     // AppManager.recalcGames() -> Junk.update(), so this is the single
     // chokepoint that keeps junk's view of the roster honest.
-    const playerCount = getPlayerCount();
-    const thead = document.querySelector('#junkTable thead tr');
-    const headerPlayerCells = thead ? Math.max(0, thead.children.length - 1) : 0;
-    if (playerCount !== headerPlayerCells) {
-      rebuildJunkTableHeader();
-      buildJunkTable();
+    if (ensureJunkTableBuilt()) {
       refreshJunkHeaderNames();
       // Re-init achievements UI for the new column set on the next tick.
       setTimeout(() => { try { initJunkAchievements(); } catch (e) {} }, 0);
@@ -765,10 +815,12 @@
     syncJunkSkinsHalfState();
 
     const config = getJunkScoringConfig();
+    const scoreMatrix = getScoreMatrix(players, HOLES);
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
       adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : [],
+      scores: scoreMatrix
     };
 
     const skinsConfig = getJunkSkinsDotsConfig();
@@ -813,13 +865,13 @@
     if (junkAchievementListenersBound) return;
     junkAchievementListenersBound = true;
 
-// Update totals on score/par/name changes (debounced to avoid stutter on every keypress)
-      let _junkAchScoreInputTimer = null;
-      document.addEventListener('input', (e)=>{
+    // Achievement-only updates; score/par/name updates are already routed through AppManager.
+    let _junkAchScoreInputTimer = null;
+    document.addEventListener('input', (e)=>{
       const t = e.target;
-      if(t.classList?.contains('score-input') || t.closest('#parRow') || t.classList?.contains('name-edit') || t.classList?.contains('junk-ach')){
+      if(t.classList?.contains('junk-ach')){
         clearTimeout(_junkAchScoreInputTimer);
-        _junkAchScoreInputTimer = setTimeout(() => updateJunkTotalsWeighted(), 160);
+        _junkAchScoreInputTimer = setTimeout(() => updateJunkTotalsWeighted(), 120);
       }
     }, { passive: true });
 
@@ -838,8 +890,7 @@
   function refreshJunkForPlayerChange(){
     const junkSection = document.getElementById('junkSection');
     if(junkSection && junkSection.classList.contains('open')){
-      rebuildJunkTableHeader();
-      buildJunkTable();
+      ensureJunkTableBuilt(true);
       refreshJunkHeaderNames();
       updateJunk();
       setTimeout(() => initJunkAchievements(), 0);
@@ -851,15 +902,19 @@
   // =============================================================================
   
   function initJunk(){
-    rebuildJunkTableHeader();
-    buildJunkTable();
+    const didRebuild = ensureJunkTableBuilt();
     
     refreshJunkHeaderNames();
     updateJunk();
     syncJunkNetModeVisibility();
-    
-    // Initialize achievements UI after table is built
-    setTimeout(() => initJunkAchievements(), 0);
+
+    // Initialize achievements UI after table is built.
+    // On game-tab switches, skip heavy re-enhancement unless structure changed.
+    if(didRebuild || !junkInitialized) {
+      setTimeout(() => initJunkAchievements(), 0);
+    }
+
+    junkInitialized = true;
 
     if (!junkCoreListenersBound) {
       junkCoreListenersBound = true;
@@ -872,17 +927,6 @@
           window.saveDebounced();
         }
       });
-
-      // Listen for score/par/name changes (debounced to avoid stutter on every keypress)
-      let _junkScoreInputTimer = null;
-      document.addEventListener('input', (e)=>{
-        const t = e.target;
-        if(t.classList?.contains('score-input') || t.closest('#parRow') || t.classList?.contains('name-edit')){
-          if(t.classList?.contains('name-edit')) refreshJunkHeaderNames();
-          clearTimeout(_junkScoreInputTimer);
-          _junkScoreInputTimer = setTimeout(() => updateJunk(), 160);
-        }
-      }, { passive: true });
 
       document.getElementById('junkSkinsCarry')?.addEventListener('change', () => {
         updateJunk();

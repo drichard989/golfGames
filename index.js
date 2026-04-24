@@ -102,6 +102,7 @@
   const TIMING = {
     FOCUS_DELAY_MS: 50,
     RECALC_DEBOUNCE_MS: 300,
+    SAVE_DEBOUNCE_MS: 900,
     INIT_RETRY_DELAY_MS: 150,
     RESIZE_DEBOUNCE_MS: 150
   };
@@ -454,18 +455,22 @@
    * Ensures Vegas, Skins, Junk, Hi-Lo, and Banker stay in sync when scores change
    */
   const AppManager = {
+    _isSectionOpen(sectionId) {
+      const section = document.getElementById(sectionId);
+      return !!section?.classList.contains('open');
+    },
     /**
      * Trigger a recalculation on all active game modules.
      * Each call is guarded so a missing or uninitialized module never
      * prevents the rest from updating.
      */
     recalcGames() {
-      try { window.Vegas?.recalc();  } catch (e) { console.warn('[AppManager] Vegas recalc failed', e); }
-      try { window.Skins?.update();  } catch (e) { /* skins may not be initialized yet */ }
-      try { window.Junk?.update();   } catch (e) { /* junk may not be initialized yet */ }
-      try { window.HiLo?.update();   } catch (e) { /* hilo may not be initialized yet */ }
-      try { window.Banker?.update(); } catch (e) { /* banker may not be initialized yet */ }
-      try { window.Wolf?.update();   } catch (e) { /* wolf may not be initialized yet */ }
+      try { if (AppManager._isSectionOpen('vegasSection')) window.Vegas?.recalc(); } catch (e) { console.warn('[AppManager] Vegas recalc failed', e); }
+      try { if (AppManager._isSectionOpen('skinsSection')) window.Skins?.update(); } catch (e) { /* skins may not be initialized yet */ }
+      try { if (AppManager._isSectionOpen('junkSection')) window.Junk?.update(); } catch (e) { /* junk may not be initialized yet */ }
+      try { if (AppManager._isSectionOpen('hiloSection')) window.HiLo?.update(); } catch (e) { /* hilo may not be initialized yet */ }
+      try { if (AppManager._isSectionOpen('bankerSection')) window.Banker?.update(); } catch (e) { /* banker may not be initialized yet */ }
+      try { if (AppManager._isSectionOpen('wolfSection')) window.Wolf?.update(); } catch (e) { /* wolf may not be initialized yet */ }
     },
     // Debounced version for score inputs — coalesces rapid keystrokes before running all game calcs
     recalcGamesDebounced: (() => {
@@ -504,6 +509,9 @@
 
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker', 'wolf'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
+  const GAME_INIT_FLAGS = {
+    junkAchievementsRestored: false
+  };
   let headerVisible = true;             // true = header shown
   let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
 
@@ -560,7 +568,13 @@
 
   function getGameConfig(which) {
     return {
-      vegas: { section: ids.vegasSection, toggle: ids.toggleVegas, init: null },
+      vegas: {
+        section: ids.vegasSection,
+        toggle: ids.toggleVegas,
+        init: () => {
+          window.Vegas?.recalc?.();
+        }
+      },
       banker: { section: ids.bankerSection, toggle: ids.toggleBanker, init: () => window.Banker?.init?.() },
       skins: { section: ids.skinsSection, toggle: ids.toggleSkins, init: () => window.Skins?.init?.() },
       junk: {
@@ -568,6 +582,9 @@
         toggle: 'toggleJunk',
         init: () => {
           window.Junk?.init?.();
+
+          if (GAME_INIT_FLAGS.junkAchievementsRestored) return;
+          GAME_INIT_FLAGS.junkAchievementsRestored = true;
 
           const savedState = localStorage.getItem(Storage.KEY);
           if (!savedState) return;
@@ -1039,6 +1056,7 @@
 
   let scoreInputRecalcFrame = null;
   const pendingScoreInputRows = new Set();
+  let nameInputSyncTimer = null;
 
   function scheduleScoreInputRecalc(rowEl) {
     if (!(rowEl instanceof HTMLElement)) return;
@@ -1173,9 +1191,12 @@
           nameInput.placeholder=`Player ${p+1}`; 
           nameInput.autocomplete="off";
           nameInput.addEventListener("input",()=>{ 
-            Scorecard.player.syncOverlay(); 
-            window.Vegas?.renderTeamControls(); 
-            AppManager.recalcGames(); 
+            Scorecard.player.syncOverlay();
+            window.Vegas?.refreshTeamNames?.();
+            clearTimeout(nameInputSyncTimer);
+            nameInputSyncTimer = setTimeout(() => {
+              AppManager.recalcGamesDebounced();
+            }, 120);
             Storage.saveDebounced(); 
           });
           
@@ -1200,7 +1221,7 @@
             if (!syncHandicapInput(chInput)) {
               if (raw === '') {
                 Scorecard.calc.recalcAll(); 
-                AppManager.recalcGames();
+                AppManager.recalcGamesDebounced();
                 if (!Storage._isLoading) {
                   Scorecard.calc.applyStrokeHighlighting();
                 }
@@ -1209,7 +1230,7 @@
               return;
             }
             Scorecard.calc.recalcAll(); 
-            AppManager.recalcGames();
+            AppManager.recalcGamesDebounced();
             // Only apply highlighting if not currently loading from storage
             if (!Storage._isLoading) {
               Scorecard.calc.applyStrokeHighlighting();
@@ -1557,19 +1578,25 @@
           if(!input) continue;
           
           if(sr > 0) {
-            input.classList.add("receives-stroke");
-            input.classList.remove("gives-stroke");
-            input.dataset.strokes = String(sr);
-            input.title = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
+            if (!input.classList.contains("receives-stroke")) input.classList.add("receives-stroke");
+            if (input.classList.contains("gives-stroke")) input.classList.remove("gives-stroke");
+            const nextStrokes = String(sr);
+            if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
+            const nextTitle = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
+            if (input.title !== nextTitle) input.title = nextTitle;
           } else if(sr < 0) {
-            input.classList.add("gives-stroke");
-            input.classList.remove("receives-stroke");
-            input.dataset.strokes = String(Math.abs(sr));
-            input.title = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
+            if (!input.classList.contains("gives-stroke")) input.classList.add("gives-stroke");
+            if (input.classList.contains("receives-stroke")) input.classList.remove("receives-stroke");
+            const nextStrokes = String(Math.abs(sr));
+            if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
+            const nextTitle = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
+            if (input.title !== nextTitle) input.title = nextTitle;
           } else {
-            input.classList.remove("receives-stroke", "gives-stroke");
-            input.removeAttribute("data-strokes");
-            input.removeAttribute("title");
+            if (input.classList.contains("receives-stroke") || input.classList.contains("gives-stroke")) {
+              input.classList.remove("receives-stroke", "gives-stroke");
+            }
+            if (input.hasAttribute("data-strokes")) input.removeAttribute("data-strokes");
+            if (input.hasAttribute("title")) input.removeAttribute("title");
           }
         }
         
@@ -1584,23 +1611,32 @@
         const totalsRowEl = $(ids.totalsRow);
         if(!totalsRowEl) return;
 
+        const playerRows = $$("#scorecard .player-row");
+        const holeTotals = Array(HOLES).fill(0);
+        let OUT = 0;
+        let INN = 0;
+        let TOT = 0;
+
+        playerRows.forEach((row) => {
+          const scoreInputs = $$('input.score-input', row);
+          for (let h = 0; h < HOLES; h++) {
+            holeTotals[h] += Number(scoreInputs[h]?.value) || 0;
+          }
+
+          const splitCells = row.querySelectorAll('td.split');
+          OUT += Number(splitCells[0]?.textContent) || 0;
+          INN += Number(splitCells[1]?.textContent) || 0;
+          TOT += Number($(".total", row)?.textContent) || 0;
+        });
+
         for(let h=1;h<=HOLES;h++){
-          const ph=$$(`input.score-input[data-hole="${h}"]`).map(i=>Number(i.value)||0), t=sum(ph);
+          const t = holeTotals[h - 1] || 0;
           const holeTotalEl = $(`[data-hole-total="${h}"]`);
           if(holeTotalEl) {
             holeTotalEl.textContent = t? String(t) : "—";
           }
         }
         const tds=totalsRowEl.querySelectorAll("td"), base=LEADING_FIXED_COLS+HOLES;
-        const OUT=$$("#scorecard .player-row").map(r=>{ 
-          const s=r.querySelectorAll("td.split"); 
-          return Number(s[0]?.textContent)||0; 
-        }).reduce((a,b)=>a+b,0);
-        const INN=$$("#scorecard .player-row").map(r=>{ 
-          const s=r.querySelectorAll("td.split"); 
-          return Number(s[1]?.textContent)||0; 
-        }).reduce((a,b)=>a+b,0);
-        const TOT=$$("#scorecard .player-row").map(r=>Number($(".total",r)?.textContent)||0).reduce((a,b)=>a+b,0);
         if(tds[base+0]) tds[base+0].textContent=OUT||"—"; 
         if(tds[base+1]) tds[base+1].textContent=INN||"—"; 
         if(tds[base+2]) tds[base+2].textContent=TOT||"—";
@@ -1651,19 +1687,25 @@
             if(!input) continue;
             
             if(sr > 0) {
-              input.classList.add("receives-stroke");
-              input.classList.remove("gives-stroke");
-              input.dataset.strokes = String(sr);
-              input.title = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
+              if (!input.classList.contains("receives-stroke")) input.classList.add("receives-stroke");
+              if (input.classList.contains("gives-stroke")) input.classList.remove("gives-stroke");
+              const nextStrokes = String(sr);
+              if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
+              const nextTitle = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
+              if (input.title !== nextTitle) input.title = nextTitle;
             } else if(sr < 0) {
-              input.classList.add("gives-stroke");
-              input.classList.remove("receives-stroke");
-              input.dataset.strokes = String(Math.abs(sr));
-              input.title = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
+              if (!input.classList.contains("gives-stroke")) input.classList.add("gives-stroke");
+              if (input.classList.contains("receives-stroke")) input.classList.remove("receives-stroke");
+              const nextStrokes = String(Math.abs(sr));
+              if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
+              const nextTitle = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
+              if (input.title !== nextTitle) input.title = nextTitle;
             } else {
-              input.classList.remove("receives-stroke", "gives-stroke");
-              input.removeAttribute("data-strokes");
-              input.removeAttribute("title");
+              if (input.classList.contains("receives-stroke") || input.classList.contains("gives-stroke")) {
+                input.classList.remove("receives-stroke", "gives-stroke");
+              }
+              if (input.hasAttribute("data-strokes")) input.removeAttribute("data-strokes");
+              if (input.hasAttribute("title")) input.removeAttribute("title");
             }
           }
         });
@@ -2334,11 +2376,11 @@
     },
     
     /**
-     * Debounced save - waits 300ms after last change before saving
+     * Debounced save - waits for input burst to settle before writing localStorage
      */
     saveDebounced() {
       clearTimeout(this.saveTimer);
-      this.saveTimer = setTimeout(() => this.save(), TIMING.RECALC_DEBOUNCE_MS);
+      this.saveTimer = setTimeout(() => this.save(), TIMING.SAVE_DEBOUNCE_MS);
     },
 
     /**
@@ -5359,22 +5401,14 @@
     if (resizeAnimationFrame) {
       cancelAnimationFrame(resizeAnimationFrame);
     }
-    
-    // Immediate sync during resize for responsiveness
-    const syncRowHeights = window.GolfApp?.scorecard?.build?.syncRowHeights;
-    if (typeof syncRowHeights === 'function') {
-      resizeAnimationFrame = requestAnimationFrame(() => {
-        syncRowHeights();
-      });
-    }
-    
+
     // Final sync after resize completes
     resizeTimeout = setTimeout(() => {
       const delayedSync = window.GolfApp?.scorecard?.build?.syncRowHeights;
       if (typeof delayedSync === 'function') {
-        requestAnimationFrame(() => delayedSync());
+        resizeAnimationFrame = requestAnimationFrame(() => delayedSync());
       }
-    }, 150);
+    }, TIMING.RESIZE_DEBOUNCE_MS);
   });
 
   window.addEventListener('load', () => {

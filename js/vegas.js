@@ -41,6 +41,17 @@
 (() => {
   'use strict';
 
+  let fixedRowsCache = null;
+
+  const getFixedPlayerRows = () => {
+    if (fixedRowsCache) return fixedRowsCache;
+    fixedRowsCache = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    queueMicrotask(() => { fixedRowsCache = null; });
+    return fixedRowsCache;
+  };
+
+  const isVegasSectionOpen = () => !!document.getElementById('vegasSection')?.classList.contains('open');
+
   // Access game constants with fallbacks
   const getMultipliers = () => window.GAME_CONSTANTS?.VEGAS?.MULTIPLIERS || { DEFAULT: 1, BIRDIE: 2, EAGLE: 3 };
 
@@ -100,7 +111,10 @@
     return pars;
   };
 
-  const getGross = (p, h) => {
+  const getGross = (p, h, computeCtx = null) => {
+    if (computeCtx?.grossByPlayer?.[p]) {
+      return Number(computeCtx.grossByPlayer[p][h]) || 0;
+    }
     try {
       const input = document.querySelector(`.score-input[data-player="${p}"][data-hole="${h + 1}"]`);
       return Number(input?.value) || 0;
@@ -109,8 +123,6 @@
       return 0;
     }
   };
-
-  const getFixedPlayerRows = () => Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
 
   const getActualHandicaps = () => {
     return getFixedPlayerRows().map((row) => {
@@ -124,7 +136,11 @@
     });
   };
 
-  const getAdjustedCHs = (netHcpMode = 'playOffLow') => {
+  const getAdjustedCHs = (netHcpMode = 'playOffLow', computeCtx = null) => {
+    if (computeCtx?.adjustedByMode?.[netHcpMode]) {
+      return computeCtx.adjustedByMode[netHcpMode];
+    }
+
     const chs = getActualHandicaps();
     const validCHs = chs.filter((ch) => ch !== null && Number.isFinite(ch));
     if (validCHs.length === 0) return chs.map(() => 0);
@@ -137,10 +153,10 @@
     return chs.map((ch) => (ch !== null && Number.isFinite(ch) ? ch - minCH : 0));
   };
 
-  const getNetNDB = (p, h, netHcpMode = 'playOffLow') => {
-    const adjustedCHs = getAdjustedCHs(netHcpMode);
+  const getNetNDB = (p, h, netHcpMode = 'playOffLow', computeCtx = null) => {
+    const adjustedCHs = getAdjustedCHs(netHcpMode, computeCtx);
     
-    const gross = getGross(p, h);
+    const gross = getGross(p, h, computeCtx);
     if (!gross) return 0;
     
     const adj = adjustedCHs[p];
@@ -156,11 +172,38 @@
     const rem = adj % 18;
     const sr = base + (holeHcp <= rem ? 1 : 0);
     const NDB_BUFFER = 2;
-    const par = getPar(h);
+    const par = computeCtx?.pars?.[h] || getPar(h);
     const ndb = par + NDB_BUFFER + sr;
     const adjGross = Math.min(gross, ndb);
     return adjGross - sr;
   };
+
+  function createVegasComputeContext(opts) {
+    const players = getPlayers();
+    const holes = getHoles();
+    const grossByPlayer = Array.from({ length: players }, () => Array(holes).fill(0));
+
+    for (let p = 0; p < players; p++) {
+      for (let h = 0; h < holes; h++) {
+        grossByPlayer[p][h] = getGross(p, h);
+      }
+    }
+
+    const pars = getPars();
+    const adjustedByMode = {
+      playOffLow: getAdjustedCHs('playOffLow'),
+      rawHandicap: getAdjustedCHs('rawHandicap')
+    };
+
+    return {
+      opts,
+      players,
+      holes,
+      grossByPlayer,
+      pars,
+      adjustedByMode
+    };
+  }
 
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => Array.from(document.querySelectorAll(sel));
@@ -286,7 +329,10 @@
     };
 
     if (!data?.valid) {
-      containers.forEach(c => { c.innerHTML = ''; });
+      containers.forEach(c => {
+        if (!c.innerHTML) return;
+        c.innerHTML = '';
+      });
       return;
     }
 
@@ -301,7 +347,11 @@
         </tbody>
       </table>
     `;
-    containers.forEach(c => { c.innerHTML = html; });
+    containers.forEach(c => {
+      if (c.dataset.renderCache === html) return;
+      c.innerHTML = html;
+      c.dataset.renderCache = html;
+    });
   }
 
   // =============================================================================
@@ -315,7 +365,7 @@ const Vegas = {
    * @param {{useNet:boolean, doubleBirdie:boolean, tripleEagle:boolean, pointValue:number}} opts
    * @returns {{perHole:object[], ptsA:number, ptsB:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean, rotation:boolean}}
    */
-  compute(teams, opts){
+  compute(teams, opts, computeCtx = null){
     // Check if we're in rotation mode (3 players with ghost)
     const realPlayers = getPlayers();
     const useRotation = realPlayers === 3;
@@ -336,15 +386,15 @@ const Vegas = {
           B: otherPlayers
         };
         
-        const pairA = this._teamPair(teamsThisHole.A,h,opts.useNet,opts.netHcpMode);
-        const pairB = this._teamPair(teamsThisHole.B,h,opts.useNet,opts.netHcpMode);
+        const pairA = this._teamPair(teamsThisHole.A,h,opts.useNet,opts.netHcpMode, computeCtx);
+        const pairB = this._teamPair(teamsThisHole.B,h,opts.useNet,opts.netHcpMode, computeCtx);
         if(!pairA || !pairB){
           perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0, ghostPartner: playerWithGhost});
           continue;
         }
 
-        const aBE = this._teamHasBirdieOrEagle(teamsThisHole.A,h,opts.useNet,opts.netHcpMode);
-        const bBE = this._teamHasBirdieOrEagle(teamsThisHole.B,h,opts.useNet,opts.netHcpMode);
+        const aBE = this._teamHasBirdieOrEagle(teamsThisHole.A,h,opts.useNet,opts.netHcpMode, computeCtx);
+        const bBE = this._teamHasBirdieOrEagle(teamsThisHole.B,h,opts.useNet,opts.netHcpMode, computeCtx);
 
         const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
         const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
@@ -354,7 +404,7 @@ const Vegas = {
 
         let winner='A', diff=vb-va;
         if(diff<0){ winner='B'; diff=-diff; }
-        const mult=this._multiplierForWinner(teamsThisHole[winner],h,opts.useNet,opts);
+        const mult=this._multiplierForWinner(teamsThisHole[winner],h,opts.useNet,opts, computeCtx);
         const holePtsA = winner==='A' ? diff*mult : -diff*mult;
 
         perHole.push({vaStr, vbStr, mult, holePtsA, ghostPartner: playerWithGhost});
@@ -382,7 +432,7 @@ const Vegas = {
         let s=0; 
         for(let h=0;h<getHoles();h++){ 
           for(let p=0; p<realPlayers; p++){
-            s+=getGross(p,h)||0; 
+            s+=getGross(p,h, computeCtx)||0; 
           }
         } 
         return s; 
@@ -407,8 +457,8 @@ const Vegas = {
     let ptsA=0;
 
     for(let h=0;h<getHoles();h++){
-      const pairA = this._teamPair(teams.A,h,opts.useNet,opts.netHcpMode);
-      const pairB = this._teamPair(teams.B,h,opts.useNet,opts.netHcpMode);
+      const pairA = this._teamPair(teams.A,h,opts.useNet,opts.netHcpMode, computeCtx);
+      const pairB = this._teamPair(teams.B,h,opts.useNet,opts.netHcpMode, computeCtx);
       if(!pairA || !pairB){
         perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0});
         continue;
@@ -424,7 +474,7 @@ const Vegas = {
 
       // Check if LOSER made birdie/eagle
       const loserTeam = teams[loser];
-      const loserBE = this._teamHasBirdieOrEagle(loserTeam, h, opts.useNet, opts.netHcpMode);
+      const loserBE = this._teamHasBirdieOrEagle(loserTeam, h, opts.useNet, opts.netHcpMode, computeCtx);
 
       // If loser made birdie+, flip WINNER's digits
       if(loserBE.birdie || loserBE.eagle) {
@@ -439,7 +489,7 @@ const Vegas = {
 
       // Calculate points with correct winner
       const diff = Math.abs(va - vb);
-      const mult = this._multiplierForWinner(teams[winner], h, opts.useNet, opts);
+      const mult = this._multiplierForWinner(teams[winner], h, opts.useNet, opts, computeCtx);
       const holePtsA = winner==='A' ? diff*mult : -diff*mult;
 
       // Store display strings
@@ -456,7 +506,7 @@ const Vegas = {
         team.forEach(p=>{ 
           // Only count real players, not ghosts
           if(p < getPlayers()) {
-            s+=getGross(p,h)||0; 
+            s+=getGross(p,h, computeCtx)||0; 
           }
         }); 
       } 
@@ -626,7 +676,7 @@ const Vegas = {
     renderVegasLiveResults(data);
   },
   // Internal helpers
-  _teamPair(players, holeIdx, useNet, netHcpMode = 'playOffLow') {
+  _teamPair(players, holeIdx, useNet, netHcpMode = 'playOffLow', computeCtx = null) {
     const vals = players.map(p => {
       // Check if this is a ghost (position >= getPlayers())
       if(p >= getPlayers()) {
@@ -641,14 +691,14 @@ const Vegas = {
         }
         return null;
       }
-      return useNet ? getNetNDB(p, holeIdx, netHcpMode) : getGross(p, holeIdx);
+      return useNet ? getNetNDB(p, holeIdx, netHcpMode, computeCtx) : getGross(p, holeIdx, computeCtx);
     }).filter(v => Number.isFinite(v) && v > 0);
     if (vals.length < 2) return null;
     vals.sort((a,b)=>a-b);
     return [vals[0], vals[1]];
   },
   _pairToString(pair){ return `${pair[0]}${pair[1]}`; },
-  _teamHasBirdieOrEagle(players,h,useNet,netHcpMode = 'playOffLow'){
+  _teamHasBirdieOrEagle(players,h,useNet,netHcpMode = 'playOffLow', computeCtx = null){
     const best=Math.min(...players.map(p=>{
       // Check if this is a ghost
       if(p >= getPlayers()) {
@@ -662,20 +712,51 @@ const Vegas = {
         }
         return Infinity;
       }
-      return (useNet ? getNetNDB(p, h, netHcpMode) : getGross(p, h)) || Infinity;
+      return (useNet ? getNetNDB(p, h, netHcpMode, computeCtx) : getGross(p, h, computeCtx)) || Infinity;
     }));
     if(!Number.isFinite(best)) return {birdie:false,eagle:false};
-    const par = getPar(h);
+    const par = computeCtx?.pars?.[h] || getPar(h);
     const toPar=best-par;
     return {birdie:toPar<=-1, eagle:toPar<=-2};
   },
-  _multiplierForWinner(winnerPlayers,h,useNet,opts){
-    const {birdie,eagle}=this._teamHasBirdieOrEagle(winnerPlayers,h,useNet,opts.netHcpMode); let m=1;
+  _multiplierForWinner(winnerPlayers,h,useNet,opts, computeCtx = null){
+    const {birdie,eagle}=this._teamHasBirdieOrEagle(winnerPlayers,h,useNet,opts.netHcpMode, computeCtx); let m=1;
     if(opts.tripleEagle && eagle) m=Math.max(m,3);
     if(opts.doubleBirdie && birdie) m=Math.max(m,2);
     return m;
   }
 };
+
+function vegas_refreshTeamNames(){
+  if (!isVegasSectionOpen()) return;
+
+  const box=$(ids.vegasTeams);
+  if(!box) return;
+
+  const names = getVegasPlayerNames();
+  const maxPositions = Math.min(getPlayers(), 4);
+
+  for(let i=0; i<maxPositions; i++){
+    const row = box.querySelector(`input[name="vegasTeam_${i}"]`)?.closest('.vegas-team-row');
+    const label = row?.querySelector('.vegas-team-name');
+    if(label) {
+      const next = names[i] || `Player ${i+1}`;
+      if (label.textContent !== next) label.textContent = next;
+    }
+  }
+
+  const teams = vegas_getTeamAssignments();
+  const opts = vegas_getOptions();
+  const data = Vegas.compute(teams, opts, createVegasComputeContext(opts));
+  renderTeamColumnLabels(data);
+  vegas_syncColumnLabelsHard();
+}
+
+let vegasControlRecalcTimer = null;
+function scheduleVegasControlRecalc() {
+  clearTimeout(vegasControlRecalcTimer);
+  vegasControlRecalcTimer = setTimeout(() => vegas_recalc(), 120);
+}
 
 function vegas_renderTeamControls(){
   const box=$(ids.vegasTeams); if(!box) return;
@@ -720,10 +801,10 @@ function vegas_renderTeamControls(){
     const label=document.createElement("div"); label.className="vegas-team-name"; label.textContent=names[i];
     const choices=document.createElement("div"); choices.className="vegas-team-choice-group";
     const aWrap=document.createElement("label"); aWrap.className="vegas-choice-btn vegas-choice-radio";
-    const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+    const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{scheduleVegasControlRecalc();saveDebounced();});
     aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
     const bWrap=document.createElement("label"); bWrap.className="vegas-choice-btn vegas-choice-radio";
-    const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+    const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{scheduleVegasControlRecalc();saveDebounced();});
     bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
     choices.append(aWrap,bWrap);
     row.append(label,choices); box.appendChild(row);
@@ -741,17 +822,17 @@ function vegas_renderTeamControls(){
       const ghostCheck = document.createElement("input"); 
       ghostCheck.type="checkbox"; 
       ghostCheck.id=`vegasGhost_${i}`;
-      ghostCheck.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+      ghostCheck.addEventListener("change",()=>{scheduleVegasControlRecalc();saveDebounced();});
       ghostCheckWrap.appendChild(ghostCheck);
       ghostCheckWrap.appendChild(document.createTextNode(`Ghost ${i+1} (par)`));
       
       label.appendChild(ghostCheckWrap);
       
       const aWrap=document.createElement("label"); aWrap.className="vegas-choice-btn vegas-choice-radio";
-      const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+      const a=document.createElement("input"); a.type="radio"; a.name=`vegasTeam_${i}`; a.value="A"; a.addEventListener("change",()=>{scheduleVegasControlRecalc();saveDebounced();});
       aWrap.appendChild(a); aWrap.appendChild(document.createTextNode("Team A"));
       const bWrap=document.createElement("label"); bWrap.className="vegas-choice-btn vegas-choice-radio";
-      const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{vegas_recalc();saveDebounced();});
+      const b=document.createElement("input"); b.type="radio"; b.name=`vegasTeam_${i}`; b.value="B"; b.addEventListener("change",()=>{scheduleVegasControlRecalc();saveDebounced();});
       bWrap.appendChild(b); bWrap.appendChild(document.createTextNode("Team B"));
       choices.append(aWrap,bWrap);
       row.append(label,choices); box.appendChild(row);
@@ -879,8 +960,9 @@ function vegas_syncColumnLabelsHard() {
 }
 
 function vegas_recalc(){
+  if (!isVegasSectionOpen()) return;
   const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();
-  const data = Vegas.compute(teams, opts);
+  const data = Vegas.compute(teams, opts, createVegasComputeContext(opts));
   Vegas.render(data);
   vegas_syncColumnLabelsHard();
   try{ window._vegasUpdateDollars?.(); }catch{}
@@ -909,6 +991,7 @@ function vegas_renderTable(){
     compute: Vegas.compute,
     render: Vegas.render,
     renderTeamControls: vegas_renderTeamControls,
+    refreshTeamNames: vegas_refreshTeamNames,
     getTeamAssignments: vegas_getTeamAssignments,
     setTeamAssignments: vegas_setTeamAssignments,
     getOptions: vegas_getOptions,

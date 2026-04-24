@@ -37,6 +37,20 @@
   'use strict';
 
   let skinsListenersBound = false;
+  let skinsInitialized = false;
+  let lastSkinsPlayerCount = 0;
+  let fixedRowsCache = null;
+
+  function getFixedPlayerRows() {
+    if (fixedRowsCache) return fixedRowsCache;
+    fixedRowsCache = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    queueMicrotask(() => { fixedRowsCache = null; });
+    return fixedRowsCache;
+  }
+
+  function isSkinsSectionOpen() {
+    return !!document.getElementById('skinsSection')?.classList.contains('open');
+  }
 
   // =============================================================================
   // HELPER FUNCTIONS
@@ -48,7 +62,7 @@
    */
   function getAdjustedCHs() {
     try {
-      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const playerRows = getFixedPlayerRows();
       const chs = [];
       playerRows.forEach(row => {
         const chInput = row.querySelector('.ch-input');
@@ -71,7 +85,7 @@
    */
   function getRawCHs() {
     try {
-      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const playerRows = getFixedPlayerRows();
       return Array.from(playerRows).map(row => {
         const chInput = row.querySelector('.ch-input');
         const v = typeof window.getActualHandicapValue === 'function'
@@ -91,7 +105,7 @@
    */
   function getPlayerCount() {
     try {
-      return document.querySelectorAll('#scorecardFixed .player-row').length;
+      return getFixedPlayerRows().length;
     } catch (error) {
       console.error('[Skins] Error getting player count:', error);
       return 0;
@@ -231,7 +245,7 @@
    */
   function getPlayerNames() {
     const names = [];
-    const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+    const playerRows = getFixedPlayerRows();
     playerRows.forEach((row, idx) => {
       const nameInput = row.querySelector('.name-edit');
       const name = nameInput?.value?.trim() || 
@@ -263,10 +277,32 @@
       let pot = 1;
       let carryoverFromHoles = []; // Track which holes contribute to current pot
 
+       const grossByPlayer = Array.from({ length: playerCount }, () => Array(HOLES).fill(0));
+       for (let p = 0; p < playerCount; p++) {
+         for (let h = 0; h < HOLES; h++) {
+           grossByPlayer[p][h] = getGross(p, h);
+         }
+       }
+
+       const pars = useNet ? getPars() : [];
+       const handicapByPlayer = useNet
+         ? (opts.netHcpMode === 'rawHandicap' ? getRawCHs() : getAdjustedCHs())
+         : [];
+
       for (let h = 0; h < HOLES; h++) {
         // Use gross or net scores based on mode
         const scores = Array.from({ length: playerCount }, (_, p) => 
-          useNet ? getNetForSkins(p, h, half, opts.netHcpMode || 'playOffLow') : getGross(p, h)
+          useNet
+            ? (() => {
+                const gross = grossByPlayer[p][h];
+                if (!gross) return 0;
+                const adj = handicapByPlayer[p] || 0;
+                const sr = strokesOnHoleHalfAware(adj, h, half);
+                const ndb = (pars[h] || 4) + 2 + sr;
+                const capped = Math.min(gross, ndb);
+                return capped - sr;
+              })()
+            : grossByPlayer[p][h]
         );
         const filled = scores.map((n, p) => ({ n, p })).filter(x => x.n > 0);
         if (filled.length < 2) {
@@ -395,6 +431,21 @@
     body.dataset.simple = '1';
   }
 
+  function ensureSkinsTableBuilt(force = false) {
+    const body = document.getElementById('skinsBody');
+    if (!body) return false;
+
+    const playerCount = getPlayerCount();
+    const existingRows = body.querySelectorAll('tr').length;
+    const needsRebuild = force || !skinsInitialized || playerCount !== lastSkinsPlayerCount || existingRows !== playerCount;
+
+    if (!needsRebuild) return false;
+
+    buildSkinsTable();
+    lastSkinsPlayerCount = playerCount;
+    return true;
+  }
+
   /**
    * Refresh player names in Skins table header
    */
@@ -410,6 +461,10 @@
    * Update Skins calculations and render
    */
   function updateSkins() {
+    if (!isSkinsSectionOpen()) return;
+
+    ensureSkinsTableBuilt();
+
     const activeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
     const mode = activeBtn?.dataset.value || 'gross';
     const useNet = mode !== 'gross';
@@ -427,7 +482,7 @@
   function refreshSkinsForPlayerChange() {
     const skinsSection = document.getElementById('skinsSection');
     if (skinsSection && skinsSection.classList.contains('open')) {
-      buildSkinsTable();
+      ensureSkinsTableBuilt(true);
       refreshSkinsHeaderNames();
       updateSkins();
     }
@@ -437,7 +492,7 @@
    * Initialize Skins game
    */
   function initSkins() {
-    buildSkinsTable();
+    ensureSkinsTableBuilt();
     refreshSkinsHeaderNames();
     
     // Sync half-pop disabled state with current mode
@@ -450,6 +505,7 @@
     syncHalfPopState();
     
     updateSkins();
+    skinsInitialized = true;
 
     if (!skinsListenersBound) {
       skinsListenersBound = true;
