@@ -77,6 +77,10 @@
   --table-input-width: 44px;
   --table-ch-width: 60px;
   --scorecard-fixed-width: 175px;
+  --score-header-height-scale: 1.1;
+  --score-sticky-head-top: -2px;
+  --game-header-height-scale: 1.1;
+  --game-sticky-head-top: -2px;
   --score-sticky-par-top: 39px;
   --score-sticky-hcp-top: 100px;
   --safe-top-dynamic: 0px;
@@ -1056,7 +1060,7 @@ body.mode-score .entry-switcher {
 }
 
 body.mode-score #main-scorecard {
-  margin-top: var(--space-sm);
+  margin-top: 0;
 }
 
 .scorecard-fixed {
@@ -1149,7 +1153,7 @@ table {
 
 thead th {
   position: sticky;
-  top: 0;
+  top: var(--score-sticky-head-top, 0px);
   background: var(--panel-alt);
   z-index: var(--z-sticky-header);
 }
@@ -1157,16 +1161,22 @@ thead th {
 #scorecard thead,
 #scorecardFixed thead {
   position: sticky;
-  top: 0;
+  top: var(--score-sticky-head-top, 0px);
   z-index: 6;
 }
 
 #scorecard th,
 #scorecardFixed th {
   position: sticky;
-  top: 0;
+  top: var(--score-sticky-head-top, 0px);
   background: var(--panel-alt);
   z-index: 5;
+}
+
+#scorecard thead th,
+#scorecardFixed thead th {
+  padding-top: calc(var(--space-xs) * var(--score-header-height-scale, 1));
+  padding-bottom: calc(var(--space-xs) * var(--score-header-height-scale, 1));
 }
 
 #scorecard #parRow td,
@@ -1635,7 +1645,7 @@ tfoot td {
 .game-section .live-results-panel:not([hidden]) {
   --live-panel-overlap: 20px;
   position: sticky;
-  top: 0;
+  top: var(--game-sticky-head-top, 0px);
   z-index: 30;
   /* Solid bg so game rows do not show through behind the card while sticky. */
   background: var(--panel-alt);
@@ -1659,7 +1669,7 @@ tfoot td {
 
 .live-results-header-clone.is-standalone {
   position: sticky;
-  top: 0;
+  top: var(--game-sticky-head-top, 0px);
   z-index: 30;
   margin: -6px 0 6px;
   padding-top: 6px;
@@ -1680,6 +1690,8 @@ tfoot td {
   border-bottom: 2px solid var(--line);
   color: var(--ink);
   font-weight: 700;
+  padding-top: calc(4px * var(--game-header-height-scale, 1));
+  padding-bottom: calc(4px * var(--game-header-height-scale, 1));
   opacity: 1;
   visibility: visible;
 }
@@ -2295,11 +2307,25 @@ tfoot td {
 .skins-table thead th,
 .junk-table thead th {
   position: sticky;
-  top: 0;
+  top: var(--game-sticky-head-top, 0px);
   background: var(--panel-alt);
+  padding-top: calc(4px * var(--game-header-height-scale, 1));
+  padding-bottom: calc(4px * var(--game-header-height-scale, 1));
   z-index: var(--z-sticky-header);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+}
+
+#vegasTable thead th,
+#bankerTable thead th,
+#skinsTable thead th,
+#junkTable thead th,
+#wolfTable thead th,
+#hiloTable thead th,
+#hiloHoleTable thead th {
+  top: var(--game-sticky-head-top, 0px);
+  padding-top: calc(4px * var(--game-header-height-scale, 1));
+  padding-bottom: calc(4px * var(--game-header-height-scale, 1));
 }
 
 .vegas-table thead th:first-child,
