@@ -90,6 +90,35 @@
     return Math.max(MIN_SCORE, Math.min(MAX_SCORE, Math.round(n)));
   }
 
+  function getGrossResultLabel(score, par) {
+    if (!Number.isFinite(score)) return 'Gross -';
+    if (!Number.isFinite(par) || par <= 0) return `Gross ${score}`;
+
+    const diff = score - par;
+    let result;
+    if (diff <= -3) result = 'Double Eagle';
+    else if (diff === -2) result = 'Eagle';
+    else if (diff === -1) result = 'Birdie';
+    else if (diff === 0) result = 'Par';
+    else if (diff === 1) result = 'Bogey';
+    else if (diff === 2) result = 'Double Bogey';
+    else if (diff === 3) result = 'Triple Bogey';
+    else if (diff === 4) result = 'Quadruple Bogey';
+    else result = 'Beyond Quad';
+
+    return `Gross ${score} - ${result}`;
+  }
+
+  function updateGrossLabel(playerIdx, rawValue) {
+    if (!sheetEl || !Number.isFinite(currentHole)) return;
+    const labelEl = sheetEl.querySelector(`.score-sheet-gross-label[data-player="${playerIdx}"]`);
+    if (!labelEl) return;
+
+    const par = getPar(currentHole);
+    const gross = toScoreOrNull(rawValue);
+    labelEl.textContent = getGrossResultLabel(gross, par);
+  }
+
   function queueRecalcAndSave() {
     if (syncFrame) cancelAnimationFrame(syncFrame);
     syncFrame = requestAnimationFrame(() => {
@@ -262,6 +291,7 @@
     if (!grid) return;
     grid.innerHTML = '';
 
+    const par = getPar(holeOneBased);
     const playerCount = getPlayerCount();
     for (let p = 0; p < playerCount; p++) {
       const input = getScoreInput(p, holeOneBased);
@@ -278,6 +308,9 @@
         strokeHtml = `<span class="score-sheet-card-stroke ${cls}" title="${stroke.title}">${stroke.text}</span>`;
       }
 
+      const gross = toScoreOrNull(val);
+      const grossLabel = getGrossResultLabel(gross, par);
+
       card.innerHTML = `
         <div class="score-sheet-card-head">
           <span class="score-sheet-card-name">${getPlayerName(p)}</span>
@@ -285,7 +318,10 @@
         </div>
         <div class="score-sheet-card-controls">
           <button type="button" class="score-sheet-stepbtn score-sheet-stepbtn-sm" data-player="${p}" data-step="-1">-</button>
-          <input class="score-sheet-player-input" data-player="${p}" type="number" inputmode="numeric" min="${MIN_SCORE}" max="${MAX_SCORE}" value="${val}" />
+          <div class="score-sheet-score-col">
+            <div class="score-sheet-gross-label" data-player="${p}">${grossLabel}</div>
+            <input class="score-sheet-player-input" data-player="${p}" type="number" inputmode="numeric" min="${MIN_SCORE}" max="${MAX_SCORE}" value="${val}" />
+          </div>
           <button type="button" class="score-sheet-stepbtn score-sheet-stepbtn-sm" data-player="${p}" data-step="1">+</button>
         </div>
       `;
@@ -359,6 +395,7 @@
 
     focusPlayerIdx = player;
     updatePlayerDraft(player, input.value, true);
+    updateGrossLabel(player, input.value);
   }
 
   function onSheetKeydown(e) {

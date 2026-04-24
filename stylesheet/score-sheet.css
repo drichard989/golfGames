@@ -198,7 +198,24 @@ body.score-sheet-active #scorecard .score-input {
   display: grid;
   grid-template-columns: 44px 1fr 44px;
   gap: 8px;
-  align-items: center;
+  align-items: end;
+}
+
+.score-sheet-score-col {
+  display: grid;
+  gap: 4px;
+}
+
+.score-sheet-gross-label {
+  min-height: 16px;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .score-sheet-stepbtn {
