@@ -525,7 +525,7 @@
     { id: "hoover", label: "Hoover", pts: 10 },
     { id: "skin",   label: "Skin",   pts: 1 },
     { id: "pulley", label: "Pully",  pts: 1 },
-    { id: "gcbc",   label: "GCBC",   pts: 3 },
+    { id: "gcbc",   label: "GCBBC",   pts: 3 },
     { id: "dod",    label: "DOD",    pts: 1 },
     { id: "hogan",  label: "Hogan",  pts: 1 },
     { id: "woodie", label: "Woodie", pts: 1 },
