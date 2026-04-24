@@ -2612,6 +2612,10 @@ body.mode-games .gamesbar {
   border-color: var(--accent);
 }
 
+.banker-hole-toggle.is-active {
+  color: #000;
+}
+
 .banker-hole-toggle {
   padding: 8px 12px;
   min-width: 44px;
@@ -2633,7 +2637,9 @@ body.mode-games .gamesbar {
 }
 
 .banker-player-toggle.is-active {
-  color: var(--warn, #f0ad4e) !important;
+  background: var(--warn, #f0ad4e) !important;
+  border-color: var(--warn, #f0ad4e) !important;
+  color: #000 !important;
 }
 
 .banker-player-bet-row {

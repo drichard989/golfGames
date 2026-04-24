@@ -161,9 +161,9 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   font-size: 11px;
 }
 .bss-bdbl-val.is-on {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--warn, #f0ad4e);
+  border-color: var(--warn, #f0ad4e);
+  color: #000;
 }
 .bss-result-block {
   font-size: 11px;
@@ -224,7 +224,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
      and instead tint the name + amount cells (green = receiving stroke,
      red = giving stroke via plus handicap). */
   body.banker-sheet-active .bss-bet-list {
-    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-columns: minmax(0, 1fr) minmax(44px, auto) 44px;
   }
   body.banker-sheet-active .bss-col-bets {
     display: grid;
@@ -260,6 +260,14 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   }
   body.banker-sheet-active .bss-col-bets .bss-bet-list {
     grid-area: list;
+  }
+  body.banker-sheet-active .bss-bet-line > .bss-bet-amt {
+    min-width: 44px;
+  }
+  body.banker-sheet-active .bss-bet-line > .bss-bet-mult-slot {
+    min-width: 44px;
+    width: 44px;
+    text-align: center;
   }
   body.banker-sheet-active .bss-col-bdbl > .bss-col-label {
     margin: 0;
@@ -651,28 +659,27 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   font-weight: 600;
   cursor: pointer;
   text-align: left;
-  color: var(--warn, #f0ad4e);
 }
 .banker-sheet-dblbtn[data-active="true"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--warn, #f0ad4e);
+  color: #000;
 }
 :root[data-theme="light"] .banker-sheet-dblbtn[data-active="true"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--warn, #f0ad4e);
+  color: #000;
 }
 .banker-sheet-dblbtn-mult {
   font-size: var(--text-xl);
   font-weight: 800;
   min-width: 36px;
   text-align: center;
-  color: var(--warn, #f0ad4e);
+  color: inherit;
 }
 .banker-sheet-dblbtn-label {
   flex: 1;
-  color: var(--warn, #f0ad4e);
+  color: inherit;
 }
 
 .banker-sheet-bet-cards {
@@ -802,14 +809,14 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   margin-left: 0;
 }
 .banker-sheet-mult-toggle[data-active="true"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--warn, #f0ad4e);
+  border-color: var(--warn, #f0ad4e);
+  color: #000;
 }
 :root[data-theme="light"] .banker-sheet-mult-toggle[data-active="true"] {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+  background: var(--warn, #f0ad4e);
+  border-color: var(--warn, #f0ad4e);
+  color: #000;
 }
 
 .banker-sheet-bet-cap {
