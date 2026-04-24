@@ -426,15 +426,57 @@
       return;
     }
 
-    const headerCells = Array.from({ length: playerCount }, (_, p) => `<td>${names[p] || `P${p+1}`}</td>`).join('');
-    const totalCells = Array.from({ length: playerCount }, (_, p) => `<td>${Number.isFinite(totals[p]) ? totals[p] : '—'}</td>`).join('');
+    // Build sorted standings with net vs field average
+    const validTotals = totals.slice(0, playerCount).map((t, i) => ({
+      name: names[i] || `P${i + 1}`,
+      dots: Number.isFinite(t) ? t : 0
+    }));
+
+    const avg = validTotals.reduce((s, p) => s + p.dots, 0) / playerCount;
+    const sorted = validTotals
+      .map((p, i) => ({ ...p, net: p.dots - avg, rank: 0 }))
+      .sort((a, b) => b.dots - a.dots);
+
+    // Assign ranks (ties get same rank)
+    let rank = 1;
+    sorted.forEach((p, i) => {
+      if (i > 0 && p.dots === sorted[i - 1].dots) {
+        p.rank = sorted[i - 1].rank;
+      } else {
+        p.rank = rank;
+      }
+      rank++;
+    });
+
+    const fmtNet = (v) => {
+      if (Math.abs(v) < 0.001) return 'Even';
+      return v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1);
+    };
+
+    const rows = sorted.map(p => {
+      const netClass = p.net > 0.001 ? 'banker-total-positive' : p.net < -0.001 ? 'banker-total-negative' : '';
+      const action = p.net > 0.001 ? 'Collects' : p.net < -0.001 ? 'Owes' : 'Even';
+      return `<tr class="live-results-data-row">
+        <td class="live-results-label">${p.rank}</td>
+        <td>${p.name}</td>
+        <td>${p.dots}</td>
+        <td class="${netClass}">${fmtNet(p.net)}</td>
+        <td class="${netClass}">${action}</td>
+      </tr>`;
+    }).join('');
 
     const html = `
-      <table class="live-results-table" aria-label="Live Junk results">
+      <table class="live-results-table" aria-label="Current Junk Standings">
         <tbody>
-          <tr class="live-results-title-row"><th colspan="${playerCount + 1}">Totals</th></tr>
-          <tr class="live-results-data-row"><td class="live-results-label">Player</td>${headerCells}</tr>
-          <tr class="live-results-data-row"><td class="live-results-label">Net</td>${totalCells}</tr>
+          <tr class="live-results-title-row"><th colspan="5">Junk Standings</th></tr>
+          <tr class="live-results-data-row">
+            <td class="live-results-label">#</td>
+            <td class="live-results-label">Player</td>
+            <td class="live-results-label">Dots</td>
+            <td class="live-results-label">vs Field</td>
+            <td class="live-results-label">Status</td>
+          </tr>
+          ${rows}
         </tbody>
       </table>
     `;
