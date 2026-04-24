@@ -926,6 +926,14 @@
   }
 
   function buildSummaryRows(){
+    // Bail when compact sheet mode is not active. Also strip any stale
+    // summary cells that might have been queued by a prior rAF.
+    if (!_active || !document.body.classList.contains('banker-sheet-active')) {
+      document.querySelectorAll('#bankerBody .banker-sheet-summary-cell').forEach(td => td.remove());
+      document.querySelectorAll('#bankerBody tr.banker-sheet-row-empty').forEach(tr => tr.classList.remove('banker-sheet-row-empty'));
+      return;
+    }
+
     // After activating, render a compact desktop-like readout inside the
     // row (banker, max bet, each opponent's bet + 2× state, banker 2×,
     // result) so the hole state is visible at a glance. Tapping the row
@@ -1200,6 +1208,10 @@
   function deactivate(){
     if (!_active) return;
     _active = false;
+    if (scheduleSummaryUpdate._t) {
+      cancelAnimationFrame(scheduleSummaryUpdate._t);
+      scheduleSummaryUpdate._t = null;
+    }
     document.body.classList.remove('banker-sheet-active');
     // Close any open sheet
     try { closeSheet(); } catch(_) {}
@@ -1226,6 +1238,12 @@
     // Safari < 14 fallback
     DESKTOP_MQ.addListener(applyViewportMode);
   }
+
+  // Some browsers/devtools resize paths can skip firing MediaQueryList
+  // "change" consistently when crossing breakpoints. Re-run mode sync on
+  // resize/orientation to guarantee cleanup when returning to desktop width.
+  window.addEventListener('resize', applyViewportMode, { passive: true });
+  window.addEventListener('orientationchange', applyViewportMode, { passive: true });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', applyViewportMode, { once: true });

@@ -41,6 +41,7 @@
   let sheetEl = null;
   let backdropEl = null;
   let currentHole = null;
+  let _applyMobileMode = null;
 
   function getPlayerCount(){
     try {
@@ -260,8 +261,13 @@
         clearJunkSummaryRows();
       }
     };
+    _applyMobileMode = applyMobile;
     try { MQ.addEventListener('change', applyMobile); }
     catch(_) { MQ.addListener(applyMobile); }
+    // Some browsers/devtools resize flows can skip MQ change callbacks;
+    // force a mode sync on resize/orientation so desktop cleanup always runs.
+    window.addEventListener('resize', applyMobile, { passive: true });
+    window.addEventListener('orientationchange', applyMobile, { passive: true });
     applyMobile();
 
     // Rebuild summaries when junk data changes or tbody is regenerated.
@@ -290,6 +296,11 @@
   }
 
   function buildJunkSummaryRows(){
+    if (!document.body.classList.contains('junk-mobile-summary-active')) {
+      clearJunkSummaryRows();
+      return;
+    }
+
     const tbody = document.getElementById('junkBody');
     if (!tbody) return;
     const names = getPlayerNames();
@@ -335,6 +346,10 @@
   }
 
   function clearJunkSummaryRows(){
+    if (scheduleJunkSummaryUpdate._t) {
+      cancelAnimationFrame(scheduleJunkSummaryUpdate._t);
+      scheduleJunkSummaryUpdate._t = null;
+    }
     document.querySelectorAll('#junkBody .junk-mobile-summary-cell').forEach(c => c.remove());
   }
 
@@ -356,9 +371,12 @@
     close: closeSheet,
     disable() {
       document.body.classList.remove('junk-sheet-active');
+      document.body.classList.remove('junk-mobile-summary-active');
+      clearJunkSummaryRows();
     },
     enable() {
       document.body.classList.add('junk-sheet-active');
+      if (typeof _applyMobileMode === 'function') _applyMobileMode();
     }
   };
 })();

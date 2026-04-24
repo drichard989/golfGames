@@ -455,26 +455,23 @@
 
     const rows = sorted.map(p => {
       const netClass = p.net > 0.001 ? 'banker-total-positive' : p.net < -0.001 ? 'banker-total-negative' : '';
-      const action = p.net > 0.001 ? 'Collects' : p.net < -0.001 ? 'Owes' : 'Even';
       return `<tr class="live-results-data-row">
         <td class="live-results-label">${p.rank}</td>
         <td>${p.name}</td>
         <td>${p.dots}</td>
         <td class="${netClass}">${fmtNet(p.net)}</td>
-        <td class="${netClass}">${action}</td>
       </tr>`;
     }).join('');
 
     const html = `
       <table class="live-results-table" aria-label="Current Junk Standings">
         <tbody>
-          <tr class="live-results-title-row"><th colspan="5">Junk Standings</th></tr>
+          <tr class="live-results-title-row"><th colspan="4">Junk Standings</th></tr>
           <tr class="live-results-data-row">
             <td class="live-results-label">#</td>
             <td class="live-results-label">Player</td>
             <td class="live-results-label">Dots</td>
             <td class="live-results-label">vs Field</td>
-            <td class="live-results-label">Status</td>
           </tr>
           ${rows}
         </tbody>
