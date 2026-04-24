@@ -605,7 +605,6 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 /* Stroke tint for the whole bet card + the banker pill. Applied
    unconditionally (all viewports) inside the bet sheet modal. */
 .banker-sheet-bet-card-stroke-down {
-  border-color: var(--accent);
   background: rgba(0, 188, 140, 0.08);
 }
 .banker-sheet-bet-card-stroke-down .banker-sheet-bet-name,
@@ -614,7 +613,6 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   border-color: var(--accent);
 }
 .banker-sheet-bet-card-stroke-up {
-  border-color: var(--danger, #dc3545);
   background: rgba(220, 53, 69, 0.08);
 }
 .banker-sheet-bet-card-stroke-up .banker-sheet-bet-name,
