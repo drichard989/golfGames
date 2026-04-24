@@ -31,7 +31,7 @@
     { id: 'skin',    label: 'Skin',    pts: 1,   emoji: '👑', auto: true },
     { id: 'pulley',  label: 'Pully',   pts: 1,   emoji: '🪢' },
     { id: 'gcbc',    label: 'GCBBC',    pts: 3,   emoji: '🍆' },
-    { id: 'dod',     label: 'DOD',     pts: 1,   emoji: '💀', imageUrl: 'images/dod.png' },
+    { id: 'dod',     label: 'DOD',     pts: 1,   emoji: '💀', imageUrl: 'images/DOD.png' },
     { id: 'hogan',   label: 'Hogan',   pts: 1,   emoji: '🎩' },
     { id: 'woodie',  label: 'Woodie',  pts: 1,   emoji: '🌲' },
     { id: 'chippy',  label: 'Chippy',  pts: 1,   emoji: '🐿️' },
