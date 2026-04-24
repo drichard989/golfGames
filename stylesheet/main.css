@@ -2354,7 +2354,7 @@ tfoot td {
 .banker-select-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   align-items: stretch;
 }
 
@@ -2386,12 +2386,13 @@ tfoot td {
 }
 
 .banker-selection-guidance .banker-sheet-guidance {
-  padding: 6px 10px;
-  margin-top: 4px;
+  padding: 4px 8px;
+  margin-top: 2px;
 }
 
 .banker-selection-guidance .banker-sheet-guidance-label {
-  margin-bottom: 2px;
+  margin-bottom: 1px;
+  font-size: 10px;
 }
 
 .banker-sheet-guidance-label {
@@ -2413,6 +2414,11 @@ tfoot td {
   color: var(--warn, #f0ad4e);
   font-weight: 600;
   text-wrap: pretty;
+}
+
+.banker-selection-guidance .banker-sheet-guidance-text {
+  font-size: 12px;
+  line-height: 1.25;
 }
 
 .banker-sheet-guidance-text.is-empty {
