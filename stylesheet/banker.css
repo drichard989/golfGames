@@ -521,7 +521,7 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 }
 .banker-sheet-stepbtn:hover { border-color: var(--accent); }
 .banker-sheet-stepbtn:active { transform: scale(0.95); }
-.banker-sheet-stepbtn-sm { width: 44px; height: 44px; font-size: 22px; border-radius: 8px; }
+.banker-sheet-stepbtn-sm { width: 51px; height: 51px; font-size: 24px; border-radius: 8px; }
 
 .banker-sheet-amount {
   display: inline-flex;
@@ -552,7 +552,7 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   }
 }
 .banker-sheet-amount-sm {
-  height: 44px;
+  height: 51px;
   min-height: unset;
   padding: 0 8px;
   max-width: 112px;
@@ -776,7 +776,7 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   display: block;
   width: 100%;
   min-width: 0;
-  height: 44px;
+  height: 51px;
   margin-top: 8px;
 }
 .banker-sheet-bet-chip {
@@ -891,17 +891,17 @@ body.banker-sheet-open { overflow: hidden; }
   .banker-sheet-bet-head { margin-bottom: 6px; }
   .banker-sheet-bet-controls {
     display: grid;
-    grid-template-columns: 44px 1fr 44px;
+    grid-template-columns: 51px 1fr 51px;
     gap: 4px;
     align-items: center;
   }
   .banker-sheet-stepbtn-sm {
-    width: 100%;
-    height: 44px;
-    font-size: 20px;
+    width: 51px;
+    height: 51px;
+    font-size: 24px;
   }
   .banker-sheet-amount-sm {
-    height: 44px;
+    height: 51px;
     min-height: unset;
     padding: 0 6px;
     max-width: none;
@@ -911,7 +911,7 @@ body.banker-sheet-open { overflow: hidden; }
     font-size: var(--text-sm);
   }
   .banker-sheet-bet-card > .banker-sheet-mult-toggle {
-    height: 44px;
+    height: 51px;
     font-size: var(--text-sm);
   }
   .banker-sheet-bet-quickchips { gap: 6px; margin-top: 6px; }
