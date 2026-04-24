@@ -450,6 +450,16 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   font-style: italic;
   padding: 10px 0;
 }
+.banker-sheet-hint-warning {
+  color: var(--warn, #f0ad4e);
+  font-style: normal;
+  font-weight: 700;
+  background: rgba(240, 173, 78, 0.12);
+  border: 1px solid rgba(240, 173, 78, 0.45);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+}
 
 .banker-sheet-stepper {
   display: flex;

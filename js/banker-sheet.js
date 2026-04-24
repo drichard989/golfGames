@@ -53,14 +53,17 @@
   function loadPrefs(){
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { autoRotate: false, lastMaxBet: 10 };
+      if (!raw) return { autoRotate: false, lastMaxBet: 10, bankerManualOverrideByHole: {} };
       const p = JSON.parse(raw);
       return {
         autoRotate: !!p.autoRotate,
-        lastMaxBet: Number.isFinite(Number(p.lastMaxBet)) ? Number(p.lastMaxBet) : 10
+        lastMaxBet: Number.isFinite(Number(p.lastMaxBet)) ? Number(p.lastMaxBet) : 10,
+        bankerManualOverrideByHole: (p && typeof p.bankerManualOverrideByHole === 'object' && p.bankerManualOverrideByHole)
+          ? p.bankerManualOverrideByHole
+          : {}
       };
     } catch(_) {
-      return { autoRotate: false, lastMaxBet: 10 };
+      return { autoRotate: false, lastMaxBet: 10, bankerManualOverrideByHole: {} };
     }
   }
   function savePrefs(){
@@ -141,6 +144,11 @@
     const el = document.querySelector(`#parRow input[data-hole="${h}"]`);
     const v = el ? parseInt(el.value, 10) : NaN;
     return Number.isFinite(v) ? v : null;
+  }
+  function getHoleGross(p, h){
+    const el = document.querySelector(`.score-input[data-player="${p}"][data-hole="${h}"]`);
+    const v = el ? Number(el.value) : NaN;
+    return Number.isFinite(v) ? v : 0;
   }
   function getResultText(h){
     const cell = document.getElementById(DOM_IDS.resultCell(h));
@@ -230,6 +238,72 @@
     };
   }
 
+  function markBankerManualOverride(hole){
+    if (!Number.isFinite(Number(hole))) return;
+    const key = String(Number(hole));
+    if (!prefs.bankerManualOverrideByHole || typeof prefs.bankerManualOverrideByHole !== 'object') {
+      prefs.bankerManualOverrideByHole = {};
+    }
+    prefs.bankerManualOverrideByHole[key] = true;
+    savePrefs();
+  }
+
+  function hasBankerManualOverride(hole){
+    const key = String(Number(hole));
+    return !!(prefs.bankerManualOverrideByHole && prefs.bankerManualOverrideByHole[key]);
+  }
+
+  function getNetScoreForAuto(p, h){
+    const gross = getHoleGross(p, h);
+    if (!gross) return null;
+
+    const activeMode = getHcpMode();
+    const useMode = activeMode === 'playOffLow' ? 'playOffLow' : 'rawHandicap';
+    const rawByPlayer = useMode === 'playOffLow'
+      ? getAdjustedHandicapByPlayer()
+      : getCourseHandicapByPlayer();
+
+    const rawCH = Number(rawByPlayer[p]) || 0;
+    const strokes = strokesOnHoleRawCH(rawCH, h);
+    return gross - strokes;
+  }
+
+  function getPrevHoleLowNetLeaders(nextHole){
+    const hole = Number(nextHole);
+    if (!Number.isFinite(hole) || hole <= 1) return [];
+
+    const prevHole = hole - 1;
+    const playerCount = getPlayerCount();
+    let lowNet = null;
+    const leaders = [];
+
+    for (let p = 0; p < playerCount; p++) {
+      const net = getNetScoreForAuto(p, prevHole);
+      if (net == null) continue;
+      if (lowNet == null || net < lowNet) {
+        lowNet = net;
+        leaders.length = 0;
+        leaders.push(p);
+      } else if (net === lowNet) {
+        leaders.push(p);
+      }
+    }
+
+    return leaders;
+  }
+
+  function maybePreselectBankerFromPrevLowNet(hole){
+    const h = Number(hole);
+    if (!prefs.autoRotate || !Number.isFinite(h) || h <= 1) return;
+    if (hasBankerManualOverride(h)) return;
+    if (getBankerIdx(h) >= 0) return;
+
+    const leaders = getPrevHoleLowNetLeaders(h);
+    if (leaders.length === 1) {
+      setBankerIdx(h, leaders[0]);
+    }
+  }
+
   function pulseAmountShell(inputEl){
     if (!inputEl) return;
     const amountShell = inputEl.closest('.banker-sheet-amount');
@@ -309,6 +383,10 @@
     ensureSheet();
     currentHole = hole;
 
+    // One-time banker preselection for this hole: previous-hole low net winner.
+    // Skips if this hole was ever manually overridden.
+    maybePreselectBankerFromPrevLowNet(hole);
+
     const par = getHolePar(hole);
     const playerCount = getPlayerCount();
     const names = getPlayerNames();
@@ -346,6 +424,18 @@
     const bankerBlock = document.createElement('section');
     bankerBlock.className = 'banker-sheet-block';
     bankerBlock.innerHTML = `<div class="banker-sheet-block-title">Banker</div>`;
+
+    const tieLeaders = (
+      prefs.autoRotate && bankerIdx < 0 && hole > 1 && !hasBankerManualOverride(hole)
+    ) ? getPrevHoleLowNetLeaders(hole) : [];
+    if (tieLeaders.length > 1) {
+      const tieNames = tieLeaders.map((idx) => names[idx] || `Player ${idx + 1}`);
+      const warning = document.createElement('div');
+      warning.className = 'banker-sheet-hint banker-sheet-hint-warning';
+      warning.textContent = `Tie on Hole ${hole - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
+      bankerBlock.appendChild(warning);
+    }
+
     const bankerPills = document.createElement('div');
     bankerPills.className = 'banker-sheet-pills';
     for (let p = 0; p < playerCount; p++){
@@ -366,6 +456,7 @@
       }
       pill.addEventListener('click', () => {
         setBankerIdx(hole, p);
+        markBankerManualOverride(hole);
         renderSheet(hole); // rebuild to show bets
       });
       bankerPills.appendChild(pill);
@@ -385,6 +476,7 @@
           sameBtn.textContent = `Same as last · ${names[prevBanker]}`;
           sameBtn.addEventListener('click', () => {
             setBankerIdx(hole, prevBanker);
+            markBankerManualOverride(hole);
             renderSheet(hole);
           });
           suggestions.appendChild(sameBtn);
@@ -720,17 +812,6 @@
 
   function openSheet(hole){
     renderSheet(hole);
-
-    // Auto-rotate: if this hole has no banker yet and auto-rotate is on,
-    // pre-select the rotated banker from the previous hole.
-    if (prefs.autoRotate && getBankerIdx(hole) < 0 && hole > 1) {
-      const prev = getBankerIdx(hole - 1);
-      const pc = getPlayerCount();
-      if (prev >= 0 && pc > 0) {
-        setBankerIdx(hole, (prev + 1) % pc);
-        renderSheet(hole);
-      }
-    }
 
     document.body.classList.add('banker-sheet-open');
     backdropEl.classList.add('is-open');
