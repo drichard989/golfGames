@@ -113,6 +113,10 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   pointer-events: auto;
 }
 
+:root[data-theme="light"] .junk-sheet-backdrop {
+  background: rgba(15, 23, 42, 0.28);
+}
+
 /* Sheet panel */
 .junk-sheet {
   position: fixed;
@@ -133,6 +137,11 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   z-index: 9001;
 }
 .junk-sheet.is-open { transform: translateY(0); }
+
+:root[data-theme="light"] .junk-sheet {
+  border-top-color: rgba(21, 32, 43, 0.18);
+  box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.14);
+}
 
 @media (min-width: 720px) {
   .junk-sheet {
@@ -158,6 +167,10 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
 }
+
+:root[data-theme="light"] .junk-sheet-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.92));
+}
 .junk-sheet-title {
   margin: 0;
   font-size: var(--text-xl);
@@ -172,6 +185,12 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
+}
+
+:root[data-theme="light"] .junk-sheet-close {
+  background: #ffffff;
+  border-color: rgba(21, 32, 43, 0.2);
+  color: #0f172a;
 }
 .junk-sheet-close:hover { background: rgba(255,255,255,0.05); }
 :root[data-theme="light"] .junk-sheet-close:hover { background: rgba(0,0,0,0.05); }
@@ -241,6 +260,11 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   transition: background 120ms ease, border-color 120ms ease, color 120ms ease, transform 80ms ease;
   text-align: center;
 }
+
+:root[data-theme="light"] .junk-sheet-chip {
+  background: #ffffff;
+  border-color: rgba(21, 32, 43, 0.2);
+}
 .junk-sheet-chip:hover:not(:disabled) { border-color: var(--accent); }
 .junk-sheet-chip:active:not(:disabled) { transform: scale(0.97); }
 .junk-sheet-chip[data-active="true"] {
@@ -279,6 +303,10 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   background: var(--panel-alt);
   display: flex;
   justify-content: flex-end;
+}
+
+:root[data-theme="light"] .junk-sheet-footer {
+  background: rgba(248, 250, 252, 0.94);
 }
 .junk-sheet-done {
   min-width: 120px;

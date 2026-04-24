@@ -82,6 +82,10 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   pointer-events: auto;
 }
 
+:root[data-theme="light"] .wolf-sheet-backdrop {
+  background: rgba(15, 23, 42, 0.28);
+}
+
 .wolf-sheet {
   position: fixed;
   left: 0;
@@ -103,6 +107,11 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 
 .wolf-sheet.is-open {
   transform: translateY(0);
+}
+
+:root[data-theme="light"] .wolf-sheet {
+  border-top-color: rgba(21, 32, 43, 0.18);
+  box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.14);
 }
 
 @media (min-width: 720px) {
@@ -134,6 +143,10 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   border-top-right-radius: inherit;
 }
 
+:root[data-theme="light"] .wolf-sheet-header {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.92));
+}
+
 .wolf-sheet-nav {
   display: flex;
   align-items: center;
@@ -158,6 +171,13 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   border-radius: 8px;
   font-size: 16px;
   cursor: pointer;
+}
+
+:root[data-theme="light"] .wolf-sheet-navbtn,
+:root[data-theme="light"] .wolf-sheet-close {
+  background: #ffffff;
+  border-color: rgba(21, 32, 43, 0.2);
+  color: #0f172a;
 }
 
 .wolf-sheet-navbtn {
@@ -219,6 +239,12 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   min-width: 0;
 }
 
+:root[data-theme="light"] .wolf-sheet-overview-item {
+  background: #ffffff;
+  border-color: rgba(21, 32, 43, 0.16);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
 .wolf-sheet-overview-label {
   font-size: 10px;
   text-transform: uppercase;
@@ -257,6 +283,12 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   font-weight: 600;
   text-align: left;
   cursor: pointer;
+}
+
+:root[data-theme="light"] .wolf-sheet-decision-btn,
+:root[data-theme="light"] .wolf-sheet-clear-btn {
+  background: #ffffff;
+  border-color: rgba(21, 32, 43, 0.2);
 }
 
 .wolf-sheet-decision-btn[data-active="true"] {
@@ -323,6 +355,10 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   background: var(--panel-alt);
   display: flex;
   justify-content: flex-end;
+}
+
+:root[data-theme="light"] .wolf-sheet-footer {
+  background: rgba(248, 250, 252, 0.94);
 }
 
 @media (max-width: 480px) {

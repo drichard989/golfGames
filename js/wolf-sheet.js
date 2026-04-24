@@ -20,13 +20,44 @@
   if (window.WOLF_BOTTOM_SHEET === false) return;
 
   const HOLES = 18;
-  const MOBILE_QUERY = '(max-width: 768px)';
+  const MOBILE_QUERY = '(max-width: 1024px)';
+  const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
+  const OPEN_TO_BACKDROP_GUARD_MS = 900;
+  const AUTO_CLOSE_LOCK_MS = 1600;
 
   let sheetEl = null;
   let backdropEl = null;
   let currentHole = null;
   let isMobileMode = false;
   let summaryObserver = null;
+  let lastOpenedAt = 0;
+  let viewportMq = null;
+  let coarseTouchMq = null;
+
+  function supportsTouchInput(){
+    try {
+      return (
+        ('ontouchstart' in window) ||
+        Number(navigator.maxTouchPoints || 0) > 0 ||
+        Number(navigator.msMaxTouchPoints || 0) > 0
+      );
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function shouldEnableSheetMode(){
+    const byViewport = !!viewportMq?.matches;
+    const byCoarsePointer = !!coarseTouchMq?.matches;
+    const byTouchCapability = supportsTouchInput();
+    return byViewport || byCoarsePointer || byTouchCapability;
+  }
+
+  function onBackdropClick(){
+    const elapsed = Date.now() - lastOpenedAt;
+    if (elapsed >= 0 && elapsed < OPEN_TO_BACKDROP_GUARD_MS) return;
+    closeSheet('backdrop');
+  }
 
   function getPlayerCount(){
     return document.querySelectorAll('#scorecardFixed .player-row').length;
@@ -95,7 +126,7 @@
 
     backdropEl = document.createElement('div');
     backdropEl.className = 'wolf-sheet-backdrop';
-    backdropEl.addEventListener('click', closeSheet);
+    backdropEl.addEventListener('click', onBackdropClick);
 
     sheetEl = document.createElement('div');
     sheetEl.className = 'wolf-sheet';
@@ -117,8 +148,8 @@
       </div>
     `;
 
-    sheetEl.querySelector('.wolf-sheet-close')?.addEventListener('click', closeSheet);
-    sheetEl.querySelector('.wolf-sheet-done')?.addEventListener('click', closeSheet);
+    sheetEl.querySelector('.wolf-sheet-close')?.addEventListener('click', () => closeSheet('explicit'));
+    sheetEl.querySelector('.wolf-sheet-done')?.addEventListener('click', () => closeSheet('explicit'));
     sheetEl.querySelector('[data-nav="prev"]')?.addEventListener('click', () => navigateHole(-1));
     sheetEl.querySelector('[data-nav="next"]')?.addEventListener('click', () => navigateHole(1));
 
@@ -127,7 +158,7 @@
 
     document.addEventListener('keydown', (e) => {
       if (!sheetEl?.classList.contains('is-open')) return;
-      if (e.key === 'Escape') closeSheet();
+      if (e.key === 'Escape') closeSheet('escape');
       else if (e.key === 'ArrowLeft') navigateHole(-1);
       else if (e.key === 'ArrowRight') navigateHole(1);
     });
@@ -278,13 +309,18 @@
   function openSheet(holeOneBased){
     if (!isMobileMode) return;
     renderSheet(holeOneBased);
+    lastOpenedAt = Date.now();
     document.body.classList.add('wolf-sheet-open');
     backdropEl.classList.add('is-open');
     sheetEl.classList.add('is-open');
   }
 
-  function closeSheet(){
+  function closeSheet(reason = 'unknown'){
     if (!sheetEl || !backdropEl) return;
+    const elapsed = Date.now() - lastOpenedAt;
+    const isExplicit = reason === 'explicit';
+    if (!isExplicit && elapsed >= 0 && elapsed < AUTO_CLOSE_LOCK_MS) return;
+
     sheetEl.classList.remove('is-open');
     backdropEl.classList.remove('is-open');
     document.body.classList.remove('wolf-sheet-open');
@@ -340,12 +376,12 @@
     openSheet(idx + 1);
   }
 
-  function applyMode(isMobile){
-    isMobileMode = !!isMobile;
+  function applyMode(){
+    isMobileMode = shouldEnableSheetMode();
     document.body.classList.toggle('wolf-sheet-active', isMobileMode);
 
-    if (!isMobileMode) {
-      closeSheet();
+    if (!isMobileMode && !sheetEl?.classList.contains('is-open')) {
+      closeSheet('mode-change');
       return;
     }
 
@@ -355,11 +391,14 @@
   function activate(){
     ensureSheet();
 
-    const mq = window.matchMedia(MOBILE_QUERY);
-    const onMq = () => applyMode(mq.matches);
+    viewportMq = window.matchMedia(MOBILE_QUERY);
+    coarseTouchMq = window.matchMedia(TOUCH_QUERY);
+    const onMq = () => applyMode();
 
-    try { mq.addEventListener('change', onMq); }
-    catch (_) { mq.addListener(onMq); }
+    try { viewportMq.addEventListener('change', onMq); }
+    catch (_) { viewportMq.addListener(onMq); }
+    try { coarseTouchMq.addEventListener('change', onMq); }
+    catch (_) { coarseTouchMq.addListener(onMq); }
     onMq();
 
     document.addEventListener('click', onTableClick);
@@ -414,6 +453,6 @@
   window.WolfSheet = {
     refresh: scheduleSummaryBuild,
     open: openSheet,
-    close: closeSheet
+    close: () => closeSheet('explicit')
   };
 })();

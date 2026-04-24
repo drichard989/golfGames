@@ -1693,6 +1693,7 @@
               this.updateBetInputs();
               this.update();
             }, 160);
+          }
         }, { passive: true });
         
         // Also listen for blur events to catch pasted values
