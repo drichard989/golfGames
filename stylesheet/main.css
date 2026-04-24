@@ -2342,8 +2342,8 @@ tfoot td {
    ========================= */
 .banker-cell-pad {
   padding: 4px;
-  width: 180px; /* constrain banker column on wide screens */
-  max-width: 220px;
+  width: 216px; /* constrain banker column on wide screens */
+  max-width: 264px;
 }
 
 .banker-inline-wrap {
