@@ -331,7 +331,7 @@
       return `Tie on Hole ${hole - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
     }
     if (leaders.length === 1) {
-      return `Scorecard says Hole ${hole - 1} low net makes ${names[leaders[0]] || `Player ${leaders[0] + 1}`} banker. Override if needed.`;
+      return `Scorecard says Hole ${hole - 1} low net makes ${names[leaders[0]] || `Player ${leaders[0] + 1}`} banker.`;
     }
     return '';
   }

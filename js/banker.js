@@ -103,7 +103,7 @@
     }
 
     if (leaders.length === 1) {
-      return `Scorecard says Hole ${hole - 1} low net makes ${names[leaders[0]] || `P${leaders[0] + 1}`} banker. Override if needed.`;
+      return `Scorecard says Hole ${hole - 1} low net makes ${names[leaders[0]] || `P${leaders[0] + 1}`} banker.`;
     }
 
     return '';
