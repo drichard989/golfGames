@@ -1385,7 +1385,7 @@ tr:last-child td {
   -moz-appearance: textfield;
   appearance: textfield;
   min-height: var(--touch-min);
-  font-size: var(--text-xl);
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
   pointer-events: none;
   touch-action: manipulation;
 }
@@ -1402,7 +1402,7 @@ tr:last-child td {
   -moz-appearance: textfield;
   appearance: textfield;
   min-height: var(--touch-min);
-  font-size: var(--text-xl);
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
   touch-action: manipulation;
 }
 
@@ -1548,7 +1548,7 @@ tfoot td {
   border: none;
   color: var(--ink);
   font-weight: 600;
-  font-size: var(--text-md);
+  font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step));
   width: 100%;
   padding: var(--space-xs) 10px;
   display: block;
@@ -3276,7 +3276,7 @@ input[type="text"] {
   }
 
   .name-edit {
-    font-size: var(--text-xl);
+    font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
     padding: 10px var(--space-md);
     min-height: var(--touch-min);
   }
