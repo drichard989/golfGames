@@ -1010,6 +1010,12 @@ select:not(.select-plain) option {
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 
+/* Games mode: keep launcher/header area attached to the sticky primary tabs
+   so no dark strip appears between the switcher and game content. */
+body.mode-games #gamesEntryPanel {
+  padding-top: 0;
+}
+
 .entry-switcher {
   position: relative;
   z-index: auto;
@@ -1026,6 +1032,11 @@ select:not(.select-plain) option {
 
 /* Score mode: keep sticky bar attached with no visual gap underneath */
 body.mode-score .entry-switcher {
+  margin-bottom: 0;
+}
+
+/* Games mode: same no-gap treatment under sticky switcher */
+body.mode-games .entry-switcher {
   margin-bottom: 0;
 }
 
@@ -1556,6 +1567,10 @@ tfoot td {
   flex-wrap: wrap;
   align-items: center;
   overflow: visible;
+}
+
+body.mode-games .gamesbar {
+  margin-top: -2px;
 }
 
 .gamesbar::-webkit-scrollbar {
