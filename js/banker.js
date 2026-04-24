@@ -28,6 +28,7 @@
   'use strict';
 
   const BANKER_PRESELECT_META_KEY = 'banker_preselect_meta_v1';
+  const BANKER_SHEET_PREFS_KEY = 'banker_sheet_prefs_v1';
 
   // =============================================================================
   // HELPER FUNCTIONS
@@ -78,6 +79,12 @@
 
   function clearBankerHoleLocks() {
     saveBankerPreselectMeta({ lockedHoles: {} });
+  }
+
+  function clearBankerSheetPrefs() {
+    try {
+      localStorage.removeItem(BANKER_SHEET_PREFS_KEY);
+    } catch (_) {}
   }
 
   const DOM_IDS = {
@@ -814,6 +821,7 @@
       }
 
       clearBankerHoleLocks();
+      clearBankerSheetPrefs();
       
       for (let h = 1; h <= 18; h++) {
         // Reset banker selection
