@@ -57,6 +57,23 @@
     return Number.isFinite(domPar) && domPar > 0 ? domPar : null;
   }
 
+  function getHoleHcp(holeOneBased) {
+    if (!Number.isFinite(holeOneBased) || holeOneBased < 1 || holeOneBased > HOLES) return null;
+
+    const hcpFromConfig = window.GolfApp?.config?.hcpMen;
+    const configHcp = Number(hcpFromConfig?.[holeOneBased - 1]);
+    if (Number.isFinite(configHcp) && configHcp > 0) return configHcp;
+
+    const globalHcp = Number(window.HCPMEN?.[holeOneBased - 1]);
+    if (Number.isFinite(globalHcp) && globalHcp > 0) return globalHcp;
+
+    const hcpRow = document.querySelector('#hcpRow');
+    const hcpCell = hcpRow?.children?.[holeOneBased - 1] || null;
+    const hcpInput = hcpCell?.querySelector?.('input');
+    const domHcp = Number(hcpInput?.value || hcpCell?.textContent);
+    return Number.isFinite(domHcp) && domHcp > 0 ? domHcp : null;
+  }
+
   function getScoreInput(playerIdx, holeOneBased) {
     return document.querySelector(`.score-input[data-player="${playerIdx}"][data-hole="${holeOneBased}"]`);
   }
@@ -134,9 +151,10 @@
       </div>
 
       <div class="score-sheet-body">
-        <div class="score-sheet-meta">
-          <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Hole</span><span id="scoreSheetHole" class="score-sheet-meta-value">-</span></div>
-          <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Par</span><span id="scoreSheetPar" class="score-sheet-meta-value">-</span></div>
+        <div class="score-sheet-hole-card" role="status" aria-live="polite">
+          <div class="score-sheet-hole-stat"><span class="score-sheet-meta-label">Hole</span><span id="scoreSheetHole" class="score-sheet-meta-value">-</span></div>
+          <div class="score-sheet-hole-stat"><span class="score-sheet-meta-label">Par</span><span id="scoreSheetPar" class="score-sheet-meta-value">-</span></div>
+          <div class="score-sheet-hole-stat"><span class="score-sheet-meta-label">HCP</span><span id="scoreSheetHcp" class="score-sheet-meta-value">-</span></div>
         </div>
 
         <div id="scoreSheetGrid" class="score-sheet-grid"></div>
@@ -277,13 +295,16 @@
     if (!sheetEl || !Number.isFinite(currentHole)) return;
 
     const par = getPar(currentHole);
+    const holeHcp = getHoleHcp(currentHole);
     const title = sheetEl.querySelector('#scoreSheetTitle');
     const holeEl = sheetEl.querySelector('#scoreSheetHole');
     const parEl = sheetEl.querySelector('#scoreSheetPar');
+    const hcpEl = sheetEl.querySelector('#scoreSheetHcp');
 
     if (title) title.textContent = `Hole ${currentHole} Scores`;
     if (holeEl) holeEl.textContent = String(currentHole);
     if (parEl) parEl.textContent = par == null ? '-' : String(par);
+    if (hcpEl) hcpEl.textContent = holeHcp == null ? '-' : String(holeHcp);
 
     const prevBtn = sheetEl.querySelector('[data-nav="prev"]');
     const nextBtn = sheetEl.querySelector('[data-nav="next"]');
