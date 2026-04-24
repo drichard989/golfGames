@@ -1462,24 +1462,14 @@ tr:last-child td {
   max-width: 70px;
 }
 
-/* Remove spinner buttons */
-.par-row input::-webkit-outer-spin-button,
-.par-row input::-webkit-inner-spin-button,
-.hcp-row input::-webkit-outer-spin-button,
-.hcp-row input::-webkit-inner-spin-button,
-.score-input::-webkit-outer-spin-button,
-.score-input::-webkit-inner-spin-button,
-.ch-input::-webkit-outer-spin-button,
-.ch-input::-webkit-inner-spin-button,
-#skinsBuyIn::-webkit-outer-spin-button,
-#skinsBuyIn::-webkit-inner-spin-button,
-.banker-table input[type="number"]::-webkit-outer-spin-button,
-.banker-table input[type="number"]::-webkit-inner-spin-button {
+/* Remove spinner buttons globally from all numeric fields */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
 
-.banker-table input[type="number"] {
+input[type="number"] {
   -moz-appearance: textfield;
   appearance: textfield;
 }
