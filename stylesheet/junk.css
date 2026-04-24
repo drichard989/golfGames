@@ -40,14 +40,28 @@ body.junk-mobile-summary-active #junkBody td.junk-mobile-summary-cell {
   max-width: none !important;
 }
 body.junk-mobile-summary-active #junkTable thead tr th:first-child::after {
-  content: 'Tap a row to score';
+  content: 'Results';
   display: inline-block;
   margin-left: 10px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--muted);
   font-size: var(--text-sm);
 }
 body.junk-mobile-summary-active #junkTable tfoot { display: none; }
+
+/* The on-screen Junk header at these widths is often the sticky clone table.
+   Mirror the same collapse there: show only Hole + Results. */
+body.junk-mobile-summary-active #junkSection .live-results-header-clone-table thead th:not(:first-child) {
+  display: none !important;
+}
+body.junk-mobile-summary-active #junkSection .live-results-header-clone-table thead th:first-child::after {
+  content: 'Results';
+  display: inline-block;
+  margin-left: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
 
 .junk-mobile-summary-cell {
   display: block !important;

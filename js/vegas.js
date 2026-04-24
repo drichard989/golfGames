@@ -47,16 +47,26 @@
   // Helper functions to access globals with error handling
   const getPlayers = () => {
     try {
-      // Count name inputs that have actual values (trim and check length)
-      const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
-      const validPlayers = nameInputs.filter(input => {
-        const val = input?.value?.trim();
-        return val && val.length > 0;
-      }).length;
-      return validPlayers > 0 ? validPlayers : nameInputs.length;
+      // Player count should follow scorecard rows, not whether names are filled.
+      const rows = getFixedPlayerRows();
+      return rows.length;
     } catch (error) {
       console.error('[Vegas] Error getting player count:', error);
       return 0;
+    }
+  };
+
+  const getVegasPlayerNames = () => {
+    try {
+      return getFixedPlayerRows().map((row, i) => {
+        const input = row.querySelector('.name-edit');
+        const v = input?.value?.trim() || input?.placeholder?.trim();
+        return v || `Player ${i + 1}`;
+      });
+    } catch (error) {
+      console.error('[Vegas] Error getting player names:', error);
+      const players = getPlayers();
+      return Array.from({ length: players }, (_, i) => `Player ${i + 1}`);
     }
   };
   
@@ -183,6 +193,28 @@
     else el.classList.add('vegas-tone-neutral');
   }
 
+  const isVegasCompactWidth = () => {
+    try {
+      return window.matchMedia('(max-width: 900px)').matches;
+    } catch (_) {
+      return false;
+    }
+  };
+
+  const formatVegasTeamLabel = (team, names, compact) => {
+    const initialOf = (idx) => {
+      const nm = (names[idx] || '').trim();
+      if (nm) return nm.charAt(0).toUpperCase();
+      return `${idx + 1}`;
+    };
+
+    if (compact) {
+      return `${initialOf(team[0])}${initialOf(team[1])}`;
+    }
+
+    return `${names[team[0]] || `P${team[0] + 1}`} + ${names[team[1]] || `P${team[1] + 1}`}`;
+  };
+
   function renderTeamColumnLabels(data) {
     const colA = $(ids.vegasColA);
     const colB = $(ids.vegasColB);
@@ -203,31 +235,20 @@
       return;
     }
 
+    const names = getVegasPlayerNames();
     const teams = vegas_getTeamAssignments();
+    const compact = isVegasCompactWidth();
     if (!teams || teams.A.length !== 2 || teams.B.length !== 2) {
-      setLabels('Team A', 'Team B');
+      const fallbackA = formatVegasTeamLabel([0, 1], names, compact);
+      const fallbackB = formatVegasTeamLabel([2, 3], names, compact);
+      setLabels(fallbackA, fallbackB);
       return;
     }
 
-    const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
-      const v = input?.value?.trim();
-      return v || `Player ${i + 1}`;
-    });
-
-    // Desktop (>= 900px AND mouse pointer) gets full "Daniel + John" labels.
-    // Mobile / tablet / touch devices get compact initials ("DJ") so the
-    // narrow result columns stay readable.
-    const isDesktop = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)').matches;
-    const initialOf = (idx) => {
-      const nm = (names[idx] || '').trim();
-      if (nm) return nm.charAt(0).toUpperCase();
-      return `${idx + 1}`;
-    };
-    const fmtTeam = (team) => isDesktop
-      ? `${names[team[0]] || `P${team[0] + 1}`} + ${names[team[1]] || `P${team[1] + 1}`}`
-      : `${initialOf(team[0])}${initialOf(team[1])}`;
-
-    setLabels(fmtTeam(teams.A), fmtTeam(teams.B));
+    setLabels(
+      formatVegasTeamLabel(teams.A, names, compact),
+      formatVegasTeamLabel(teams.B, names, compact)
+    );
   }
 
   function renderVegasLiveResults(data) {
@@ -237,8 +258,19 @@
     ].filter(Boolean);
     if (!containers.length) return;
 
-    const teamAName = document.getElementById('vegasColA')?.textContent?.trim() || 'Team A';
-    const teamBName = document.getElementById('vegasColB')?.textContent?.trim() || 'Team B';
+    let teamAName = document.getElementById('vegasColA')?.textContent?.trim() || 'Team A';
+    let teamBName = document.getElementById('vegasColB')?.textContent?.trim() || 'Team B';
+
+    // In the results cards, prefer full player names when standard 4-player
+    // teams are in use, even if table headers are compact initials.
+    if (!data?.rotation && getPlayers() === 4) {
+      const names = getVegasPlayerNames();
+      const teams = vegas_getTeamAssignments();
+      const teamA = teams?.A?.length === 2 ? teams.A : [0, 1];
+      const teamB = teams?.B?.length === 2 ? teams.B : [2, 3];
+      teamAName = formatVegasTeamLabel(teamA, names, false);
+      teamBName = formatVegasTeamLabel(teamB, names, false);
+    }
     const fmtMoney = (v) => {
       const n = Number(v) || 0;
       const abs = Math.abs(n).toFixed(2);
@@ -482,11 +514,7 @@ const Vegas = {
     if(warn) warn.hidden=true;
 
     // Get player names from scorecard - get all name inputs like Junk/Skins do
-    const nameInputs = Array.from(document.querySelectorAll('.name-edit'));
-    const names = nameInputs.map((input, i) => {
-      const v = input?.value?.trim();
-      return v || `Player ${i+1}`;
-    });
+    const names = getVegasPlayerNames();
     
     data.perHole.forEach((hole,h)=>{
       // In rotation mode, show which player is with ghost
@@ -515,10 +543,7 @@ const Vegas = {
 
     // Show individual player points in rotation mode
     if(data.rotation && data.playerPoints){
-      const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
-        const v = input?.value?.trim();
-        return v || `Player ${i+1}`;
-      });
+      const names = getVegasPlayerNames();
       const playerLines = data.playerPoints.map((pts, i) => {
         const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
         return `${names[i]}: ${sign}${pts}`;
@@ -552,10 +577,7 @@ const Vegas = {
     // Show netted out total in rotation mode
     if(data.rotation){
       const per = Math.max(0, Number($(ids.vegasPointValue)?.value)||0);
-      const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
-        const v = input?.value?.trim();
-        return v || `Player ${i+1}`;
-      });
+      const names = getVegasPlayerNames();
       const netLines = data.playerPoints.map((pts, i) => {
         const dollars = pts * per;
         return `${names[i]}: ${fmt(dollars)}`;
@@ -671,10 +693,7 @@ function vegas_renderTeamControls(){
   const hadPrev = (prevAssignments.A?.length || 0) + (prevAssignments.B?.length || 0) > 0;
 
   box.innerHTML="";
-  const names = Array.from(document.querySelectorAll('.name-edit')).map((input, i) => {
-    const v = input?.value?.trim();
-    return v || `Player ${i+1}`;
-  });
+  const names = getVegasPlayerNames();
   
   // Vegas supports exactly 4 positions (players or ghosts)
   const maxPositions = 4;
@@ -831,10 +850,39 @@ function vegas_setOptions(o) {
   if ('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue;
 }
 
+function vegas_syncColumnLabelsHard() {
+  const colA = $(ids.vegasColA);
+  const colB = $(ids.vegasColB);
+  const ptsColA = document.getElementById('vegasPtsColA');
+  const ptsColB = document.getElementById('vegasPtsColB');
+  if (!colA || !colB) return;
+  if (getPlayers() !== 4) return;
+
+  const aText = (colA.textContent || '').trim();
+  const bText = (colB.textContent || '').trim();
+  const stillGeneric = /^Team\s*A$/i.test(aText) && /^Team\s*B$/i.test(bText);
+  if (!stillGeneric) return;
+
+  const names = getVegasPlayerNames();
+  const teams = vegas_getTeamAssignments();
+  const teamA = teams?.A?.length === 2 ? teams.A : [0, 1];
+  const teamB = teams?.B?.length === 2 ? teams.B : [2, 3];
+  const compact = isVegasCompactWidth();
+  const fmt = (team) => formatVegasTeamLabel(team, names, compact);
+
+  const labelA = fmt(teamA);
+  const labelB = fmt(teamB);
+  colA.textContent = labelA;
+  colB.textContent = labelB;
+  if (ptsColA) ptsColA.textContent = `Pts (${labelA})`;
+  if (ptsColB) ptsColB.textContent = `Pts (${labelB})`;
+}
+
 function vegas_recalc(){
   const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();
   const data = Vegas.compute(teams, opts);
   Vegas.render(data);
+  vegas_syncColumnLabelsHard();
   try{ window._vegasUpdateDollars?.(); }catch{}
 }
 

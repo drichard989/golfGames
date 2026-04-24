@@ -106,7 +106,7 @@
       const rows = getFixedPlayerRows();
       return rows.map((row, i) => {
         const input = row.querySelector('.name-edit');
-        const v = input?.value?.trim();
+        const v = input?.value?.trim() || input?.placeholder?.trim();
         return v || `Player ${i+1}`;
       });
     } catch (error) {
@@ -483,6 +483,10 @@
   function updateJunk(){
     const tbody = document.getElementById('junkBody');
     if(!tbody) return;
+
+    // Keep header labels synced with the scorecard names on every refresh,
+    // including restores/programmatic changes that do not emit name input.
+    refreshJunkHeaderNames();
 
     // Detect player-count drift: if the table was last built for a different
     // number of players (e.g. someone tapped the − button on a player row),

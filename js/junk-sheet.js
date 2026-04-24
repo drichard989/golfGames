@@ -57,7 +57,7 @@
     const rows = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
     return rows.map((row, i) => {
       const nameInput = row.querySelector('.name-edit');
-      const v = nameInput?.value?.trim();
+      const v = nameInput?.value?.trim() || nameInput?.placeholder?.trim();
       return v || `P${i+1}`;
     });
   }
@@ -234,6 +234,15 @@
   function activate(){
     document.body.classList.add('junk-sheet-active');
 
+    // Defensive first-pass sync: ensure tablet/narrow widths enter summary mode
+    // even if later media-query listeners don't fire during initial layout.
+    try {
+      if (window.matchMedia('(max-width: 1100px)').matches) {
+        document.body.classList.add('junk-mobile-summary-active');
+        scheduleJunkSummaryUpdate();
+      }
+    } catch(_) {}
+
     // Row click delegation on the junk tbody
     document.addEventListener('click', (e) => {
       const tbody = e.target.closest('#junkBody');
@@ -251,7 +260,7 @@
     // Mobile 2-column summary layout (hole | all players' dots) — driven by
     // the `.junk-mobile-summary-active` body class. We toggle it based on a
     // media query and rebuild the per-row summary cell.
-    const MQ = window.matchMedia('(max-width: 600px)');
+    const MQ = window.matchMedia('(max-width: 1100px)');
     const applyMobile = () => {
       if (MQ.matches) {
         document.body.classList.add('junk-mobile-summary-active');
@@ -268,6 +277,14 @@
     // force a mode sync on resize/orientation so desktop cleanup always runs.
     window.addEventListener('resize', applyMobile, { passive: true });
     window.addEventListener('orientationchange', applyMobile, { passive: true });
+    // Re-sync when Junk tab is opened; some layout transitions don't emit a
+    // media-query change event even though the effective viewport has changed.
+    document.addEventListener('click', (e) => {
+      if (!e.target) return;
+      if (e.target.closest && e.target.closest('#toggleJunk')) {
+        requestAnimationFrame(applyMobile);
+      }
+    });
     applyMobile();
 
     // Rebuild summaries when junk data changes or tbody is regenerated.
@@ -283,11 +300,19 @@
     document.addEventListener('input', (e) => {
       if (!document.body.classList.contains('junk-mobile-summary-active')) return;
       if (!e.target) return;
-      // Score changes and achievement toggles can affect dots
-      if (e.target.classList && (e.target.classList.contains('score-input') || e.target.classList.contains('junk-ach'))) {
+      // Score, name, and achievement changes can affect summary rows.
+      if (e.target.classList && (e.target.classList.contains('score-input') || e.target.classList.contains('junk-ach') || e.target.classList.contains('name-edit'))) {
         scheduleJunkSummaryUpdate();
       }
     }, { passive: true });
+
+    document.addEventListener('change', (e) => {
+      if (!document.body.classList.contains('junk-mobile-summary-active')) return;
+      if (!e.target || !e.target.classList) return;
+      if (e.target.classList.contains('name-edit')) {
+        scheduleJunkSummaryUpdate();
+      }
+    });
   }
 
   function scheduleJunkSummaryUpdate(){

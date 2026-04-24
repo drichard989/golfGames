@@ -4738,19 +4738,23 @@
           const cloneThead = document.createElement('thead');
           const cloneRow = document.createElement('tr');
 
-          // Banker compact mode (mobile/tablet sheet view) displays 2 logical
-          // columns in the table body: Hole + summary/result. Mirror that here.
+          // Compact summary mode displays 2 logical columns in the table body:
+          // Hole + summary/result. Mirror that in the sticky clone header.
           const isBankerCompact =
             section.id === 'bankerSection' &&
             document.body.classList.contains('banker-sheet-active');
+          const isJunkCompact =
+            section.id === 'junkSection' &&
+            document.body.classList.contains('junk-mobile-summary-active');
+          const isCompactTwoCol = isBankerCompact || isJunkCompact;
 
-          if (isBankerCompact) {
+          if (isCompactTwoCol) {
             const holeTh = document.createElement('th');
             holeTh.textContent = (sourceThsAll[0]?.textContent || 'Hole').trim() || 'Hole';
             cloneRow.appendChild(holeTh);
 
             const resultTh = document.createElement('th');
-            resultTh.textContent = 'Result';
+            resultTh.textContent = isJunkCompact ? 'Results' : 'Result';
             cloneRow.appendChild(resultTh);
           } else {
             const headersToClone = sourceThsVisible.length ? sourceThsVisible : sourceThsAll;
@@ -4775,7 +4779,7 @@
             cloneTable.style.width = `${tableWidth}px`;
           }
 
-          if (isBankerCompact) {
+          if (isCompactTwoCol) {
             const holeWidth = Math.max(0, Math.ceil(sourceThsAll[0]?.getBoundingClientRect().width || 0));
             if (cloneThs[0] && holeWidth > 0) {
               cloneThs[0].style.width = `${holeWidth}px`;
@@ -4843,6 +4847,18 @@
           });
         }
 
+        const bodyClassObserver = 'MutationObserver' in window
+          ? new MutationObserver((mutations) => {
+            const classChanged = mutations.some(
+              (m) => m.type === 'attributes' && m.attributeName === 'class'
+            );
+            if (classChanged) scheduleSync();
+          })
+          : null;
+        if (bodyClassObserver && document.body) {
+          bodyClassObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+        }
+
         if (wrap) {
           wrap.addEventListener('scroll', onWrapScroll, { passive: true });
         }
@@ -4870,6 +4886,9 @@
             }
             if (tableMutationObserver) {
               tableMutationObserver.disconnect();
+            }
+            if (bodyClassObserver) {
+              bodyClassObserver.disconnect();
             }
             if (wrap) {
               wrap.removeEventListener('scroll', onWrapScroll);
