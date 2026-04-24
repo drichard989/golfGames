@@ -4607,6 +4607,12 @@
     const bindGameOptionsToggles = () => {
       const liveHeaderClones = new Map();
       const liveHeaderCloneRetryTimers = new Map();
+      const standaloneCloneConfigs = [
+        { sectionId: 'vegasSection', panelId: 'vegasLiveResultsPanel' },
+        { sectionId: 'bankerSection', panelId: 'bankerLiveResultsPanel' },
+        { sectionId: 'junkSection', panelId: 'junkLiveResultsPanel' },
+        { sectionId: 'wolfSection', panelId: 'wolfLiveResultsPanel' }
+      ];
 
       const getTopPinnedShellHeight = () => {
         const shell = document.querySelector('.top-pinned-shell');
@@ -4884,22 +4890,26 @@
         liveHeaderCloneRetryTimers.set(section, next);
       };
 
-      const syncVegasClosedHeaderClone = () => {
-        const section = document.getElementById('vegasSection');
+      const syncStandaloneGameHeaderClone = (config) => {
+        const section = document.getElementById(config.sectionId);
         if (!section) return;
 
-        const livePanel = document.getElementById('vegasLiveResultsPanel');
-        const vegasIsOpen = section.classList.contains('open') && section.getAttribute('aria-hidden') !== 'true';
+        const livePanel = document.getElementById(config.panelId);
+        const sectionIsOpen = section.classList.contains('open') && section.getAttribute('aria-hidden') !== 'true';
         const livePanelOpen = !!livePanel && !livePanel.hidden;
 
-        if (!vegasIsOpen || livePanelOpen) {
-          if (!vegasIsOpen) {
+        if (!sectionIsOpen || livePanelOpen) {
+          if (!sectionIsOpen) {
             clearLiveHeaderClone(section);
           }
           return;
         }
 
         ensureLiveHeaderCloneWhenReady(section, section, { standalone: true });
+      };
+
+      const syncAllStandaloneGameHeaderClones = () => {
+        standaloneCloneConfigs.forEach(syncStandaloneGameHeaderClone);
       };
 
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
@@ -4918,12 +4928,14 @@
           if (panel.classList.contains('live-results-panel')) {
             const section = panel.closest('.game-section');
             if (section) {
-              const isVegasLivePanel = section.id === 'vegasSection' && panel.id === 'vegasLiveResultsPanel';
+              const standaloneConfig = standaloneCloneConfigs.find((cfg) =>
+                cfg.sectionId === section.id && cfg.panelId === panel.id
+              );
               if (isOpen) {
                 ensureLiveHeaderCloneWhenReady(section, panel, { standalone: false });
               } else {
-                if (isVegasLivePanel) {
-                  syncVegasClosedHeaderClone();
+                if (standaloneConfig) {
+                  syncStandaloneGameHeaderClone(standaloneConfig);
                 } else {
                   clearLiveHeaderClone(section);
                 }
@@ -4940,11 +4952,11 @@
       });
 
       document.addEventListener('golf:game-tab-changed', () => {
-        syncVegasClosedHeaderClone();
+        syncAllStandaloneGameHeaderClones();
       });
 
-      // Initial state (e.g., page load with Vegas tab active and standings card closed).
-      syncVegasClosedHeaderClone();
+      // Initial state (e.g., page load with one of these game tabs active and standings card closed).
+      syncAllStandaloneGameHeaderClones();
     };
     bindGameOptionsToggles();
     
