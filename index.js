@@ -981,9 +981,15 @@
       syncGamesPanelHeight();
     };
 
+    let scrollSyncScheduled = false;
     const syncOnScroll = () => {
-      syncSafeTopInset();
-      syncGamesPanelHeight();
+      if (scrollSyncScheduled) return;
+      scrollSyncScheduled = true;
+      requestAnimationFrame(() => {
+        scrollSyncScheduled = false;
+        // Safe-area inset is layout/device driven and handled by resize/pageshow.
+        syncGamesPanelHeight();
+      });
     };
 
     syncLayout();
@@ -1029,6 +1035,28 @@
     }));
 
     if (save) saveDebounced();
+  }
+
+  let scoreInputRecalcFrame = null;
+  const pendingScoreInputRows = new Set();
+
+  function scheduleScoreInputRecalc(rowEl) {
+    if (!(rowEl instanceof HTMLElement)) return;
+
+    pendingScoreInputRows.add(rowEl);
+    if (scoreInputRecalcFrame) return;
+
+    scoreInputRecalcFrame = requestAnimationFrame(() => {
+      scoreInputRecalcFrame = null;
+
+      pendingScoreInputRows.forEach((row) => {
+        Scorecard.calc.recalcRow(row);
+      });
+      pendingScoreInputRows.clear();
+
+      Scorecard.calc.recalcTotalsRow();
+      AppManager.recalcGamesDebounced();
+    });
   }
 
   // =============================================================================
@@ -1248,9 +1276,7 @@
               } else {
                 inp.classList.remove("invalid");
               }
-              Scorecard.calc.recalcRow(tr); 
-              Scorecard.calc.recalcTotalsRow(); 
-              AppManager.recalcGamesDebounced();
+              scheduleScoreInputRecalc(tr);
               Storage.saveDebounced(); 
             });
             td.appendChild(inp); 
@@ -3832,9 +3858,7 @@
         } else {
           inp.classList.remove("invalid");
         }
-        Scorecard.calc.recalcRow(tr);
-        Scorecard.calc.recalcTotalsRow();
-        AppManager.recalcGamesDebounced();
+        scheduleScoreInputRecalc(tr);
         Storage.saveDebounced();
       });
       

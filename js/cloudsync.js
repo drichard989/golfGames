@@ -2012,6 +2012,8 @@
   }
 
   function scheduleScorecardAlignmentAfterJoin() {
+    let hasDispatchedResize = false;
+
     const runSync = () => {
       const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
       if (typeof sync === 'function') {
@@ -2030,8 +2032,8 @@
         return { aligned: true, checked: false, maxDelta: 0, pairs: 0 };
       }
 
-      const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
-      const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
+      const fixedRows = fixedTable.rows;
+      const scrollRows = scrollTable.rows;
       const pairs = Math.min(fixedRows.length, scrollRows.length);
 
       let maxDelta = 0;
@@ -2063,8 +2065,11 @@
       requestAnimationFrame(runSync);
       setTimeout(runSync, 24);
 
-      // Nudge listeners that depend on viewport/layout changes.
-      window.dispatchEvent(new Event('resize'));
+      // Nudge listeners that depend on viewport/layout changes once per join.
+      if (!hasDispatchedResize) {
+        hasDispatchedResize = true;
+        window.dispatchEvent(new Event('resize'));
+      }
 
       console.warn(
         `[CloudSync] post-join alignment retry (${label}): max row delta=${result.maxDelta}px across ${result.pairs} rows`
