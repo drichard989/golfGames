@@ -241,7 +241,8 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
     grid-area: p2x;
     display: block;
     margin: 0;
-    text-align: right;
+    text-align: center;
+    min-width: 44px;
     font-size: 9px;
     font-weight: 700;
     line-height: 1.2;
@@ -254,6 +255,7 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   }
   body.banker-sheet-active .bss-col-bdbl > .bss-col-label {
     margin: 0;
+    min-width: 44px;
     line-height: 1.2;
   }
   body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
