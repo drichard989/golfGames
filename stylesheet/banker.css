@@ -615,7 +615,7 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 
 .banker-sheet-bet-cards {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 @media (min-width: 720px) {

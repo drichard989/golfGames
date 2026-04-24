@@ -555,7 +555,7 @@
     guidance.className = 'banker-sheet-guidance';
     const guidanceLabel = document.createElement('div');
     guidanceLabel.className = 'banker-sheet-guidance-label';
-    guidanceLabel.textContent = 'Scorecard guidance';
+    guidanceLabel.textContent = 'Banker suggestion';
     const guidanceText = document.createElement('div');
     guidanceText.className = `banker-sheet-guidance-text${warningText ? '' : ' is-empty'}`;
     guidanceText.textContent = warningText || 'Enter the previous hole scores to see who the scorecard says should be banker.';
