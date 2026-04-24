@@ -3,7 +3,7 @@
    ============================================================================
 
    Additive UI layer over existing score inputs. On mobile, tapping a score cell
-   opens a bottom sheet editor with large controls.
+   opens a per-hole bottom sheet that shows all players in a responsive grid.
 
    Revert options:
      - Set `window.SCORE_BOTTOM_SHEET = false` before this script loads, OR
@@ -21,8 +21,10 @@
   const MOBILE_QUERY = '(max-width: 768px)';
 
   let isMobileMode = false;
-  let currentInput = null;
-  let draftValue = '';
+  let currentHole = null;
+  let focusPlayerIdx = 0;
+  let draftScoresByPlayer = {};
+  let syncFrame = null;
 
   let backdropEl = null;
   let sheetEl = null;
@@ -56,19 +58,47 @@
     return Math.max(MIN_SCORE, Math.min(MAX_SCORE, Math.round(n)));
   }
 
-  function triggerRecalcAndSave() {
-    try {
-      window.GolfApp?.scorecard?.calc?.recalcAll?.(true);
-    } catch (_) {}
-    try {
-      window.GolfApp?.appManager?.recalcGames?.();
-    } catch (_) {}
-    try {
-      window.GolfApp?.scorecard?.build?.syncRowHeights?.(true);
-    } catch (_) {}
-    try {
-      window.saveDebounced?.();
-    } catch (_) {}
+  function queueRecalcAndSave() {
+    if (syncFrame) cancelAnimationFrame(syncFrame);
+    syncFrame = requestAnimationFrame(() => {
+      syncFrame = null;
+      try {
+        window.GolfApp?.scorecard?.calc?.recalcAll?.(true);
+      } catch (_) {}
+      try {
+        window.GolfApp?.appManager?.recalcGames?.();
+      } catch (_) {}
+      try {
+        window.GolfApp?.scorecard?.build?.syncRowHeights?.(true);
+      } catch (_) {}
+      try {
+        window.saveDebounced?.();
+      } catch (_) {}
+    });
+  }
+
+  function getStrokeIndicator(inputEl) {
+    if (!inputEl) return null;
+    const strokes = Number(inputEl.dataset.strokes || 0);
+    if (!Number.isFinite(strokes) || strokes <= 0) return null;
+
+    if (inputEl.classList.contains('receives-stroke')) {
+      return {
+        tone: 'down',
+        text: `-${strokes}`,
+        title: `Receives ${strokes} stroke${strokes > 1 ? 's' : ''}`
+      };
+    }
+
+    if (inputEl.classList.contains('gives-stroke')) {
+      return {
+        tone: 'up',
+        text: `+${strokes}`,
+        title: `Gives ${strokes} stroke${strokes > 1 ? 's' : ''}`
+      };
+    }
+
+    return null;
   }
 
   function ensureSheet() {
@@ -86,62 +116,33 @@
     sheetEl.innerHTML = `
       <div class="score-sheet-header">
         <button type="button" class="score-sheet-navbtn" data-nav="prev" aria-label="Previous hole">&lt;</button>
-        <h3 id="scoreSheetTitle" class="score-sheet-title">Score Entry</h3>
+        <h3 id="scoreSheetTitle" class="score-sheet-title">Hole Scores</h3>
         <button type="button" class="score-sheet-navbtn" data-nav="next" aria-label="Next hole">&gt;</button>
         <button type="button" class="score-sheet-close" aria-label="Close">x</button>
       </div>
 
       <div class="score-sheet-body">
         <div class="score-sheet-meta">
-          <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Player</span><span id="scoreSheetPlayer" class="score-sheet-meta-value">-</span></div>
           <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Hole</span><span id="scoreSheetHole" class="score-sheet-meta-value">-</span></div>
           <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Par</span><span id="scoreSheetPar" class="score-sheet-meta-value">-</span></div>
+          <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Players</span><span id="scoreSheetPlayers" class="score-sheet-meta-value">-</span></div>
         </div>
 
-        <div id="scoreSheetStrokeWrap" class="score-sheet-stroke" hidden>
-          <span id="scoreSheetStroke" class="score-sheet-stroke-pill">-</span>
-        </div>
-
-        <div class="score-sheet-editor">
-          <button type="button" class="score-sheet-stepbtn" data-step="-1">-</button>
-          <input id="scoreSheetValue" type="number" inputmode="numeric" min="1" max="20" placeholder="-" />
-          <button type="button" class="score-sheet-stepbtn" data-step="1">+</button>
-        </div>
-
-        <div class="score-sheet-quick" id="scoreSheetQuick"></div>
+        <div id="scoreSheetGrid" class="score-sheet-grid"></div>
       </div>
 
       <div class="score-sheet-footer">
-        <button type="button" class="btn" id="scoreSheetClearBtn">Clear</button>
-        <button type="button" class="btn" id="scoreSheetSaveBtn">Save</button>
-        <button type="button" class="btn" id="scoreSheetSaveNextBtn">Save and Next</button>
+        <button type="button" class="btn" id="scoreSheetCloseBtn">Done</button>
       </div>
     `;
 
     sheetEl.querySelector('.score-sheet-close')?.addEventListener('click', closeSheet);
+    sheetEl.querySelector('#scoreSheetCloseBtn')?.addEventListener('click', closeSheet);
     sheetEl.querySelector('[data-nav="prev"]')?.addEventListener('click', () => navigateHole(-1));
     sheetEl.querySelector('[data-nav="next"]')?.addEventListener('click', () => navigateHole(1));
 
-    sheetEl.querySelector('[data-step="-1"]')?.addEventListener('click', () => nudgeDraft(-1));
-    sheetEl.querySelector('[data-step="1"]')?.addEventListener('click', () => nudgeDraft(1));
-
-    const valueInput = sheetEl.querySelector('#scoreSheetValue');
-    valueInput?.addEventListener('input', () => {
-      draftValue = String(valueInput.value || '').trim();
-    });
-
-    sheetEl.querySelector('#scoreSheetClearBtn')?.addEventListener('click', () => {
-      draftValue = '';
-      renderSheet();
-    });
-
-    sheetEl.querySelector('#scoreSheetSaveBtn')?.addEventListener('click', () => {
-      commitDraft(false);
-    });
-
-    sheetEl.querySelector('#scoreSheetSaveNextBtn')?.addEventListener('click', () => {
-      commitDraft(true);
-    });
+    sheetEl.addEventListener('click', onSheetClick);
+    sheetEl.addEventListener('input', onSheetInput);
 
     document.addEventListener('keydown', (e) => {
       if (!sheetEl?.classList.contains('is-open')) return;
@@ -152,22 +153,18 @@
     document.body.appendChild(sheetEl);
   }
 
-  function getCurrentLocation() {
-    if (!currentInput) return null;
-    const playerIdx = Number(currentInput.dataset.player);
-    const holeOneBased = Number(currentInput.dataset.hole);
-    if (!Number.isFinite(playerIdx) || !Number.isFinite(holeOneBased)) return null;
-    return { playerIdx, holeOneBased };
-  }
-
   function openForInput(inputEl) {
     if (!isMobileMode || !inputEl) return;
     if (inputEl.disabled || inputEl.readOnly) return;
 
-    ensureSheet();
-    currentInput = inputEl;
-    draftValue = String(inputEl.value || '').trim();
+    const hole = Number(inputEl.dataset.hole);
+    const player = Number(inputEl.dataset.player);
+    if (!Number.isFinite(hole) || !Number.isFinite(player)) return;
 
+    ensureSheet();
+    currentHole = hole;
+    focusPlayerIdx = player;
+    loadDraftForHole(currentHole);
     renderSheet();
 
     document.body.classList.add('score-sheet-open');
@@ -180,170 +177,142 @@
     sheetEl.classList.remove('is-open');
     backdropEl.classList.remove('is-open');
     document.body.classList.remove('score-sheet-open');
-    currentInput = null;
-    draftValue = '';
+    currentHole = null;
+    draftScoresByPlayer = {};
   }
 
-  function nudgeDraft(delta) {
-    const current = toScoreOrNull(draftValue);
-    if (current == null) {
-      draftValue = String(delta > 0 ? MIN_SCORE : MAX_SCORE);
-    } else {
-      draftValue = String(Math.max(MIN_SCORE, Math.min(MAX_SCORE, current + delta)));
+  function loadDraftForHole(holeOneBased) {
+    draftScoresByPlayer = {};
+    const par = getPar(holeOneBased);
+    const fallback = par == null ? '' : String(par);
+    const playerCount = getPlayerCount();
+
+    for (let p = 0; p < playerCount; p++) {
+      const input = getScoreInput(p, holeOneBased);
+      const raw = String(input?.value || '').trim();
+      draftScoresByPlayer[p] = raw || fallback;
     }
+  }
+
+  function applyPlayerScore(playerIdx) {
+    if (!Number.isFinite(currentHole)) return;
+    const input = getScoreInput(playerIdx, currentHole);
+    if (!input) return;
+
+    const score = toScoreOrNull(draftScoresByPlayer[playerIdx]);
+    input.value = score == null ? '' : String(score);
+    input.classList.remove('invalid');
+
+    queueRecalcAndSave();
+  }
+
+  function updatePlayerDraft(playerIdx, nextValue, applyNow = true) {
+    draftScoresByPlayer[playerIdx] = String(nextValue == null ? '' : nextValue).trim();
+    if (applyNow) applyPlayerScore(playerIdx);
+  }
+
+  function nudgePlayer(playerIdx, delta) {
+    const current = toScoreOrNull(draftScoresByPlayer[playerIdx]);
+    let next;
+    if (current == null) {
+      next = delta > 0 ? MIN_SCORE : MAX_SCORE;
+    } else {
+      next = Math.max(MIN_SCORE, Math.min(MAX_SCORE, current + delta));
+    }
+
+    updatePlayerDraft(playerIdx, next, true);
     renderSheet();
   }
 
-  function buildQuickButtons() {
-    const quick = sheetEl?.querySelector('#scoreSheetQuick');
-    if (!quick) return;
-    quick.innerHTML = '';
+  function renderGrid(holeOneBased) {
+    const grid = sheetEl?.querySelector('#scoreSheetGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
 
-    [3, 4, 5, 6, 7, 8, 9, 10].forEach((score) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'score-sheet-quick-btn';
-      btn.textContent = String(score);
-      if (String(score) === String(draftValue)) {
-        btn.dataset.active = 'true';
+    const playerCount = getPlayerCount();
+    for (let p = 0; p < playerCount; p++) {
+      const input = getScoreInput(p, holeOneBased);
+      const stroke = getStrokeIndicator(input);
+      const val = draftScoresByPlayer[p] == null ? '' : String(draftScoresByPlayer[p]);
+
+      const card = document.createElement('section');
+      card.className = 'score-sheet-player-card';
+      if (p === focusPlayerIdx) card.classList.add('is-focus-player');
+
+      let strokeHtml = '';
+      if (stroke) {
+        const cls = stroke.tone === 'down' ? 'is-down' : 'is-up';
+        strokeHtml = `<span class="score-sheet-card-stroke ${cls}" title="${stroke.title}">${stroke.text}</span>`;
       }
-      btn.addEventListener('click', () => {
-        draftValue = String(score);
-        renderSheet();
-      });
-      quick.appendChild(btn);
-    });
-  }
 
-  function getStrokeIndicator(inputEl) {
-    if (!inputEl) return null;
-    const strokes = Number(inputEl.dataset.strokes || 0);
-    if (!Number.isFinite(strokes) || strokes <= 0) return null;
+      card.innerHTML = `
+        <div class="score-sheet-card-head">
+          <span class="score-sheet-card-name">${getPlayerName(p)}</span>
+          ${strokeHtml}
+        </div>
+        <div class="score-sheet-card-controls">
+          <button type="button" class="score-sheet-stepbtn score-sheet-stepbtn-sm" data-player="${p}" data-step="-1">-</button>
+          <input class="score-sheet-player-input" data-player="${p}" type="number" inputmode="numeric" min="${MIN_SCORE}" max="${MAX_SCORE}" value="${val}" />
+          <button type="button" class="score-sheet-stepbtn score-sheet-stepbtn-sm" data-player="${p}" data-step="1">+</button>
+        </div>
+      `;
 
-    if (inputEl.classList.contains('receives-stroke')) {
-      return {
-        tone: 'down',
-        text: `Receives ${strokes} stroke${strokes > 1 ? 's' : ''}`
-      };
+      grid.appendChild(card);
     }
-
-    if (inputEl.classList.contains('gives-stroke')) {
-      return {
-        tone: 'up',
-        text: `Gives ${strokes} stroke${strokes > 1 ? 's' : ''}`
-      };
-    }
-
-    return null;
   }
 
   function renderSheet() {
-    if (!sheetEl || !currentInput) return;
+    if (!sheetEl || !Number.isFinite(currentHole)) return;
 
-    if (!document.contains(currentInput)) {
-      closeSheet();
-      return;
-    }
-
-    const loc = getCurrentLocation();
-    if (!loc) {
-      closeSheet();
-      return;
-    }
-
-    const { playerIdx, holeOneBased } = loc;
-    const playerName = getPlayerName(playerIdx);
-    const par = getPar(holeOneBased);
+    const par = getPar(currentHole);
+    const playerCount = getPlayerCount();
 
     const title = sheetEl.querySelector('#scoreSheetTitle');
-    const playerEl = sheetEl.querySelector('#scoreSheetPlayer');
     const holeEl = sheetEl.querySelector('#scoreSheetHole');
     const parEl = sheetEl.querySelector('#scoreSheetPar');
-    const valueEl = sheetEl.querySelector('#scoreSheetValue');
-    const strokeWrapEl = sheetEl.querySelector('#scoreSheetStrokeWrap');
-    const strokeEl = sheetEl.querySelector('#scoreSheetStroke');
+    const playersEl = sheetEl.querySelector('#scoreSheetPlayers');
 
-    if (title) title.textContent = `Score - ${playerName}`;
-    if (playerEl) playerEl.textContent = playerName;
-    if (holeEl) holeEl.textContent = String(holeOneBased);
+    if (title) title.textContent = `Hole ${currentHole} Scores`;
+    if (holeEl) holeEl.textContent = String(currentHole);
     if (parEl) parEl.textContent = par == null ? '-' : String(par);
-    if (valueEl) valueEl.value = draftValue;
-
-    if (strokeWrapEl && strokeEl) {
-      const stroke = getStrokeIndicator(currentInput);
-      strokeWrapEl.hidden = !stroke;
-      strokeEl.classList.remove('is-down', 'is-up');
-      if (stroke) {
-        strokeEl.textContent = stroke.text;
-        strokeEl.classList.add(stroke.tone === 'down' ? 'is-down' : 'is-up');
-      }
-    }
-
-    const prevHoleInput = getScoreInput(playerIdx, holeOneBased - 1);
-    const nextHoleInput = getScoreInput(playerIdx, holeOneBased + 1);
+    if (playersEl) playersEl.textContent = String(playerCount);
 
     const prevBtn = sheetEl.querySelector('[data-nav="prev"]');
     const nextBtn = sheetEl.querySelector('[data-nav="next"]');
-    if (prevBtn) prevBtn.disabled = !prevHoleInput;
-    if (nextBtn) nextBtn.disabled = !nextHoleInput;
+    if (prevBtn) prevBtn.disabled = currentHole <= 1;
+    if (nextBtn) nextBtn.disabled = currentHole >= HOLES;
 
-    buildQuickButtons();
+    renderGrid(currentHole);
   }
 
   function navigateHole(delta) {
-    const loc = getCurrentLocation();
-    if (!loc) return;
-    const target = getScoreInput(loc.playerIdx, loc.holeOneBased + delta);
-    if (!target) return;
-    currentInput = target;
-    draftValue = String(target.value || '').trim();
+    if (!Number.isFinite(currentHole)) return;
+    const nextHole = currentHole + delta;
+    if (nextHole < 1 || nextHole > HOLES) return;
+    currentHole = nextHole;
+    loadDraftForHole(currentHole);
     renderSheet();
   }
 
-  function getAdvanceTarget(inputEl) {
-    if (!inputEl) return null;
-
-    const player = Number(inputEl.dataset.player);
-    const hole = Number(inputEl.dataset.hole);
-    if (!Number.isFinite(player) || !Number.isFinite(hole)) return null;
-
-    const direction = window.GolfApp?.config?.ADVANCE_DIRECTION || 'down';
-    if (direction === 'disabled') return null;
-
-    if (direction === 'right') {
-      if (hole >= HOLES) return null;
-      return getScoreInput(player, hole + 1);
+  function onSheetClick(e) {
+    const stepBtn = e.target.closest('.score-sheet-stepbtn[data-player]');
+    if (stepBtn) {
+      const player = Number(stepBtn.dataset.player);
+      const step = Number(stepBtn.dataset.step);
+      if (!Number.isFinite(player) || !Number.isFinite(step)) return;
+      nudgePlayer(player, step);
+      return;
     }
-
-    const playerCount = getPlayerCount();
-    if (player + 1 >= playerCount) return null;
-    return getScoreInput(player + 1, hole);
   }
 
-  function commitDraft(goNext) {
-    if (!currentInput) return;
+  function onSheetInput(e) {
+    const input = e.target.closest('.score-sheet-player-input');
+    if (!(input instanceof HTMLInputElement)) return;
+    const player = Number(input.dataset.player);
+    if (!Number.isFinite(player)) return;
 
-    const targetInput = currentInput;
-    const score = toScoreOrNull(draftValue);
-    targetInput.value = score == null ? '' : String(score);
-    targetInput.classList.remove('invalid');
-
-    triggerRecalcAndSave();
-
-    if (!goNext) {
-      closeSheet();
-      return;
-    }
-
-    const nextInput = getAdvanceTarget(targetInput);
-    if (!nextInput) {
-      closeSheet();
-      return;
-    }
-
-    currentInput = nextInput;
-    draftValue = String(nextInput.value || '').trim();
-    renderSheet();
+    focusPlayerIdx = player;
+    updatePlayerDraft(player, input.value, true);
   }
 
   function onScoreInputPointerDown(e) {

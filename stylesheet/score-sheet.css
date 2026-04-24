@@ -133,52 +133,73 @@ body.score-sheet-active #scorecard .score-input {
   text-overflow: ellipsis;
 }
 
-.score-sheet-editor {
-  display: grid;
-  grid-template-columns: 62px 1fr 62px;
-  gap: 10px;
-  align-items: center;
+.score-sheet-grid {
   margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
 }
 
-.score-sheet-stroke {
-  margin-top: 10px;
+.score-sheet-player-card {
+  border: 2px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-alt);
+  padding: 8px;
+}
+
+.score-sheet-player-card.is-focus-player {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(0, 188, 140, 0.25);
+}
+
+.score-sheet-card-head {
   display: flex;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-.score-sheet-stroke-pill {
+.score-sheet-card-name {
+  font-size: var(--text-md);
+  font-weight: 700;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score-sheet-card-stroke {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 32px;
-  padding: 6px 12px;
+  min-height: 24px;
+  padding: 2px 6px;
   border: 2px solid var(--line);
   border-radius: 999px;
-  background: var(--panel-alt);
-  color: var(--muted);
-  font-size: var(--text-sm);
+  font-size: 11px;
   font-weight: 700;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.02);
 }
 
-.score-sheet-stroke-pill.is-down {
+.score-sheet-card-stroke.is-down {
   border-color: rgba(0, 188, 140, 0.65);
   background: rgba(0, 188, 140, 0.2);
   color: #d9ffe9;
 }
 
-.score-sheet-stroke-pill.is-up {
+.score-sheet-card-stroke.is-up {
   border-color: rgba(220, 53, 69, 0.7);
   background: rgba(220, 53, 69, 0.2);
   color: #ffdfe3;
 }
 
-:root[data-theme="light"] .score-sheet-stroke-pill.is-down {
-  color: #0a3a2e;
-}
-
-:root[data-theme="light"] .score-sheet-stroke-pill.is-up {
-  color: #7a1b25;
+.score-sheet-card-controls {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  gap: 8px;
+  align-items: center;
 }
 
 .score-sheet-stepbtn {
@@ -192,45 +213,33 @@ body.score-sheet-active #scorecard .score-input {
   cursor: pointer;
 }
 
-#scoreSheetValue {
-  min-height: 56px;
+.score-sheet-stepbtn-sm {
+  min-height: 44px;
+  font-size: 24px;
+}
+
+.score-sheet-player-input {
+  min-height: 44px;
   border: 2px solid var(--line);
   border-radius: 10px;
   background: var(--bg);
   color: var(--ink);
   text-align: center;
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 700;
   width: 100%;
 }
 
-.score-sheet-quick {
-  margin-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+:root[data-theme="light"] .score-sheet-card-stroke.is-down {
+  color: #0a3a2e;
 }
 
-.score-sheet-quick-btn {
-  min-height: 44px;
-  border: 2px solid var(--line);
-  border-radius: 10px;
-  background: var(--panel-alt);
-  color: var(--ink);
-  font-size: var(--text-lg);
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.score-sheet-quick-btn[data-active="true"] {
-  border-color: var(--accent);
-  background: rgba(0, 188, 140, 0.2);
+:root[data-theme="light"] .score-sheet-card-stroke.is-up {
+  color: #7a1b25;
 }
 
 .score-sheet-footer {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  display: block;
   padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
   border-top: 2px solid var(--line);
   background: var(--panel-alt);
@@ -238,10 +247,21 @@ body.score-sheet-active #scorecard .score-input {
 
 .score-sheet-footer .btn {
   min-height: 44px;
+  width: 100%;
 }
 
 @media (max-width: 480px) {
   .score-sheet-meta {
     grid-template-columns: 1fr;
+  }
+
+  .score-sheet-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 520px) {
+  .score-sheet-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
