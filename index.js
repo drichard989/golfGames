@@ -1024,6 +1024,10 @@
       restoreGameTabScroll(which);
     }
 
+    document.dispatchEvent(new CustomEvent('golf:game-tab-changed', {
+      detail: { game: which, previousGame }
+    }));
+
     if (save) saveDebounced();
   }
 
@@ -4604,6 +4608,25 @@
       const liveHeaderClones = new Map();
       const liveHeaderCloneRetryTimers = new Map();
 
+      const getTopPinnedShellHeight = () => {
+        const shell = document.querySelector('.top-pinned-shell');
+        if (!shell) return 0;
+        return Math.ceil(shell.getBoundingClientRect().height || 0);
+      };
+
+      const ensureVegasClosedCloneAnchor = (section) => {
+        const header = section.querySelector('.game-section-header');
+        if (!header) return null;
+
+        let anchor = section.querySelector('.vegas-closed-header-clone-anchor');
+        if (!anchor) {
+          anchor = document.createElement('div');
+          anchor.className = 'vegas-closed-header-clone-anchor';
+          header.insertAdjacentElement('afterend', anchor);
+        }
+        return anchor;
+      };
+
       const findSectionTable = (section) =>
         section.querySelector('#vegasTable, #bankerTable, #junkTable, #wolfTable');
 
@@ -4623,15 +4646,30 @@
           liveHeaderClones.delete(section);
         }
         section.classList.remove('live-header-clone-active');
+        section.classList.remove('live-header-clone-standalone');
         const host = section.querySelector('.live-results-header-clone');
         if (host) host.remove();
+        const anchor = section.querySelector('.vegas-closed-header-clone-anchor');
+        if (anchor) anchor.remove();
       };
 
-      const ensureLiveHeaderClone = (section, panel) => {
+      const ensureLiveHeaderClone = (section, hostParent, { standalone = false } = {}) => {
         const table = findSectionTable(section);
-        if (!table || !table.tHead) return false;
+        if (!table || !table.tHead || !hostParent) return false;
 
         let state = liveHeaderClones.get(section);
+        if (state) {
+          if (state.hostParent !== hostParent || state.standalone !== standalone) {
+            state.cleanup?.();
+            liveHeaderClones.delete(section);
+            section.classList.remove('live-header-clone-active');
+            section.classList.remove('live-header-clone-standalone');
+            const oldHost = section.querySelector('.live-results-header-clone');
+            if (oldHost) oldHost.remove();
+            state = null;
+          }
+        }
+
         if (state) {
           state.syncNow();
           return true;
@@ -4643,12 +4681,22 @@
 
         const host = document.createElement('div');
         host.className = 'live-results-header-clone';
-        panel.appendChild(host);
+        if (standalone) {
+          host.classList.add('is-standalone');
+        }
+        hostParent.appendChild(host);
 
         const syncNow = () => {
           rafId = null;
           const sourceHead = table.tHead;
           if (!sourceHead) return;
+
+          if (standalone) {
+            const pinnedHeight = getTopPinnedShellHeight();
+            host.style.setProperty('--live-header-clone-top', `${pinnedHeight}px`);
+          } else {
+            host.style.removeProperty('--live-header-clone-top');
+          }
 
           const newCloneTable = document.createElement('table');
           newCloneTable.className = `${table.className} live-results-header-clone-table`;
@@ -4746,7 +4794,15 @@
           : null;
         if (tableResizeObserver) {
           tableResizeObserver.observe(table);
-          tableResizeObserver.observe(panel);
+          tableResizeObserver.observe(hostParent);
+        }
+
+        const pinnedShell = document.querySelector('.top-pinned-shell');
+        const pinnedShellResizeObserver = standalone && 'ResizeObserver' in window && pinnedShell
+          ? new ResizeObserver(() => scheduleSync())
+          : null;
+        if (pinnedShellResizeObserver && pinnedShell) {
+          pinnedShellResizeObserver.observe(pinnedShell);
         }
 
         const tableMutationObserver = 'MutationObserver' in window
@@ -4767,9 +4823,12 @@
         window.addEventListener('orientationchange', scheduleSync, { passive: true });
 
         section.classList.add('live-header-clone-active');
+        section.classList.toggle('live-header-clone-standalone', standalone);
         scheduleSync();
 
         liveHeaderClones.set(section, {
+          hostParent,
+          standalone,
           syncNow: scheduleSync,
           cleanup: () => {
             if (rafId != null) {
@@ -4778,6 +4837,9 @@
             }
             if (tableResizeObserver) {
               tableResizeObserver.disconnect();
+            }
+            if (pinnedShellResizeObserver) {
+              pinnedShellResizeObserver.disconnect();
             }
             if (tableMutationObserver) {
               tableMutationObserver.disconnect();
@@ -4793,12 +4855,12 @@
         return true;
       };
 
-      const ensureLiveHeaderCloneWhenReady = (section, panel, attempt = 0) => {
-        if (!section || !panel || panel.hidden) {
+      const ensureLiveHeaderCloneWhenReady = (section, hostParent, options = {}, attempt = 0) => {
+        if (!section || !hostParent) {
           return;
         }
 
-        const created = ensureLiveHeaderClone(section, panel);
+        const created = ensureLiveHeaderClone(section, hostParent, options);
         if (created) {
           const timer = liveHeaderCloneRetryTimers.get(section);
           if (timer) {
@@ -4820,9 +4882,30 @@
 
         const next = setTimeout(() => {
           liveHeaderCloneRetryTimers.delete(section);
-          ensureLiveHeaderCloneWhenReady(section, panel, attempt + 1);
+          ensureLiveHeaderCloneWhenReady(section, hostParent, options, attempt + 1);
         }, 100);
         liveHeaderCloneRetryTimers.set(section, next);
+      };
+
+      const syncVegasClosedHeaderClone = () => {
+        const section = document.getElementById('vegasSection');
+        if (!section) return;
+
+        const livePanel = document.getElementById('vegasLiveResultsPanel');
+        const vegasIsOpen = section.classList.contains('open') && section.getAttribute('aria-hidden') !== 'true';
+        const livePanelOpen = !!livePanel && !livePanel.hidden;
+
+        if (!vegasIsOpen || livePanelOpen) {
+          if (!vegasIsOpen) {
+            clearLiveHeaderClone(section);
+          }
+          return;
+        }
+
+        const anchor = ensureVegasClosedCloneAnchor(section);
+        if (!anchor) return;
+
+        ensureLiveHeaderCloneWhenReady(section, anchor, { standalone: true });
       };
 
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
@@ -4841,10 +4924,15 @@
           if (panel.classList.contains('live-results-panel')) {
             const section = panel.closest('.game-section');
             if (section) {
+              const isVegasLivePanel = section.id === 'vegasSection' && panel.id === 'vegasLiveResultsPanel';
               if (isOpen) {
-                ensureLiveHeaderCloneWhenReady(section, panel);
+                ensureLiveHeaderCloneWhenReady(section, panel, { standalone: false });
               } else {
-                clearLiveHeaderClone(section);
+                if (isVegasLivePanel) {
+                  syncVegasClosedHeaderClone();
+                } else {
+                  clearLiveHeaderClone(section);
+                }
               }
             }
           }
@@ -4856,6 +4944,13 @@
           Storage.saveDebounced();
         });
       });
+
+      document.addEventListener('golf:game-tab-changed', () => {
+        syncVegasClosedHeaderClone();
+      });
+
+      // Initial state (e.g., page load with Vegas tab active and standings card closed).
+      syncVegasClosedHeaderClone();
     };
     bindGameOptionsToggles();
     

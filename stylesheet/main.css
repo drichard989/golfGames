@@ -1657,6 +1657,13 @@ tfoot td {
   border-radius: var(--radius-lg);
 }
 
+.live-results-header-clone.is-standalone {
+  position: sticky;
+  top: var(--live-header-clone-top, 0px);
+  z-index: 30;
+  margin: 0 0 6px;
+}
+
 .live-results-header-clone-table {
   border-collapse: separate;
   border-spacing: 0;
