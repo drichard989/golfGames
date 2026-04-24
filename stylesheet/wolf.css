@@ -67,6 +67,38 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   text-overflow: ellipsis;
 }
 
+/* Large text mode: keep the Wolf mobile chart readable by reclaiming
+   horizontal space and allowing long decisions/results to wrap. */
+:root[data-font-size="large"] #wolfTable th,
+:root[data-font-size="large"] #wolfTable td {
+  padding-left: 3px;
+  padding-right: 3px;
+}
+
+:root[data-font-size="large"] #wolfTable th:first-child,
+:root[data-font-size="large"] #wolfTable td:first-child,
+:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:first-child {
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+:root[data-font-size="large"] .wolf-summary-line {
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 6px;
+  align-items: start;
+}
+
+:root[data-font-size="large"] .wolf-summary-value {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.25;
+  word-break: break-word;
+}
+
 .wolf-sheet-backdrop {
   position: fixed;
   inset: 0;

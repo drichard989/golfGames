@@ -148,6 +148,16 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   line-height: 1.4;
   white-space: nowrap;
 }
+
+.bss-bet-stroke.is-stroke-down {
+  background: rgba(0, 188, 140, 0.18);
+  color: var(--accent);
+}
+
+.bss-bet-stroke.is-stroke-up {
+  background: rgba(220, 53, 69, 0.18);
+  color: var(--danger, #dc3545);
+}
 .bss-bdbl-val {
   display: inline-block;
   min-width: 28px;
@@ -800,7 +810,7 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   color: #ffe08a;
 }
 
-:root:not([data-theme="light"]) .bss-bet-stroke,
+:root:not([data-theme="light"]) .bss-bet-stroke:not(.is-stroke-down):not(.is-stroke-up),
 :root:not([data-theme="light"]) .banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke,
 :root:not([data-theme="light"]) .banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke,
 :root:not([data-theme="light"]) .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke,
@@ -808,12 +818,28 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   color: #e8ecf2 !important;
 }
 
-:root[data-theme="light"] .bss-bet-stroke,
+:root[data-theme="light"] .bss-bet-stroke:not(.is-stroke-down):not(.is-stroke-up),
 :root[data-theme="light"] .banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke,
 :root[data-theme="light"] .banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke,
 :root[data-theme="light"] .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke,
 :root[data-theme="light"] .banker-sheet-pill .banker-sheet-pill-stroke:not(.is-stroke-down):not(.is-stroke-up) {
   color: #4b5563 !important;
+}
+
+:root:not([data-theme="light"]) .bss-bet-stroke.is-stroke-down {
+  color: var(--accent) !important;
+}
+
+:root:not([data-theme="light"]) .bss-bet-stroke.is-stroke-up {
+  color: var(--danger, #dc3545) !important;
+}
+
+:root[data-theme="light"] .bss-bet-stroke.is-stroke-down {
+  color: var(--accent) !important;
+}
+
+:root[data-theme="light"] .bss-bet-stroke.is-stroke-up {
+  color: var(--danger, #dc3545) !important;
 }
 
 :root:not([data-theme="light"]) .banker-sheet-pill-stroke.is-stroke-down {

@@ -971,12 +971,18 @@
       const bankerStroke = getStrokeIndicatorFor(bankerIdx, h);
       const showTabletStrokeIndicator = window.matchMedia('(min-width: 481px)').matches;
       let bankerStrokeCls = '';
+      let bankerStrokeChipCls = '';
       let bankerStrokeInlineHtml = '';
       if (bankerStroke && bankerStroke.text) {
-        if (bankerStroke.text.startsWith('-')) bankerStrokeCls = ' bss-bet-stroke-down';
-        else if (bankerStroke.text.startsWith('+')) bankerStrokeCls = ' bss-bet-stroke-up';
+        if (bankerStroke.text.startsWith('-')) {
+          bankerStrokeCls = ' bss-bet-stroke-down';
+          bankerStrokeChipCls = ' is-stroke-down';
+        } else if (bankerStroke.text.startsWith('+')) {
+          bankerStrokeCls = ' bss-bet-stroke-up';
+          bankerStrokeChipCls = ' is-stroke-up';
+        }
         if (showTabletStrokeIndicator) {
-          bankerStrokeInlineHtml = ` <span class="bss-bet-stroke bss-bet-stroke-inline" title="${escapeHtml(bankerStroke.title)}">${escapeHtml(bankerStroke.text)}</span>`;
+          bankerStrokeInlineHtml = ` <span class="bss-bet-stroke bss-bet-stroke-inline${bankerStrokeChipCls}" title="${escapeHtml(bankerStroke.title)}">${escapeHtml(bankerStroke.text)}</span>`;
         }
       }
 
@@ -991,8 +997,13 @@
         const nm = escapeHtml(names[p] || `P${p+1}`);
         const amt = b > 0 ? `$${b}` : '—';
         const strokeHtml = '';
+        let strokeChipCls = '';
+        if (stroke && stroke.text) {
+          if (stroke.text.startsWith('-')) strokeChipCls = ' is-stroke-down';
+          else if (stroke.text.startsWith('+')) strokeChipCls = ' is-stroke-up';
+        }
         const strokeInlineHtml = (showTabletStrokeIndicator && stroke)
-          ? ` <span class="bss-bet-stroke bss-bet-stroke-inline" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>`
+          ? ` <span class="bss-bet-stroke bss-bet-stroke-inline${strokeChipCls}" title="${escapeHtml(stroke.title)}">${escapeHtml(stroke.text)}</span>`
           : '';
         const multHtml = dbl ? `<span class="bss-bet-mult">${multLabel}</span>` : '';
         // Derive stroke direction so we can tint the whole row on tablet

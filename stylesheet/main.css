@@ -2556,6 +2556,49 @@ body.mode-games .gamesbar {
   min-width: 116px;
 }
 
+/* Large font mode: Wolf chart needs explicit column budgeting so Decision and
+   Result stay readable on phones without horizontal crowding. */
+:root[data-font-size="large"] #wolfTable {
+  table-layout: fixed;
+}
+
+:root[data-font-size="large"] #wolfTable thead th:first-child,
+:root[data-font-size="large"] #wolfTable tbody td:first-child,
+:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:first-child {
+  width: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+:root[data-font-size="large"] #wolfTable thead th:nth-child(2),
+:root[data-font-size="large"] #wolfTable tbody td:nth-child(2),
+:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:nth-child(2) {
+  width: 90px;
+  min-width: 90px;
+}
+
+:root[data-font-size="large"] #wolfTable thead th:nth-child(3),
+:root[data-font-size="large"] #wolfTable tbody td:nth-child(3),
+:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:nth-child(3) {
+  width: 132px;
+  min-width: 132px;
+}
+
+:root[data-font-size="large"] #wolfTable tbody td:nth-child(4) {
+  white-space: normal;
+  line-height: 1.25;
+  text-align: left;
+}
+
+:root[data-font-size="large"] #wolfTable .wolf-decision {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  font-size: var(--text-sm);
+}
+
 .banker-sheet-guidance {
   margin-top: 8px;
   padding: 10px 12px;
