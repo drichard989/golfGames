@@ -784,15 +784,26 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   color: #ffe08a;
 }
 
-:root .bss-bet-stroke,
-:root .banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke,
-:root .banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke,
-:root .banker-sheet-pill-stroke-down .banker-sheet-pill-stroke,
-:root .banker-sheet-pill-stroke-up .banker-sheet-pill-stroke,
-:root .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke,
-:root .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
-:root .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
+:root:not([data-theme="light"]) .bss-bet-stroke,
+:root:not([data-theme="light"]) .banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke,
+:root:not([data-theme="light"]) .banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke,
+:root:not([data-theme="light"]) .banker-sheet-pill-stroke-down .banker-sheet-pill-stroke,
+:root:not([data-theme="light"]) .banker-sheet-pill-stroke-up .banker-sheet-pill-stroke,
+:root:not([data-theme="light"]) .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke,
+:root:not([data-theme="light"]) .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
+:root:not([data-theme="light"]) .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
   color: #e8ecf2 !important;
+}
+
+:root[data-theme="light"] .bss-bet-stroke,
+:root[data-theme="light"] .banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke,
+:root[data-theme="light"] .banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke,
+:root[data-theme="light"] .banker-sheet-pill-stroke-down .banker-sheet-pill-stroke,
+:root[data-theme="light"] .banker-sheet-pill-stroke-up .banker-sheet-pill-stroke,
+:root[data-theme="light"] .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke,
+:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
+:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
+  color: #4b5563 !important;
 }
 
 .bss-bet-stroke-inline {

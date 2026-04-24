@@ -2716,9 +2716,14 @@ body.mode-games .gamesbar {
   white-space: nowrap;
 }
 
-:root .banker-stroke-indicator,
-:root .banker-inline-stroke-pill {
+:root:not([data-theme="light"]) .banker-stroke-indicator,
+:root:not([data-theme="light"]) .banker-inline-stroke-pill {
   color: #e8ecf2 !important;
+}
+
+:root[data-theme="light"] .banker-stroke-indicator,
+:root[data-theme="light"] .banker-inline-stroke-pill {
+  color: #4b5563 !important;
 }
 
 .banker-result-row {

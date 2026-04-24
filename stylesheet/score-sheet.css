@@ -312,11 +312,11 @@ body.score-sheet-active #scorecard .score-input {
 }
 
 :root[data-theme="light"] .score-sheet-card-stroke.is-down {
-  color: #e8ecf2;
+  color: #4b5563;
 }
 
 :root[data-theme="light"] .score-sheet-card-stroke.is-up {
-  color: #e8ecf2;
+  color: #4b5563;
 }
 
 .score-sheet-footer {
