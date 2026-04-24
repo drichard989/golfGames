@@ -447,8 +447,8 @@
       holeResults.forEach(hole => {
         if (hole.teamALow === 0) return; // Skip holes with no scores
         
-        const lowWinnerText = hole.lowWinner === 'A' ? 'Team A' : hole.lowWinner === 'B' ? 'Team B' : 'Tie';
-        const highWinnerText = hole.highWinner === 'A' ? 'Team A' : hole.highWinner === 'B' ? 'Team B' : 'Tie';
+        const lowWinnerText = hole.lowWinner === 'A' ? teamALabel : hole.lowWinner === 'B' ? teamBLabel : 'Tie';
+        const highWinnerText = hole.highWinner === 'A' ? teamALabel : hole.highWinner === 'B' ? teamBLabel : 'Tie';
         
         holeHtml += `
           <tr>
