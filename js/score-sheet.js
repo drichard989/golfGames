@@ -21,6 +21,7 @@
   const MOBILE_QUERY = '(max-width: 1024px)';
   const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
   const OPEN_TO_BACKDROP_GUARD_MS = 900;
+  const AUTO_CLOSE_LOCK_MS = 1600;
 
   let isMobileMode = false;
   let currentHole = null;
@@ -56,7 +57,7 @@
   function onBackdropClick() {
     const elapsed = Date.now() - lastOpenedAt;
     if (elapsed >= 0 && elapsed < OPEN_TO_BACKDROP_GUARD_MS) return;
-    closeSheet();
+    closeSheet('backdrop');
   }
 
   function getPlayerCount() {
@@ -224,8 +225,8 @@
       </div>
     `;
 
-    sheetEl.querySelector('.score-sheet-close')?.addEventListener('click', closeSheet);
-    sheetEl.querySelector('#scoreSheetCloseBtn')?.addEventListener('click', closeSheet);
+    sheetEl.querySelector('.score-sheet-close')?.addEventListener('click', () => closeSheet('explicit'));
+    sheetEl.querySelector('#scoreSheetCloseBtn')?.addEventListener('click', () => closeSheet('explicit'));
     sheetEl.querySelector('[data-nav="prev"]')?.addEventListener('click', () => navigateHole(-1));
     sheetEl.querySelector('[data-nav="next"]')?.addEventListener('click', () => navigateHole(1));
 
@@ -235,7 +236,7 @@
 
     document.addEventListener('keydown', (e) => {
       if (!sheetEl?.classList.contains('is-open')) return;
-      if (e.key === 'Escape') closeSheet();
+      if (e.key === 'Escape') closeSheet('escape');
     });
 
     document.body.appendChild(backdropEl);
@@ -262,8 +263,12 @@
     sheetEl.classList.add('is-open');
   }
 
-  function closeSheet() {
+  function closeSheet(reason = 'unknown') {
     if (!sheetEl || !backdropEl) return;
+    const elapsed = Date.now() - lastOpenedAt;
+    const isExplicit = reason === 'explicit';
+    if (!isExplicit && elapsed >= 0 && elapsed < AUTO_CLOSE_LOCK_MS) return;
+
     sheetEl.classList.remove('is-open');
     backdropEl.classList.remove('is-open');
     document.body.classList.remove('score-sheet-open');
@@ -496,6 +501,6 @@
 
   window.ScoreSheet = {
     openForInput,
-    close: closeSheet
+    close: () => closeSheet('explicit')
   };
 })();
