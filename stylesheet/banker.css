@@ -460,6 +460,12 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   padding: 8px 10px;
   margin-bottom: 8px;
 }
+.banker-sheet-auto-label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+  margin: -2px 0 8px;
+  letter-spacing: 0.02em;
+}
 
 .banker-sheet-stepper {
   display: flex;

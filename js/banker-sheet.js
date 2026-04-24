@@ -60,10 +60,18 @@
         lastMaxBet: Number.isFinite(Number(p.lastMaxBet)) ? Number(p.lastMaxBet) : 10,
         bankerManualOverrideByHole: (p && typeof p.bankerManualOverrideByHole === 'object' && p.bankerManualOverrideByHole)
           ? p.bankerManualOverrideByHole
+          : {},
+        bankerAutoSelectedFromPrevHole: (p && typeof p.bankerAutoSelectedFromPrevHole === 'object' && p.bankerAutoSelectedFromPrevHole)
+          ? p.bankerAutoSelectedFromPrevHole
           : {}
       };
     } catch(_) {
-      return { autoRotate: false, lastMaxBet: 10, bankerManualOverrideByHole: {} };
+      return {
+        autoRotate: false,
+        lastMaxBet: 10,
+        bankerManualOverrideByHole: {},
+        bankerAutoSelectedFromPrevHole: {}
+      };
     }
   }
   function savePrefs(){
@@ -244,7 +252,11 @@
     if (!prefs.bankerManualOverrideByHole || typeof prefs.bankerManualOverrideByHole !== 'object') {
       prefs.bankerManualOverrideByHole = {};
     }
+    if (!prefs.bankerAutoSelectedFromPrevHole || typeof prefs.bankerAutoSelectedFromPrevHole !== 'object') {
+      prefs.bankerAutoSelectedFromPrevHole = {};
+    }
     prefs.bankerManualOverrideByHole[key] = true;
+    delete prefs.bankerAutoSelectedFromPrevHole[key];
     savePrefs();
   }
 
@@ -295,12 +307,17 @@
   function maybePreselectBankerFromPrevLowNet(hole){
     const h = Number(hole);
     if (!prefs.autoRotate || !Number.isFinite(h) || h <= 1) return;
+    if (!prefs.bankerAutoSelectedFromPrevHole || typeof prefs.bankerAutoSelectedFromPrevHole !== 'object') {
+      prefs.bankerAutoSelectedFromPrevHole = {};
+    }
     if (hasBankerManualOverride(h)) return;
     if (getBankerIdx(h) >= 0) return;
 
     const leaders = getPrevHoleLowNetLeaders(h);
     if (leaders.length === 1) {
       setBankerIdx(h, leaders[0]);
+      prefs.bankerAutoSelectedFromPrevHole[String(h)] = h - 1;
+      savePrefs();
     }
   }
 
@@ -424,6 +441,19 @@
     const bankerBlock = document.createElement('section');
     bankerBlock.className = 'banker-sheet-block';
     bankerBlock.innerHTML = `<div class="banker-sheet-block-title">Banker</div>`;
+
+    const autoFromPrev = Number(prefs.bankerAutoSelectedFromPrevHole?.[String(hole)]);
+    if (
+      prefs.autoRotate &&
+      bankerIdx >= 0 &&
+      !hasBankerManualOverride(hole) &&
+      Number.isFinite(autoFromPrev)
+    ) {
+      const autoLabel = document.createElement('div');
+      autoLabel.className = 'banker-sheet-auto-label';
+      autoLabel.textContent = `Auto-selected from Hole ${autoFromPrev} low net`;
+      bankerBlock.appendChild(autoLabel);
+    }
 
     const tieLeaders = (
       prefs.autoRotate && bankerIdx < 0 && hole > 1 && !hasBankerManualOverride(hole)
