@@ -246,19 +246,23 @@ body.score-sheet-active #scorecard .score-input {
 }
 
 .score-sheet-card-controls {
+  --score-sheet-control-size: 56px;
   display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  grid-template-columns: repeat(3, var(--score-sheet-control-size));
   gap: 8px;
   align-items: end;
+  justify-content: space-between;
 }
 
 .score-sheet-score-col {
   display: grid;
   gap: 4px;
+  width: var(--score-sheet-control-size);
 }
 
 .score-sheet-gross-label {
   min-height: 16px;
+  padding-right: 0;
   font-size: 11px;
   line-height: 1.2;
   font-weight: 700;
@@ -290,25 +294,38 @@ body.score-sheet-active #scorecard .score-input {
 }
 
 .score-sheet-stepbtn-sm {
-  min-height: 44px;
+  width: var(--score-sheet-control-size);
+  min-height: var(--score-sheet-control-size);
+  height: var(--score-sheet-control-size);
   font-size: 24px;
 }
 
-.score-sheet-player-input {
-  min-height: 44px;
+.score-sheet .score-sheet-player-input {
+  width: var(--score-sheet-control-size);
+  min-height: var(--score-sheet-control-size);
+  height: var(--score-sheet-control-size);
+  appearance: textfield;
+  -moz-appearance: textfield;
   border: 2px solid var(--line);
   border-radius: 10px;
   background: var(--bg);
   color: var(--ink);
+  padding: 0;
   text-align: center;
   font-size: 24px;
   font-weight: 700;
-  width: 100%;
+  line-height: 1;
 }
 
-:root[data-theme="light"] .score-sheet-player-input {
+:root[data-theme="light"] .score-sheet .score-sheet-player-input {
   background: #ffffff;
   border-color: rgba(21, 32, 43, 0.2);
+}
+
+.score-sheet .score-sheet-player-input::-webkit-outer-spin-button,
+.score-sheet .score-sheet-player-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 :root[data-theme="light"] .score-sheet-card-stroke.is-down {
@@ -412,11 +429,12 @@ body.score-sheet-active #scorecard .score-input {
   .score-sheet-gross-label {
     font-size: 20px;
     min-height: 31px;
+    padding-right: 0;
     line-height: 1.25;
   }
 
   .score-sheet-card-controls {
-    grid-template-columns: 97px 1fr 97px;
+    --score-sheet-control-size: 97px;
     gap: 17px;
   }
 
@@ -425,12 +443,10 @@ body.score-sheet-active #scorecard .score-input {
   }
 
   .score-sheet-stepbtn-sm {
-    min-height: 97px;
     font-size: 48px;
   }
 
-  .score-sheet-player-input {
-    min-height: 97px;
+  .score-sheet .score-sheet-player-input {
     border-radius: 17px;
     font-size: 52px;
   }

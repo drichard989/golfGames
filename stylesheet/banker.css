@@ -203,9 +203,9 @@ html[data-font-size="large"] .bss-bet-p2x-label {
 @media (min-width: 481px) {
   body.banker-sheet-active .bss-grid {
     grid-template-columns:
-      minmax(72px, auto)   /* banker (with max stacked) */
-      1fr                  /* bets */
-      minmax(32px, auto);  /* BX */
+      clamp(92px, 18vw, 132px)  /* banker (with max stacked) */
+      minmax(0, 1fr)            /* bets */
+      44px;                     /* BX (fixed for row-to-row alignment) */
   }
   body.banker-sheet-active .bss-grid .bss-col-max { display: none; }
   body.banker-sheet-active .bss-max-inline { display: block; }
@@ -228,7 +228,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   }
   body.banker-sheet-active .bss-col-bets {
     display: grid;
-    grid-template-columns: 1fr auto;
+    grid-template-columns: minmax(0, 1fr) 44px;
     grid-template-areas:
       "bets p2x"
       "list list";
@@ -272,8 +272,14 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   body.banker-sheet-active .bss-col-bdbl > .bss-col-label {
     margin: 0;
     min-width: 44px;
+    width: 44px;
     line-height: 1.2;
     color: var(--accent);
+  }
+  body.banker-sheet-active .bss-col-bdbl .bss-bdbl-val {
+    min-width: 44px;
+    width: 44px;
+    box-sizing: border-box;
   }
   body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
   body.banker-sheet-active .bss-bet-line > .bss-bet-name { padding-left: 6px; }
