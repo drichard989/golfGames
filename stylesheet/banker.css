@@ -872,14 +872,36 @@ body.banker-sheet-open { overflow: hidden; }
   .banker-sheet-dblbtn { padding: 12px 18px; font-size: var(--text-md); min-height: 48px; }
 
   .banker-sheet-bet-cards { gap: 8px; }
-  .banker-sheet-bet-card { padding: 9px 12px; }
+  .banker-sheet-bet-card { padding: 8px 8px; }
   .banker-sheet-bet-head { margin-bottom: 6px; }
-  .banker-sheet-bet-controls { gap: 6px; }
-  .banker-sheet-stepbtn-sm { width: 48px; height: 48px; font-size: 22px; }
-  .banker-sheet-amount-sm { min-height: 48px; padding: 0 8px; max-width: 120px; font-size: var(--text-md); }
-  .banker-sheet-mult-toggle { min-width: 63px; height: 48px; font-size: var(--text-md); }
+  .banker-sheet-bet-controls {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 40px 48px;
+    gap: 4px;
+    align-items: center;
+  }
+  .banker-sheet-stepbtn-sm {
+    width: 100%;
+    height: 40px;
+    font-size: 20px;
+  }
+  .banker-sheet-amount-sm {
+    min-height: 40px;
+    padding: 0 6px;
+    max-width: none;
+    width: 100%;
+    min-width: 0;
+    font-size: var(--text-sm);
+  }
+  .banker-sheet-mult-toggle {
+    min-width: 0;
+    width: 100%;
+    height: 40px;
+    margin-left: 0;
+    font-size: var(--text-sm);
+  }
   .banker-sheet-bet-quickchips { gap: 6px; margin-top: 6px; }
-  .banker-sheet-bet-chip { padding: 8px 18px; font-size: var(--text-sm); min-height: 42px; }
+  .banker-sheet-bet-chip { padding: 6px 10px; font-size: var(--text-sm); min-height: 36px; }
   .banker-sheet-bet-cap { margin-top: 4px; }
 
   .banker-sheet-footer {
