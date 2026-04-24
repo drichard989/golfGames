@@ -1254,7 +1254,7 @@ td {
   max-width: 120px;
   width: 120px;
   background-color: var(--panel);
-  font-size: calc(var(--text-sm) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -1266,7 +1266,7 @@ td {
   width: 55px;
   padding: var(--space-xs) 3px;
   background-color: var(--panel);
-  font-size: calc(var(--text-sm) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
 }
 
 /* Name cell container with delete button */
@@ -1313,7 +1313,7 @@ td {
   flex: 1;
   min-width: 0;
   max-width: none;
-  font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step)) !important;
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step)) !important;
   line-height: 1.2;
   padding: 6px 3px;
   background: transparent;
@@ -1324,7 +1324,7 @@ td {
 
 #scorecardFixed .ch-input {
   width: 49px;
-  font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
   padding: 6px 3px;
   text-align: center;
 }
