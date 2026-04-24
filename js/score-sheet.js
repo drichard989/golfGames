@@ -119,8 +119,8 @@
   }
 
   function getGrossResultLabel(score, par) {
-    if (!Number.isFinite(score)) return 'Gross -';
-    if (!Number.isFinite(par) || par <= 0) return `Gross ${score}`;
+    if (!Number.isFinite(score)) return '';
+    if (!Number.isFinite(par) || par <= 0) return '';
 
     const diff = score - par;
     let result;
@@ -134,7 +134,7 @@
     else if (diff === 4) result = 'Quadruple Bogey';
     else result = 'Beyond Quad';
 
-    return `Gross ${score} - ${result}`;
+    return result;
   }
 
   function updateGrossLabel(playerIdx, rawValue) {
@@ -333,7 +333,6 @@
 
       const card = document.createElement('section');
       card.className = 'score-sheet-player-card';
-      if (p === focusPlayerIdx) card.classList.add('is-focus-player');
 
       let strokeHtml = '';
       if (stroke) {
@@ -461,11 +460,6 @@
     openForInput(input);
   }
 
-  function onScoreInputFocusIn(e) {
-    if (!isMobileMode) return;
-    // Keep native focus behavior during drag/scroll; modal opens from deliberate tap.
-  }
-
   function applyMode() {
     isMobileMode = shouldEnableSheetMode();
     document.body.classList.toggle('score-sheet-active', isMobileMode);
@@ -490,7 +484,6 @@
     applyMode();
 
     document.addEventListener('click', onScoreInputClick, true);
-    document.addEventListener('focusin', onScoreInputFocusIn, true);
   }
 
   if (document.readyState === 'loading') {
