@@ -14,6 +14,7 @@
   const EL = {
     createBtn: () => document.getElementById('cloudCreateBtn'),
     joinBtn: () => document.getElementById('cloudJoinBtn'),
+    joinQrBtn: () => document.getElementById('cloudJoinQrBtn'),
     leaveBtn: () => document.getElementById('cloudLeaveBtn'),
     createBadgeBtn: () => document.getElementById('cloudCreateBadgeBtn'),
     qrBadgeBtn: () => document.getElementById('cloudQrBadgeBtn'),
@@ -1861,6 +1862,17 @@
 
     EL.joinQrBadgeBtn()?.addEventListener('click',
       withCloudOp('join QR (badge)', null, async () => {
+        try {
+          await scanJoinQrCodeAndJoin();
+        } catch (err) {
+          const msg = String(err?.message || err || '').toLowerCase();
+          if (msg.includes('cancelled')) return;
+          throw err;
+        }
+      }));
+
+    EL.joinQrBtn()?.addEventListener('click',
+      withCloudOp('join QR', null, async () => {
         try {
           await scanJoinQrCodeAndJoin();
         } catch (err) {
