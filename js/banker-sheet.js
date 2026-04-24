@@ -15,7 +15,7 @@
      - Max Bet inline stepper (-/+ buttons + numeric input)
      - Per-opponent card with bet input + 2×/3× toggle + stroke indicator
      - Banker 2×/3× toggle prominently at top
-    - Auto-select banker from previous-hole low net (opt-in, persisted)
+    - Preselect banker from previous-hole low net (always on)
      - "Repeat last hole" shortcut (banker rotation + prior bets)
      - Max Bet default remembers last-used value
      - Live result preview
@@ -55,24 +55,13 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
         return {
-          autoSelect: true,
-          autoSelectUserSet: false,
           lastMaxBet: 10,
           bankerManualOverrideByHole: {},
           bankerAutoSelectedFromPrevHole: {}
         };
       }
       const p = JSON.parse(raw);
-      // Backward-compatible migration from historical autoRotate key.
-      const userSet = !!(p.autoSelectUserSet ?? p.autoRotateUserSet);
-      const storedAutoSelect = (typeof p.autoSelect === 'boolean')
-        ? p.autoSelect
-        : !!p.autoRotate;
       return {
-        // Migration: historical installs defaulted auto-rotate off.
-        // Treat missing explicit user choice as enabled so low-net preselect works.
-        autoSelect: userSet ? storedAutoSelect : true,
-        autoSelectUserSet: userSet,
         lastMaxBet: Number.isFinite(Number(p.lastMaxBet)) ? Number(p.lastMaxBet) : 10,
         bankerManualOverrideByHole: (p && typeof p.bankerManualOverrideByHole === 'object' && p.bankerManualOverrideByHole)
           ? p.bankerManualOverrideByHole
@@ -83,8 +72,6 @@
       };
     } catch(_) {
       return {
-        autoSelect: true,
-        autoSelectUserSet: false,
         lastMaxBet: 10,
         bankerManualOverrideByHole: {},
         bankerAutoSelectedFromPrevHole: {}
@@ -323,7 +310,7 @@
 
   function maybePreselectBankerFromPrevLowNet(hole){
     const h = Number(hole);
-    if (!prefs.autoSelect || !Number.isFinite(h) || h <= 1) return;
+    if (!Number.isFinite(h) || h <= 1) return;
     if (!prefs.bankerAutoSelectedFromPrevHole || typeof prefs.bankerAutoSelectedFromPrevHole !== 'object') {
       prefs.bankerAutoSelectedFromPrevHole = {};
     }
@@ -373,10 +360,7 @@
       </div>
       <div class="banker-sheet-body"></div>
       <div class="banker-sheet-footer">
-        <label class="banker-sheet-autorotate">
-          <input type="checkbox" class="banker-sheet-autorotate-cb" />
-          <span>Auto-select banker (prev hole low net)</span>
-        </label>
+        <span class="banker-sheet-autorotate">Preselect banker from previous low net</span>
         <div class="banker-sheet-footer-actions">
           <button type="button" class="btn banker-sheet-done">Done</button>
         </div>
@@ -387,14 +371,6 @@
     sheetEl.querySelector('.banker-sheet-done').addEventListener('click', closeSheet);
     sheetEl.querySelector('[data-nav="prev"]').addEventListener('click', () => navigateHole(-1));
     sheetEl.querySelector('[data-nav="next"]').addEventListener('click', () => navigateHole(1));
-
-    const autoCb = sheetEl.querySelector('.banker-sheet-autorotate-cb');
-    autoCb.checked = !!prefs.autoSelect;
-    autoCb.addEventListener('change', () => {
-      prefs.autoSelect = !!autoCb.checked;
-      prefs.autoSelectUserSet = true;
-      savePrefs();
-    });
 
     document.body.appendChild(backdropEl);
     document.body.appendChild(sheetEl);
@@ -462,7 +438,6 @@
 
     const autoFromPrev = Number(prefs.bankerAutoSelectedFromPrevHole?.[String(hole)]);
     if (
-      prefs.autoSelect &&
       bankerIdx >= 0 &&
       !hasBankerManualOverride(hole) &&
       Number.isFinite(autoFromPrev)
@@ -474,7 +449,7 @@
     }
 
     const tieLeaders = (
-      prefs.autoSelect && bankerIdx < 0 && hole > 1 && !hasBankerManualOverride(hole)
+      bankerIdx < 0 && hole > 1 && !hasBankerManualOverride(hole)
     ) ? getPrevHoleLowNetLeaders(hole) : [];
     if (tieLeaders.length > 1) {
       const tieNames = tieLeaders.map((idx) => names[idx] || `Player ${idx + 1}`);
