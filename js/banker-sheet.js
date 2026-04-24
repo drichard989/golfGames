@@ -551,16 +551,17 @@
     }
     bankerBlock.appendChild(bankerPills);
 
-    // Suggestions row now carries persistent tie warnings when needed.
-    const suggestions = document.createElement('div');
-    suggestions.className = 'banker-sheet-suggestions';
-    if (warningText) {
-      const warning = document.createElement('span');
-      warning.className = 'banker-sheet-suggestion banker-sheet-suggestion-warning';
-      warning.textContent = warningText;
-      suggestions.appendChild(warning);
-    }
-    if (suggestions.children.length) bankerBlock.appendChild(suggestions);
+    const guidance = document.createElement('div');
+    guidance.className = 'banker-sheet-guidance';
+    const guidanceLabel = document.createElement('div');
+    guidanceLabel.className = 'banker-sheet-guidance-label';
+    guidanceLabel.textContent = 'Scorecard guidance';
+    const guidanceText = document.createElement('div');
+    guidanceText.className = `banker-sheet-guidance-text${warningText ? '' : ' is-empty'}`;
+    guidanceText.textContent = warningText || 'Enter the previous hole scores to see who the scorecard says should be banker.';
+    guidance.appendChild(guidanceLabel);
+    guidance.appendChild(guidanceText);
+    bankerBlock.appendChild(guidance);
     body.appendChild(bankerBlock);
 
     if (bankerIdx < 0) {

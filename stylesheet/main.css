@@ -2359,12 +2359,44 @@ tfoot td {
 }
 
 .banker-selection-warning {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
   line-height: 1.25;
 }
 
 .banker-selection-warning[hidden] {
   display: none;
+}
+
+.banker-sheet-guidance {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(240, 173, 78, 0.35);
+  border-radius: 10px;
+  background: rgba(240, 173, 78, 0.08);
+}
+
+.banker-sheet-guidance-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+
+.banker-sheet-guidance-text {
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--warn, #f0ad4e);
+  font-weight: 600;
+}
+
+.banker-sheet-guidance-text.is-empty {
+  color: var(--muted);
+  font-weight: 500;
 }
 
 .banker-select {

@@ -1141,15 +1141,25 @@
         bankerStrokeIndicator.id = DOM_IDS.bankerStroke(h);
         bankerStrokeIndicator.className = 'banker-stroke-indicator';
 
-        const bankerWarning = document.createElement('span');
+        const bankerGuidance = document.createElement('div');
+        bankerGuidance.className = 'banker-sheet-guidance banker-selection-guidance';
+        bankerGuidance.hidden = true;
+
+        const bankerGuidanceLabel = document.createElement('div');
+        bankerGuidanceLabel.className = 'banker-sheet-guidance-label';
+        bankerGuidanceLabel.textContent = 'Scorecard guidance';
+
+        const bankerWarning = document.createElement('div');
         bankerWarning.id = DOM_IDS.bankerWarning(h);
-        bankerWarning.className = 'banker-selection-warning banker-result-muted banker-result-muted-sm banker-result-warning';
-        bankerWarning.hidden = true;
+        bankerWarning.className = 'banker-sheet-guidance-text banker-selection-warning banker-result-warning';
+
+        bankerGuidance.appendChild(bankerGuidanceLabel);
+        bankerGuidance.appendChild(bankerWarning);
 
         bankerWrap.appendChild(bankerSelect);
         bankerWrap.appendChild(bankerStrokeIndicator);
         bankerCell.appendChild(bankerWrap);
-        bankerCell.appendChild(bankerWarning);
+        bankerCell.appendChild(bankerGuidance);
         bankerTd.appendChild(bankerCell);
         tr.appendChild(bankerTd);
         
@@ -1286,7 +1296,7 @@
           const bankerWarning = document.getElementById(DOM_IDS.bankerWarning(h));
           if (bankerWarning) {
             bankerWarning.textContent = warningText;
-            bankerWarning.hidden = !warningText;
+            if (bankerWarning.parentElement) bankerWarning.parentElement.hidden = !warningText;
           }
           if (warningText) {
             continue;
@@ -1301,7 +1311,7 @@
         const warningText = getBankerSelectionWarning(h, bankerIdx, names);
         if (bankerWarning) {
           bankerWarning.textContent = warningText;
-          bankerWarning.hidden = !warningText;
+          if (bankerWarning.parentElement) bankerWarning.parentElement.hidden = !warningText;
         }
         
         // Create bet inputs for each non-banker player
