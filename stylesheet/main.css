@@ -2796,12 +2796,7 @@ body.mode-games .gamesbar {
 
 /* Hi-Lo hole-by-hole highlighting */
 #hiloHoleTable td {
-  font-size: 13px;
-}
-
-#hiloHoleTable td:nth-child(2),
-#hiloHoleTable td:nth-child(3) {
-  font-family: 'Courier New', monospace;
+  font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step));
 }
 
 /* =========================
