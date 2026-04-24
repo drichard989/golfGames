@@ -3417,6 +3417,16 @@ input[type="text"] {
     font-size: var(--text-xl);
   }
 
+  /* Par/HCP inputs are display-only and must not pick up the wide horizontal
+     padding above — that reduces the 44px content area too much and clips
+     two-digit numbers (e.g. 13, 15, 17) in light mode. */
+  #parRow input,
+  #parRowFixed input,
+  #hcpRow input,
+  #hcpRowFixed input {
+    padding: var(--space-md) 2px;
+  }
+
   .game-toggle {
     padding: var(--text-md) var(--space-lg);
     font-size: var(--text-xl);
