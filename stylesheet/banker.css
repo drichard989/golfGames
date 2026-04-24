@@ -636,58 +636,13 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 :root[data-theme="light"] .banker-sheet-pill-stroke {
   background: rgba(0,0,0,0.06);
 }
-.banker-sheet-pill-stroke-down:not([data-active="true"]) {
+.banker-sheet-pill-stroke-down .banker-sheet-pill-stroke {
   border-color: var(--accent);
   color: var(--accent);
 }
-.banker-sheet-pill-stroke-up:not([data-active="true"]) {
+.banker-sheet-pill-stroke-up .banker-sheet-pill-stroke {
   border-color: var(--danger, #dc3545);
   color: var(--danger, #dc3545);
-}
-
-/* Selected stroked pills keep their stroke tone (red/green) and use a
-   green outline to indicate selection, instead of collapsing to solid green. */
-.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"],
-.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] {
-  background: var(--panel-alt);
-  border-color: currentColor;
-  color: var(--ink);
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.14);
-}
-.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] {
-  /* Keep selected green tone for players receiving strokes. */
-  color: #0f7a49;
-  border-color: rgba(15, 122, 73, 0.78);
-  box-shadow: 0 0 0 2px rgba(15, 122, 73, 0.26);
-  background:
-    linear-gradient(135deg, rgba(15, 122, 73, 0.24), rgba(15, 122, 73, 0.08) 45%, transparent 72%),
-    var(--panel-alt);
-}
-.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] {
-  /* Keep selected red tone for plus-handicap players giving strokes. */
-  color: var(--danger, #dc3545);
-  border-color: rgba(220, 53, 69, 0.76);
-  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.24);
-  background:
-    linear-gradient(135deg, rgba(220, 53, 69, 0.20), rgba(220, 53, 69, 0.08) 45%, transparent 72%),
-    var(--panel-alt);
-}
-.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-name,
-.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke {
-  color: var(--accent);
-}
-.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-name,
-.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
-  color: var(--danger, #dc3545);
-}
-.banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
-.banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
-  border-color: currentColor;
-  background: rgba(255, 255, 255, 0.12);
-}
-:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
-:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
-  background: rgba(0, 0, 0, 0.08);
 }
 
 .bss-bet-stroke-inline {
