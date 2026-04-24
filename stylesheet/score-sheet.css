@@ -147,11 +147,6 @@ body.score-sheet-active #scorecard .score-input {
   padding: 8px;
 }
 
-.score-sheet-player-card.is-focus-player {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(0, 188, 140, 0.25);
-}
-
 .score-sheet-card-head {
   display: flex;
   align-items: center;

@@ -40,9 +40,21 @@
   }
 
   function getPar(holeOneBased) {
-    const input = document.querySelector(`#parRow input[data-hole="${holeOneBased}"]`);
-    const val = Number(input?.value);
-    return Number.isFinite(val) && val > 0 ? val : null;
+    if (!Number.isFinite(holeOneBased) || holeOneBased < 1 || holeOneBased > HOLES) return null;
+
+    // Prefer canonical course data over DOM scraping.
+    const parsFromConfig = window.GolfApp?.config?.pars;
+    const configPar = Number(parsFromConfig?.[holeOneBased - 1]);
+    if (Number.isFinite(configPar) && configPar > 0) return configPar;
+
+    const globalPar = Number(window.PARS?.[holeOneBased - 1]);
+    if (Number.isFinite(globalPar) && globalPar > 0) return globalPar;
+
+    const parRow = document.querySelector('#parRow');
+    const parCell = parRow?.children?.[holeOneBased - 1] || null;
+    const parInput = parCell?.querySelector?.('input');
+    const domPar = Number(parInput?.value || parCell?.textContent);
+    return Number.isFinite(domPar) && domPar > 0 ? domPar : null;
   }
 
   function getScoreInput(playerIdx, holeOneBased) {
@@ -125,7 +137,6 @@
         <div class="score-sheet-meta">
           <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Hole</span><span id="scoreSheetHole" class="score-sheet-meta-value">-</span></div>
           <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Par</span><span id="scoreSheetPar" class="score-sheet-meta-value">-</span></div>
-          <div class="score-sheet-meta-item"><span class="score-sheet-meta-label">Players</span><span id="scoreSheetPlayers" class="score-sheet-meta-value">-</span></div>
         </div>
 
         <div id="scoreSheetGrid" class="score-sheet-grid"></div>
@@ -143,6 +154,7 @@
 
     sheetEl.addEventListener('click', onSheetClick);
     sheetEl.addEventListener('input', onSheetInput);
+    sheetEl.addEventListener('keydown', onSheetKeydown);
 
     document.addEventListener('keydown', (e) => {
       if (!sheetEl?.classList.contains('is-open')) return;
@@ -265,17 +277,13 @@
     if (!sheetEl || !Number.isFinite(currentHole)) return;
 
     const par = getPar(currentHole);
-    const playerCount = getPlayerCount();
-
     const title = sheetEl.querySelector('#scoreSheetTitle');
     const holeEl = sheetEl.querySelector('#scoreSheetHole');
     const parEl = sheetEl.querySelector('#scoreSheetPar');
-    const playersEl = sheetEl.querySelector('#scoreSheetPlayers');
 
     if (title) title.textContent = `Hole ${currentHole} Scores`;
     if (holeEl) holeEl.textContent = String(currentHole);
     if (parEl) parEl.textContent = par == null ? '-' : String(par);
-    if (playersEl) playersEl.textContent = String(playerCount);
 
     const prevBtn = sheetEl.querySelector('[data-nav="prev"]');
     const nextBtn = sheetEl.querySelector('[data-nav="next"]');
@@ -285,13 +293,27 @@
     renderGrid(currentHole);
   }
 
-  function navigateHole(delta) {
+  function focusPlayerInput(playerIdx) {
+    if (!sheetEl || !Number.isFinite(playerIdx)) return;
+    const input = sheetEl.querySelector(`.score-sheet-player-input[data-player="${playerIdx}"]`);
+    if (!(input instanceof HTMLInputElement)) return;
+    input.focus();
+    input.select();
+  }
+
+  function navigateHole(delta, playerToFocus) {
     if (!Number.isFinite(currentHole)) return;
     const nextHole = currentHole + delta;
     if (nextHole < 1 || nextHole > HOLES) return;
     currentHole = nextHole;
     loadDraftForHole(currentHole);
     renderSheet();
+
+    if (Number.isFinite(playerToFocus)) {
+      requestAnimationFrame(() => {
+        focusPlayerInput(playerToFocus);
+      });
+    }
   }
 
   function onSheetClick(e) {
@@ -313,6 +335,23 @@
 
     focusPlayerIdx = player;
     updatePlayerDraft(player, input.value, true);
+  }
+
+  function onSheetKeydown(e) {
+    if (e.key !== 'Enter') return;
+
+    const input = e.target.closest('.score-sheet-player-input');
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const player = Number(input.dataset.player);
+    if (!Number.isFinite(player)) return;
+
+    e.preventDefault();
+    focusPlayerIdx = player;
+    updatePlayerDraft(player, input.value, true);
+
+    if (currentHole >= HOLES) return;
+    navigateHole(1, player);
   }
 
   function onScoreInputPointerDown(e) {
