@@ -4,27 +4,5 @@
   },
   "functions": {
     "source": "functions"
-  },
-  "hosting": [
-    {
-      "target": "prod",
-      "public": ".",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**",
-        "functions/**"
-      ]
-    },
-    {
-      "target": "staging",
-      "public": ".",
-      "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**",
-        "functions/**"
-      ]
-    }
-  ]
+  }
 }
