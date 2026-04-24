@@ -1659,7 +1659,7 @@ tfoot td {
 
 .live-results-header-clone.is-standalone {
   position: sticky;
-  top: var(--live-header-clone-top, 0px);
+  top: 0;
   z-index: 30;
   margin: 0 0 6px;
 }
