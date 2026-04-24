@@ -449,13 +449,6 @@
     }
 
     const tieLeaders = (hole > 1) ? getPrevHoleLowNetLeaders(hole) : [];
-    if (tieLeaders.length > 1) {
-      const tieNames = tieLeaders.map((idx) => names[idx] || `Player ${idx + 1}`);
-      const warning = document.createElement('div');
-      warning.className = 'banker-sheet-hint banker-sheet-hint-warning';
-      warning.textContent = `Tie on Hole ${hole - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
-      bankerBlock.appendChild(warning);
-    }
 
     const bankerPills = document.createElement('div');
     bankerPills.className = 'banker-sheet-pills';
@@ -484,25 +477,15 @@
     }
     bankerBlock.appendChild(bankerPills);
 
-    // Suggestions: "Same as last" only (rotate removed per product decision)
+    // Suggestions row now carries persistent tie warnings when needed.
     const suggestions = document.createElement('div');
     suggestions.className = 'banker-sheet-suggestions';
-    if (hole > 1) {
-      const prevBanker = getBankerIdx(hole - 1);
-      if (prevBanker >= 0 && playerCount > 0) {
-        if (prevBanker !== bankerIdx) {
-          const sameBtn = document.createElement('button');
-          sameBtn.type = 'button';
-          sameBtn.className = 'banker-sheet-suggestion';
-          sameBtn.textContent = `Same as last · ${names[prevBanker]}`;
-          sameBtn.addEventListener('click', () => {
-            setBankerIdx(hole, prevBanker);
-            markBankerManualOverride(hole);
-            renderSheet(hole);
-          });
-          suggestions.appendChild(sameBtn);
-        }
-      }
+    if (tieLeaders.length > 1) {
+      const tieNames = tieLeaders.map((idx) => names[idx] || `Player ${idx + 1}`);
+      const tieWarning = document.createElement('span');
+      tieWarning.className = 'banker-sheet-suggestion banker-sheet-suggestion-warning';
+      tieWarning.textContent = `Tie on Hole ${hole - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
+      suggestions.appendChild(tieWarning);
     }
     if (suggestions.children.length) bankerBlock.appendChild(suggestions);
     body.appendChild(bankerBlock);

@@ -437,6 +437,15 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   cursor: pointer;
 }
 .banker-sheet-suggestion:hover { background: rgba(0, 188, 140, 0.08); }
+.banker-sheet-suggestion-warning {
+  color: var(--warn, #f0ad4e);
+  border-color: rgba(240, 173, 78, 0.82);
+  background: rgba(240, 173, 78, 0.10);
+  cursor: default;
+}
+.banker-sheet-suggestion-warning:hover {
+  background: rgba(240, 173, 78, 0.10);
+}
 .banker-sheet-suggestion-muted {
   color: var(--muted);
   border-color: var(--line);
