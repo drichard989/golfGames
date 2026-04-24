@@ -18,7 +18,8 @@
   const HOLES = 18;
   const MIN_SCORE = 1;
   const MAX_SCORE = 20;
-  const MOBILE_QUERY = '(max-width: 768px)';
+  const MOBILE_QUERY = '(max-width: 1024px)';
+  const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
   const TAP_MOVE_THRESHOLD_PX = 12;
   const TAP_MAX_DURATION_MS = 450;
 
@@ -486,12 +487,15 @@
     ensureSheet();
 
     const mq = window.matchMedia(MOBILE_QUERY);
-    const onMqChange = () => applyMode(mq.matches);
+    const touchMq = window.matchMedia(TOUCH_QUERY);
+    const onMqChange = () => applyMode(mq.matches || touchMq.matches);
 
     try { mq.addEventListener('change', onMqChange); }
     catch (_) { mq.addListener(onMqChange); }
+    try { touchMq.addEventListener('change', onMqChange); }
+    catch (_) { touchMq.addListener(onMqChange); }
 
-    applyMode(mq.matches);
+    applyMode(mq.matches || touchMq.matches);
 
     document.addEventListener('pointerdown', onScoreInputPointerDown, true);
     document.addEventListener('pointermove', onScoreInputPointerMove, true);
