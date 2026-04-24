@@ -1694,6 +1694,25 @@ tfoot td {
 .game-section.live-header-clone-active #hiloTable thead,
 .game-section.live-header-clone-active #hiloHoleTable thead {
   visibility: hidden;
+  height: 0 !important;
+  min-height: 0 !important;
+}
+
+.game-section.live-header-clone-active #vegasTable thead th,
+.game-section.live-header-clone-active #bankerTable thead th,
+.game-section.live-header-clone-active #junkTable thead th,
+.game-section.live-header-clone-active #wolfTable thead th,
+.game-section.live-header-clone-active #skinsTable thead th,
+.game-section.live-header-clone-active #hiloTable thead th,
+.game-section.live-header-clone-active #hiloHoleTable thead th {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-top: 0 !important;
+  border-bottom: 0 !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  line-height: 0 !important;
+  font-size: 0 !important;
 }
 
 @media (max-width: 640px) {
