@@ -487,17 +487,20 @@
         if (typeof window.saveDebounced === 'function') window.saveDebounced();
       });
 
-      // Recompute on any score/par/ch input
+      // Recompute on any score/par/ch input (debounced to avoid stutter on every keypress)
+      let _skinsScoreInputTimer = null;
       document.addEventListener('input', (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
+        if (t.classList?.contains('name-edit')) {
+          refreshSkinsHeaderNames();
+          return;
+        }
         if (t.classList?.contains('score-input') || 
             t.classList?.contains('ch-input') || 
             t.closest('#scorecard')) {
-          updateSkins();
-        }
-        if (t.classList?.contains('name-edit')) {
-          refreshSkinsHeaderNames();
+          clearTimeout(_skinsScoreInputTimer);
+          _skinsScoreInputTimer = setTimeout(() => updateSkins(), 160);
         }
       }, { passive: true });
     }

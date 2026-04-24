@@ -1676,7 +1676,8 @@
         this.update();
         
         // Listen for score/name/CH changes - refresh names aggressively
-        document.addEventListener('input', (e) => {
+          let _bankerScoreInputTimer = null;
+          document.addEventListener('input', (e) => {
           const t = e.target;
           if (t.classList?.contains('name-edit')) {
             this.refreshPlayerNames();
@@ -1687,9 +1688,11 @@
 
           if (t.classList?.contains('score-input') || 
               t.classList?.contains('ch-input')) {
-            this.updateBetInputs();
-            this.update();
-          }
+            clearTimeout(_bankerScoreInputTimer);
+            _bankerScoreInputTimer = setTimeout(() => {
+              this.updateBetInputs();
+              this.update();
+            }, 160);
         }, { passive: true });
         
         // Also listen for blur events to catch pasted values

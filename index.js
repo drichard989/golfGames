@@ -466,7 +466,15 @@
       try { window.HiLo?.update();   } catch (e) { /* hilo may not be initialized yet */ }
       try { window.Banker?.update(); } catch (e) { /* banker may not be initialized yet */ }
       try { window.Wolf?.update();   } catch (e) { /* wolf may not be initialized yet */ }
-    }
+    },
+    // Debounced version for score inputs — coalesces rapid keystrokes before running all game calcs
+    recalcGamesDebounced: (() => {
+      let _timer = null;
+      return function() {
+        clearTimeout(_timer);
+        _timer = setTimeout(() => AppManager.recalcGames(), 150);
+      };
+    })()
   };
   try { window.AppManager = AppManager; } catch {}
 
@@ -1238,11 +1246,7 @@
               }
               Scorecard.calc.recalcRow(tr); 
               Scorecard.calc.recalcTotalsRow(); 
-              AppManager.recalcGames();
-              // Only apply highlighting if not currently loading from storage
-              if (!Storage._isLoading) {
-                Scorecard.calc.applyStrokeHighlighting();
-              }
+              AppManager.recalcGamesDebounced();
               Storage.saveDebounced(); 
             });
             td.appendChild(inp); 
@@ -3826,11 +3830,7 @@
         }
         Scorecard.calc.recalcRow(tr);
         Scorecard.calc.recalcTotalsRow();
-        AppManager.recalcGames();
-        // Reapply highlighting after a brief delay to ensure it persists
-        setTimeout(() => {
-          Scorecard.calc.applyStrokeHighlighting();
-        }, 150);
+        AppManager.recalcGamesDebounced();
         Storage.saveDebounced();
       });
       

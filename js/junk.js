@@ -812,11 +812,13 @@
     if (junkAchievementListenersBound) return;
     junkAchievementListenersBound = true;
 
-    // Update totals on score/par/name changes
-    document.addEventListener('input', (e)=>{
+// Update totals on score/par/name changes (debounced to avoid stutter on every keypress)
+      let _junkAchScoreInputTimer = null;
+      document.addEventListener('input', (e)=>{
       const t = e.target;
       if(t.classList?.contains('score-input') || t.closest('#parRow') || t.classList?.contains('name-edit') || t.classList?.contains('junk-ach')){
-        updateJunkTotalsWeighted();
+        clearTimeout(_junkAchScoreInputTimer);
+        _junkAchScoreInputTimer = setTimeout(() => updateJunkTotalsWeighted(), 160);
       }
     }, { passive: true });
 
@@ -870,12 +872,14 @@
         }
       });
 
-      // Listen for score/par/name changes
+      // Listen for score/par/name changes (debounced to avoid stutter on every keypress)
+      let _junkScoreInputTimer = null;
       document.addEventListener('input', (e)=>{
         const t = e.target;
         if(t.classList?.contains('score-input') || t.closest('#parRow') || t.classList?.contains('name-edit')){
           if(t.classList?.contains('name-edit')) refreshJunkHeaderNames();
-          updateJunk();
+          clearTimeout(_junkScoreInputTimer);
+          _junkScoreInputTimer = setTimeout(() => updateJunk(), 160);
         }
       }, { passive: true });
 
