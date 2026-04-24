@@ -478,19 +478,8 @@
 
     const avg = validTotals.reduce((s, p) => s + p.dots, 0) / playerCount;
     const sorted = validTotals
-      .map((p, i) => ({ ...p, net: p.dots - avg, rank: 0 }))
+      .map((p) => ({ ...p, net: p.dots - avg }))
       .sort((a, b) => b.dots - a.dots);
-
-    // Assign ranks (ties get same rank)
-    let rank = 1;
-    sorted.forEach((p, i) => {
-      if (i > 0 && p.dots === sorted[i - 1].dots) {
-        p.rank = sorted[i - 1].rank;
-      } else {
-        p.rank = rank;
-      }
-      rank++;
-    });
 
     const fmtNet = (v) => {
       if (Math.abs(v) < 0.001) return 'Even';
@@ -500,19 +489,17 @@
     const rows = sorted.map(p => {
       const netClass = p.net > 0.001 ? 'banker-total-positive' : p.net < -0.001 ? 'banker-total-negative' : '';
       return `<tr class="live-results-data-row">
-        <td class="live-results-label">${p.rank}</td>
-        <td>${p.name}</td>
+        <td class="live-results-label">${p.name}</td>
         <td>${p.dots}</td>
         <td class="${netClass}">${fmtNet(p.net)}</td>
       </tr>`;
     }).join('');
 
     const html = `
-      <table class="live-results-table" aria-label="Current Junk Standings">
+      <table class="live-results-table junk-standings-table" aria-label="Current Junk Standings">
         <tbody>
-          <tr class="live-results-title-row"><th colspan="4">Junk Standings</th></tr>
+          <tr class="live-results-title-row"><th colspan="3">Junk Standings</th></tr>
           <tr class="live-results-data-row">
-            <td class="live-results-label">#</td>
             <td class="live-results-label">Player</td>
             <td class="live-results-label">Dots</td>
             <td class="live-results-label">vs Field</td>
