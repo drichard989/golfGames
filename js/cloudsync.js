@@ -77,7 +77,8 @@
     'toggleHilo',
     'toggleWolf',
     'gamesLauncherBtn',
-    'scorecardLauncherBtn'
+    'scorecardLauncherBtn',
+    'bankerLiveResultsBtn'
   ]);
 
   const VIEWER_BLOCK_CONTAINERS = '#main-scorecard, #vegasSection, #bankerSection, #skinsSection, #junkSection, #hiloSection';

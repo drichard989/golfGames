@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.0.188" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.0.189" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.0.188" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.0.188" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.0.189" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.0.189" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -362,7 +362,7 @@
       <div class="game-section-header">
         <h2>🏦 Banker</h2>
         <div class="controls">
-          <button type="button" class="btn game-options-toggle" data-target="bankerLiveResultsPanel" aria-controls="bankerLiveResultsPanel" aria-expanded="false">Live Banker Results</button>
+          <button type="button" class="btn game-options-toggle" id="bankerLiveResultsBtn" data-target="bankerLiveResultsPanel" aria-controls="bankerLiveResultsPanel" aria-expanded="false">Live Banker Results</button>
           <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
         </div>
       </div>
