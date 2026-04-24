@@ -20,15 +20,23 @@
   const MAX_SCORE = 20;
   const MOBILE_QUERY = '(max-width: 1024px)';
   const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
+  const OPEN_TO_BACKDROP_GUARD_MS = 500;
 
   let isMobileMode = false;
   let currentHole = null;
   let focusPlayerIdx = 0;
   let draftScoresByPlayer = {};
   let syncFrame = null;
+  let lastOpenedAt = 0;
 
   let backdropEl = null;
   let sheetEl = null;
+
+  function onBackdropClick() {
+    const elapsed = Date.now() - lastOpenedAt;
+    if (elapsed >= 0 && elapsed < OPEN_TO_BACKDROP_GUARD_MS) return;
+    closeSheet();
+  }
 
   function getPlayerCount() {
     return document.querySelectorAll('#scorecardFixed .player-row').length;
@@ -165,7 +173,7 @@
 
     backdropEl = document.createElement('div');
     backdropEl.className = 'score-sheet-backdrop';
-    backdropEl.addEventListener('click', closeSheet);
+    backdropEl.addEventListener('click', onBackdropClick);
 
     sheetEl = document.createElement('div');
     sheetEl.className = 'score-sheet';
@@ -226,6 +234,7 @@
     focusPlayerIdx = player;
     loadDraftForHole(currentHole);
     renderSheet();
+    lastOpenedAt = Date.now();
 
     document.body.classList.add('score-sheet-open');
     backdropEl.classList.add('is-open');
