@@ -807,23 +807,19 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   border-top: 2px solid var(--line);
   background: var(--panel-alt);
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
 :root[data-theme="light"] .banker-sheet-footer {
   background: rgba(248, 250, 252, 0.94);
 }
-.banker-sheet-autorotate {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.banker-sheet-selection-note {
+  margin-top: 8px;
   font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--ink);
-  cursor: pointer;
+  color: var(--muted);
+  line-height: 1.4;
 }
 .banker-sheet-autorotate-cb {
   width: 20px;

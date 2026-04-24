@@ -433,7 +433,6 @@
       </div>
       <div class="banker-sheet-body"></div>
       <div class="banker-sheet-footer">
-        <span class="banker-sheet-autorotate">Preselect banker from previous low net</span>
         <div class="banker-sheet-footer-actions">
           <button type="button" class="btn banker-sheet-done">Done</button>
         </div>
@@ -550,6 +549,13 @@
       bankerPills.appendChild(pill);
     }
     bankerBlock.appendChild(bankerPills);
+
+    if (warningText) {
+      const warningNote = document.createElement('div');
+      warningNote.className = 'banker-sheet-selection-note';
+      warningNote.textContent = warningText;
+      bankerBlock.appendChild(warningNote);
+    }
 
     body.appendChild(bankerBlock);
 
