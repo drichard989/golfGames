@@ -1087,6 +1087,7 @@
           </div>
           <div class="bss-col bss-col-bets">
             <div class="bss-col-label">Bets</div>
+            <div class="bss-bet-p2x-label">P2X</div>
             <div class="bss-bet-list">${betItems.join('') || '<span class="bss-bet-empty">—</span>'}</div>
           </div>
           <div class="bss-col bss-col-bdbl">

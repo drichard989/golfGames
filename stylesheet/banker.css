@@ -83,6 +83,9 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   border-radius: 6px;
   overflow: hidden;
 }
+.bss-bet-p2x-label {
+  display: none;
+}
 .bss-bet-line {
   /* Let children participate in the parent grid so columns align across rows */
   display: contents;
@@ -218,6 +221,19 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
      red = giving stroke via plus handicap). */
   body.banker-sheet-active .bss-bet-list {
     grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+  body.banker-sheet-active .bss-col-bets {
+    position: relative;
+  }
+  body.banker-sheet-active .bss-col-bets .bss-bet-p2x-label {
+    display: block;
+    margin: -2px 0 2px;
+    text-align: right;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
   }
   body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
   body.banker-sheet-active .bss-bet-line > .bss-bet-name { padding-left: 6px; }
