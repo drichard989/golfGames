@@ -2023,10 +2023,59 @@
       }
     };
 
-    requestAnimationFrame(runSync);
-    setTimeout(runSync, 80);
-    setTimeout(runSync, 220);
-    setTimeout(runSync, 520);
+    const checkAlignment = () => {
+      const fixedTable = document.getElementById('scorecardFixed');
+      const scrollTable = document.getElementById('scorecard');
+      if (!fixedTable || !scrollTable) {
+        return { aligned: true, checked: false, maxDelta: 0, pairs: 0 };
+      }
+
+      const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
+      const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
+      const pairs = Math.min(fixedRows.length, scrollRows.length);
+
+      let maxDelta = 0;
+      let misaligned = 0;
+      for (let i = 0; i < pairs; i += 1) {
+        const fixedHeight = Math.ceil(fixedRows[i]?.getBoundingClientRect().height || 0);
+        const scrollHeight = Math.ceil(scrollRows[i]?.getBoundingClientRect().height || 0);
+        const delta = Math.abs(fixedHeight - scrollHeight);
+        if (delta > maxDelta) maxDelta = delta;
+        if (delta > 1) misaligned += 1;
+      }
+
+      return {
+        aligned: misaligned === 0,
+        checked: true,
+        maxDelta,
+        pairs
+      };
+    };
+
+    const runPass = (label) => {
+      runSync();
+      const result = checkAlignment();
+      if (!result.checked || result.aligned) {
+        return;
+      }
+
+      // If any rows are still out of sync, force one more pass after layout settles.
+      requestAnimationFrame(runSync);
+      setTimeout(runSync, 24);
+
+      // Nudge listeners that depend on viewport/layout changes.
+      window.dispatchEvent(new Event('resize'));
+
+      console.warn(
+        `[CloudSync] post-join alignment retry (${label}): max row delta=${result.maxDelta}px across ${result.pairs} rows`
+      );
+    };
+
+    requestAnimationFrame(() => runPass('raf'));
+    setTimeout(() => runPass('80ms'), 80);
+    setTimeout(() => runPass('220ms'), 220);
+    setTimeout(() => runPass('520ms'), 520);
+    setTimeout(() => runPass('900ms'), 900);
   }
 
   async function joinSessionFromUrlIfPresent() {
