@@ -551,13 +551,6 @@
     }
     bankerBlock.appendChild(bankerPills);
 
-    const guidance = document.createElement('div');
-    guidance.className = 'banker-sheet-guidance';
-    const guidanceText = document.createElement('div');
-    guidanceText.className = `banker-sheet-guidance-text${warningText ? '' : ' is-empty'}`;
-    guidanceText.textContent = warningText || 'Enter the previous hole scores to see who the scorecard says should be banker.';
-    guidance.appendChild(guidanceText);
-    bankerBlock.appendChild(guidance);
     body.appendChild(bankerBlock);
 
     if (bankerIdx < 0) {
@@ -723,13 +716,13 @@
             <input type="number" inputmode="numeric" min="0" step="1" class="banker-sheet-bet-input" />
           </div>
           <button type="button" class="banker-sheet-stepbtn banker-sheet-stepbtn-sm" data-step="1">+</button>
-          <button type="button" class="banker-sheet-mult-toggle" data-active="${doubled ? 'true' : 'false'}">${multText}</button>
         </div>
         <div class="banker-sheet-bet-quickchips">
           <button type="button" class="banker-sheet-bet-chip" data-quick="5">$5</button>
           <button type="button" class="banker-sheet-bet-chip" data-quick="10">$10</button>
           <button type="button" class="banker-sheet-bet-chip" data-quick="20">$20</button>
         </div>
+        <button type="button" class="banker-sheet-mult-toggle" data-active="${doubled ? 'true' : 'false'}">${multText}</button>
         <div class="banker-sheet-bet-cap"></div>
       `;
 
