@@ -303,10 +303,24 @@
         const dot = td ? (td.querySelector('.junk-dot')?.textContent || td.textContent || '').trim() : '';
         const hasDot = dot && dot !== '—' && dot !== '';
         const nm = escapeHtmlLocal(names[p] || `P${p+1}`);
+
+        // Collect emojis for checked achievements for this player+hole
+        const emojis = ACH
+          .filter(a => {
+            const inp = findAchInput(h, p, a.id);
+            return inp && inp.checked;
+          })
+          .map(a => a.emoji)
+          .join('');
+
+        const emojiHtml = emojis
+          ? `<span class="junk-mini-emojis">${escapeHtmlLocal(emojis)}</span>`
+          : '';
+
         lines.push(`
           <div class="junk-mini-row${hasDot?'':' is-empty'}">
             <span class="junk-mini-name">${nm}</span>
-            <span class="junk-mini-dot">${hasDot ? escapeHtmlLocal(dot) : '—'}</span>
+            <span class="junk-mini-right">${emojiHtml}<span class="junk-mini-dot">${hasDot ? escapeHtmlLocal(dot) : '—'}</span></span>
           </div>
         `);
       }

@@ -27,10 +27,10 @@ body.junk-mobile-summary-active #junkTable {
 }
 body.junk-mobile-summary-active #junkTable th:first-child,
 body.junk-mobile-summary-active #junkTable td:first-child {
-  width: 32px !important;
-  min-width: 32px !important;
-  max-width: 32px !important;
-  padding: 4px 2px !important;
+  width: 64px !important;
+  min-width: 64px !important;
+  max-width: 64px !important;
+  padding: 4px 6px !important;
   text-align: center !important;
   font-size: var(--text-sm) !important;
   font-weight: 700 !important;
@@ -74,11 +74,22 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   text-overflow: ellipsis;
   min-width: 0;
 }
+.junk-mini-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+.junk-mini-emojis {
+  font-size: 11px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
 .junk-mini-dot {
   font-weight: 700;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
-  min-width: 28px;
+  min-width: 20px;
   text-align: right;
 }
 .junk-mini-empty {
