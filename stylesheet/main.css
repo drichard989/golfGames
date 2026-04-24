@@ -13,16 +13,16 @@
 /* ---- CSS Custom Properties ---- */
 :root {
   /* Theme colors (dark default) — based on Bootswatch Darkly */
-  --bg: #222222;
-  --panel: #303030;
-  --panel-alt: #2b2b2b;
+  --bg: #1b1f24;
+  --panel: #2a3038;
+  --panel-alt: #343d47;
   --ink: #ffffff;
   --muted: #adb5bd;
   --accent: #00bc8c;
-  --line: #444444;
+  --line: #556170;
   --warn: #f39c12;
   --danger: #e74c3c;
-  --shadow: rgba(0, 0, 0, .35);
+  --shadow: rgba(0, 0, 0, .45);
   
   /* Spacing tokens */
   --space-xs: 6px;
@@ -1958,6 +1958,32 @@ body.mode-games .gamesbar {
 
 .game-options-toggle.is-open::after {
   transform: rotate(0deg);
+}
+
+/* Dark mode micro-contrast pass for inactive controls */
+:root:not([data-theme="light"]) .btn:not(.accent):not(.active):not(.is-open),
+:root:not([data-theme="light"]) .theme-toggle,
+:root:not([data-theme="light"]) .game-toggle:not(.active),
+:root:not([data-theme="light"]) .entry-switcher-btn:not(.active),
+:root:not([data-theme="light"]) .game-options-toggle:not(.is-open),
+:root:not([data-theme="light"]) .banker-toggle-btn:not(.is-active),
+:root:not([data-theme="light"]) .junk-cell summary,
+:root:not([data-theme="light"]) .junk-cell button {
+  background: #232b33;
+  border-color: #627080;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+:root:not([data-theme="light"]) .btn:not(.accent):not(.active):not(.is-open):hover,
+:root:not([data-theme="light"]) .theme-toggle:hover,
+:root:not([data-theme="light"]) .game-toggle:not(.active):hover,
+:root:not([data-theme="light"]) .entry-switcher-btn:not(.active):hover,
+:root:not([data-theme="light"]) .game-options-toggle:not(.is-open):hover,
+:root:not([data-theme="light"]) .banker-toggle-btn:not(.is-active):hover,
+:root:not([data-theme="light"]) .junk-cell summary:hover,
+:root:not([data-theme="light"]) .junk-cell button:hover {
+  background: #2a343e;
+  border-color: #708093;
 }
 
 .pill {
