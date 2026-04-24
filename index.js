@@ -141,6 +141,9 @@
     }
   };
 
+  const BANKER_SHEET_PREFS_KEY = 'banker_sheet_prefs_v1';
+  const BANKER_PRESELECT_META_KEY = 'banker_preselect_meta_v1';
+
   window.GAME_CONSTANTS = GAME_CONSTANTS;
 
   // =============================================================================
@@ -2798,6 +2801,12 @@
       const resetBanker = () => {
         setBankerModeBtn('bankerHcpModeRawHandicap');
         window.Banker?.setState?.({ holes: [] });
+        try {
+          localStorage.removeItem(BANKER_SHEET_PREFS_KEY);
+          localStorage.removeItem(BANKER_PRESELECT_META_KEY);
+        } catch (error) {
+          console.warn('[Storage] Failed to clear Banker metadata:', error);
+        }
       };
 
       const resetSkins = () => {
