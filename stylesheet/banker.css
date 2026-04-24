@@ -793,19 +793,19 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 .banker-sheet-footer-actions { display: flex; gap: 8px; }
 .banker-sheet-done {
   min-width: 120px;
-  background: linear-gradient(135deg, rgba(0, 188, 140, 0.9), rgba(166, 32, 48, 0.9));
-  border-color: rgba(220, 53, 69, 0.78);
+  background: rgba(220, 53, 69, 0.85);
+  border-color: rgba(220, 53, 69, 0.9);
   color: #fff;
   font-weight: 800;
-  box-shadow: inset 0 0 0 1px rgba(220, 53, 69, 0.26);
 }
 .banker-sheet-done:hover {
-  border-color: rgba(220, 53, 69, 0.92);
+  background: rgba(220, 53, 69, 1);
+  border-color: rgba(220, 53, 69, 1);
   filter: brightness(1.04);
 }
 :root[data-theme="light"] .banker-sheet-done {
-  background: linear-gradient(135deg, rgba(0, 160, 120, 0.92), rgba(180, 40, 58, 0.92));
-  border-color: rgba(190, 48, 65, 0.8);
+  background: rgba(200, 40, 56, 0.9);
+  border-color: rgba(190, 35, 50, 0.9);
   color: #fff;
 }
 
