@@ -19,12 +19,15 @@
   const MIN_SCORE = 1;
   const MAX_SCORE = 20;
   const MOBILE_QUERY = '(max-width: 768px)';
+  const TAP_MOVE_THRESHOLD_PX = 12;
+  const TAP_MAX_DURATION_MS = 450;
 
   let isMobileMode = false;
   let currentHole = null;
   let focusPlayerIdx = 0;
   let draftScoresByPlayer = {};
   let syncFrame = null;
+  let pendingScoreTap = null;
 
   let backdropEl = null;
   let sheetEl = null;
@@ -377,32 +380,67 @@
 
   function onScoreInputPointerDown(e) {
     if (!isMobileMode) return;
+    if (e.isPrimary === false) return;
 
     const input = e.target.closest('#scorecard .score-input');
     if (!(input instanceof HTMLInputElement)) return;
     if (input.disabled || input.readOnly) return;
 
+    pendingScoreTap = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      startedAt: Date.now(),
+      moved: false,
+      input
+    };
+  }
+
+  function onScoreInputPointerMove(e) {
+    if (!pendingScoreTap) return;
+    if (e.pointerId !== pendingScoreTap.pointerId) return;
+
+    const dx = Math.abs(e.clientX - pendingScoreTap.startX);
+    const dy = Math.abs(e.clientY - pendingScoreTap.startY);
+    if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
+      pendingScoreTap.moved = true;
+    }
+  }
+
+  function onScoreInputPointerUp(e) {
+    if (!pendingScoreTap) return;
+    if (e.pointerId !== pendingScoreTap.pointerId) return;
+
+    const elapsedMs = Date.now() - pendingScoreTap.startedAt;
+    const shouldOpen = !pendingScoreTap.moved && elapsedMs <= TAP_MAX_DURATION_MS;
+    const targetInput = pendingScoreTap.input;
+    pendingScoreTap = null;
+
+    if (!shouldOpen) return;
+    if (!(targetInput instanceof HTMLInputElement)) return;
+
     e.preventDefault();
     e.stopPropagation();
-    input.blur();
-    openForInput(input);
+    targetInput.blur();
+    openForInput(targetInput);
+  }
+
+  function onScoreInputPointerCancel(e) {
+    if (!pendingScoreTap) return;
+    if (e.pointerId !== pendingScoreTap.pointerId) return;
+    pendingScoreTap = null;
   }
 
   function onScoreInputFocusIn(e) {
     if (!isMobileMode) return;
-
-    const input = e.target.closest('#scorecard .score-input');
-    if (!(input instanceof HTMLInputElement)) return;
-    if (input.disabled || input.readOnly) return;
-
-    input.blur();
-    openForInput(input);
+    // Keep native focus behavior during drag/scroll; modal opens from deliberate tap.
   }
 
   function applyMode(isMobile) {
     isMobileMode = !!isMobile;
     document.body.classList.toggle('score-sheet-active', isMobileMode);
     if (!isMobileMode) {
+      pendingScoreTap = null;
       closeSheet();
     }
   }
@@ -419,6 +457,9 @@
     applyMode(mq.matches);
 
     document.addEventListener('pointerdown', onScoreInputPointerDown, true);
+    document.addEventListener('pointermove', onScoreInputPointerMove, true);
+    document.addEventListener('pointerup', onScoreInputPointerUp, true);
+    document.addEventListener('pointercancel', onScoreInputPointerCancel, true);
     document.addEventListener('focusin', onScoreInputFocusIn, true);
   }
 
