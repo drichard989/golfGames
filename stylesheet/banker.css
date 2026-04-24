@@ -224,7 +224,9 @@ html[data-font-size="large"] .bss-bet-p2x-label {
      and instead tint the name + amount cells (green = receiving stroke,
      red = giving stroke via plus handicap). */
   body.banker-sheet-active .bss-bet-list {
-    grid-template-columns: minmax(0, 1fr) minmax(44px, auto) 44px;
+    grid-template-columns: minmax(0, 1fr) 88px 44px;
+    column-gap: 0;
+    align-items: stretch;
   }
   body.banker-sheet-active .bss-col-bets {
     display: grid;
@@ -262,11 +264,17 @@ html[data-font-size="large"] .bss-bet-p2x-label {
     grid-area: list;
   }
   body.banker-sheet-active .bss-bet-line > .bss-bet-amt {
-    min-width: 44px;
+    min-width: 88px;
+    padding-right: 10px;
   }
   body.banker-sheet-active .bss-bet-line > .bss-bet-mult-slot {
     min-width: 44px;
     width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 0;
+    padding-right: 0;
     text-align: center;
   }
   body.banker-sheet-active .bss-col-bdbl > .bss-col-label {

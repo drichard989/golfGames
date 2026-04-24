@@ -476,16 +476,15 @@
     const bankerIdx = getBankerIdx(hole);
     const maxBet = getMaxBet(hole);
 
-    // If this hole has no banker yet and the max bet is still 0 or default,
-    // seed it with the remembered default.
+    // Ensure each hole starts with a usable max bet so opponent bets can
+    // auto-populate. This now runs regardless of banker selection state.
     const maxBetEl = document.getElementById(DOM_IDS.maxBet(hole));
-    if (maxBetEl && bankerIdx < 0) {
+    if (maxBetEl) {
       const currentVal = Number(maxBetEl.value);
-      if (!Number.isFinite(currentVal) || currentVal <= 0 || currentVal === 10) {
-        // Only replace the default "10" if user hasn't customized this hole yet
-        if (prefs.lastMaxBet && prefs.lastMaxBet !== currentVal) {
-          setMaxBet(hole, prefs.lastMaxBet);
-        }
+      if (!Number.isFinite(currentVal) || currentVal <= 0) {
+        const remembered = Number(prefs.lastMaxBet);
+        const seed = Number.isFinite(remembered) && remembered > 0 ? remembered : 10;
+        setMaxBet(hole, seed);
       }
     }
 
@@ -1221,11 +1220,9 @@
     document.querySelectorAll('#bankerBody tr.banker-sheet-row-empty').forEach(tr => tr.classList.remove('banker-sheet-row-empty'));
   }
 
-  // Desktop = wide screen WITH a precise pointer (mouse). Anything touch-first
-  // (phones, all tablets including 1024–1366px iPads / Android tabs) gets the
-  // bottom sheet + full-width inline summary so the per-player result rows
-  // don't wrap inside a narrow result column.
-  const DESKTOP_MQ = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
+  // Use viewport width only: tablet-sized desktop windows should behave like
+  // tablets and open the banker modal from row taps/clicks.
+  const DESKTOP_MQ = window.matchMedia('(min-width: 1200px)');
   function applyViewportMode(){
     if (DESKTOP_MQ.matches) {
       deactivate();
