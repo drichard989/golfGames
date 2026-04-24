@@ -223,17 +223,38 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
     grid-template-columns: minmax(0, 1fr) auto auto;
   }
   body.banker-sheet-active .bss-col-bets {
-    position: relative;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "bets p2x"
+      "list list";
+    align-items: end;
+    column-gap: 6px;
+    row-gap: 2px;
+  }
+  body.banker-sheet-active .bss-col-bets > .bss-col-label {
+    grid-area: bets;
+    margin: 0;
+    line-height: 1.2;
   }
   body.banker-sheet-active .bss-col-bets .bss-bet-p2x-label {
+    grid-area: p2x;
     display: block;
-    margin: -2px 0 2px;
+    margin: 0;
     text-align: right;
     font-size: 9px;
     font-weight: 700;
+    line-height: 1.2;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--muted);
+  }
+  body.banker-sheet-active .bss-col-bets .bss-bet-list {
+    grid-area: list;
+  }
+  body.banker-sheet-active .bss-col-bdbl > .bss-col-label {
+    margin: 0;
+    line-height: 1.2;
   }
   body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
   body.banker-sheet-active .bss-bet-line > .bss-bet-name { padding-left: 6px; }

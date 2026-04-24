@@ -1091,7 +1091,7 @@
             <div class="bss-bet-list">${betItems.join('') || '<span class="bss-bet-empty">—</span>'}</div>
           </div>
           <div class="bss-col bss-col-bdbl">
-            <div class="bss-col-label">BX</div>
+            <div class="bss-col-label">B2X</div>
             <div class="bss-bdbl-val${bankerDbl?' is-on':''}">${bankerDbl ? multLabel : '—'}</div>
           </div>
           <div class="bss-col bss-col-result" style="grid-column:1 / -1;width:100%;max-width:100%;box-sizing:border-box;padding-left:0;padding-right:0;">
