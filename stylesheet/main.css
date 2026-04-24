@@ -1831,6 +1831,38 @@ body.mode-games .gamesbar {
   border-bottom: none;
 }
 
+.vegas-results-table {
+  table-layout: fixed;
+}
+
+.vegas-results-table .live-results-label {
+  position: static;
+  left: auto;
+  z-index: auto;
+  width: 58px;
+  min-width: 58px;
+  max-width: 58px;
+  padding-left: 6px;
+  padding-right: 6px;
+  box-shadow: none;
+}
+
+.wolf-results-table {
+  table-layout: fixed;
+}
+
+.wolf-results-table .live-results-label {
+  position: static;
+  left: auto;
+  z-index: auto;
+  width: 54px;
+  min-width: 54px;
+  max-width: 54px;
+  padding-left: 5px;
+  padding-right: 5px;
+  box-shadow: none;
+}
+
 /* Compact layout on narrow screens so all player columns fit without scrolling */
 @media (max-width: 600px) {
   .live-results-table th,
@@ -1844,6 +1876,22 @@ body.mode-games .gamesbar {
   }
   .live-results-data-row td {
     height: 36px;
+  }
+
+  .vegas-results-table .live-results-label {
+    width: 52px;
+    min-width: 52px;
+    max-width: 52px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .wolf-results-table .live-results-label {
+    width: 48px;
+    min-width: 48px;
+    max-width: 48px;
+    padding-left: 4px;
+    padding-right: 4px;
   }
 }
 

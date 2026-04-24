@@ -506,7 +506,7 @@
       `<td>${Number.isFinite(totals[p]) ? totals[p] : '—'}</td>`
     ).join('');
     container.innerHTML = `
-      <table class="live-results-table" aria-label="Live Wolf results">
+      <table class="live-results-table wolf-results-table" aria-label="Live Wolf results">
         <tbody>
           <tr class="live-results-title-row"><th colspan="${REQUIRED_PLAYERS + 1}">Totals</th></tr>
           <tr class="live-results-data-row"><td class="live-results-label">Player</td>${headerCells}</tr>
