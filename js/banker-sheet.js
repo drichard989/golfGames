@@ -34,6 +34,7 @@
   if (window.BANKER_BOTTOM_SHEET === false) return;
 
   const STORAGE_KEY = 'banker_sheet_prefs_v1';
+  const BANKER_PRESELECT_META_KEY = 'banker_preselect_meta_v1';
 
   const DOM_IDS = {
     bankerSelect: (h) => `banker_h${h}`,
@@ -80,6 +81,40 @@
   }
   function savePrefs(){
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch(_){}
+  }
+
+  function loadBankerPreselectMeta(){
+    try {
+      const raw = localStorage.getItem(BANKER_PRESELECT_META_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return {
+        lockedHoles: parsed && typeof parsed.lockedHoles === 'object' && parsed.lockedHoles
+          ? parsed.lockedHoles
+          : {}
+      };
+    } catch(_) {
+      return { lockedHoles: {} };
+    }
+  }
+
+  function saveBankerPreselectMeta(meta){
+    try {
+      localStorage.setItem(BANKER_PRESELECT_META_KEY, JSON.stringify({
+        lockedHoles: meta && typeof meta.lockedHoles === 'object' ? meta.lockedHoles : {}
+      }));
+    } catch(_){}
+  }
+
+  function isBankerHoleLocked(hole){
+    const meta = loadBankerPreselectMeta();
+    return !!meta.lockedHoles[String(Number(hole))];
+  }
+
+  function lockBankerHole(hole){
+    const key = String(Number(hole));
+    const meta = loadBankerPreselectMeta();
+    meta.lockedHoles[key] = true;
+    saveBankerPreselectMeta(meta);
   }
 
   function getPlayerCount(){
@@ -261,6 +296,7 @@
     }
     prefs.bankerManualOverrideByHole[key] = true;
     delete prefs.bankerAutoSelectedFromPrevHole[key];
+    lockBankerHole(hole);
     savePrefs();
   }
 
@@ -315,11 +351,13 @@
       prefs.bankerAutoSelectedFromPrevHole = {};
     }
     if (hasBankerManualOverride(h)) return;
+    if (isBankerHoleLocked(h)) return;
     if (getBankerIdx(h) >= 0) return;
 
     const leaders = getPrevHoleLowNetLeaders(h);
     if (leaders.length === 1) {
       setBankerIdx(h, leaders[0]);
+      lockBankerHole(h);
       prefs.bankerAutoSelectedFromPrevHole[String(h)] = h - 1;
       savePrefs();
     }

@@ -27,6 +27,8 @@
 (() => {
   'use strict';
 
+  const BANKER_PRESELECT_META_KEY = 'banker_preselect_meta_v1';
+
   // =============================================================================
   // HELPER FUNCTIONS
   // =============================================================================
@@ -38,6 +40,44 @@
       console.error('[Banker] Error getting player count:', error);
       return 0;
     }
+  }
+
+  function loadBankerPreselectMeta() {
+    try {
+      const raw = localStorage.getItem(BANKER_PRESELECT_META_KEY);
+      const parsed = raw ? JSON.parse(raw) : null;
+      return {
+        lockedHoles: parsed && typeof parsed.lockedHoles === 'object' && parsed.lockedHoles
+          ? parsed.lockedHoles
+          : {}
+      };
+    } catch (_) {
+      return { lockedHoles: {} };
+    }
+  }
+
+  function saveBankerPreselectMeta(meta) {
+    try {
+      localStorage.setItem(BANKER_PRESELECT_META_KEY, JSON.stringify({
+        lockedHoles: meta && typeof meta.lockedHoles === 'object' ? meta.lockedHoles : {}
+      }));
+    } catch (_) {}
+  }
+
+  function isBankerHoleLocked(hole) {
+    const meta = loadBankerPreselectMeta();
+    return !!meta.lockedHoles[String(Number(hole))];
+  }
+
+  function lockBankerHole(hole) {
+    const key = String(Number(hole));
+    const meta = loadBankerPreselectMeta();
+    meta.lockedHoles[key] = true;
+    saveBankerPreselectMeta(meta);
+  }
+
+  function clearBankerHoleLocks() {
+    saveBankerPreselectMeta({ lockedHoles: {} });
   }
 
   const DOM_IDS = {
@@ -725,6 +765,9 @@
           const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
           if (bankerSelect && holeState.banker !== undefined) {
             bankerSelect.value = String(holeState.banker);
+            if (Number(holeState.banker) >= 0) {
+              lockBankerHole(h);
+            }
           }
 
           const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
@@ -769,6 +812,8 @@
       if (!confirm('Clear all Banker game data? This cannot be undone.')) {
         return;
       }
+
+      clearBankerHoleLocks();
       
       for (let h = 1; h <= 18; h++) {
         // Reset banker selection
@@ -1053,6 +1098,9 @@
         }
         
         bankerSelect.addEventListener('change', () => {
+          if (Number(bankerSelect.value) >= 0) {
+            lockBankerHole(h);
+          }
           this.updateBetInputs();
           this.update();
           queueSave();
@@ -1183,11 +1231,12 @@
 
         // Desktop parity with bottom-sheet flow:
         // preselect this hole's banker from previous-hole low-net winner.
-        if ((bankerIdx < 0 || bankerIdx >= playerCount) && bankerSelect) {
+        if ((bankerIdx < 0 || bankerIdx >= playerCount) && bankerSelect && !isBankerHoleLocked(h)) {
           const leaders = getPrevHoleLowNetLeaders(h);
           if (leaders.length === 1) {
             bankerSelect.value = String(leaders[0]);
             bankerIdx = leaders[0];
+            lockBankerHole(h);
           }
         }
         
