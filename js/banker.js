@@ -493,20 +493,20 @@
   }
 
   function getStrokeTone(strokes) {
-    // strokes > 0 => score is reduced (good): green sheen
-    // strokes < 0 => score is increased (plus handicap gives strokes): red sheen
+    // strokes > 0 => score is reduced (good): green tint
+    // strokes < 0 => score is increased (plus handicap gives strokes): red tint
     return strokes > 0
       ? {
           color: '#0f7a49',
           borderColor: 'rgba(15, 122, 73, 0.72)',
-          background: 'linear-gradient(135deg, rgba(15, 122, 73, 0.30), rgba(15, 122, 73, 0.12) 55%, rgba(15, 122, 73, 0.04))',
-          boxShadow: 'inset 0 0 0 1px rgba(15, 122, 73, 0.34), 0 0 0 1px rgba(15, 122, 73, 0.18)'
+          background: 'rgba(15, 122, 73, 0.18)',
+          boxShadow: 'none'
         }
       : {
           color: '#ff6b6b',
           borderColor: 'rgba(255, 107, 107, 0.62)',
-          background: 'linear-gradient(135deg, rgba(255, 107, 107, 0.30), rgba(255, 107, 107, 0.12) 55%, rgba(255, 107, 107, 0.03))',
-          boxShadow: 'inset 0 0 0 1px rgba(255, 107, 107, 0.30), 0 0 0 1px rgba(255, 107, 107, 0.16)'
+          background: 'rgba(255, 107, 107, 0.18)',
+          boxShadow: 'none'
         };
   }
 
