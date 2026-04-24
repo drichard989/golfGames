@@ -534,9 +534,10 @@
       // not they are currently the banker.
       const pillStroke = getStrokeIndicatorFor(p, hole);
       if (pillStroke && pillStroke.text) {
-        if (pillStroke.text.startsWith('-')) pill.classList.add('banker-sheet-pill-stroke-down');
-        else if (pillStroke.text.startsWith('+')) pill.classList.add('banker-sheet-pill-stroke-up');
-        pill.innerHTML = `<span class="banker-sheet-pill-stroke" title="${escapeHtml(pillStroke.title)}">${escapeHtml(pillStroke.text)}</span><span class="banker-sheet-pill-name">${escapeHtml(names[p])}</span>`;
+        const strokeDirClass = pillStroke.text.startsWith('-')
+          ? 'is-stroke-down'
+          : (pillStroke.text.startsWith('+') ? 'is-stroke-up' : '');
+        pill.innerHTML = `<span class="banker-sheet-bet-stroke banker-sheet-pill-stroke ${strokeDirClass}" title="${escapeHtml(pillStroke.title)}">${escapeHtml(pillStroke.text)}</span><span class="banker-sheet-pill-name">${escapeHtml(names[p])}</span>`;
       } else {
         pill.textContent = names[p];
       }

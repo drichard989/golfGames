@@ -775,13 +775,15 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 :root[data-theme="light"] .banker-sheet-pill-stroke {
   background: rgba(0,0,0,0.06);
 }
-.banker-sheet-pill-stroke-down .banker-sheet-pill-stroke {
-  border-color: #0f7a49;
-  color: #0f7a49;
+.banker-sheet-pill-stroke.is-stroke-down {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(0, 188, 140, 0.12);
 }
-.banker-sheet-pill-stroke-up .banker-sheet-pill-stroke {
-  border-color: #2f6df6;
-  color: #2f6df6;
+.banker-sheet-pill-stroke.is-stroke-up {
+  border-color: var(--danger, #dc3545);
+  color: var(--danger, #dc3545);
+  background: rgba(220, 53, 69, 0.12);
 }
 
 .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke {
@@ -801,23 +803,35 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 :root:not([data-theme="light"]) .bss-bet-stroke,
 :root:not([data-theme="light"]) .banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke,
 :root:not([data-theme="light"]) .banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke,
-:root:not([data-theme="light"]) .banker-sheet-pill-stroke-down .banker-sheet-pill-stroke,
-:root:not([data-theme="light"]) .banker-sheet-pill-stroke-up .banker-sheet-pill-stroke,
 :root:not([data-theme="light"]) .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke,
-:root:not([data-theme="light"]) .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
-:root:not([data-theme="light"]) .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
+:root:not([data-theme="light"]) .banker-sheet-pill .banker-sheet-pill-stroke:not(.is-stroke-down):not(.is-stroke-up) {
   color: #e8ecf2 !important;
 }
 
 :root[data-theme="light"] .bss-bet-stroke,
 :root[data-theme="light"] .banker-sheet-bet-card-stroke-down .banker-sheet-bet-stroke,
 :root[data-theme="light"] .banker-sheet-bet-card-stroke-up .banker-sheet-bet-stroke,
-:root[data-theme="light"] .banker-sheet-pill-stroke-down .banker-sheet-pill-stroke,
-:root[data-theme="light"] .banker-sheet-pill-stroke-up .banker-sheet-pill-stroke,
 :root[data-theme="light"] .banker-sheet-pill[data-active="true"] .banker-sheet-pill-stroke,
-:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-down[data-active="true"] .banker-sheet-pill-stroke,
-:root[data-theme="light"] .banker-sheet-pill.banker-sheet-pill-stroke-up[data-active="true"] .banker-sheet-pill-stroke {
+:root[data-theme="light"] .banker-sheet-pill .banker-sheet-pill-stroke:not(.is-stroke-down):not(.is-stroke-up) {
   color: #4b5563 !important;
+}
+
+:root:not([data-theme="light"]) .banker-sheet-pill-stroke.is-stroke-down {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+:root:not([data-theme="light"]) .banker-sheet-pill-stroke.is-stroke-up {
+  color: var(--danger, #dc3545) !important;
+  border-color: var(--danger, #dc3545) !important;
+}
+
+:root[data-theme="light"] .banker-sheet-pill-stroke.is-stroke-down {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+:root[data-theme="light"] .banker-sheet-pill-stroke.is-stroke-up {
+  color: var(--danger, #dc3545) !important;
+  border-color: var(--danger, #dc3545) !important;
 }
 
 .bss-bet-stroke-inline {
