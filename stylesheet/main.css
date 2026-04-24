@@ -1381,11 +1381,12 @@ tr:last-child td {
   border: none;
   background: transparent;
   color: var(--ink);
-  padding: 10px var(--space-xs);
+  padding: 8px 2px;
   -moz-appearance: textfield;
   appearance: textfield;
   min-height: var(--touch-min);
-  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: clamp(14px, calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step)), 22px);
+  line-height: 1.05;
   pointer-events: none;
   touch-action: manipulation;
 }
@@ -3037,13 +3038,21 @@ input[type="text"] {
   font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
 }
 
-/* Keep scorecard Par/HCP/Score rows scaling in lockstep across all modes. */
+/* Keep score-entry cells at the larger data size while Par/HCP use their
+   dedicated anti-clipping sizing above. */
+#scorecard .score-input {
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+}
+
+/* Header rows are denser than score-entry rows; cap Par/HCP sizing to avoid
+   clipping two-digit values in sticky mode. */
 #scorecard .par-row input,
 #scorecard .hcp-row input,
-#scorecard .score-input,
 #parRowFixed input,
 #hcpRowFixed input {
-  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+  font-size: clamp(14px, calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step)), 22px);
+  line-height: 1.05;
+  padding: 8px 2px;
 }
 
 /* Add Player row — small top gap without large inline margin */
