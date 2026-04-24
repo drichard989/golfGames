@@ -230,6 +230,19 @@
     };
   }
 
+  function pulseAmountShell(inputEl){
+    if (!inputEl) return;
+    const amountShell = inputEl.closest('.banker-sheet-amount');
+    if (!amountShell) return;
+    amountShell.classList.remove('banker-sheet-amount-chip-hit');
+    // Restart animation reliably on repeated taps.
+    void amountShell.offsetWidth;
+    amountShell.classList.add('banker-sheet-amount-chip-hit');
+    setTimeout(() => {
+      amountShell.classList.remove('banker-sheet-amount-chip-hit');
+    }, 260);
+  }
+
   function ensureSheet(){
     if (sheetEl) return;
     backdropEl = document.createElement('div');
@@ -448,6 +461,7 @@
         sameMax.textContent = `Same as last · $${prevMax}`;
         sameMax.addEventListener('click', () => {
           amountInput.value = String(prevMax);
+          pulseAmountShell(amountInput);
           setMaxBet(hole, prevMax);
           prefs.lastMaxBet = prevMax;
           savePrefs();
@@ -464,6 +478,7 @@
       chip.textContent = `$${v}`;
       chip.addEventListener('click', () => {
         amountInput.value = String(v);
+        pulseAmountShell(amountInput);
         setMaxBet(hole, v);
         prefs.lastMaxBet = v;
         savePrefs();
@@ -593,6 +608,7 @@
           const m = getMaxBet(hole);
           const next = m > 0 ? Math.min(m, v) : v;
           betInput.value = String(next);
+          pulseAmountShell(betInput);
           setBet(p, hole, next);
           updateCardCap(card, p, hole);
           updateLiveResult();

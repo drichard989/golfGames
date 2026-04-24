@@ -385,10 +385,10 @@
     // strokes < 0 => score is increased (plus handicap gives strokes): red sheen
     return strokes > 0
       ? {
-          color: '#2bd48f',
-          borderColor: 'rgba(43, 212, 143, 0.62)',
-          background: 'linear-gradient(135deg, rgba(43, 212, 143, 0.28), rgba(43, 212, 143, 0.10) 55%, rgba(43, 212, 143, 0.03))',
-          boxShadow: 'inset 0 0 0 1px rgba(43, 212, 143, 0.30), 0 0 0 1px rgba(43, 212, 143, 0.16)'
+          color: '#0f7a49',
+          borderColor: 'rgba(15, 122, 73, 0.72)',
+          background: 'linear-gradient(135deg, rgba(15, 122, 73, 0.30), rgba(15, 122, 73, 0.12) 55%, rgba(15, 122, 73, 0.04))',
+          boxShadow: 'inset 0 0 0 1px rgba(15, 122, 73, 0.34), 0 0 0 1px rgba(15, 122, 73, 0.18)'
         }
       : {
           color: '#ff6b6b',
