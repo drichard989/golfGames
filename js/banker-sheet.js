@@ -448,9 +448,7 @@
       bankerBlock.appendChild(autoLabel);
     }
 
-    const tieLeaders = (
-      bankerIdx < 0 && hole > 1 && !hasBankerManualOverride(hole)
-    ) ? getPrevHoleLowNetLeaders(hole) : [];
+    const tieLeaders = (hole > 1) ? getPrevHoleLowNetLeaders(hole) : [];
     if (tieLeaders.length > 1) {
       const tieNames = tieLeaders.map((idx) => names[idx] || `Player ${idx + 1}`);
       const warning = document.createElement('div');
