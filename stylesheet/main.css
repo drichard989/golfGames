@@ -2446,6 +2446,22 @@ body.mode-games .gamesbar {
   display: none;
 }
 
+/* Large font mode: banker headers need wider Hole and Banker 2x columns to
+   prevent label clipping in both native and cloned sticky headers. */
+:root[data-font-size="large"] #bankerTable thead th:first-child,
+:root[data-font-size="large"] #bankerTable tbody td:first-child,
+:root[data-font-size="large"] #bankerSection .live-results-header-clone-table thead th:first-child {
+  width: 56px;
+  min-width: 56px;
+}
+
+:root[data-font-size="large"] #bankerTable thead th:nth-child(5),
+:root[data-font-size="large"] #bankerTable tbody td:nth-child(5),
+:root[data-font-size="large"] #bankerSection .live-results-header-clone-table thead th:nth-child(5) {
+  width: 116px;
+  min-width: 116px;
+}
+
 .banker-sheet-guidance {
   margin-top: 8px;
   padding: 10px 12px;
@@ -2613,6 +2629,11 @@ body.mode-games .gamesbar {
   align-items: center;
   justify-content: center;
   white-space: nowrap;
+  color: var(--warn, #f0ad4e) !important;
+}
+
+.banker-player-toggle.is-active {
+  color: var(--warn, #f0ad4e) !important;
 }
 
 .banker-player-bet-row {
@@ -2633,6 +2654,12 @@ body.mode-games .gamesbar {
   white-space: nowrap;
   font-size: 14px;
   font-weight: 500;
+}
+
+@media (min-width: 481px) {
+  .bss-col-bets .bss-bet-p2x-label {
+    color: var(--warn, #f0ad4e) !important;
+  }
 }
 
 .banker-stroke-slot {

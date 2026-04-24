@@ -86,6 +86,10 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 .bss-bet-p2x-label {
   display: none;
 }
+
+html[data-font-size="large"] .bss-bet-p2x-label {
+  color: var(--warn, #f0ad4e);
+}
 .bss-bet-line {
   /* Let children participate in the parent grid so columns align across rows */
   display: contents;
@@ -248,7 +252,11 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
     line-height: 1.2;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--warn, #f0ad4e);
+  }
+
+  html[data-font-size="large"] body.banker-sheet-active .bss-col-bets .bss-bet-p2x-label {
+    color: var(--warn, #f0ad4e);
   }
   body.banker-sheet-active .bss-col-bets .bss-bet-list {
     grid-area: list;
@@ -643,24 +651,29 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   font-weight: 600;
   cursor: pointer;
   text-align: left;
+  color: var(--warn, #f0ad4e);
 }
 .banker-sheet-dblbtn[data-active="true"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--warn, #f0ad4e);
 }
 :root[data-theme="light"] .banker-sheet-dblbtn[data-active="true"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--warn, #f0ad4e);
 }
 .banker-sheet-dblbtn-mult {
   font-size: var(--text-xl);
   font-weight: 800;
   min-width: 36px;
   text-align: center;
+  color: var(--warn, #f0ad4e);
 }
-.banker-sheet-dblbtn-label { flex: 1; }
+.banker-sheet-dblbtn-label {
+  flex: 1;
+  color: var(--warn, #f0ad4e);
+}
 
 .banker-sheet-bet-cards {
   display: grid;
@@ -1059,6 +1072,11 @@ body.banker-sheet-open { overflow: hidden; }
   color: var(--muted);
   font-style: italic;
   padding: 4px 6px;
+}
+
+/* Large font mode parity with tablet: emphasize the P2X label in yellow. */
+html[data-font-size="large"] body.banker-sheet-active .bss-col-bets .bss-bet-p2x-label {
+  color: var(--warn, #f0ad4e) !important;
 }
 
 /* Phone tightening (all iPhones up to Pro Max 430px) */
