@@ -76,6 +76,7 @@
   --table-cell-width: 48px;
   --table-input-width: 44px;
   --table-ch-width: 60px;
+  --games-launcher-gap: 6px;
   --scorecard-fixed-width: 175px;
   --score-header-height-scale: 1.1;
   --score-sticky-head-top: -2px;
@@ -211,7 +212,7 @@ body::before {
 header {
   padding: var(--space-md) var(--space-lg) var(--space-sm);
   display: grid;
-  gap: var(--space-sm);
+  gap: calc(var(--space-sm) / 2);
   /* Smooth collapse when Games tab is active */
   transition: max-height 0.22s ease, opacity 0.18s ease, padding 0.22s ease;
   max-height: 800px;
@@ -241,6 +242,7 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   top: auto;
   z-index: 1;
   background: var(--bg);
+  padding-bottom: 2px;
 }
 
 .header-collapse-bar {
@@ -1013,7 +1015,7 @@ select:not(.select-plain) option {
 /* Games mode: keep launcher/header area attached to the sticky primary tabs
    so no dark strip appears between the switcher and game content. */
 body.mode-games #gamesEntryPanel {
-  padding-top: 0;
+  padding-top: 6px;
 }
 
 .entry-switcher {
@@ -1563,14 +1565,14 @@ tfoot td {
 .gamesbar {
   margin: var(--space-md) var(--space-lg) 0;
   display: flex;
-  gap: var(--space-md);
+  gap: var(--games-launcher-gap, 6px);
   flex-wrap: wrap;
   align-items: center;
   overflow: visible;
 }
 
 body.mode-games .gamesbar {
-  margin-top: -2px;
+  margin-top: 0;
 }
 
 .gamesbar::-webkit-scrollbar {
@@ -1607,7 +1609,7 @@ body.mode-games .gamesbar {
 
 .game-section {
   display: none;
-  margin: var(--space-lg) var(--space-lg) 32px;
+  margin: var(--games-launcher-gap, 6px) var(--space-lg) 32px;
   padding: var(--space-lg);
   border: 2px solid var(--line);
   border-radius: var(--radius-xl);
@@ -3042,7 +3044,7 @@ input[type="text"] {
 
 /* Add Player row — small top gap without large inline margin */
 .header-addplayer-row {
-  margin-top: var(--space-xs);
+  margin-top: 0;
 }
 
 .header-title-row {
@@ -3164,11 +3166,11 @@ input[type="text"] {
 @media (min-width: 900px) {
   header {
     padding: var(--space-sm) var(--space-lg) 4px;
-    gap: var(--space-xs);
+    gap: calc(var(--space-xs) / 2);
   }
 
   .header-addplayer-row {
-    margin-top: 2px;
+    margin-top: 0;
   }
 
   .header-options-panel {
@@ -3322,7 +3324,7 @@ input[type="text"] {
   }
 
   .gamesbar {
-    gap: 10px;
+    gap: var(--games-launcher-gap, 6px);
     margin: var(--space-md) var(--space-md) 0;
     flex-wrap: wrap;
   }
@@ -3343,7 +3345,7 @@ input[type="text"] {
   }
 
   .game-section {
-    margin: var(--text-md) var(--space-md) 28px;
+    margin: var(--games-launcher-gap, 6px) var(--space-md) 28px;
     padding: var(--text-md);
   }
 
