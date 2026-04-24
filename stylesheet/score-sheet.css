@@ -54,14 +54,14 @@ body.score-sheet-active #scorecard .score-input {
   box-shadow: 0 -10px 28px rgba(15, 23, 42, 0.14);
 }
 
-@media (min-width: 720px) {
+@media (min-width: 720px), ((min-width: 520px) and (hover: none) and (pointer: coarse)) {
   .score-sheet {
     left: 50%;
     right: auto;
     bottom: 24px;
     transform: translate(-50%, 120%);
-    width: min(980px, calc(100vw - 24px));
-    max-height: min(90vh, 960px);
+    width: min(1280px, calc(100vw - 16px));
+    max-height: min(92vh, 1180px);
     border-radius: var(--radius-lg);
     border: 2px solid var(--line);
   }
@@ -341,26 +341,26 @@ body.score-sheet-active #scorecard .score-input {
   }
 }
 
-@media (min-width: 720px) {
+@media (min-width: 720px), ((min-width: 520px) and (hover: none) and (pointer: coarse)) {
   .score-sheet-header {
-    grid-template-columns: 60px 1fr 60px 60px;
-    gap: 12px;
-    padding: 18px 21px;
+    grid-template-columns: 90px 1fr 90px 90px;
+    gap: 18px;
+    padding: 27px 32px;
   }
 
   .score-sheet-title {
-    font-size: 30px;
+    font-size: 45px;
   }
 
   .score-sheet-navbtn,
   .score-sheet-close {
-    min-height: 60px;
-    border-radius: 12px;
-    font-size: 27px;
+    min-height: 90px;
+    border-radius: 18px;
+    font-size: 40px;
   }
 
   .score-sheet-body {
-    padding: 18px 21px;
+    padding: 27px 32px;
   }
 
   .score-sheet-hole-card {
@@ -371,77 +371,77 @@ body.score-sheet-active #scorecard .score-input {
 
   .score-sheet-hole-stat {
     border-radius: 0;
-    padding: 12px;
+    padding: 18px;
   }
 
   .score-sheet-meta-label {
-    font-size: 15px;
-    margin-bottom: 6px;
+    font-size: 22px;
+    margin-bottom: 9px;
   }
 
   .score-sheet-meta-value {
-    font-size: 27px;
+    font-size: 40px;
   }
 
   .score-sheet-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 15px;
-    margin-top: 18px;
+    gap: 22px;
+    margin-top: 27px;
   }
 
   .score-sheet-player-card {
-    padding: 18px;
-    border-radius: 15px;
+    padding: 27px;
+    border-radius: 22px;
   }
 
   .score-sheet-card-head {
-    gap: 12px;
-    margin-bottom: 12px;
+    gap: 18px;
+    margin-bottom: 18px;
   }
 
   .score-sheet-card-name {
-    font-size: 27px;
+    font-size: 40px;
   }
 
   .score-sheet-card-stroke {
-    min-height: 36px;
-    padding: 3px 9px;
-    font-size: 17px;
+    min-height: 54px;
+    padding: 5px 14px;
+    font-size: 26px;
   }
 
   .score-sheet-gross-label {
-    font-size: 17px;
-    min-height: 27px;
+    font-size: 26px;
+    min-height: 40px;
     line-height: 1.25;
   }
 
   .score-sheet-card-controls {
-    grid-template-columns: 84px 1fr 84px;
-    gap: 15px;
+    grid-template-columns: 126px 1fr 126px;
+    gap: 22px;
   }
 
   .score-sheet-score-col {
-    gap: 6px;
+    gap: 9px;
   }
 
   .score-sheet-stepbtn-sm {
-    min-height: 84px;
-    font-size: 42px;
+    min-height: 126px;
+    font-size: 63px;
   }
 
   .score-sheet-player-input {
-    min-height: 84px;
-    border-radius: 15px;
-    font-size: 45px;
+    min-height: 126px;
+    border-radius: 22px;
+    font-size: 68px;
   }
 
   .score-sheet-footer {
-    padding: 15px 21px calc(15px + env(safe-area-inset-bottom, 0px));
+    padding: 22px 32px calc(22px + env(safe-area-inset-bottom, 0px));
   }
 
   .score-sheet-footer .btn {
-    min-height: 66px;
-    font-size: 27px;
+    min-height: 99px;
+    font-size: 40px;
   }
 }
 
