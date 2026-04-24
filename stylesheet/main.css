@@ -2801,6 +2801,45 @@ tfoot td {
   padding: 0;
 }
 
+.junk-text-labels {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1.2;
+}
+
+.junk-ach-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 1px;
+}
+
+.junk-ach-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: 9px;
+  min-width: fit-content;
+}
+
+.junk-ach-emoji {
+  font-size: 12px;
+  line-height: 1;
+  height: 14px;
+}
+
+.junk-ach-label-small {
+  font-size: 8px;
+  font-weight: 600;
+  color: var(--ink);
+  max-width: 60px;
+  word-break: break-word;
+  text-align: center;
+}
+
 .junk-dot {
   display: inline-block;
   min-width: 18px;

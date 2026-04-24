@@ -670,26 +670,45 @@
       // Don't show Bogey or worse since they don't earn junk points
     }
     
-    // Add achievements
+    // Collect achievements with emojis
+    const achievements = [];
     box.querySelectorAll('input.junk-ach:checked').forEach(cb=>{
       const achId = cb.dataset.key;
       const ach = ACH.find(a => a.id === achId);
       if (ach) {
+        let label = ach.label;
         if (achId === 'skin') {
           const skinCount = Number(cb.dataset.count || 0);
-          labels.push(skinCount > 1 ? `${ach.label} x${skinCount}` : ach.label);
-        } else {
-          labels.push(ach.label);
+          label = skinCount > 1 ? `${ach.label} x${skinCount}` : ach.label;
         }
+        achievements.push({ emoji: ach.emoji, label });
       }
     });
     
-    // Join with line breaks after every 2 items
-    const chunks = [];
-    for(let i = 0; i < labels.length; i += 2) {
-      chunks.push(labels.slice(i, i + 2).join(', '));
+    // Build HTML: emoji + label pairs stacked
+    let html = '';
+    
+    // First add text labels (Eagle, Birdie, Par)
+    if (labels.length > 0) {
+      const chunks = [];
+      for(let i = 0; i < labels.length; i += 2) {
+        chunks.push(labels.slice(i, i + 2).join(', '));
+      }
+      html += `<div class="junk-text-labels">${chunks.join('<br>')}</div>`;
     }
-    labelsDiv.innerHTML = chunks.join('<br>');
+    
+    // Then add achievement badges (emoji + label stacked)
+    if (achievements.length > 0) {
+      const badges = achievements.map(a => `
+        <div class="junk-ach-badge">
+          <div class="junk-ach-emoji">${a.emoji}</div>
+          <div class="junk-ach-label-small">${a.label}</div>
+        </div>
+      `).join('');
+      html += `<div class="junk-ach-badges">${badges}</div>`;
+    }
+    
+    labelsDiv.innerHTML = html;
   }
 
   function updateJunkTotalsWeighted(){
