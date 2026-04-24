@@ -1,254 +1,130 @@
-# Golf Scorecard PWA
+# Golf Games
 
-**Version:** 2.1.0 | **Updated:** November 18, 2025
+Current web app version: v3.1.46
 
-A Progressive Web App for tracking golf scores with multiple simultaneous side games. Built with vanilla JavaScript, optimized for mobile and desktop use.
+Golf Games is a mobile-first progressive web app for live golf scoring with multiple side games and optional cloud live sharing.
 
-## ⚡ What's New in v2.1.0
+## Highlights
 
-- 🔔 **Error Notifications** - User-friendly toast notifications for errors and successes
-- ⌨️ **Keyboard Shortcuts** - Power user productivity (Ctrl+S, Ctrl+N, Ctrl+R)
-- 🎮 **Unified API** - Clean `window.GolfApp` namespace for all features
-- 💾 **Storage Migration** - Automatic data migration from v4 to v5
-- ♿ **Accessibility** - Skip links, screen reader support, ARIA labels
-- 🛡️ **Error Handling** - Comprehensive try-catch blocks (95% coverage)
-- 📊 **Data Validation** - Automatic input sanitization and clamping
-- 🎯 **Constants** - All magic numbers extracted to `GAME_CONSTANTS`
+- Dual-pane scorecard with pinned player and CH columns
+- Handicap modes: Gross, Play Off Low, and Raw Handicap
+- Net Double Bogey capping integrated across game calculations
+- Simultaneous side games: Junk, Skins, Vegas, Hi-Lo, Banker, Wolf
+- Mobile score-entry bottom sheet and game-specific mobile sheets
+- Cloud live sharing with edit/view codes, QR share, and QR join
+- Snapshot review/restore workflow for live cloud sessions
+- Offline-friendly PWA behavior with service worker cache management
 
-**Full details:** See [IMPROVEMENTS.md](./IMPROVEMENTS.md) and [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
+## Current Game Modules
 
----
+- Junk: dots plus achievements, standings, and per-hole breakdown
+- Skins: gross/net modes, carryover, half-pop support
+- Vegas: team scoring modes, multipliers, and rotations
+- Hi-Lo: team winner tracking and hole-by-hole summaries
+- Banker: per-hole banker assignment and betting settlement
+- Wolf: full 4-player Wolf flow with partner/lone/blind decisions
 
-## 🏌️ Features
+## Live Sharing
 
-### Core Scorecard
-- **Dynamic Player Management**: Support for 1-99 players with add/remove functionality
-- **Course Handicap System**: Full support including negative handicaps
-- **Net Scoring**: Net Double Bogey (NDB) capping with "play off low" stroke allocation
-- **Multiple Courses**: Pre-configured courses (Manito, Dove Canyon) with easy addition of new courses
-- **Auto-Advance Input**: Automatically focuses next input after score entry
-- **CSV Import/Export**: Easy score entry and data portability
+Cloud sharing supports:
 
-### Side Games (All Simultaneous)
-- **Vegas**: Team game with multipliers and digit flipping
-- **Skins**: Classic carry-over competition with half-pops mode
-- **Junk (Dots)**: Points for eagles/birdies/pars with achievements
-- **Banker**: Points-per-match (stub - to be implemented)
+- Create live session
+- Join by edit/view code
+- Join by QR scan
+- Share edit/view links and QR
+- Viewer lock mode for read-only sessions
+- Live snapshots with review and restore to current
 
-### PWA Features
-- **Offline Support**: Full functionality without internet connection
-- **Service Worker Caching**: Fast load times and offline access
-- **Auto-Updates**: Background updates with version management
-- **Responsive Design**: Optimized for phone, tablet, and desktop
-- **Dark/Light Theme**: Toggle between themes with persistence
-- **Add to Home Screen**: Install as native-like app
+Setup details are in [FIREBASE_SETUP.md](./FIREBASE_SETUP.md).
 
-## 📁 Project Structure
+## Architecture
 
-```
+No build step. Vanilla JavaScript modules loaded directly from [index.html](./index.html).
+
+- Core app state and scorecard logic: [index.js](./index.js)
+- Game modules: [js](./js)
+- Styling: [stylesheet](./stylesheet)
+- Service worker: [sw.js](./sw.js)
+
+Primary public namespace is window.GolfApp, including:
+
+- `GolfApp.api` for common app actions
+- `GolfApp.scorecard` for scorecard build and calculation internals
+- `GolfApp.appManager` for cross-game recalculation orchestration
+
+## Project Layout
+
+```text
 golfGames/
-├── index.html              # Main HTML, styles, game sections
-├── index.js                # Core scorecard logic (2,617 lines) ⭐ Updated
-├── sw.js                   # Service worker (v2.1.0) ⭐ Updated
-├── manifest.json           # PWA manifest
-├── js/
-│   ├── vegas.js           # Vegas game module (568 lines) ⭐ Improved
-│   ├── skins.js           # Skins game module (377 lines) ⭐ Improved
-│   ├── junk.js            # Junk game module (487 lines) ⭐ Improved
-│   ├── hilo.js            # Hi-Lo game module (445 lines) ⭐ Improved
-│   ├── export.js          # CSV/Email export (2,179 lines)
-│   ├── qrcode.js          # QR code sharing
-│   └── banker.js          # Banker stub (38 lines)
-├── stylesheet/
-│   └── main.css           # Main styles with toasts ⭐ Updated
-├── IMPROVEMENTS.md         # v2.1.0 improvements doc ⭐ New
-├── MIGRATION_GUIDE.md      # Upgrade guide ⭐ New
-└── QUICK_REFERENCE.md      # API reference ⭐ New
+  index.html
+  index.js
+  sw.js
+  manifest.json
+  js/
+    cloudsync.js
+    score-sheet.js
+    junk.js
+    junk-sheet.js
+    skins.js
+    vegas.js
+    hilo.js
+    banker.js
+    banker-sheet.js
+    wolf.js
+    wolf-sheet.js
+    export.js
+    firebase-config.js
+    qrcode.js
+  stylesheet/
+    main.css
+    junk.css
+    banker.css
+    score-sheet.css
+    wolf.css
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
-### Installation
-1. Clone the repository
-2. Serve files with any HTTP server (required for service worker)
-3. Access via browser
+1. Clone this repository.
+2. Run a local web server from repo root.
+3. Open the app in a browser.
 
-### Development
+Example:
+
 ```bash
-# Simple Python server
-python -m http.server 8000
-
-# Or Node.js
-npx http-server
+python3 -m http.server 8000
 ```
 
-### Using The API
-```javascript
-// Access everything via unified namespace
-window.GolfApp.version           // "2.1.0"
-window.GolfApp.api.save()        // Save scorecard
-window.GolfApp.api.addPlayer()   // Add player
-window.GolfApp.errorHandler.success('Success!') // Show toast
+Then open:
 
-// Full API reference in QUICK_REFERENCE.md
+```text
+http://127.0.0.1:8000/index.html
 ```
 
-### Keyboard Shortcuts ⌨️
-- `Ctrl/Cmd + S` - Save scorecard
-- `Ctrl/Cmd + N` - Add new player
-- `Ctrl/Cmd + R` - Refresh all calculations
-- `Escape` - Close notifications
+## Development Notes
 
----
+- Service worker version and cache key are managed in [sw.js](./sw.js).
+- CSS asset query versions in [index.html](./index.html) are used for cache busting.
+- The app is optimized for touch/mobile first, then desktop.
 
-## 📚 Documentation
+## Documentation
 
-- **[IMPROVEMENTS.md](./IMPROVEMENTS.md)** - Complete v2.1.0 improvements
-- **[QUICK_REFERENCE.md](./QUICK_REFERENCE.md)** - Developer API reference
-- **[MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)** - v2.0 → v2.1 upgrade guide
+- [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
+- [IMPROVEMENTS.md](./IMPROVEMENTS.md)
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md)
+- [FIREBASE_SETUP.md](./FIREBASE_SETUP.md)
+- [PWA_SETUP.md](./PWA_SETUP.md)
+- [TEST_README.md](./TEST_README.md)
 
----
+## Contributing
 
-## 🎮 Game Rules
+This repository is proprietary. See [CONTRIBUTING.md](./CONTRIBUTING.md) for contribution and IP terms.
 
-### Vegas
-Team-based game combining scores into 2-digit numbers.
+## License
 
-**Modes:**
-- **Standard (4 players)**: 2v2 fixed partnerships
-- **Rotation (3 players)**: Each player partners with ghost (par) for 6 holes
-- **Ghost (2 players)**: Both players partner with ghost
+This project is proprietary and distributed under an All Rights Reserved license.
 
-**Scoring:**
-- Scores combined low-to-high (e.g., 4+5 = "45")
-- Lower number wins: points = (higher - lower) × multiplier
-- Birdie: 2× multiplier (optional)
-- Eagle: 3× multiplier (optional)
-- Digit flip on opponent birdie+ (45 → 54)
-
-### Skins
-Classic hole-by-hole competition.
-
-**Rules:**
-- Lowest net score wins each hole
-- Ties carry forward (pot accumulates)
-- Final carry distributed evenly
-
-**Options:**
-- Standard or half-pops handicapping
-- NET or GROSS scoring
-- Configurable buy-in
-
-### Junk (Dots)
-Points for good scoring.
-
-**Base Points:**
-- Eagle or better: 4 dots
-- Birdie: 2 dots
-- Par: 1 dot
-- Bogey+: 0 dots
-
-**Achievements (Bonus Points):**
-- Hogan (5 pts): Birdie+ on all par 3s
-- Sandy (3 pts): Up and down from bunker
-- Sadaam (2 pts): Out of bunker in one
-- Pulley (1 pt): Par after penalty
-- Triple (10 pts): 3+ consecutive birdies
-
-## 🏗️ Architecture
-
-### Modular Design
-The application uses a clean modular architecture with separation of concerns:
-
-**Core (index.js)**
-- `Config`: Course database, constants
-- `Utils`: DOM helpers, math utilities
-- `AppManager`: Coordinates game recalculations
-- `Storage`: localStorage with versioning
-- `Scorecard`: Table building, calculations, player/course management
-
-**External Modules**
-Each game is a self-contained module exposing a clean API via `window.[GameName]`:
-- Independent calculation logic
-- Own DOM manipulation
-- State management (save/load)
-- No cross-dependencies
-
-### Key Design Patterns
-- **IIFE Modules**: Encapsulation with controlled global exposure
-- **Play Off Low**: Handicap system for fair competition
-- **NDB Capping**: Prevents runaway bad holes
-- **Debounced Saves**: Auto-save with 300ms debounce
-- **Progressive Enhancement**: Works without JavaScript for basic HTML
-
-## 🚀 Getting Started
-
-### Installation
-1. Clone the repository
-2. Serve files with any HTTP server (required for service worker)
-3. Access via browser
-
-### Development
-```bash
-# Simple Python server
-python -m http.server 8000
-
-# Or Node.js
-npx http-server
-```
-
-### Production
-Deploy to any static hosting service:
-- GitHub Pages
-- Netlify
-- Vercel
-- CloudFlare Pages
-
-## 🔧 Adding a New Course
-
-Edit `index.js` in the `Config.COURSES` object:
-
-```javascript
-COURSES: {
-  'yourcourse': {
-    name: 'Your Course Name',
-    pars: [4,4,4,5,3,4,4,3,4, 4,4,3,5,5,4,4,3,4],
-    hcpMen: [7,13,11,15,17,1,5,9,3, 10,2,12,14,18,4,6,16,8]
-  }
-}
-```
-
-Where:
-- `pars`: Par for holes 1-18 (exactly 18 values)
-- `hcpMen`: Handicap index 1-18 (1=hardest, 18=easiest)
-
-## 📱 Browser Support
-
-**Recommended:**
-- Chrome 90+
-- Safari 14+
-- Firefox 88+
-- Edge 90+
-
-**Required Features:**
-- ES6+ JavaScript
-- Service Workers
-- localStorage
-- CSS Grid
-- Flexbox
-
-## 🤝 Contributing
-
-Contributions welcome! Areas for contribution:
-- Implement Banker game logic
-- Add new courses
-- UI/UX improvements
-- Additional game modes
-- Bug fixes
-
-## 🎯 Roadmap
-
-## 📊 Stats
+See [LICENSE](./LICENSE) for full terms.
 
 - **Total Lines**: ~3,018 across all modules
 - **Core**: 1,474 lines
