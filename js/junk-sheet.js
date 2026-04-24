@@ -28,7 +28,7 @@
     { id: 'sadaam',  label: 'Sadaam',  pts: 2,   emoji: '💥' },
     { id: 'kp',      label: 'KP',      pts: 1,   emoji: '🎯' },
     { id: 'hoover',  label: 'Hoover',  pts: 10,  emoji: '🧹' },
-    { id: 'skin',    label: 'Skin',    pts: 1,   emoji: '�', auto: true },
+    { id: 'skin',    label: 'Skin',    pts: 1,   emoji: '👑', auto: true },
     { id: 'pulley',  label: 'Pully',   pts: 1,   emoji: '🪢' },
     { id: 'gcbc',    label: 'GCBBC',    pts: 3,   emoji: '🍆' },
     { id: 'dod',     label: 'DOD',     pts: 1,   emoji: '💀', imageUrl: 'images/dod.png' },
