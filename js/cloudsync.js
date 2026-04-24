@@ -1564,6 +1564,7 @@
       updateUiForSession();
       updateJoinProgressOverlay('Loading live scorecard...');
       await subscribeRealtime(result.gameId);
+      scheduleScorecardAlignmentAfterJoin();
       if (showSuccessToast) {
         showJoinSuccessToast(state.session.role);
       }
@@ -1791,6 +1792,26 @@
         scorecard.scrollIntoView({ behavior: 'auto', block: 'start' });
       });
     }
+
+    scheduleScorecardAlignmentAfterJoin();
+  }
+
+  function scheduleScorecardAlignmentAfterJoin() {
+    const runSync = () => {
+      const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
+      if (typeof sync === 'function') {
+        try {
+          sync(true);
+        } catch (err) {
+          console.warn('[CloudSync] post-join row-height sync failed:', err);
+        }
+      }
+    };
+
+    requestAnimationFrame(runSync);
+    setTimeout(runSync, 80);
+    setTimeout(runSync, 220);
+    setTimeout(runSync, 520);
   }
 
   async function joinSessionFromUrlIfPresent() {
