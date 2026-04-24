@@ -2506,6 +2506,11 @@ tfoot td {
   font-size: 10px;
 }
 
+.banker-result-warning {
+  color: var(--warn, #f0ad4e);
+  font-weight: 700;
+}
+
 .banker-inline-stroke-pill {
   display: inline-flex;
   align-items: center;

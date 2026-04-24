@@ -262,6 +262,48 @@
     };
   }
 
+  function getActiveBankerHcpMode() {
+    const activeBtn = document.querySelector('#bankerHcpModeGroup .hcp-mode-btn[data-active="true"]');
+    return activeBtn?.dataset.value || 'rawHandicap';
+  }
+
+  /**
+   * Get previous-hole low-net leaders for desktop banker preselection.
+   * @param {number} holeOneBased
+   * @returns {number[]} zero-based player indexes tied for low score
+   */
+  function getPrevHoleLowNetLeaders(holeOneBased) {
+    const hole = Number(holeOneBased);
+    if (!Number.isFinite(hole) || hole <= 1) return [];
+
+    const prevHoleIdx = hole - 2;
+    const playerCount = getPlayerCount();
+    const mode = getActiveBankerHcpMode();
+    const useNet = mode !== 'gross';
+    const netHcpMode = mode === 'playOffLow' ? 'playOffLow' : 'rawHandicap';
+
+    let bestScore = null;
+    const leaders = [];
+
+    for (let p = 0; p < playerCount; p++) {
+      const gross = getGross(p, prevHoleIdx);
+      if (!Number.isFinite(gross) || gross <= 0) continue;
+
+      const score = useNet ? getNetScore(p, prevHoleIdx, netHcpMode) : gross;
+      if (!Number.isFinite(score) || score <= 0) continue;
+
+      if (bestScore == null || score < bestScore) {
+        bestScore = score;
+        leaders.length = 0;
+        leaders.push(p);
+      } else if (score === bestScore) {
+        leaders.push(p);
+      }
+    }
+
+    return leaders;
+  }
+
   /**
    * Persist state using app-level debounced saver if available.
    */
@@ -1137,13 +1179,30 @@
         if (!betsTd) continue;
         
         const bankerSelect = document.getElementById(DOM_IDS.bankerSelect(h));
-        const bankerIdx = bankerSelect ? Number(bankerSelect.value) : -1;
+        let bankerIdx = bankerSelect ? Number(bankerSelect.value) : -1;
+
+        // Desktop parity with bottom-sheet flow:
+        // preselect this hole's banker from previous-hole low-net winner.
+        if ((bankerIdx < 0 || bankerIdx >= playerCount) && bankerSelect) {
+          const leaders = getPrevHoleLowNetLeaders(h);
+          if (leaders.length === 1) {
+            bankerSelect.value = String(leaders[0]);
+            bankerIdx = leaders[0];
+          }
+        }
         
         if (bankerIdx < 0 || bankerIdx >= playerCount) {
           betsTd.innerHTML = '';
           const selectMsg = document.createElement('span');
-          selectMsg.className = 'banker-result-muted banker-result-muted-sm';
-          selectMsg.textContent = 'Select banker';
+          const tieLeaders = getPrevHoleLowNetLeaders(h);
+          if (tieLeaders.length > 1) {
+            const tieNames = tieLeaders.map((idx) => names[idx] || `P${idx + 1}`);
+            selectMsg.className = 'banker-result-muted banker-result-muted-sm banker-result-warning';
+            selectMsg.textContent = `Tie on Hole ${h - 1} low net (${tieNames.join(', ')}). Select who holed out first.`;
+          } else {
+            selectMsg.className = 'banker-result-muted banker-result-muted-sm';
+            selectMsg.textContent = 'Select banker';
+          }
           betsTd.appendChild(selectMsg);
           continue;
         }
