@@ -17,6 +17,7 @@
     leaveBtn: () => document.getElementById('cloudLeaveBtn'),
     createBadgeBtn: () => document.getElementById('cloudCreateBadgeBtn'),
     qrBadgeBtn: () => document.getElementById('cloudQrBadgeBtn'),
+    joinQrBadgeBtn: () => document.getElementById('cloudJoinQrBadgeBtn'),
     editCodeBadgeBtn: () => document.getElementById('cloudEditCodeBadgeBtn'),
     viewCodeBadgeBtn: () => document.getElementById('cloudViewCodeBadgeBtn'),
     joinCode: () => document.getElementById('cloudJoinCode'),
@@ -274,6 +275,7 @@
   function syncHeaderCodeBadgeButtons() {
     const createBtn = EL.createBadgeBtn();
     const qrBtn = EL.qrBadgeBtn();
+    const joinQrBtn = EL.joinQrBadgeBtn();
     const editBtn = EL.editCodeBadgeBtn();
     const viewBtn = EL.viewCodeBadgeBtn();
 
@@ -290,6 +292,12 @@
       qrBtn.disabled = false;
       qrBtn.textContent = 'Share QR';
       qrBtn.title = 'Share live view QR code';
+    }
+
+    if (joinQrBtn) {
+      joinQrBtn.disabled = false;
+      joinQrBtn.textContent = 'Join QR';
+      joinQrBtn.title = 'Scan a QR code to join a live game';
     }
 
     if (editBtn) {
@@ -1055,6 +1063,190 @@
     qrWrap.appendChild(canvas);
   }
 
+  function extractCodeFromScannedQrText(rawText) {
+    const text = String(rawText || '').trim();
+    if (!text) return '';
+
+    // If full URL (our current QR format), pull view/code query param.
+    try {
+      const url = new URL(text);
+      const direct = normalizeCode(url.searchParams.get('view') || url.searchParams.get('code') || '');
+      if (direct) return direct;
+    } catch (_) {
+      // Not a URL - continue with fallback parsers below.
+    }
+
+    // Fallback for partial URLs / copied query fragments.
+    const queryMatch = text.match(/[?&](?:view|code)=([^&#\s]+)/i);
+    if (queryMatch?.[1]) {
+      try {
+        return normalizeCode(decodeURIComponent(queryMatch[1]));
+      } catch {
+        return normalizeCode(queryMatch[1]);
+      }
+    }
+
+    // Last resort: treat raw scan data as a direct access code.
+    return normalizeCode(text);
+  }
+
+  async function scanJoinQrCodeAndJoin() {
+    if (typeof jsQR === 'undefined') {
+      throw new Error('QR scanner unavailable. Refresh and try again.');
+    }
+
+    const scannedText = await new Promise((resolve, reject) => {
+      let rafId = null;
+      let stream = null;
+      let closed = false;
+
+      const modal = document.createElement('div');
+      modal.id = 'cloudJoinQrScanModal';
+      modal.style.cssText = [
+        'position: fixed',
+        'inset: 0',
+        'background: rgba(0,0,0,0.8)',
+        'display: flex',
+        'align-items: center',
+        'justify-content: center',
+        'z-index: 10010',
+        'padding: 12px'
+      ].join(';');
+
+      const card = document.createElement('div');
+      card.style.cssText = [
+        'background: #111',
+        'color: #fff',
+        'border-radius: 12px',
+        'width: min(94vw, 460px)',
+        'padding: 12px 12px 10px',
+        'box-sizing: border-box'
+      ].join(';');
+
+      const title = document.createElement('h2');
+      title.textContent = 'Join via QR';
+      title.style.cssText = 'margin: 0 0 8px 0; font-size: 20px;';
+
+      const message = document.createElement('p');
+      message.textContent = 'Point your camera at a live-share QR code.';
+      message.style.cssText = 'margin: 0 0 10px 0; color: #c8cdd3; font-size: 13px;';
+
+      const video = document.createElement('video');
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('muted', 'true');
+      video.autoplay = true;
+      video.style.cssText = [
+        'display: block',
+        'width: 100%',
+        'max-height: min(58vh, 360px)',
+        'background: #000',
+        'border-radius: 10px',
+        'object-fit: cover'
+      ].join(';');
+
+      const canvas = document.createElement('canvas');
+      canvas.style.display = 'none';
+
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex; justify-content:flex-end; margin-top:10px;';
+      const cancelBtn = document.createElement('button');
+      cancelBtn.type = 'button';
+      cancelBtn.className = 'btn';
+      cancelBtn.textContent = 'Cancel';
+      cancelBtn.style.cssText = 'min-height: 40px;';
+      actions.appendChild(cancelBtn);
+
+      card.append(title, message, video, canvas, actions);
+      modal.appendChild(card);
+      document.body.appendChild(modal);
+
+      const cleanup = () => {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
+        try {
+          stream?.getTracks?.().forEach((t) => t.stop());
+        } catch {}
+        modal.remove();
+      };
+
+      const closeWithError = (err) => {
+        if (closed) return;
+        closed = true;
+        cleanup();
+        reject(err);
+      };
+
+      const closeWithResult = (value) => {
+        if (closed) return;
+        closed = true;
+        cleanup();
+        resolve(value);
+      };
+
+      cancelBtn.addEventListener('click', () => closeWithError(new Error('QR scan cancelled')));
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeWithError(new Error('QR scan cancelled'));
+      });
+
+      navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: 'environment' },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      }).then((s) => {
+        stream = s;
+        video.srcObject = s;
+        return video.play();
+      }).then(() => {
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        const tick = () => {
+          if (closed) return;
+          if (video.readyState >= video.HAVE_ENOUGH_DATA) {
+            const w = video.videoWidth;
+            const h = video.videoHeight;
+            if (w > 0 && h > 0) {
+              canvas.width = w;
+              canvas.height = h;
+              ctx.drawImage(video, 0, 0, w, h);
+              const imageData = ctx.getImageData(0, 0, w, h);
+              const result = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+              if (result?.data) {
+                closeWithResult(result.data);
+                return;
+              }
+            }
+          }
+          rafId = requestAnimationFrame(tick);
+        };
+
+        tick();
+      }).catch((err) => {
+        closeWithError(new Error(`Camera unavailable: ${err?.message || err}`));
+      });
+    });
+
+    const code = extractCodeFromScannedQrText(scannedText);
+    if (!code) {
+      throw new Error('Scanned QR does not contain a valid join code.');
+    }
+
+    const joinInput = EL.joinCode();
+    if (joinInput) joinInput.value = code;
+
+    showJoinProgressOverlay('Checking access code...');
+    try {
+      await joinSessionWithCode(code, { showSuccessToast: false });
+      completeJoinProgressOverlay(state.session?.role);
+    } catch (err) {
+      clearJoinProgressOverlay();
+      throw err;
+    }
+  }
+
   async function generateLiveViewQrCode() {
     if (!state.user) throw new Error('Cloud auth is not ready yet.');
 
@@ -1664,6 +1856,17 @@
           await generateLiveEditQrCode();
         } else {
           await generateLiveViewQrCode();
+        }
+      }));
+
+    EL.joinQrBadgeBtn()?.addEventListener('click',
+      withCloudOp('join QR (badge)', null, async () => {
+        try {
+          await scanJoinQrCodeAndJoin();
+        } catch (err) {
+          const msg = String(err?.message || err || '').toLowerCase();
+          if (msg.includes('cancelled')) return;
+          throw err;
         }
       }));
 
