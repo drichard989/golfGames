@@ -4614,19 +4614,6 @@
         return Math.ceil(shell.getBoundingClientRect().height || 0);
       };
 
-      const ensureVegasClosedCloneAnchor = (section) => {
-        const header = section.querySelector('.game-section-header');
-        if (!header) return null;
-
-        let anchor = section.querySelector('.vegas-closed-header-clone-anchor');
-        if (!anchor) {
-          anchor = document.createElement('div');
-          anchor.className = 'vegas-closed-header-clone-anchor';
-          header.insertAdjacentElement('afterend', anchor);
-        }
-        return anchor;
-      };
-
       const findSectionTable = (section) =>
         section.querySelector('#vegasTable, #bankerTable, #junkTable, #wolfTable');
 
@@ -4649,8 +4636,6 @@
         section.classList.remove('live-header-clone-standalone');
         const host = section.querySelector('.live-results-header-clone');
         if (host) host.remove();
-        const anchor = section.querySelector('.vegas-closed-header-clone-anchor');
-        if (anchor) anchor.remove();
       };
 
       const ensureLiveHeaderClone = (section, hostParent, { standalone = false } = {}) => {
@@ -4684,7 +4669,19 @@
         if (standalone) {
           host.classList.add('is-standalone');
         }
-        hostParent.appendChild(host);
+        if (standalone) {
+          const sectionHeader = section.querySelector('.game-section-header');
+          const tableWrap = findSectionTableWrap(section);
+          if (sectionHeader && tableWrap) {
+            tableWrap.insertAdjacentElement('beforebegin', host);
+          } else if (sectionHeader) {
+            sectionHeader.insertAdjacentElement('afterend', host);
+          } else {
+            hostParent.appendChild(host);
+          }
+        } else {
+          hostParent.appendChild(host);
+        }
 
         const syncNow = () => {
           rafId = null;
@@ -4902,10 +4899,7 @@
           return;
         }
 
-        const anchor = ensureVegasClosedCloneAnchor(section);
-        if (!anchor) return;
-
-        ensureLiveHeaderCloneWhenReady(section, anchor, { standalone: true });
+        ensureLiveHeaderCloneWhenReady(section, section, { standalone: true });
       };
 
       const toggles = document.querySelectorAll('.game-options-toggle[data-target]');
