@@ -236,13 +236,13 @@ body.score-sheet-active #scorecard .score-input {
 .score-sheet-card-stroke.is-down {
   border-color: rgba(0, 188, 140, 0.65);
   background: rgba(0, 188, 140, 0.2);
-  color: #fff;
+  color: #e8ecf2;
 }
 
 .score-sheet-card-stroke.is-up {
   border-color: rgba(220, 53, 69, 0.7);
   background: rgba(220, 53, 69, 0.2);
-  color: #fff;
+  color: #e8ecf2;
 }
 
 .score-sheet-card-controls {
@@ -312,11 +312,11 @@ body.score-sheet-active #scorecard .score-input {
 }
 
 :root[data-theme="light"] .score-sheet-card-stroke.is-down {
-  color: #0a3a2e;
+  color: #e8ecf2;
 }
 
 :root[data-theme="light"] .score-sheet-card-stroke.is-up {
-  color: #7a1b25;
+  color: #e8ecf2;
 }
 
 .score-sheet-footer {
