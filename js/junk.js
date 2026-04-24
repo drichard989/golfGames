@@ -526,7 +526,7 @@
     { id: "skin",   label: "Skin",   pts: 1 },
     { id: "pulley", label: "Pully",  pts: 1 },
     { id: "gcbc",   label: "GCBBC",   pts: 3 },
-    { id: "dod",    label: "DOD",    pts: 1 },
+    { id: "dod",    label: "DOD",    pts: 1, imageUrl: "images/dod.png" },
     { id: "hogan",  label: "Hogan",  pts: 1 },
     { id: "woodie", label: "Woodie", pts: 1 },
     { id: "chippy", label: "Chippy", pts: 1 },
@@ -670,7 +670,7 @@
       // Don't show Bogey or worse since they don't earn junk points
     }
     
-    // Collect achievements with emojis
+    // Collect achievements with emojis/images
     const achievements = [];
     box.querySelectorAll('input.junk-ach:checked').forEach(cb=>{
       const achId = cb.dataset.key;
@@ -681,7 +681,10 @@
           const skinCount = Number(cb.dataset.count || 0);
           label = skinCount > 1 ? `${ach.label} x${skinCount}` : ach.label;
         }
-        achievements.push({ emoji: ach.emoji, label });
+        const iconHtml = ach.imageUrl 
+          ? `<img src="${ach.imageUrl}" alt="${ach.label}" style="height:1em;width:1em;object-fit:contain;"/>` 
+          : ach.emoji;
+        achievements.push({ icon: iconHtml, label });
       }
     });
     
@@ -697,11 +700,11 @@
       html += `<div class="junk-text-labels">${chunks.join('<br>')}</div>`;
     }
     
-    // Then add achievement badges (emoji + label stacked)
+    // Then add achievement badges (emoji/image + label stacked)
     if (achievements.length > 0) {
       const badges = achievements.map(a => `
         <div class="junk-ach-badge">
-          <div class="junk-ach-emoji">${a.emoji}</div>
+          <div class="junk-ach-emoji">${a.icon}</div>
           <div class="junk-ach-label-small">${a.label}</div>
         </div>
       `).join('');

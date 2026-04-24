@@ -31,7 +31,7 @@
     { id: 'skin',    label: 'Skin',    pts: 1,   emoji: '�', auto: true },
     { id: 'pulley',  label: 'Pully',   pts: 1,   emoji: '🪢' },
     { id: 'gcbc',    label: 'GCBBC',    pts: 3,   emoji: '🍆' },
-    { id: 'dod',     label: 'DOD',     pts: 1,   emoji: '💀' },
+    { id: 'dod',     label: 'DOD',     pts: 1,   emoji: '💀', imageUrl: 'images/dod.png' },
     { id: 'hogan',   label: 'Hogan',   pts: 1,   emoji: '🎩' },
     { id: 'woodie',  label: 'Woodie',  pts: 1,   emoji: '🌲' },
     { id: 'chippy',  label: 'Chippy',  pts: 1,   emoji: '🐿️' },
@@ -175,14 +175,20 @@
           const count = getSkinCountFor(hole, p);
           btn.disabled = true;
           btn.classList.add('is-auto');
+          const emojiHtml = a.imageUrl 
+            ? `<img src="${a.imageUrl}" alt="${a.label}" style="height:1em;width:1em;object-fit:contain;"/>`
+            : a.emoji;
           btn.innerHTML = `
-            <span class="junk-sheet-chip-emoji">${a.emoji}</span>
+            <span class="junk-sheet-chip-emoji">${emojiHtml}</span>
             <span class="junk-sheet-chip-label">${a.label}${count > 0 ? ` ×${count}` : ''}</span>
             <span class="junk-sheet-chip-pts">Auto</span>
           `;
         } else {
+          const emojiHtml = a.imageUrl 
+            ? `<img src="${a.imageUrl}" alt="${a.label}" style="height:1em;width:1em;object-fit:contain;"/>`
+            : a.emoji;
           btn.innerHTML = `
-            <span class="junk-sheet-chip-emoji">${a.emoji}</span>
+            <span class="junk-sheet-chip-emoji">${emojiHtml}</span>
             <span class="junk-sheet-chip-label">${a.label}</span>
             <span class="junk-sheet-chip-pts">+${a.pts}</span>
           `;
