@@ -1,5 +1,18 @@
 {
   "projects": {
     "default": "golfgames-b3539"
-  }
+  },
+  "targets": {
+    "golfgames-b3539": {
+      "hosting": {
+        "staging": [
+          "golfgames-staging"
+        ],
+        "prod": [
+          "golfgames-b3539"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

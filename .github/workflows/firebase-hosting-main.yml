@@ -1,0 +1,27 @@
+name: Deploy Firebase Hosting (main)
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-hosting:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Deploy Hosting (prod target)
+        run: firebase deploy --only hosting:prod --project golfgames-b3539
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
