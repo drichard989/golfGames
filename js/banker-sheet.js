@@ -53,10 +53,22 @@
   function loadPrefs(){
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return { autoRotate: false, lastMaxBet: 10, bankerManualOverrideByHole: {} };
+      if (!raw) {
+        return {
+          autoRotate: true,
+          autoRotateUserSet: false,
+          lastMaxBet: 10,
+          bankerManualOverrideByHole: {},
+          bankerAutoSelectedFromPrevHole: {}
+        };
+      }
       const p = JSON.parse(raw);
+      const userSet = !!p.autoRotateUserSet;
       return {
-        autoRotate: !!p.autoRotate,
+        // Migration: historical installs defaulted auto-rotate off.
+        // Treat missing explicit user choice as enabled so low-net preselect works.
+        autoRotate: userSet ? !!p.autoRotate : true,
+        autoRotateUserSet: userSet,
         lastMaxBet: Number.isFinite(Number(p.lastMaxBet)) ? Number(p.lastMaxBet) : 10,
         bankerManualOverrideByHole: (p && typeof p.bankerManualOverrideByHole === 'object' && p.bankerManualOverrideByHole)
           ? p.bankerManualOverrideByHole
@@ -67,7 +79,8 @@
       };
     } catch(_) {
       return {
-        autoRotate: false,
+        autoRotate: true,
+        autoRotateUserSet: false,
         lastMaxBet: 10,
         bankerManualOverrideByHole: {},
         bankerAutoSelectedFromPrevHole: {}
@@ -375,6 +388,7 @@
     autoCb.checked = !!prefs.autoRotate;
     autoCb.addEventListener('change', () => {
       prefs.autoRotate = !!autoCb.checked;
+      prefs.autoRotateUserSet = true;
       savePrefs();
     });
 
