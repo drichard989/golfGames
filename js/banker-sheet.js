@@ -15,7 +15,7 @@
      - Max Bet inline stepper (-/+ buttons + numeric input)
      - Per-opponent card with bet input + 2×/3× toggle + stroke indicator
      - Banker 2×/3× toggle prominently at top
-     - Auto-rotate banker (opt-in, persisted)
+    - Auto-select banker from previous-hole low net (opt-in, persisted)
      - "Repeat last hole" shortcut (banker rotation + prior bets)
      - Max Bet default remembers last-used value
      - Live result preview
@@ -55,20 +55,24 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) {
         return {
-          autoRotate: true,
-          autoRotateUserSet: false,
+          autoSelect: true,
+          autoSelectUserSet: false,
           lastMaxBet: 10,
           bankerManualOverrideByHole: {},
           bankerAutoSelectedFromPrevHole: {}
         };
       }
       const p = JSON.parse(raw);
-      const userSet = !!p.autoRotateUserSet;
+      // Backward-compatible migration from historical autoRotate key.
+      const userSet = !!(p.autoSelectUserSet ?? p.autoRotateUserSet);
+      const storedAutoSelect = (typeof p.autoSelect === 'boolean')
+        ? p.autoSelect
+        : !!p.autoRotate;
       return {
         // Migration: historical installs defaulted auto-rotate off.
         // Treat missing explicit user choice as enabled so low-net preselect works.
-        autoRotate: userSet ? !!p.autoRotate : true,
-        autoRotateUserSet: userSet,
+        autoSelect: userSet ? storedAutoSelect : true,
+        autoSelectUserSet: userSet,
         lastMaxBet: Number.isFinite(Number(p.lastMaxBet)) ? Number(p.lastMaxBet) : 10,
         bankerManualOverrideByHole: (p && typeof p.bankerManualOverrideByHole === 'object' && p.bankerManualOverrideByHole)
           ? p.bankerManualOverrideByHole
@@ -79,8 +83,8 @@
       };
     } catch(_) {
       return {
-        autoRotate: true,
-        autoRotateUserSet: false,
+        autoSelect: true,
+        autoSelectUserSet: false,
         lastMaxBet: 10,
         bankerManualOverrideByHole: {},
         bankerAutoSelectedFromPrevHole: {}
@@ -319,7 +323,7 @@
 
   function maybePreselectBankerFromPrevLowNet(hole){
     const h = Number(hole);
-    if (!prefs.autoRotate || !Number.isFinite(h) || h <= 1) return;
+    if (!prefs.autoSelect || !Number.isFinite(h) || h <= 1) return;
     if (!prefs.bankerAutoSelectedFromPrevHole || typeof prefs.bankerAutoSelectedFromPrevHole !== 'object') {
       prefs.bankerAutoSelectedFromPrevHole = {};
     }
@@ -371,7 +375,7 @@
       <div class="banker-sheet-footer">
         <label class="banker-sheet-autorotate">
           <input type="checkbox" class="banker-sheet-autorotate-cb" />
-          <span>Auto-rotate banker</span>
+          <span>Auto-select banker (prev hole low net)</span>
         </label>
         <div class="banker-sheet-footer-actions">
           <button type="button" class="btn banker-sheet-done">Done</button>
@@ -385,10 +389,10 @@
     sheetEl.querySelector('[data-nav="next"]').addEventListener('click', () => navigateHole(1));
 
     const autoCb = sheetEl.querySelector('.banker-sheet-autorotate-cb');
-    autoCb.checked = !!prefs.autoRotate;
+    autoCb.checked = !!prefs.autoSelect;
     autoCb.addEventListener('change', () => {
-      prefs.autoRotate = !!autoCb.checked;
-      prefs.autoRotateUserSet = true;
+      prefs.autoSelect = !!autoCb.checked;
+      prefs.autoSelectUserSet = true;
       savePrefs();
     });
 
@@ -458,7 +462,7 @@
 
     const autoFromPrev = Number(prefs.bankerAutoSelectedFromPrevHole?.[String(hole)]);
     if (
-      prefs.autoRotate &&
+      prefs.autoSelect &&
       bankerIdx >= 0 &&
       !hasBankerManualOverride(hole) &&
       Number.isFinite(autoFromPrev)
@@ -470,7 +474,7 @@
     }
 
     const tieLeaders = (
-      prefs.autoRotate && bankerIdx < 0 && hole > 1 && !hasBankerManualOverride(hole)
+      prefs.autoSelect && bankerIdx < 0 && hole > 1 && !hasBankerManualOverride(hole)
     ) ? getPrevHoleLowNetLeaders(hole) : [];
     if (tieLeaders.length > 1) {
       const tieNames = tieLeaders.map((idx) => names[idx] || `Player ${idx + 1}`);
