@@ -161,8 +161,8 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   font-size: 11px;
 }
 .bss-bdbl-val.is-on {
-  background: var(--warn, #f0ad4e);
-  border-color: var(--warn, #f0ad4e);
+  background: var(--accent);
+  border-color: var(--accent);
   color: #000;
 }
 .bss-result-block {
@@ -273,6 +273,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
     margin: 0;
     min-width: 44px;
     line-height: 1.2;
+    color: var(--accent);
   }
   body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
   body.banker-sheet-active .bss-bet-line > .bss-bet-name { padding-left: 6px; }
