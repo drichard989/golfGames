@@ -3034,7 +3034,16 @@ input[type="number"],
 input[type="text"] {
   padding: 10px var(--space-md);
   min-height: var(--touch-min);
-  font-size: var(--text-xl);
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
+}
+
+/* Keep scorecard Par/HCP/Score rows scaling in lockstep across all modes. */
+#scorecard .par-row input,
+#scorecard .hcp-row input,
+#scorecard .score-input,
+#parRowFixed input,
+#hcpRowFixed input {
+  font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
 }
 
 /* Add Player row — small top gap without large inline margin */
@@ -3480,7 +3489,7 @@ input[type="text"] {
   input[type="text"] {
     min-height: var(--touch-comfortable);
     padding: var(--space-md) var(--text-md);
-    font-size: var(--text-xl);
+    font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
   }
 
   /* Par/HCP inputs are display-only and must not pick up the wide horizontal
