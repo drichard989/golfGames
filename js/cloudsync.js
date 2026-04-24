@@ -114,8 +114,135 @@
     lastPushedContentHash: '',
     lockObserver: null,
     lastViewerBlockedNoticeAt: 0,
-    pushSuspended: false
+    pushSuspended: false,
+    joinProgressOverlayEl: null,
+    joinProgressHideTimer: null
   };
+
+  function clearJoinProgressOverlay() {
+    if (state.joinProgressHideTimer) {
+      clearTimeout(state.joinProgressHideTimer);
+      state.joinProgressHideTimer = null;
+    }
+    if (state.joinProgressOverlayEl) {
+      state.joinProgressOverlayEl.remove();
+      state.joinProgressOverlayEl = null;
+    }
+  }
+
+  function showJoinProgressOverlay(message = 'Connecting to live game...') {
+    clearJoinProgressOverlay();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'cloudJoinProgressOverlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    overlay.style.cssText = [
+      'position: fixed',
+      'inset: 0',
+      'z-index: 10055',
+      'display: flex',
+      'align-items: center',
+      'justify-content: center',
+      'background: rgba(0, 0, 0, 0.58)',
+      'opacity: 0',
+      'transition: opacity 0.2s ease'
+    ].join(';');
+
+    const card = document.createElement('div');
+    card.style.cssText = [
+      'background: var(--panel)',
+      'border: 1px solid var(--line)',
+      'border-radius: 12px',
+      'color: var(--ink)',
+      'padding: 18px 20px',
+      'width: min(92vw, 420px)',
+      'text-align: center',
+      'box-shadow: 0 14px 40px rgba(0, 0, 0, 0.38)'
+    ].join(';');
+
+    const spinner = document.createElement('div');
+    spinner.className = 'cloud-join-progress-spinner';
+    spinner.style.cssText = [
+      'width: 34px',
+      'height: 34px',
+      'margin: 0 auto 12px auto',
+      'border: 3px solid rgba(255, 255, 255, 0.2)',
+      'border-top-color: var(--accent)',
+      'border-radius: 50%',
+      'animation: cloudJoinSpin 0.9s linear infinite'
+    ].join(';');
+
+    const title = document.createElement('div');
+    title.textContent = 'Joining Live Game';
+    title.style.cssText = 'font-size: var(--text-xl); font-weight: 700; margin-bottom: 6px;';
+
+    const body = document.createElement('div');
+    body.className = 'cloud-join-progress-text';
+    body.textContent = message;
+    body.style.cssText = 'font-size: var(--text-md); color: var(--muted); line-height: 1.4;';
+
+    card.append(spinner, title, body);
+    overlay.appendChild(card);
+    document.body.appendChild(overlay);
+
+    state.joinProgressOverlayEl = overlay;
+
+    // Inject keyframes once (inline style approach keeps this change self-contained).
+    if (!document.getElementById('cloudJoinProgressStyle')) {
+      const style = document.createElement('style');
+      style.id = 'cloudJoinProgressStyle';
+      style.textContent = '@keyframes cloudJoinSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+      document.head.appendChild(style);
+    }
+
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+    });
+  }
+
+  function updateJoinProgressOverlay(message) {
+    const overlay = state.joinProgressOverlayEl;
+    if (!overlay) return;
+    const textEl = overlay.querySelector('.cloud-join-progress-text');
+    if (textEl) textEl.textContent = message;
+  }
+
+  function completeJoinProgressOverlay(role) {
+    const overlay = state.joinProgressOverlayEl;
+    if (!overlay) return;
+
+    const spinner = overlay.querySelector('.cloud-join-progress-spinner');
+    const textEl = overlay.querySelector('.cloud-join-progress-text');
+    const mode = role === 'editor' ? 'edit' : 'view';
+
+    if (spinner) {
+      spinner.style.animation = 'none';
+      spinner.style.border = '3px solid rgba(0, 188, 140, 0.55)';
+      spinner.style.borderTopColor = 'rgba(0, 188, 140, 0.55)';
+      spinner.textContent = 'OK';
+      spinner.style.display = 'flex';
+      spinner.style.alignItems = 'center';
+      spinner.style.justifyContent = 'center';
+      spinner.style.fontWeight = '700';
+      spinner.style.fontSize = '11px';
+      spinner.style.color = 'var(--accent)';
+    }
+
+    if (textEl) {
+      textEl.textContent = `Connected - live ${mode} mode`;
+      textEl.style.color = 'var(--ink)';
+      textEl.style.fontWeight = '600';
+    }
+
+    state.joinProgressHideTimer = setTimeout(() => {
+      if (!state.joinProgressOverlayEl) return;
+      state.joinProgressOverlayEl.style.opacity = '0';
+      state.joinProgressHideTimer = setTimeout(() => {
+        clearJoinProgressOverlay();
+      }, 220);
+    }, 1100);
+  }
 
   function setStatus(msg) {
     const statusEl = EL.status();
@@ -987,6 +1114,22 @@
     }
   }
 
+  function resetToDisconnectedState() {
+    unbindRealtime();
+    clearTimeout(state.pushTimer);
+    clearTimeout(state.pendingRemoteTimer);
+    state.pendingRemoteTimer = null;
+    state.pendingRemoteState = null;
+    state.session = null;
+    state.lastSeenRevision = 0;
+    state.lastSnapshotAt = 0;
+    state.currentLiveState = null;
+    state.lastPushedContentHash = '';
+    state.snapshots = [];
+    storeSession(null);
+    updateUiForSession();
+  }
+
   function writeSnapshot(syncGame, source = 'auto') {
     if (!state.session || state.session.role !== 'editor' || !state.db || !syncGame) return Promise.resolve(null);
 
@@ -1370,7 +1513,8 @@
     await subscribeRealtime(result.gameId);
   }
 
-  async function joinSessionWithCode(rawCode) {
+  async function joinSessionWithCode(rawCode, options = {}) {
+    const { showSuccessToast = true } = options;
     if (!state.user) throw new Error('Not authenticated');
 
     const code = normalizeCode(rawCode);
@@ -1402,39 +1546,35 @@
       throw new Error('Invalid redeemGameCode response');
     }
 
-    state.session = {
-      gameId: result.gameId,
-      role: result.role === 'editor' ? 'editor' : 'viewer',
-      editCode: normalizeCode(result.editCode || ''),
-      viewCode: normalizeCode(result.viewCode || '')
-    };
+    try {
+      state.session = {
+        gameId: result.gameId,
+        role: result.role === 'editor' ? 'editor' : 'viewer',
+        editCode: normalizeCode(result.editCode || ''),
+        viewCode: normalizeCode(result.viewCode || '')
+      };
 
-    storeSession({
-      gameId: result.gameId,
-      role: state.session.role,
-      editCode: state.session.editCode || '',
-      viewCode: state.session.viewCode || ''
-    });
-    window.GolfApp?.storage?.prepareForIncomingSyncState?.(undefined, { resetSharedGames: false });
-    updateUiForSession();
-    await subscribeRealtime(result.gameId);
-    showJoinSuccessToast(state.session.role);
+      storeSession({
+        gameId: result.gameId,
+        role: state.session.role,
+        editCode: state.session.editCode || '',
+        viewCode: state.session.viewCode || ''
+      });
+      window.GolfApp?.storage?.prepareForIncomingSyncState?.(undefined, { resetSharedGames: false });
+      updateUiForSession();
+      updateJoinProgressOverlay('Loading live scorecard...');
+      await subscribeRealtime(result.gameId);
+      if (showSuccessToast) {
+        showJoinSuccessToast(state.session.role);
+      }
+    } catch (err) {
+      resetToDisconnectedState();
+      throw err;
+    }
   }
 
   async function leaveSession() {
-    unbindRealtime();
-    clearTimeout(state.pushTimer);
-    clearTimeout(state.pendingRemoteTimer);
-    state.pendingRemoteTimer = null;
-    state.pendingRemoteState = null;
-    state.session = null;
-    state.lastSeenRevision = 0;
-    state.lastSnapshotAt = 0;
-    state.currentLiveState = null;
-    state.lastPushedContentHash = '';
-    state.snapshots = [];
-    storeSession(null);
-    updateUiForSession();
+    resetToDisconnectedState();
   }
 
   // =============================================================================
@@ -1490,8 +1630,17 @@
       withCloudOp('create session', 'Cloud: creating session...', createSession));
 
     EL.joinBtn()?.addEventListener('click',
-      withCloudOp('join session', 'Cloud: joining...', () =>
-        joinSessionWithCode(EL.joinCode()?.value || '')));
+      withCloudOp('join session', null, async () => {
+        const code = EL.joinCode()?.value || '';
+        showJoinProgressOverlay('Checking access code...');
+        try {
+          await joinSessionWithCode(code, { showSuccessToast: false });
+          completeJoinProgressOverlay(state.session?.role);
+        } catch (err) {
+          clearJoinProgressOverlay();
+          throw err;
+        }
+      }));
 
     EL.leaveBtn()?.addEventListener('click', () => leaveSession());
 
@@ -1649,10 +1798,12 @@
     if (!code) return false;
 
     try {
-      await joinSessionWithCode(code);
+      updateJoinProgressOverlay('Checking access code...');
+      await joinSessionWithCode(code, { showSuccessToast: false });
       clearCodeFromUrl();
       focusScorecardAfterUrlJoin();
       setStatus(`Cloud: joined from shared link (${state.session?.role || 'viewer'})`);
+      completeJoinProgressOverlay(state.session?.role);
       return true;
     } catch (err) {
       console.error('[CloudSync] Failed to join session from URL code:', err);
@@ -1660,6 +1811,7 @@
       const joinInput = EL.joinCode();
       if (joinInput) joinInput.value = code;
       setStatus(`Cloud: couldn't auto-join (${err.message}). Tap Join to retry.`);
+      clearJoinProgressOverlay();
       return false;
     }
   }
@@ -1671,8 +1823,15 @@
     bindUi();
     patchStorageSaveHook();
 
+    const urlJoinCode = getCodeFromUrl();
+    if (urlJoinCode) {
+      showJoinProgressOverlay('Connecting to cloud services...');
+    }
+
     const ok = await initFirebase();
     if (!ok) {
+      resetToDisconnectedState();
+      clearJoinProgressOverlay();
       // Still pre-fill join code from URL so user can retry once cloud is ready
       const code = getCodeFromUrl();
       const joinInput = EL.joinCode();
@@ -1682,6 +1841,7 @@
 
     const joinedFromUrl = await joinSessionFromUrlIfPresent();
     if (!joinedFromUrl) {
+      clearJoinProgressOverlay();
       await restoreSession();
     }
   }
