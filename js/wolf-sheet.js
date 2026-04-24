@@ -229,7 +229,6 @@
     const par = getHolePar(holeOneBased);
     const title = `Hole ${holeOneBased}${par != null ? ` - Par ${par}` : ''}`;
     const wolfName = getWolfName(holeOneBased);
-    const decision = getDecisionLabel(holeOneBased);
     const result = getResultLabel(holeOneBased);
 
     sheetEl.querySelector('.wolf-sheet-title').textContent = title;
@@ -248,16 +247,8 @@
     overview.innerHTML = `
       <div class="wolf-sheet-overview-grid">
         <div class="wolf-sheet-overview-item">
-          <div class="wolf-sheet-overview-label">Wolf</div>
+          <div class="wolf-sheet-overview-label">Who Is The Wolf</div>
           <div class="wolf-sheet-overview-value">${escapeHtml(wolfName)}</div>
-        </div>
-        <div class="wolf-sheet-overview-item">
-          <div class="wolf-sheet-overview-label">Decision</div>
-          <div class="wolf-sheet-overview-value">${escapeHtml(decision)}</div>
-        </div>
-        <div class="wolf-sheet-overview-item">
-          <div class="wolf-sheet-overview-label">Result</div>
-          <div class="wolf-sheet-overview-value">${escapeHtml(result)}</div>
         </div>
       </div>
     `;
@@ -268,6 +259,18 @@
     decisionsBlock.innerHTML = '<div class="wolf-sheet-block-title">Set Decision</div>';
     buildDecisionButtons(holeOneBased, decisionsBlock);
     body.appendChild(decisionsBlock);
+
+    const resultBlock = document.createElement('section');
+    resultBlock.className = 'wolf-sheet-block';
+    resultBlock.innerHTML = `
+      <div class="wolf-sheet-overview-grid">
+        <div class="wolf-sheet-overview-item">
+          <div class="wolf-sheet-overview-label">Result</div>
+          <div class="wolf-sheet-overview-value">${escapeHtml(result)}</div>
+        </div>
+      </div>
+    `;
+    body.appendChild(resultBlock);
 
     buildScoresBlock(holeOneBased, body);
   }
