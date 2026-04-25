@@ -237,7 +237,7 @@
     // Defensive first-pass sync: ensure tablet/narrow widths enter summary mode
     // even if later media-query listeners don't fire during initial layout.
     try {
-      if (window.matchMedia('(max-width: 1100px)').matches) {
+      if (window.matchMedia('(max-width: 1023px)').matches) {
         document.body.classList.add('junk-mobile-summary-active');
         scheduleJunkSummaryUpdate();
       }
@@ -247,8 +247,6 @@
     document.addEventListener('click', (e) => {
       const tbody = e.target.closest('#junkBody');
       if (!tbody) return;
-      // Ignore clicks on form controls inside (shouldn't exist when active, but just in case)
-      if (e.target.closest('input, button, select, textarea, details, summary, a')) return;
       const tr = e.target.closest('tr');
       if (!tr) return;
       const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -260,7 +258,7 @@
     // Mobile 2-column summary layout (hole | all players' dots) — driven by
     // the `.junk-mobile-summary-active` body class. We toggle it based on a
     // media query and rebuild the per-row summary cell.
-    const MQ = window.matchMedia('(max-width: 1100px)');
+    const MQ = window.matchMedia('(max-width: 1023px)');
     const applyMobile = () => {
       if (MQ.matches) {
         document.body.classList.add('junk-mobile-summary-active');

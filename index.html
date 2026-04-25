@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.55" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.63" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.55" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.55" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.63" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.63" />
     <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.1.6" />
     <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.1.2" />
   </head>
@@ -395,7 +395,7 @@
       </div>
       <div class="banker-wrap">
         <table class="banker-table" id="bankerTable">
-          <thead>
+          <thead class="banker-table-desktop-header">
             <tr>
               <th>Hole</th>
               <th>Banker</th>
@@ -403,6 +403,12 @@
               <th>Bets</th>
               <th>Banker 2×</th>
               <th>Result</th>
+            </tr>
+          </thead>
+          <thead class="banker-table-tablet-header">
+            <tr>
+              <th>Hole</th>
+              <th colspan="5">Results</th>
             </tr>
           </thead>
           <tbody id="bankerBody"></tbody>
@@ -511,13 +517,19 @@
       </div>
       <div class="banker-wrap">
         <table class="junk-table" id="junkTable">
-          <thead>
+          <thead class="junk-table-desktop-header">
             <tr>
               <th>Hole</th>
               <th id="junkP1">P1</th>
               <th id="junkP2">P2</th>
               <th id="junkP3">P3</th>
               <th id="junkP4">P4</th>
+            </tr>
+          </thead>
+          <thead class="junk-table-tablet-header">
+            <tr>
+              <th>Hole</th>
+              <th colspan="4">Results</th>
             </tr>
           </thead>
           <tbody id="junkBody"></tbody>
@@ -591,17 +603,17 @@
     </div>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     </section>
-    <script src="index.js" defer></script>
-    <script src="js/export.js" defer></script>
-    <script src="js/vegas.js" defer></script>
-    <script src="js/banker.js" defer></script>
-    <script src="js/banker-sheet.js" defer></script>
-    <script src="js/hilo.js" defer></script>
-    <script src="js/skins.js" defer></script>
-    <script src="js/junk.js" defer></script>
-    <script src="js/junk-sheet.js" defer></script>
-    <script src="js/wolf.js" defer></script>
-    <script src="js/wolf-sheet.js" defer></script>
+    <script src="index.js?v=v3.2.62" defer></script>
+    <script src="js/export.js?v=v3.2.62" defer></script>
+    <script src="js/vegas.js?v=v3.2.62" defer></script>
+    <script src="js/banker.js?v=v3.2.62" defer></script>
+    <script src="js/banker-sheet.js?v=v3.2.62" defer></script>
+    <script src="js/hilo.js?v=v3.2.62" defer></script>
+    <script src="js/skins.js?v=v3.2.62" defer></script>
+    <script src="js/junk.js?v=v3.2.62" defer></script>
+    <script src="js/junk-sheet.js?v=v3.2.62" defer></script>
+    <script src="js/wolf.js?v=v3.2.62" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.2.62" defer></script>
     <script src="js/score-sheet.js?v=v3.1.17" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>

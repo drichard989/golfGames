@@ -914,9 +914,6 @@
     if (!document.body.classList.contains('banker-sheet-active')) return;
     const tbody = e.target.closest('#bankerBody');
     if (!tbody) return;
-    // Clicks on form controls inside shouldn't propagate because the cells
-    // are CSS-hidden, but guard anyway.
-    if (e.target.closest('input, button, select, textarea, a')) return;
     const tr = e.target.closest('tr');
     if (!tr) return;
     const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -1232,9 +1229,9 @@
     document.querySelectorAll('#bankerBody tr.banker-sheet-row-empty').forEach(tr => tr.classList.remove('banker-sheet-row-empty'));
   }
 
-  // Use viewport width only: tablet-sized (≥768px) and desktop windows should
-  // show the full banker table interface with headers and input cells visible.
-  const DESKTOP_MQ = window.matchMedia('(min-width: 768px)');
+  // Use viewport width only: windows ≥1024px should show the full banker table
+  // interface with headers and input cells visible. Below 1024px, activate compact modal.
+  const DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
   function applyViewportMode(){
     if (DESKTOP_MQ.matches) {
       deactivate();

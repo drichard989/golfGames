@@ -9,6 +9,26 @@ body.junk-sheet-active #junkBody tr { cursor: pointer; }
 body.junk-sheet-active #junkBody tr:hover td { background: rgba(255,255,255,0.03); }
 :root[data-theme="light"] body.junk-sheet-active #junkBody tr:hover td { background: rgba(0,0,0,0.03); }
 
+/* Header visibility */
+.junk-table-desktop-header {
+  display: table-header-group;
+}
+
+.junk-table-tablet-header {
+  display: none;
+}
+
+/* Phone/narrow (<1024px): Show simplified "Results" header */
+@media (max-width: 1023px) {
+  .junk-table-desktop-header {
+    display: none;
+  }
+
+  .junk-table-tablet-header {
+    display: table-header-group;
+  }
+}
+
 /* Junk standings table uses a compact 3-column layout (Player, Dots, vs Field)
    and explicit vertical dividers so borders remain visible on narrow phones. */
 .junk-standings-table .live-results-label {
