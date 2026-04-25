@@ -624,7 +624,7 @@
     if (!(target instanceof HTMLElement)) return false;
     if (!isViewerSession()) return false;
 
-    if (eventType === 'click') {
+    if (eventType === 'click' || eventType === 'pointerdown' || eventType === 'mousedown' || eventType === 'touchstart') {
       const allowedBtn = target.closest('button[id], [role="button"][id]');
       if (allowedBtn instanceof HTMLElement && VIEWER_ALLOWED_CLICK_IDS.has(allowedBtn.id)) {
         return false;
@@ -655,6 +655,9 @@
     document.addEventListener('beforeinput', guard, true);
     document.addEventListener('input', guard, true);
     document.addEventListener('change', guard, true);
+    document.addEventListener('pointerdown', guard, true);
+    document.addEventListener('mousedown', guard, true);
+    document.addEventListener('touchstart', guard, true);
     document.addEventListener('click', guard, true);
     document.addEventListener('keydown', guard, true);
   }
@@ -1329,7 +1332,7 @@
       setCodesText('', false);
       state.snapshots = [];
       resetSnapshotReviewUi();
-      syncViewerLock();
+      syncViewerLock({ force: true, syncRows: false });
       return;
     }
 
@@ -1347,7 +1350,7 @@
 
     renderSnapshotOptions();
     syncSnapshotButtons();
-    syncViewerLock();
+    syncViewerLock({ force: true, syncRows: false });
   }
 
   function unbindRealtime() {
