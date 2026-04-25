@@ -5364,22 +5364,7 @@
 
     // Banker: no UI wiring (stub only)
 
-    // New share flow: create/reuse cloud session and share a view-link URL.
-    const shareLiveBtn = document.getElementById('shareHtmlBtn');
-    if (shareLiveBtn) {
-      shareLiveBtn.addEventListener('click', async () => {
-        try {
-          if (!window.CloudSync?.shareLiveViewLink) {
-            announce('Cloud share is not ready yet.');
-            return;
-          }
-          await window.CloudSync.shareLiveViewLink();
-        } catch (error) {
-          console.error('[Share] Failed to share live link:', error);
-          announce(error?.message || 'Unable to share live link.');
-        }
-      });
-    }
+
 
     function chooseLiveQrMode() {
       return new Promise((resolve) => {
