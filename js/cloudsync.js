@@ -293,17 +293,16 @@
 
     statusEl.textContent = msg;
 
-    const text = String(msg || '').toLowerCase();
-    const forceOffline = /(not connected|init failed|init error|realtime error|push failed|couldn't auto-join|join failed|error|failed)/.test(text);
-    const forceOnline = /(connected \(|joined from shared link|viewing snapshot|reviewing snapshot|shared live view link|live view link copied|live view link ready|live qr ready|live edit qr ready)/.test(text);
-
-    const isLive = forceOffline ? false : (forceOnline ? true : !!state.session);
+    // Single source of truth for header status/toggle: active session presence.
+    // This avoids status-badge drift from heuristic text parsing.
+    const isLive = !!state.session;
     statusEl.setAttribute('data-live', isLive ? 'true' : 'false');
 
     const badge = document.getElementById('cloudStatusBadge');
     if (badge) {
       if (isLive) {
-        badge.textContent = '☁ Live';
+        const mode = state.session?.role === 'editor' ? 'Edit' : 'View';
+        badge.textContent = `☁ Live (${mode})`;
         badge.setAttribute('data-live', 'true');
       } else {
         badge.textContent = '☁ Offline';
@@ -322,7 +321,7 @@
     const viewBtn = EL.viewCodeBadgeBtn();
 
     if (createBtn) {
-      const isLive = !!state.session;
+      const isLive = EL.status()?.getAttribute('data-live') === 'true';
       createBtn.hidden = false;
       createBtn.disabled = false;
       createBtn.textContent = isLive ? 'Go offline' : 'Go live';
