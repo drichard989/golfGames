@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+
+# Auto-bump app cache/version before each commit and stage the changes.
+npm run --silent bump:cache
+git add sw.js index.html

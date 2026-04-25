@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v3.2.69';
+const CACHE_VERSION = 'v3.2.73';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache - comprehensive list
@@ -9,16 +9,26 @@ const FILES_TO_CACHE = [
   '/index.html',
   '/index.js',
   '/manifest.json',
+  '/sw.js',
   '/js/vegas.js',
   '/js/banker.js',
+  '/js/banker-sheet.js',
   '/js/skins.js',
   '/js/junk.js',
+  '/js/junk-sheet.js',
   '/js/hilo.js',
+  '/js/wolf.js',
+  '/js/wolf-sheet.js',
+  '/js/score-sheet.js',
   '/js/export.js',
   '/js/qrcode.js',
   '/js/firebase-config.js',
   '/js/cloudsync.js',
   '/stylesheet/main.css',
+  '/stylesheet/junk.css',
+  '/stylesheet/banker.css',
+  '/stylesheet/score-sheet.css',
+  '/stylesheet/wolf.css',
   '/images/favicon-16.png',
   '/images/favicon-32.png',
   '/images/apple-touch-icon.png',

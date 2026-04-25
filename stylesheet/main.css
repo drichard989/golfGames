@@ -993,6 +993,10 @@ select:not(.select-plain) option {
   gap: 6px;
 }
 
+.scorecard-footer-controls[hidden] {
+  display: none !important;
+}
+
 .scorecard-footer-toggle {
   margin-left: auto;
   min-height: 36px;
