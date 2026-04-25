@@ -1085,10 +1085,6 @@ body.mode-games .entry-switcher {
   background: var(--panel-alt);
 }
 
-.ios-scorecard-clone-shell {
-  display: none;
-}
-
 /* Utility class — preserves text-align from cloned source cells */
 .align-left {
   text-align: left !important;
@@ -1134,115 +1130,6 @@ body.mode-score #main-scorecard {
 
 /* iOS only: let scorecard grow with players and scroll at page level. */
 @supports (-webkit-touch-callout: none) {
-  body.ios-scorecard-clone-active .ios-scorecard-clone-shell {
-    display: none;
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed {
-    position: sticky;
-    top: var(--score-sticky-head-top, 0px);
-    z-index: 14;
-    border-right: 2px solid var(--line);
-    border-top: 2px solid var(--line);
-    border-bottom: 2px solid var(--line);
-    background: var(--panel);
-    box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll {
-    position: sticky;
-    top: var(--score-sticky-head-top, 0px);
-    z-index: 13;
-    overflow: visible;
-    border-top: 2px solid var(--line);
-    border-bottom: 2px solid var(--line);
-    background: var(--panel);
-    box-sizing: border-box;
-    pointer-events: none;
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
-    width: max-content;
-    border-collapse: separate;
-    border-spacing: 0;
-    background: var(--panel);
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table th,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table td,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table th,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table td {
-    background: var(--panel-alt);
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table th:first-child,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table td:first-child {
-    text-align: left;
-    padding: var(--space-xs) 6px;
-    min-width: 120px;
-    max-width: 120px;
-    width: 120px;
-    background-color: var(--panel);
-    font-size: var(--scorecard-header-font-size);
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table th:nth-child(2),
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table td:nth-child(2) {
-    min-width: 55px;
-    max-width: 55px;
-    width: 55px;
-    padding: var(--space-xs) 3px;
-    background-color: var(--panel);
-    font-size: var(--scorecard-header-font-size);
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.par-row td,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.hcp-row td,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.par-row th,
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.hcp-row th {
-    background-color: var(--panel-alt);
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
-    transform: none;
-    backface-visibility: hidden;
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  body.ios-scorecard-clone-active.mode-score #scorecard thead,
-  body.ios-scorecard-clone-active.mode-score #scorecardFixed thead,
-  body.ios-scorecard-clone-active.mode-score #scorecard #parRow,
-  body.ios-scorecard-clone-active.mode-score #scorecard #hcpRow,
-  body.ios-scorecard-clone-active.mode-score #scorecardFixed #parRowFixed,
-  body.ios-scorecard-clone-active.mode-score #scorecardFixed #hcpRowFixed {
-    display: none;
-  }
-
-  body.ios-scorecard-clone-active #scorecard thead,
-  body.ios-scorecard-clone-active #scorecardFixed thead,
-  body.ios-scorecard-clone-active #scorecard th,
-  body.ios-scorecard-clone-active #scorecardFixed th,
-  body.ios-scorecard-clone-active #scorecard #parRow td,
-  body.ios-scorecard-clone-active #scorecard #parRow th,
-  body.ios-scorecard-clone-active #scorecardFixed #parRowFixed td,
-  body.ios-scorecard-clone-active #scorecardFixed #parRowFixed th,
-  body.ios-scorecard-clone-active #scorecard #hcpRow td,
-  body.ios-scorecard-clone-active #scorecard #hcpRow th,
-  body.ios-scorecard-clone-active #scorecardFixed #hcpRowFixed td,
-  body.ios-scorecard-clone-active #scorecardFixed #hcpRowFixed th {
-    position: static !important;
-    top: auto !important;
-    transform: none !important;
-  }
-
   .scorecard-fixed {
     height: auto;
     max-height: none;
