@@ -5364,7 +5364,36 @@
 
     // Banker: no UI wiring (stub only)
 
+    // Archived tools: CSV import/export, email, QR scan import
+    {
+      const csvInput = document.getElementById('csvInput');
+      if (csvInput) csvInput.addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0];
+        if (f) handleCSVFile(f);
+        e.target.value = '';
+      });
 
+      const dlBtn = document.getElementById('dlTemplateBtn');
+      if (dlBtn) dlBtn.addEventListener('click', downloadCSVTemplate);
+
+      const exportBtn = document.getElementById('exportCSVBtn');
+      if (exportBtn) exportBtn.addEventListener('click', () => window.Export?.exportCurrentScorecard());
+
+      const emailBtn = document.getElementById('emailCSVBtn');
+      if (emailBtn) emailBtn.addEventListener('click', () => window.Export?.emailCurrentScorecard());
+
+      const scanQRBtn = document.getElementById('scanQRBtn');
+      if (scanQRBtn) scanQRBtn.addEventListener('click', () => window.QRShare?.scan?.());
+
+      const archivedToolsToggle = document.getElementById('archivedToolsToggle');
+      const archivedToolsSection = document.getElementById('archivedToolsSection');
+      if (archivedToolsToggle && archivedToolsSection) {
+        archivedToolsToggle.addEventListener('click', () => {
+          const isOpen = archivedToolsSection.style.display !== 'none';
+          archivedToolsSection.style.display = isOpen ? 'none' : '';
+        });
+      }
+    }
 
     function chooseLiveQrMode() {
       return new Promise((resolve) => {

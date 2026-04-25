@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.5" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.6" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.5" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.5" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.6" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.6" />
     <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.1.6" />
     <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.1.2" />
   </head>
@@ -71,6 +71,24 @@
             <button id="clearEverythingBtn" class="btn" style="background: var(--danger); color: white;">Clear Everything</button>
             <button id="resetBtn" class="btn">Reset Scores</button>
             <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
+          </div>
+
+          <div class="utilities-row utilities-row-export">
+            <button id="archivedToolsToggle" class="btn" type="button">🗄️ Archived Tools</button>
+          </div>
+
+          <div id="archivedToolsSection" class="control archived-tools" style="display:none;">
+            <div class="small archived-tools-title">Deprecated tools (archived for easy rollback)</div>
+            <div class="utilities-row archived-tools-row">
+              <div class="control utilities-control csv-control">
+                <label for="csvInput">CSV Import</label>
+                <input id="csvInput" type="file" accept=".csv" />
+              </div>
+              <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
+              <button id="exportCSVBtn" class="btn">📤 Export Current Scorecard</button>
+              <button id="emailCSVBtn" class="btn">📧 Email Scorecard</button>
+              <button id="scanQRBtn" class="btn">📸 Scan QR Code (Import)</button>
+            </div>
           </div>
 
         </div>
