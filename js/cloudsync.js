@@ -413,12 +413,12 @@
 
     return new Promise((resolve) => {
       const dialog = document.createElement('div');
-      dialog.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10050;padding:16px;';
+      dialog.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:10050;padding:16px;animation:fadeIn 0.2s ease;';
       dialog.setAttribute('role', 'dialog');
       dialog.setAttribute('aria-modal', 'true');
 
       const box = document.createElement('div');
-      box.style.cssText = 'background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,0.3);';
+      box.style.cssText = 'background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;max-width:420px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,0.3);animation:slideUpFull 0.16s cubic-bezier(0.2,0.8,0.2,1);';
 
       const title = document.createElement('h3');
       title.textContent = 'Share QR Type';
@@ -454,8 +454,12 @@
       cancelBtn.style.cssText = 'flex:1 1 120px;';
 
       const close = (choice) => {
-        dialog.remove();
-        resolve(choice);
+        box.style.animation = 'slideDownFull 0.18s cubic-bezier(0.4,0,1,1) forwards';
+        dialog.style.animation = 'fadeOut 0.18s ease forwards';
+        setTimeout(() => {
+          dialog.remove();
+          resolve(choice);
+        }, 185);
       };
 
       viewBtn.addEventListener('click', () => close('view'));
@@ -1064,6 +1068,7 @@
       justify-content: center;
       z-index: 10000;
       padding: 20px;
+      animation: fadeIn 0.2s ease;
     `;
 
     const card = document.createElement('div');
@@ -1075,6 +1080,7 @@
       width: 100%;
       padding: 20px;
       text-align: center;
+      animation: slideUpFull 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
     `;
 
     const heading = document.createElement('h2');
@@ -1091,7 +1097,11 @@
     const closeBtn = document.createElement('button');
     closeBtn.textContent = 'Close';
     closeBtn.className = 'btn';
-    closeBtn.addEventListener('click', () => modal.remove());
+    closeBtn.addEventListener('click', () => {
+      card.style.animation = 'slideDownFull 0.18s cubic-bezier(0.4, 0, 1, 1) forwards';
+      modal.style.animation = 'fadeOut 0.18s ease forwards';
+      setTimeout(() => modal.remove(), 185);
+    });
 
     card.appendChild(heading);
     card.appendChild(subtitle);

@@ -4163,7 +4163,7 @@ input[type="text"] {
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
   padding: 0;
   z-index: 10041;
-  animation: slideUp 0.22s ease;
+  animation: playerEntryModalIn 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .player-entry-modal-header {
@@ -4410,6 +4410,50 @@ input[type="text"] {
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes slideUpFull {
+  from {
+    transform: translateY(100vh);
+    opacity: 0.92;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDownFull {
+  from {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(100vh);
+    opacity: 0.85;
+  }
+}
+
+@keyframes playerEntryModalIn {
+  from {
+    transform: translateX(-50%) translateY(100dvh);
+    opacity: 0.92;
+  }
+  to {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes playerEntryModalOut {
+  from {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-50%) translateY(100dvh);
+    opacity: 0.85;
   }
 }
 

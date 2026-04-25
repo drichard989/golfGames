@@ -4112,14 +4112,28 @@
 
   function closePlayerEntryModal() {
     playerEntryModalClosedAt = Date.now();
-    if (playerEntryModalBackdrop) playerEntryModalBackdrop.hidden = true;
-    if (playerEntryModalSheet) playerEntryModalSheet.hidden = true;
-    document.body.classList.remove('player-entry-modal-open');
     playerEntryModalFocusTarget = null;
     // Blur active element so focus doesn't return to a scorecard input and re-trigger the modal
     if (document.activeElement && document.activeElement !== document.body) {
       document.activeElement.blur();
     }
+    if (!playerEntryModalSheet) return;
+    // Play exit animation then hide
+    playerEntryModalSheet.style.animation = 'playerEntryModalOut 0.18s cubic-bezier(0.4, 0, 1, 1) forwards';
+    if (playerEntryModalBackdrop) {
+      playerEntryModalBackdrop.style.animation = 'fadeOut 0.18s ease forwards';
+    }
+    const sheet = playerEntryModalSheet;
+    const backdrop = playerEntryModalBackdrop;
+    setTimeout(() => {
+      sheet.hidden = true;
+      sheet.style.animation = '';
+      if (backdrop) {
+        backdrop.hidden = true;
+        backdrop.style.animation = '';
+      }
+      document.body.classList.remove('player-entry-modal-open');
+    }, 185);
   }
 
   function syncPlayerEntryModalPosition() {
@@ -4388,8 +4402,14 @@
 
     renderPlayerEntryModalRows();
     syncPlayerEntryModalPosition();
-    if (playerEntryModalBackdrop) playerEntryModalBackdrop.hidden = false;
-    if (playerEntryModalSheet) playerEntryModalSheet.hidden = false;
+    if (playerEntryModalBackdrop) {
+      playerEntryModalBackdrop.style.animation = '';
+      playerEntryModalBackdrop.hidden = false;
+    }
+    if (playerEntryModalSheet) {
+      playerEntryModalSheet.style.animation = '';
+      playerEntryModalSheet.hidden = false;
+    }
     document.body.classList.add('player-entry-modal-open');
     requestAnimationFrame(syncPlayerEntryModalPosition);
     setTimeout(syncPlayerEntryModalPosition, 240);
@@ -4648,7 +4668,7 @@
       max-width: 400px;
       width: 90%;
       box-shadow: ${isLightTheme ? '0 8px 32px rgba(0, 0, 0, 0.15)' : '0 8px 32px rgba(0, 0, 0, 0.4)'};
-      animation: slideUp 0.3s ease;
+      animation: slideUpFull 0.16s cubic-bezier(0.2, 0.8, 0.2, 1);
     `;
     
     // Title
@@ -4738,11 +4758,12 @@
     
     // Close modal function
     const closeModal = (result) => {
-      modal.style.animation = 'fadeOut 0.2s ease';
+      container.style.animation = 'slideDownFull 0.18s cubic-bezier(0.4, 0, 1, 1) forwards';
+      modal.style.animation = 'fadeOut 0.18s ease forwards';
       setTimeout(() => {
         modal.remove();
         callback(result);
-      }, 200);
+      }, 185);
     };
     
     // Event listeners
