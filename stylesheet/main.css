@@ -990,7 +990,7 @@ select:not(.select-plain) option {
   border: 2px solid var(--line);
   border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
   margin: 0;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  padding-bottom: 0;
 }
 
 .scorecard-add-player-btn {
@@ -1124,28 +1124,29 @@ body.mode-score #main-scorecard {
   height: min(62vh, 560px);
   max-height: min(62vh, 560px);
   overflow: auto;
-  overscroll-behavior: auto;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
   scroll-behavior: auto;
   scrollbar-gutter: stable both-edges;
-  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scrolling: auto;
   touch-action: pan-x pan-y;
 }
 
-/* iOS: allow page scroll handoff when scorecard reaches its edges. */
+/* iOS: keep scroll contained inside scorecard to minimize rubberbanding. */
 @supports (-webkit-touch-callout: none) {
   #scoreEntryPanel,
   .scorecard-container {
-    overscroll-behavior: auto;
-    overscroll-behavior-x: auto;
-    overscroll-behavior-y: auto;
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
   }
 
   #scoreEntryPanel {
-    overflow: visible;
+    overflow: hidden;
   }
 
   .scorecard-container {
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: auto;
   }
 }
 

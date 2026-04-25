@@ -6,8 +6,8 @@
    
    GAME MECHANICS:
    • Standard Mode (4 players): 2v2 teams, fixed partnerships
-   • Rotation Mode (3 players): Each player partners with "ghost" (par) for 6 holes
-   • Ghost Mode (2 players): Each player partners with ghost on all holes
+  • Ghost Mode (2-3 players): Add ghost partner(s) (par) via team assignment controls
+  • Standard Mode (4 players): 2v2 teams, fixed partnerships
    
    SCORING:
    • Scores combined lowest-to-highest (e.g., 4+5 = "45", not "54")
@@ -351,6 +351,27 @@
     });
   }
 
+  function setVegasDisabledState(disabled, reason = '') {
+    const section = document.getElementById('vegasSection');
+    const warningEl = $(ids.vegasTeamWarning);
+    const defaultWarn = 'Pick exactly two players on Team A and two on Team B.';
+
+    if (warningEl) {
+      warningEl.textContent = disabled ? (reason || 'Vegas supports at most 4 players.') : defaultWarn;
+      warningEl.hidden = !disabled;
+    }
+
+    if (!section) return;
+    section.classList.toggle('vegas-disabled', !!disabled);
+
+    // Keep tab + options toggles clickable; disable only game inputs.
+    section.querySelectorAll('#vegasOptionsPanel input, #vegasOptionsPanel select, #vegasOptionsPanel button').forEach((el) => {
+      if (el.classList.contains('game-options-toggle')) return;
+      if (el.id === 'clearVegasDataBtn') return;
+      el.disabled = !!disabled;
+    });
+  }
+
   // =============================================================================
   // VEGAS GAME LOGIC
   // =============================================================================
@@ -363,91 +384,51 @@ const Vegas = {
    * @returns {{perHole:object[], ptsA:number, ptsB:number, totalA:number, totalB:number, dollarsA:number, dollarsB:number, valid:boolean, rotation:boolean}}
    */
   compute(teams, opts, computeCtx = null){
-    // Check if we're in rotation mode (3 players with ghost)
     const realPlayers = getPlayers();
-    const useRotation = realPlayers === 3;
-    
-    if(useRotation){
-      // Rotation mode: each player rotates playing with ghost (position 3)
-      const perHole=[];
-      let ptsA=0;
-      const ghostPos = 3;
-      
-      for(let h=0;h<getHoles();h++){
-        // Rotate every 6 holes: Player 0 (holes 0-5), Player 1 (holes 6-11), Player 2 (holes 12-17)
-        const playerWithGhost = Math.floor(h / 6) % 3;
-        const otherPlayers = [0,1,2].filter(p => p !== playerWithGhost);
-        
-        const teamsThisHole = {
-          A: [playerWithGhost, ghostPos],
-          B: otherPlayers
-        };
-        
-        const pairA = this._teamPair(teamsThisHole.A,h,opts.useNet,opts.netHcpMode, computeCtx);
-        const pairB = this._teamPair(teamsThisHole.B,h,opts.useNet,opts.netHcpMode, computeCtx);
-        if(!pairA || !pairB){
-          perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0, ghostPartner: playerWithGhost});
-          continue;
-        }
-
-        const aBE = this._teamHasBirdieOrEagle(teamsThisHole.A,h,opts.useNet,opts.netHcpMode, computeCtx);
-        const bBE = this._teamHasBirdieOrEagle(teamsThisHole.B,h,opts.useNet,opts.netHcpMode, computeCtx);
-
-        const effA = (bBE.birdie || bBE.eagle) ? [pairA[1],pairA[0]] : pairA;
-        const effB = (aBE.birdie || aBE.eagle) ? [pairB[1],pairB[0]] : pairB;
-
-        const vaStr=this._pairToString(effA), vbStr=this._pairToString(effB);
-        const va=Number(vaStr), vb=Number(vbStr);
-
-        let winner='A', diff=vb-va;
-        if(diff<0){ winner='B'; diff=-diff; }
-        const mult=this._multiplierForWinner(teamsThisHole[winner],h,opts.useNet,opts, computeCtx);
-        const holePtsA = winner==='A' ? diff*mult : -diff*mult;
-
-        perHole.push({vaStr, vbStr, mult, holePtsA, ghostPartner: playerWithGhost});
-        ptsA += holePtsA;
-      }
-      
-      // Calculate individual player points in rotation and game breakdowns
-      const playerPoints = [0, 0, 0];
-      const gameResults = [
-        {player: 0, holes: '1-6', points: 0},
-        {player: 1, holes: '7-12', points: 0},
-        {player: 2, holes: '13-18', points: 0}
-      ];
-      
-      perHole.forEach((hole, h) => {
-        if(hole.ghostPartner !== undefined){
-          playerPoints[hole.ghostPartner] += hole.holePtsA;
-          // Calculate which game this belongs to (0-5: game 0, 6-11: game 1, 12-17: game 2)
-          const gameIdx = Math.floor(h / 6);
-          gameResults[gameIdx].points += hole.holePtsA;
-        }
-      });
-      
-      const teamSum = () => { 
-        let s=0; 
-        for(let h=0;h<getHoles();h++){ 
-          for(let p=0; p<realPlayers; p++){
-            s+=getGross(p,h, computeCtx)||0; 
-          }
-        } 
-        return s; 
+    if (realPlayers > 4) {
+      return {
+        perHole: [],
+        ptsA: 0,
+        ptsB: 0,
+        totalA: 0,
+        totalB: 0,
+        dollarsA: 0,
+        dollarsB: 0,
+        valid: false,
+        rotation: false,
+        invalidReason: 'Vegas is disabled for more than 4 players. Reduce player count to 4 or fewer.'
       };
-      const totalA=teamSum();
-
-      const per = Math.max(0, opts.pointValue || 0);
-      const dollarsA = ptsA * per;
-      const dollarsB = -dollarsA;
-      const ptsB = -ptsA;
-
-      return {perHole, ptsA, ptsB, totalA, totalB:0, dollarsA, dollarsB, valid:true, rotation:true, playerPoints, gameResults};
+    }
+    if (realPlayers < 2) {
+      return {
+        perHole: [],
+        ptsA: 0,
+        ptsB: 0,
+        totalA: 0,
+        totalB: 0,
+        dollarsA: 0,
+        dollarsB: 0,
+        valid: false,
+        rotation: false,
+        invalidReason: 'Vegas requires at least 2 players.'
+      };
     }
     
     // Standard mode: fixed teams
     // Each team needs exactly 2 positions (players or ghosts)
     if(!(teams.A.length===2 && teams.B.length===2)){
-      return {perHole:[], ptsA:0, ptsB:0, totalA:0, totalB:0, dollarsA:0, dollarsB:0, valid:false, rotation:false};
+      return {
+        perHole: [],
+        ptsA: 0,
+        ptsB: 0,
+        totalA: 0,
+        totalB: 0,
+        dollarsA: 0,
+        dollarsB: 0,
+        valid: false,
+        rotation: false,
+        invalidReason: 'Pick exactly two players on Team A and two on Team B.'
+      };
     }
 
     const perHole=[];
@@ -564,12 +545,7 @@ const Vegas = {
     const names = getVegasPlayerNames();
     
     data.perHole.forEach((hole,h)=>{
-      // In rotation mode, show which player is with ghost
-      let vaStr = hole.vaStr;
-      if(data.rotation && hole.ghostPartner !== undefined){
-        const partnerName = names[hole.ghostPartner] || `P${hole.ghostPartner+1}`;
-        vaStr = `${hole.vaStr} (${partnerName}+👻)`;
-      }
+      const vaStr = hole.vaStr;
       
       const a = $(`[data-vegas-a="${h}"]`);
       const b = $(`[data-vegas-b="${h}"]`);
@@ -588,30 +564,14 @@ const Vegas = {
       applyVegasTone(pb, Number(ptsB) || 0);
     });
 
-    // Show individual player points in rotation mode
-    if(data.rotation && data.playerPoints){
-      const names = getVegasPlayerNames();
-      const playerLines = data.playerPoints.map((pts, i) => {
-        const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
-        return `${names[i]}: ${sign}${pts}`;
-      }).join(" | ");
-      
-      const pa = $(ids.vegasPtsA);
-      const pb = $(ids.vegasPtsB);
-      if(pa) pa.textContent = playerLines;
-      if(pb) pb.textContent = "—";
-      applyVegasTone(pa, NaN);
-      applyVegasTone(pb, NaN);
-    } else {
-      const ptsA = data.ptsA;
-      const pa = $(ids.vegasPtsA);
-      if(pa) pa.textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
-      applyVegasTone(pa, Number(ptsA) || 0);
-      const ptsB = data.ptsB;
-      const pb = $(ids.vegasPtsB);
-      if(pb) pb.textContent = ptsB===0? "0" : (ptsB>0? `+${ptsB}`:`${ptsB}`);
-      applyVegasTone(pb, Number(ptsB) || 0);
-    }
+    const ptsA = data.ptsA;
+    const pa = $(ids.vegasPtsA);
+    if(pa) pa.textContent = ptsA===0? "0" : (ptsA>0? `+${ptsA}`:`${ptsA}`);
+    applyVegasTone(pa, Number(ptsA) || 0);
+    const ptsB = data.ptsB;
+    const pb = $(ids.vegasPtsB);
+    if(pb) pb.textContent = ptsB===0? "0" : (ptsB>0? `+${ptsB}`:`${ptsB}`);
+    applyVegasTone(pb, Number(ptsB) || 0);
 
     const fmt = v => {
       const abs = Math.abs(v);
@@ -621,49 +581,16 @@ const Vegas = {
       return s;
     };
     
-    // Show netted out total in rotation mode
-    if(data.rotation){
-      const per = Math.max(0, Number($(ids.vegasPointValue)?.value)||0);
-      const names = getVegasPlayerNames();
-      const netLines = data.playerPoints.map((pts, i) => {
-        const dollars = pts * per;
-        return `${names[i]}: ${fmt(dollars)}`;
-      }).join(" | ");
-      
-      const da = $(ids.vegasDollarA);
-      const db = $(ids.vegasDollarB);
-      if(da) da.textContent = netLines;
-      if(db) db.textContent = "—";
-      applyVegasTone(da, NaN);
-      applyVegasTone(db, NaN);
-      
-      // Show game breakdown
-      const breakdownRow = document.getElementById('vegasGameBreakdown');
-      const breakdownData = document.getElementById('vegasGameBreakdownData');
-      if(breakdownRow && breakdownData && data.gameResults){
-        breakdownRow.hidden = false;
-        breakdownRow.style.display = '';
-        const gameLines = data.gameResults.map((game, i) => {
-          const playerName = names[game.player] || `P${game.player+1}`;
-          const pts = game.points;
-          const sign = pts === 0 ? "" : (pts > 0 ? "+" : "");
-          const dollars = pts * per;
-          return `<strong>Game ${i+1}</strong> (${playerName}+👻, Holes ${game.holes}): ${sign}${pts} pts (${fmt(dollars)})`;
-        }).join(' • ');
-        breakdownData.innerHTML = gameLines;
-      }
-    } else {
-      const da = $(ids.vegasDollarA);
-      const db = $(ids.vegasDollarB);
-      if(da) da.textContent = fmt(data.dollarsA);
-      if(db) db.textContent = fmt(data.dollarsB);
-      applyVegasTone(da, Number(data.dollarsA) || 0);
-      applyVegasTone(db, Number(data.dollarsB) || 0);
-      
-      // Hide game breakdown in non-rotation mode
-      const breakdownRow = document.getElementById('vegasGameBreakdown');
-      if(breakdownRow) { breakdownRow.hidden = true; breakdownRow.style.display = 'none'; }
-    }
+    const da = $(ids.vegasDollarA);
+    const db = $(ids.vegasDollarB);
+    if(da) da.textContent = fmt(data.dollarsA);
+    if(db) db.textContent = fmt(data.dollarsB);
+    applyVegasTone(da, Number(data.dollarsA) || 0);
+    applyVegasTone(db, Number(data.dollarsB) || 0);
+
+    // Rotation mode removed: always hide old breakdown row.
+    const breakdownRow = document.getElementById('vegasGameBreakdown');
+    if(breakdownRow) { breakdownRow.hidden = true; breakdownRow.style.display = 'none'; }
 
     const ta = $(ids.vegasTotalA);
     const tb = $(ids.vegasTotalB);
@@ -675,13 +602,8 @@ const Vegas = {
   // Internal helpers
   _teamPair(players, holeIdx, useNet, netHcpMode = 'playOffLow', computeCtx = null) {
     const vals = players.map(p => {
-      // Check if this is a ghost (position >= getPlayers())
+      // Check if this is a ghost (position >= real player count)
       if(p >= getPlayers()) {
-        // In rotation mode (3 players), ghost is always active
-        if(getPlayers() === 3) {
-          return getPar(holeIdx); // Ghost shoots par
-        }
-        // Otherwise check if checkbox is enabled
         const ghostCheck = document.getElementById(`vegasGhost_${p}`);
         if(ghostCheck && ghostCheck.checked) {
           return getPar(holeIdx); // Ghost shoots par
@@ -699,10 +621,6 @@ const Vegas = {
     const best=Math.min(...players.map(p=>{
       // Check if this is a ghost
       if(p >= getPlayers()) {
-        // In rotation mode (3 players), ghost is always active
-        if(getPlayers() === 3) {
-          return getPar(h); // Ghost shoots par (never birdie/eagle)
-        }
         const ghostCheck = document.getElementById(`vegasGhost_${p}`);
         if(ghostCheck && ghostCheck.checked) {
           return getPar(h); // Ghost shoots par (never birdie/eagle)
@@ -758,6 +676,21 @@ function scheduleVegasControlRecalc() {
 
 function vegas_renderTeamControls(){
   const box=$(ids.vegasTeams); if(!box) return;
+  const playerCount = getPlayers();
+
+  if (playerCount > 4) {
+    box.innerHTML = '';
+    const info = document.createElement('div');
+    info.className = 'warn';
+    info.style.gridColumn = '1 / -1';
+    info.textContent = 'Vegas is disabled for more than 4 players. Reduce player count to 4 or fewer.';
+    box.appendChild(info);
+    setVegasDisabledState(true, info.textContent);
+    vegas_recalc();
+    return;
+  }
+
+  setVegasDisabledState(false);
 
   // Preserve existing selections so a re-render (triggered by name edits,
   // cascades, or cloud sync) does NOT reset the user's team picks.
@@ -776,23 +709,8 @@ function vegas_renderTeamControls(){
   
   // Vegas supports exactly 4 positions (players or ghosts)
   const maxPositions = 4;
-  const realPlayers = Math.min(getPlayers(), maxPositions);
-  const needsGhosts = getPlayers() < maxPositions;
-  const useRotation = getPlayers() === 3;
-  
-  // In rotation mode, show info message instead of team controls
-  if(useRotation){
-    const info = document.createElement("div");
-    info.style.gridColumn = "1 / -1";
-    info.style.padding = "12px";
-    info.style.background = "rgba(100,100,255,0.1)";
-    info.style.borderRadius = "8px";
-    info.style.marginBottom = "12px";
-    info.innerHTML = `<strong>🔄 Rotation Mode (3 Players)</strong><br>Each player plays 6 holes with a ghost partner (shoots par):<br>• ${names[0]}: Holes 1-6<br>• ${names[1]}: Holes 7-12<br>• ${names[2]}: Holes 13-18`;
-    box.appendChild(info);
-    vegas_recalc();
-    return;
-  }
+  const realPlayers = Math.min(playerCount, maxPositions);
+  const needsGhosts = playerCount < maxPositions;
   
   for(let i=0; i<realPlayers; i++){
     const row=document.createElement("div"); row.className="vegas-team-row";
@@ -853,6 +771,21 @@ function vegas_renderTeamControls(){
     }
     if (realPlayers >= 4 || needsGhosts) {
       const b3 = $(`input[name="vegasTeam_3"][value="B"]`); if (b3) b3.checked = true;
+    }
+  }
+
+  // For 3-player games, force the 4th slot into ghost mode so teams can
+  // still be assigned as 2v2 including one ghost.
+  if (playerCount === 3) {
+    const ghostCheck = document.getElementById('vegasGhost_3');
+    if (ghostCheck) ghostCheck.checked = true;
+    const teams = vegas_getTeamAssignments();
+    if (teams.A.length < 2) {
+      const r = $(`input[name="vegasTeam_3"][value="A"]`);
+      if (r) r.checked = true;
+    } else if (teams.B.length < 2) {
+      const r = $(`input[name="vegasTeam_3"][value="B"]`);
+      if (r) r.checked = true;
     }
   }
 }
@@ -960,6 +893,7 @@ function vegas_syncColumnLabelsHard() {
 function vegas_recalc(){
   const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();
   const data = Vegas.compute(teams, opts, createVegasComputeContext(opts));
+  setVegasDisabledState(getPlayers() > 4, data.invalidReason || 'Vegas is disabled for more than 4 players. Reduce player count to 4 or fewer.');
   Vegas.render(data);
   vegas_syncColumnLabelsHard();
   try{ window._vegasUpdateDollars?.(); }catch{}
