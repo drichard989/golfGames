@@ -1339,7 +1339,6 @@
     let cachedFixedCloneTable = null;
     let cachedScrollCloneTable = null;
     let lastCloneSignature = '';
-    let scrollRafId = null;
     let pendingScrollLeft = 0;
     let appliedScrollLeft = Number.NaN;
 
@@ -1371,7 +1370,7 @@
       sourceCells.forEach((sourceCell, idx) => {
         const cloneCell = cloneCells[idx];
         if (!cloneCell) return;
-        const width = Math.ceil(sourceCell.getBoundingClientRect().width || 0);
+        const width = sourceCell.getBoundingClientRect().width || 0;
         if (width <= 0) return;
         cloneCell.style.width = `${width}px`;
         cloneCell.style.minWidth = `${width}px`;
@@ -1390,10 +1389,9 @@
     };
 
     const applyScrollTransform = () => {
-      scrollRafId = null;
       if (shell.hidden || !activeScrollCloneTable) return;
       if (pendingScrollLeft === appliedScrollLeft) return;
-      activeScrollCloneTable.style.transform = `translateX(${-pendingScrollLeft}px)`;
+      activeScrollCloneTable.style.transform = `translate3d(${-pendingScrollLeft}px, 0, 0)`;
       appliedScrollLeft = pendingScrollLeft;
     };
 
@@ -1446,15 +1444,15 @@
       const cardRect = scorecard.getBoundingClientRect();
       const fixedRect = fixedPane.getBoundingClientRect();
       const scrollRect = scrollPane.getBoundingClientRect();
-      const scrollTableWidth = Math.ceil(document.getElementById('scorecard')?.getBoundingClientRect().width || 0);
-      const leftOffset = Math.max(0, Math.round(cardRect.left - navRect.left));
+      const scrollTableWidth = document.getElementById('scorecard')?.getBoundingClientRect().width || 0;
+      const leftOffset = Math.max(0, cardRect.left - navRect.left);
       const fixedWidth = Math.max(
         1,
-        Math.round(fixedRect.width || fixedPane.clientWidth || fixedPane.offsetWidth || 0)
+        fixedRect.width || fixedPane.clientWidth || fixedPane.offsetWidth || 0
       );
       const scrollViewportWidth = Math.max(
         1,
-        Math.round(
+        (
           scrollRect.width ||
           scrollPane.clientWidth ||
           scrollPane.offsetWidth ||
@@ -1484,8 +1482,7 @@
       if (shell.hidden) return;
       if (!activeScrollCloneTable) return;
       pendingScrollLeft = scrollPane.scrollLeft || 0;
-      if (scrollRafId != null) return;
-      scrollRafId = requestAnimationFrame(applyScrollTransform);
+      applyScrollTransform();
     };
 
     scrollPane.addEventListener('scroll', onScroll, { passive: true });
