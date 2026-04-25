@@ -49,7 +49,7 @@
     const playerRows = scrollTable?.querySelectorAll(".player-row");
     
     // Get names and CH from fixed table
-    const fixedTable = document.querySelector("#scorecardFixed");
+    const fixedTable = document.querySelector("#scorecard");
     const fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
     
     const rows = [];
@@ -99,7 +99,7 @@
       csv += "Hole,BankerPlayer,MaxBet,BankerDoubled,PlayerBets\n";
       
       // Get player names for readable output
-      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const playerRows = document.querySelectorAll('#scorecard .player-row');
       const playerNames = Array.from(playerRows).map(row => {
         const nameInput = row.querySelector('.name-edit');
         return nameInput?.value?.trim() || '';

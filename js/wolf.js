@@ -55,7 +55,7 @@
   // HELPERS (intentionally mirror the other game modules for consistency)
   // ---------------------------------------------------------------------------
   function getFixedPlayerRows() {
-    return Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    return Array.from(document.querySelectorAll('#scorecard .player-row'));
   }
 
   function getPlayerCount() {

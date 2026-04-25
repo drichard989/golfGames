@@ -67,11 +67,11 @@
   }
 
   function getPlayerCount(){
-    return document.querySelectorAll('#scorecardFixed .player-row').length;
+    return document.querySelectorAll('#scorecard .player-row').length;
   }
 
   function getPlayerNames(){
-    const rows = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    const rows = Array.from(document.querySelectorAll('#scorecard .player-row'));
     return rows.map((row, idx) => {
       const name = row.querySelector('.name-edit')?.value?.trim();
       return name || `Player ${idx + 1}`;

@@ -72,7 +72,7 @@
     --font-data-adjust: 3px;
     --font-size-step: 0px;
 
-  /* Scorecard typography tokens (fixed + scroll panes stay in sync) */
+  /* Scorecard typography tokens */
   --scorecard-header-font-size: calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step));
   --scorecard-data-font-size: calc(var(--text-xl) + var(--font-data-adjust) + var(--font-size-step));
   --scorecard-name-font-size: var(--scorecard-data-font-size);
@@ -82,9 +82,8 @@
   --table-input-width: 44px;
   --table-ch-width: 60px;
   --games-launcher-gap: 6px;
-  --scorecard-fixed-width: 175px;
   --score-header-height-scale: 1.1;
-  --score-sticky-head-top: -2px;
+  --score-sticky-head-top: 0px;
   --game-header-height-scale: 1.1;
   --game-sticky-head-top: -2px;
   --score-sticky-par-top: 39px;
@@ -961,14 +960,14 @@ select:not(.select-plain) option {
 }
 
 /* =========================
-   Scorecard (Dual-Table Layout)
+   Scorecard (Single-Table Layout)
    ========================= */
 .scorecard-container {
-  display: flex;
+  display: block;
   background: var(--panel);
   border: 2px solid var(--line);
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  overflow: visible;
+  overflow: hidden;
   margin: var(--space-md) 0 0;
   border-bottom: none;
 }
@@ -1094,57 +1093,23 @@ body.mode-score #main-scorecard {
   margin-top: 0;
 }
 
-.scorecard-fixed {
-  flex-shrink: 0;
-  flex-grow: 0;
-  min-width: var(--scorecard-fixed-width);
-  max-width: var(--scorecard-fixed-width);
-  width: var(--scorecard-fixed-width);
-  height: min(62vh, 560px);
-  max-height: min(62vh, 560px);
-  border-right: 2px solid rgba(168, 179, 191, 0.4);
-  background: var(--panel);
-  z-index: 10;
-  box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  touch-action: pan-y;
-  overscroll-behavior: auto;
-  scrollbar-gutter: stable;
-}
-
-.scorecard-scroll {
-  flex: 1;
+.scorecard-container {
   position: relative;
+  width: 100%;
   height: min(62vh, 560px);
   max-height: min(62vh, 560px);
-  overflow-x: auto;
-  overflow-y: auto;
-  scrollbar-gutter: stable;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scroll-behavior: auto;
+  scrollbar-gutter: stable both-edges;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
-  overscroll-behavior: auto;
-  overscroll-behavior-x: auto;
-  scroll-behavior: auto;
 }
 
-/* iOS only: let scorecard grow with players and scroll at page level. */
+/* iOS: keep gestures anchored to the scorecard pane. */
 @supports (-webkit-touch-callout: none) {
-  .scorecard-fixed {
-    height: auto;
-    max-height: none;
-    overflow-y: visible;
-  }
-
-  .scorecard-scroll {
-    height: auto;
-    max-height: none;
-    overflow-y: visible;
-  }
-
   #scoreEntryPanel,
-  .scorecard-fixed,
-  .scorecard-scroll {
+  .scorecard-container {
     overscroll-behavior: none;
     overscroll-behavior-x: none;
     overscroll-behavior-y: none;
@@ -1154,46 +1119,27 @@ body.mode-score #main-scorecard {
     overflow: visible;
   }
 
-  .scorecard-fixed,
-  .scorecard-scroll {
+  .scorecard-container {
     -webkit-overflow-scrolling: touch;
   }
 }
 
 /* Scrollbar styling */
-.scorecard-scroll::-webkit-scrollbar {
+.scorecard-container::-webkit-scrollbar {
   height: 2px;
   width: 2px;
 }
 
-.scorecard-fixed::-webkit-scrollbar {
-  width: 2px;
-  height: 2px;
-}
-
-.scorecard-scroll::-webkit-scrollbar-track {
+.scorecard-container::-webkit-scrollbar-track {
   background: var(--panel-alt);
 }
 
-.scorecard-fixed::-webkit-scrollbar-track {
-  background: var(--panel-alt);
-}
-
-.scorecard-scroll::-webkit-scrollbar-thumb {
+.scorecard-container::-webkit-scrollbar-thumb {
   background: var(--line);
   border-radius: 2px;
 }
 
-.scorecard-fixed::-webkit-scrollbar-thumb {
-  background: var(--line);
-  border-radius: 2px;
-}
-
-.scorecard-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
-}
-
-.scorecard-fixed::-webkit-scrollbar-thumb:hover {
+.scorecard-container::-webkit-scrollbar-thumb:hover {
   background: var(--muted);
 }
 
@@ -1204,48 +1150,24 @@ table {
   background: var(--panel);
 }
 
-#scorecardFixed {
-  min-width: 100%;
-  max-width: 100%;
-  width: 100%;
-}
-
 #scorecard {
-  min-width: 860px;
+  min-width: 1040px;
 }
 
-thead th {
+#scorecard thead th {
   position: sticky;
   top: var(--score-sticky-head-top, 0px);
   background: var(--panel-alt);
-  z-index: var(--z-sticky-header);
+  z-index: 20;
 }
 
-#scorecard thead,
-#scorecardFixed thead {
-  position: sticky;
-  top: var(--score-sticky-head-top, 0px);
-  z-index: 6;
-}
-
-#scorecard th,
-#scorecardFixed th {
-  position: sticky;
-  top: var(--score-sticky-head-top, 0px);
-  background: var(--panel-alt);
-  z-index: 5;
-}
-
-#scorecard thead th,
-#scorecardFixed thead th {
+#scorecard thead th {
   padding-top: calc(var(--space-xs) * var(--score-header-height-scale, 1));
   padding-bottom: calc(var(--space-xs) * var(--score-header-height-scale, 1));
 }
 
 #scorecard #parRow td,
-#scorecard #parRow th,
-#scorecardFixed #parRowFixed td,
-#scorecardFixed #parRowFixed th {
+#scorecard #parRow th {
   position: sticky;
   top: var(--score-sticky-par-top, 44px);
   z-index: 4;
@@ -1253,9 +1175,7 @@ thead th {
 }
 
 #scorecard #hcpRow td,
-#scorecard #hcpRow th,
-#scorecardFixed #hcpRowFixed td,
-#scorecardFixed #hcpRowFixed th {
+#scorecard #hcpRow th {
   position: sticky;
   top: var(--score-sticky-hcp-top, 88px);
   z-index: 3;
@@ -1264,15 +1184,10 @@ thead th {
 
 /* Let touch drags started on sticky header/par/hcp rows scroll the pane on iOS. */
 #scorecard thead th,
-#scorecardFixed thead th,
 #scorecard #parRow td,
 #scorecard #parRow th,
-#scorecardFixed #parRowFixed td,
-#scorecardFixed #parRowFixed th,
 #scorecard #hcpRow td,
-#scorecard #hcpRow th,
-#scorecardFixed #hcpRowFixed td,
-#scorecardFixed #hcpRowFixed th {
+#scorecard #hcpRow th {
   pointer-events: none;
 }
 
@@ -1286,28 +1201,32 @@ td {
   white-space: nowrap;
 }
 
-/* Fixed table specific styling */
-#scorecardFixed th:first-child,
-#scorecardFixed td:first-child {
+/* Sticky left columns (Player + CH) */
+#scorecard th:first-child,
+#scorecard td:first-child {
   text-align: left;
   padding: var(--space-xs) 6px;
   min-width: 120px;
   max-width: 120px;
   width: 120px;
+  position: sticky;
+  left: 0;
   background-color: var(--panel);
-  font-size: var(--scorecard-header-font-size);
   overflow: hidden;
   text-overflow: ellipsis;
+  z-index: var(--z-sticky-col);
 }
 
-#scorecardFixed th:nth-child(2),
-#scorecardFixed td:nth-child(2) {
+#scorecard th:nth-child(2),
+#scorecard td:nth-child(2) {
   min-width: 55px;
   max-width: 55px;
   width: 55px;
   padding: var(--space-xs) 3px;
+  position: sticky;
+  left: 120px;
   background-color: var(--panel);
-  font-size: var(--scorecard-header-font-size);
+  z-index: var(--z-sticky-col);
 }
 
 /* Name cell container with delete button */
@@ -1349,8 +1268,8 @@ td {
   transform: scale(0.95);
 }
 
-/* Input styling for fixed table */
-#scorecardFixed .name-edit {
+/* Input styling for first columns */
+#scorecard .name-edit {
   flex: 1;
   min-width: 0;
   max-width: none;
@@ -1363,7 +1282,7 @@ td {
   font-weight: 500;
 }
 
-#scorecardFixed .ch-input {
+#scorecard .ch-input {
   width: var(--table-input-width);
   min-width: var(--table-input-width);
   height: var(--table-input-width);
@@ -1375,13 +1294,14 @@ td {
   line-height: 1;
 }
 
-#scorecardFixed thead th:first-child {
+#scorecard thead th:first-child {
   background-color: var(--panel-alt);
-  z-index: var(--z-sticky-first-col);
+  z-index: 21;
 }
 
-#scorecardFixed thead th:nth-child(2) {
+#scorecard thead th:nth-child(2) {
   background-color: var(--panel-alt);
+  z-index: 21;
 }
 
 tr:last-child td {
@@ -1389,34 +1309,28 @@ tr:last-child td {
 }
 
 #scorecard tr.player-row:last-child td,
-#scorecardFixed tr.player-row:last-child td,
 #scorecard tr.player-row:last-child th,
-#scorecardFixed tr.player-row:last-child th {
+#scorecard tr.player-row:last-child th {
   border-bottom: 2px solid var(--line);
 }
 
-/* Scrollable table - reset first-child styling (hole 1 should not be special) */
-#scorecard th:first-child,
-#scorecard td:first-child {
-  text-align: center;
-  padding: var(--space-xs) 3px;
-  min-width: auto;
-  position: static;
-  left: auto;
-  background-color: transparent;
-  z-index: auto;
-  border-right: none;
-  -webkit-transform: none;
-  transform: none;
-}
-
-#scorecard thead th:first-child {
-  background-color: var(--panel-alt);
+/* Keep sticky corners and left cells above other sticky rows. */
+#scorecard #parRow td:first-child,
+#scorecard #parRow td:nth-child(2),
+#scorecard #hcpRow td:first-child,
+#scorecard #hcpRow td:nth-child(2) {
+  z-index: 6;
 }
 
 /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
-#scorecard th:nth-child(10),
-#scorecard td:nth-child(10) {
+#scorecard th:nth-child(12),
+#scorecard td:nth-child(12) {
+  border-left: 3px solid rgba(168, 179, 191, 0.4) !important;
+}
+
+/* Divider between CH and Hole 1 */
+#scorecard th:nth-child(3),
+#scorecard td:nth-child(3) {
   border-left: 3px solid rgba(168, 179, 191, 0.4) !important;
 }
 
@@ -1428,7 +1342,7 @@ tr:last-child td {
 /* Emphasize Par and Handicap rows */
 .par-row th,
 .par-row td {
-  background: transparent;
+  background: var(--panel-alt);
   border-left: 2px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 2px solid rgba(255, 255, 255, 0.3);
@@ -1437,7 +1351,7 @@ tr:last-child td {
 
 .hcp-row th,
 .hcp-row td {
-  background: transparent;
+  background: var(--panel-alt);
   border-left: 2px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 2px solid rgba(255, 255, 255, 0.3);
@@ -1479,39 +1393,39 @@ tr:last-child td {
 }
 
 /* Divider between hole 18 and Out — matches the front/back 9 divider weight */
-#scorecard th:nth-child(19),
-#scorecard td:nth-child(19) {
+#scorecard th:nth-child(21),
+#scorecard td:nth-child(21) {
   border-left: 3px solid rgba(168, 179, 191, 0.4) !important;
 }
 
 /* Thin dividers between summary columns (Out | In | Total | To Par | Net) */
-#scorecard th:nth-child(20),
-#scorecard td:nth-child(20),
+#scorecard th:nth-child(22),
+#scorecard td:nth-child(22),
+#scorecard th:nth-child(23),
+#scorecard td:nth-child(23),
+#scorecard th:nth-child(24),
+#scorecard td:nth-child(24),
+#scorecard th:nth-child(25),
+#scorecard td:nth-child(25) {
+  border-left: 1px solid rgba(168, 179, 191, 0.3) !important;
+}
+
+/* Keep summary columns stable even when values change from "—" to numbers */
 #scorecard th:nth-child(21),
 #scorecard td:nth-child(21),
 #scorecard th:nth-child(22),
 #scorecard td:nth-child(22),
 #scorecard th:nth-child(23),
-#scorecard td:nth-child(23) {
-  border-left: 1px solid rgba(168, 179, 191, 0.3) !important;
-}
-
-/* Keep summary columns stable even when values change from "—" to numbers */
-#scorecard th:nth-child(19),
-#scorecard td:nth-child(19),
-#scorecard th:nth-child(20),
-#scorecard td:nth-child(20),
-#scorecard th:nth-child(21),
-#scorecard td:nth-child(21),
-#scorecard th:nth-child(23),
-#scorecard td:nth-child(23) {
+#scorecard td:nth-child(23),
+#scorecard th:nth-child(25),
+#scorecard td:nth-child(25) {
   width: 56px;
   min-width: 56px;
   max-width: 56px;
 }
 
-#scorecard th:nth-child(22),
-#scorecard td:nth-child(22) {
+#scorecard th:nth-child(24),
+#scorecard td:nth-child(24) {
   width: 70px;
   min-width: 70px;
   max-width: 70px;
@@ -3274,9 +3188,7 @@ input[type="text"] {
 /* Header rows are denser than score-entry rows; cap Par/HCP sizing to avoid
    clipping two-digit values in sticky mode. */
 #scorecard .par-row input,
-#scorecard .hcp-row input,
-#parRowFixed input,
-#hcpRowFixed input {
+#scorecard .hcp-row input {
   font-size: clamp(14px, calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step)), 22px);
   line-height: 1.05;
   padding: 8px 2px;
@@ -3732,9 +3644,7 @@ input[type="text"] {
      padding above — that reduces the 44px content area too much and clips
      two-digit numbers (e.g. 13, 15, 17) in light mode. */
   #parRow input,
-  #parRowFixed input,
-  #hcpRow input,
-  #hcpRowFixed input {
+  #hcpRow input {
     padding: var(--space-md) 2px;
   }
 
@@ -3923,6 +3833,12 @@ input[type="text"] {
   border-left: 2px solid rgba(0, 0, 0, 0.15);
   border-top: 2px solid rgba(0, 0, 0, 0.3);
   border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+}
+
+/* Light theme: divider between CH and Hole 1 */
+:root[data-theme="light"] #scorecard th:nth-child(3),
+:root[data-theme="light"] #scorecard td:nth-child(3) {
+  border-left: 3px solid rgba(0, 0, 0, 0.35) !important;
 }
 
 /* Light theme: heavy divider between hole 18 and Out */

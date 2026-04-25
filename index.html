@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.51" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.52" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.51" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.51" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.52" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.52" />
     <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.1.6" />
     <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.1.2" />
   </head>
@@ -148,54 +148,24 @@
     </div>
     <section id="scoreEntryPanel" class="entry-panel" role="tabpanel" aria-labelledby="entrySwitcherScoreBtn">
 
-    <!-- SCORECARD - Dual Table Layout -->
+    <!-- SCORECARD -->
     <div class="scorecard-container" id="main-scorecard">
-      <!-- Fixed Left Column (Player Names + CH) -->
-      <div class="scorecard-fixed">
-        <table id="scorecardFixed" aria-describedby="saveStatus">
-          <thead>
-            <tr id="holesHeaderFixed">
-              <th class="align-left">Player</th>
-              <th>CH</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="par-row" id="parRowFixed">
-              <td class="align-left">
-                <strong>Par</strong>
-              </td>
-              <td></td>
-            </tr>
-            <tr class="hcp-row" id="hcpRowFixed">
-              <td class="align-left">
-                <strong>HCP Index</strong>
-              </td>
-              <td></td>
-            </tr>
-            <!-- Player rows inserted by JS -->
-          </tbody>
-        </table>
-      </div>
-      
-      <!-- Scrollable Right Columns (Holes + Scores) -->
-      <div class="scorecard-scroll">
-        <table id="scorecard" aria-describedby="saveStatus">
-          <thead>
-            <tr id="holesHeader">
-              <!-- JS fills Holes 1–18 + Out + In + Total + To Par + Net -->
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="par-row" id="parRow">
-              <!-- JS fills par values -->
-            </tr>
-            <tr class="hcp-row" id="hcpRow">
-              <!-- JS fills HCP values -->
-            </tr>
-            <!-- Player rows inserted by JS -->
-          </tbody>
-        </table>
-      </div>
+      <table id="scorecard" aria-describedby="saveStatus">
+        <thead>
+          <tr id="holesHeader">
+            <!-- JS fills Player + CH + Holes 1–18 + Out + In + Total + To Par + Net -->
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="par-row" id="parRow">
+            <!-- JS fills par values -->
+          </tr>
+          <tr class="hcp-row" id="hcpRow">
+            <!-- JS fills HCP values -->
+          </tr>
+          <!-- Player rows inserted by JS -->
+        </tbody>
+      </table>
     </div>
 
     <div class="scorecard-controls-shell">

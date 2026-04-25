@@ -46,7 +46,7 @@
 
   const getFixedPlayerRows = () => {
     const rows = window.GolfApp?.utils?.getFixedPlayerRowsCached?.();
-    return Array.isArray(rows) ? rows : Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    return Array.isArray(rows) ? rows : Array.from(document.querySelectorAll('#scorecard .player-row'));
   };
 
   // Access game constants with fallbacks

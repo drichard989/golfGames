@@ -175,10 +175,10 @@
       if (el) el.textContent = msg;
     },
     
-    /** Get player rows from both tables (avoids duplicate queries) */
+    /** Get player rows from the single scorecard table */
     getPlayerRows: () => ({
       scrollable: Array.from(document.querySelectorAll('#scorecard .player-row')),
-      fixed: Array.from(document.querySelectorAll('#scorecardFixed .player-row'))
+      fixed: Array.from(document.querySelectorAll('#scorecard .player-row'))
     }),
 
     _queryCache: new Map(),
@@ -204,7 +204,7 @@
     },
 
     getFixedPlayerRowsCached() {
-      return Utils.getCachedQueryAll('#scorecardFixed .player-row', 'scorecardFixedRows');
+      return Utils.getCachedQueryAll('#scorecard .player-row', 'scorecardRows');
     },
     
     /**
@@ -535,9 +535,7 @@
 
   const ids = {
     holesHeader:"#holesHeader",parRow:"#parRow",hcpRow:"#hcpRow",totalsRow:"#totalsRow",
-    holesHeaderFixed:"#holesHeaderFixed",parRowFixed:"#parRowFixed",hcpRowFixed:"#hcpRowFixed",totalsRowFixed:"#totalsRowFixed",
     table:"#scorecard",
-    tableFixed:"#scorecardFixed",
     resetBtn:"#resetBtn",clearAllBtn:"#clearAllBtn",clearEverythingBtn:"#clearEverythingBtn",saveBtn:"#saveBtn",saveStatus:"#saveStatus",
 
     // Games toggles
@@ -1106,26 +1104,7 @@
   }
 
   function setupScorecardScrollSync() {
-    const fixedPane = document.querySelector('.scorecard-fixed');
-    const scrollPane = document.querySelector('.scorecard-scroll');
-    if (!fixedPane || !scrollPane) return;
-
-    let syncingVertical = false;
-
-    const syncScrollTop = (source, target) => {
-      if (syncingVertical) return;
-      syncingVertical = true;
-      target.scrollTop = source.scrollTop;
-      requestAnimationFrame(() => {
-        syncingVertical = false;
-      });
-    };
-
-    scrollPane.addEventListener('scroll', () => {
-      syncScrollTop(scrollPane, fixedPane);
-    }, { passive: true });
-
-    fixedPane.addEventListener('scroll', () => syncScrollTop(fixedPane, scrollPane), { passive: true });
+    // Single-table scorecard uses native scrolling in one pane.
   }
 
   /**
@@ -1137,9 +1116,8 @@
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (!isIOS) return;
 
-    const scrollPane = document.querySelector('.scorecard-scroll');
-    const fixedPane = document.querySelector('.scorecard-fixed');
-    if (!scrollPane || !fixedPane) return;
+    const scrollPane = document.querySelector('.scorecard-container');
+    if (!scrollPane) return;
 
     const installGuard = (pane) => {
       let startX = 0;
@@ -1190,7 +1168,6 @@
     };
 
     installGuard(scrollPane);
-    installGuard(fixedPane);
   }
 
   /**
@@ -1204,9 +1181,8 @@
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     if (!isIOS) return;
 
-    const scrollPane = document.querySelector('.scorecard-scroll');
-    const fixedPane  = document.querySelector('.scorecard-fixed');
-    if (!scrollPane || !fixedPane) return;
+    const scrollPane = document.querySelector('.scorecard-container');
+    if (!scrollPane) return;
 
     let stickyEls = [];
     let fallbackEnabled = false;
@@ -1217,9 +1193,6 @@
         ...scrollPane.querySelectorAll('thead th'),
         ...scrollPane.querySelectorAll('#parRow td, #parRow th'),
         ...scrollPane.querySelectorAll('#hcpRow td, #hcpRow th'),
-        ...fixedPane.querySelectorAll('thead th'),
-        ...fixedPane.querySelectorAll('#parRowFixed td, #parRowFixed th'),
-        ...fixedPane.querySelectorAll('#hcpRowFixed td, #hcpRowFixed th'),
       ];
       stickyEls.forEach((el) => {
         el.style.willChange = fallbackEnabled ? 'transform' : 'auto';
@@ -1244,7 +1217,7 @@
     }
 
     function detectNativeStickyWorks() {
-      const probe = scrollPane.querySelector('thead th') || fixedPane.querySelector('thead th');
+      const probe = scrollPane.querySelector('thead th');
       if (!probe) return true;
 
       const maxScroll = Math.max(0, scrollPane.scrollHeight - scrollPane.clientHeight);
@@ -1255,11 +1228,9 @@
       const beforeTop = probe.getBoundingClientRect().top;
 
       scrollPane.scrollTop = targetTop;
-      fixedPane.scrollTop = targetTop;
       const afterTop = probe.getBoundingClientRect().top;
 
       scrollPane.scrollTop = startTop;
-      fixedPane.scrollTop = startTop;
 
       return Math.abs(afterTop - beforeTop) <= 1.5;
     }
@@ -1272,7 +1243,6 @@
       if (fallbackEnabled && !listenersBound) {
         listenersBound = true;
         scrollPane.addEventListener('scroll', onScroll, { passive: true });
-        fixedPane.addEventListener('scroll', onScroll, { passive: true });
       }
 
       if (fallbackEnabled) {
@@ -1414,6 +1384,16 @@
        */
       header(){
         const header=$(ids.holesHeader);
+        if (!header) return;
+        const thPlayer = document.createElement("th");
+        thPlayer.textContent = "Player";
+        thPlayer.className = "align-left";
+        header.appendChild(thPlayer);
+
+        const thCh = document.createElement("th");
+        thCh.textContent = "CH";
+        header.appendChild(thCh);
+
         for(let h=1;h<=HOLES;h++){ 
           const th=document.createElement("th"); 
           th.textContent=h; 
@@ -1433,6 +1413,20 @@
        */
       parAndHcpRows(){
         const parRow=$(ids.parRow), hcpRow=$(ids.hcpRow);
+        if (!parRow || !hcpRow) return;
+
+        const parLabel = document.createElement("td");
+        parLabel.className = "align-left";
+        parLabel.innerHTML = "<strong>Par</strong>";
+        parRow.appendChild(parLabel);
+        parRow.appendChild(document.createElement("td"));
+
+        const hcpLabel = document.createElement("td");
+        hcpLabel.className = "align-left";
+        hcpLabel.innerHTML = "<strong>HCP Index</strong>";
+        hcpRow.appendChild(hcpLabel);
+        hcpRow.appendChild(document.createElement("td"));
+
         for(let h=1;h<=HOLES;h++){
           const tdp=document.createElement("td"), ip=document.createElement("input"); 
           ip.type="number"; ip.inputMode="numeric"; ip.value=PARS[h-1]; 
@@ -1472,20 +1466,15 @@
        */
       playerRows(){
         const tbody=$(ids.table).tBodies[0];
-        const tbodyFixed=$(ids.tableFixed).tBodies[0];
+        if (!tbody) return;
         
         for(let p=0;p<PLAYERS;p++){
-          // Create row for scrollable table (scores only)
+          // Create row for single table (name + CH + scores)
           const tr=document.createElement("tr"); 
           tr.className="player-row"; 
           tr.dataset.player=String(p);
-          
-          // Create row for fixed table (name + CH only)
-          const trFixed=document.createElement("tr"); 
-          trFixed.className="player-row"; 
-          trFixed.dataset.player=String(p);
 
-          // Name input (in fixed table)
+          // Name input
           const nameTd=document.createElement("td");
           
           // Create container for delete button and name input
@@ -1500,7 +1489,7 @@
           deleteBtn.type = "button";
           deleteBtn.addEventListener("click", () => {
             // Get current index dynamically from the row's dataset
-            const currentIndex = Number(trFixed.dataset.player);
+            const currentIndex = Number(tr.dataset.player);
             Scorecard.player.removeByIndex(currentIndex);
           });
           
@@ -1522,9 +1511,9 @@
           nameCellContainer.appendChild(deleteBtn);
           nameCellContainer.appendChild(nameInput);
           nameTd.appendChild(nameCellContainer); 
-          trFixed.appendChild(nameTd);
+          tr.appendChild(nameTd);
 
-          // Course Handicap input (in fixed table)
+          // Course Handicap input
           const chTd=document.createElement("td");
           
           const chInput=document.createElement("input"); 
@@ -1557,9 +1546,9 @@
             Storage.saveDebounced(); 
           });
           chTd.appendChild(chInput); 
-          trFixed.appendChild(chTd);
+          tr.appendChild(chTd);
 
-          // Score inputs for each hole (in scrollable table)
+          // Score inputs for each hole
           for(let h=1; h<=HOLES; h++){
             const td=document.createElement("td"), inp=document.createElement("input");
             inp.type="number"; 
@@ -1632,7 +1621,6 @@
           tr.append(outTd,inTd,totalTd,toParTd,netTd);
 
           tbody.appendChild(tr);
-          tbodyFixed.appendChild(trFixed);
         }
       },
 
@@ -1642,6 +1630,11 @@
       totalsRow(){
         const totalsRow=$(ids.totalsRow);
         if(!totalsRow) return;
+        const label = document.createElement("td");
+        label.className = "subtle align-left";
+        label.textContent = "Totals";
+        totalsRow.appendChild(label);
+        totalsRow.appendChild(document.createElement("td"));
         for(let h=1;h<=HOLES;h++){
           const td=document.createElement("td"); 
           td.className="subtle"; 
@@ -1658,14 +1651,11 @@
       },
 
       /**
-       * Sync row heights between fixed and scrollable tables
-       * This ensures perfect vertical alignment on all devices
+       * Update sticky row offsets for single-table scorecard.
        */
       syncRowHeights(skipHighlighting = false) {
-        const fixedTable = $(ids.tableFixed);
         const scrollTable = $(ids.table);
-        
-        if (!fixedTable || !scrollTable) return;
+        if (!scrollTable) return;
 
         if (syncRowHeightsFrame) {
           cancelAnimationFrame(syncRowHeightsFrame);
@@ -1674,47 +1664,12 @@
         syncRowHeightsFrame = requestAnimationFrame(() => {
           syncRowHeightsFrame = null;
 
-          const fixedRows = Array.from(fixedTable.querySelectorAll('tr'));
-          const scrollRows = Array.from(scrollTable.querySelectorAll('tr'));
-          const allRows = [...fixedRows, ...scrollRows];
-
-          allRows.forEach((row) => {
-            row.style.height = 'auto';
-          });
-
-          void fixedTable.offsetHeight;
-          void scrollTable.offsetHeight;
-
-          const maxRows = Math.max(fixedRows.length, scrollRows.length);
-          for (let i = 0; i < maxRows; i++) {
-            const fixedRow = fixedRows[i];
-            const scrollRow = scrollRows[i];
-            if (!fixedRow || !scrollRow) continue;
-
-            const fixedHeight = Math.ceil(fixedRow.getBoundingClientRect().height);
-            const scrollHeight = Math.ceil(scrollRow.getBoundingClientRect().height);
-            const maxHeight = Math.max(fixedHeight, scrollHeight);
-            const nextHeight = `${maxHeight}px`;
-
-            if (fixedRow.style.height !== nextHeight) fixedRow.style.height = nextHeight;
-            if (scrollRow.style.height !== nextHeight) scrollRow.style.height = nextHeight;
-          }
-
           // Keep sticky par/hcp offsets aligned to current live row heights.
-          // Measure both fixed and scroll tables and use the larger value so
-          // sticky rows stay perfectly aligned after font-size/theme changes.
+          // Uses only the single score table in unified mode.
           const headerRowScroll = scrollTable.querySelector('thead tr');
-          const headerRowFixed = fixedTable.querySelector('thead tr');
           const parRowScroll = document.getElementById('parRow');
-          const parRowFixed = document.getElementById('parRowFixed');
-          const measuredHeaderHeight = Math.max(
-            headerRowScroll?.getBoundingClientRect().height || 0,
-            headerRowFixed?.getBoundingClientRect().height || 0
-          );
-          const measuredParHeight = Math.max(
-            parRowScroll?.getBoundingClientRect().height || 0,
-            parRowFixed?.getBoundingClientRect().height || 0
-          );
+          const measuredHeaderHeight = headerRowScroll?.getBoundingClientRect().height || 0;
+          const measuredParHeight = parRowScroll?.getBoundingClientRect().height || 0;
           const headerHeight = Math.ceil(measuredHeaderHeight || 44);
           const parHeight = Math.ceil(measuredParHeight || 44);
           const rootStyle = document.documentElement?.style;
@@ -1723,7 +1678,7 @@
             rootStyle.setProperty('--score-sticky-hcp-top', `${headerHeight + parHeight}px`);
           }
 
-          // Refresh iOS sticky-by-transform cell cache after any DOM rebuild
+          // Refresh iOS sticky-by-transform cache after DOM rebuild.
           window._iosStickyRefresh?.();
 
         });
@@ -1742,7 +1697,7 @@
        * @returns {number[]} Array of adjusted handicaps (minimum is always 0)
        */
       adjustedCHs(){
-        const fixedRows = $$("#scorecardFixed .player-row");
+        const fixedRows = $$("#scorecard .player-row");
         const chs = fixedRows.map(r => { 
           const chInput = $(".ch-input", r);
           const v = getActualHandicapValue(chInput);
@@ -2067,7 +2022,7 @@
         playerNamesBody.appendChild(hcpRow);
         
         // Add player rows - sync with actual player inputs from fixed table
-        const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+        const playerRows = document.querySelectorAll('#scorecard .player-row');
         playerRows.forEach((row, idx) => {
           const nameInput = row.querySelector('.name-edit');
           const overlayRow = document.createElement('tr');
@@ -2539,7 +2494,7 @@
     save() {
       try {
         const scoreRows = $$("#scorecard .player-row");
-        const fixedRows = $$("#scorecardFixed .player-row");
+        const fixedRows = $$("#scorecard .player-row");
         
         if (scoreRows.length === 0 || fixedRows.length === 0) {
           console.warn('[Storage] No player rows found, skipping save');
@@ -2717,19 +2672,19 @@
       const clampedTarget = Math.max(MIN_PLAYERS, Math.min(MAX_PLAYERS, Number(targetCount) || MIN_PLAYERS));
 
       let scoreRows = $$("#scorecard .player-row");
-      let fixedRows = $$("#scorecardFixed .player-row");
+      let fixedRows = $$("#scorecard .player-row");
 
       while (scoreRows.length > clampedTarget && fixedRows.length > clampedTarget) {
         scoreRows[scoreRows.length - 1]?.remove();
         fixedRows[fixedRows.length - 1]?.remove();
         scoreRows = $$("#scorecard .player-row");
-        fixedRows = $$("#scorecardFixed .player-row");
+        fixedRows = $$("#scorecard .player-row");
       }
 
       while (scoreRows.length < clampedTarget && PLAYERS < MAX_PLAYERS) {
         addPlayer();
         scoreRows = $$("#scorecard .player-row");
-        fixedRows = $$("#scorecardFixed .player-row");
+        fixedRows = $$("#scorecard .player-row");
       }
 
       PLAYERS = scoreRows.length;
@@ -2758,7 +2713,7 @@
       const { resetSharedGames = true } = options || {};
       this.syncPlayerRowCount(targetPlayerCount);
 
-      const fixedRows = $$("#scorecardFixed .player-row");
+      const fixedRows = $$("#scorecard .player-row");
       fixedRows.forEach((row, idx) => {
         const nameInput = $(".name-edit", row);
         const chInput = $(".ch-input", row);
@@ -2956,7 +2911,7 @@
         
         // CRITICAL: Explicitly query each table to avoid ambiguity
         const scoreRows = $$("#scorecard .player-row");  // Scrollable table with scores
-        const fixedRows = $$("#scorecardFixed .player-row");  // Fixed table with names/CH
+        const fixedRows = $$("#scorecard .player-row");  // Fixed table with names/CH
         
         s.players?.forEach((p, i) => { 
           const r = scoreRows[i]; 
@@ -3154,7 +3109,7 @@
      */
     clearAll() {
       // Clear names and handicaps from fixed table
-      const fixedRows = $$("#scorecardFixed .player-row");
+      const fixedRows = $$("#scorecard .player-row");
       fixedRows.forEach(r => {
         const nameInput = $(".name-edit", r);
         const chInput = $(".ch-input", r);
@@ -3807,7 +3762,7 @@
     if (mode === 'cancel') return;
 
     // Get player rows from both tables
-    const fixedTable = document.querySelector("#scorecardFixed");
+    const fixedTable = document.querySelector("#scorecard");
     const scrollTable = document.querySelector("#scorecard");
     let fixedPlayerRows = fixedTable?.querySelectorAll(".player-row");
     let scrollPlayerRows = scrollTable?.querySelectorAll(".player-row");
@@ -4090,20 +4045,14 @@
     }
     
     const tbody = $('#scorecard').tBodies[0];
-    const tbodyFixed = $('#scorecardFixed').tBodies[0];
     const p = PLAYERS; // Current player index
     
-    // Create new player row for scrollable table (scores only)
+    // Create new player row for unified table
     const tr = document.createElement("tr");
     tr.className = "player-row";
     tr.dataset.player = String(p);
-    
-    // Create new player row for fixed table (name + CH only)
-    const trFixed = document.createElement("tr");
-    trFixed.className = "player-row";
-    trFixed.dataset.player = String(p);
-    
-    // Name input (in fixed table)
+
+    // Name input
     const nameTd = document.createElement("td");
     
     // Create container for delete button and name input
@@ -4118,7 +4067,7 @@
     deleteBtn.type = "button";
     deleteBtn.addEventListener("click", () => {
       // Get current index dynamically from the row's dataset
-      const currentIndex = Number(trFixed.dataset.player);
+      const currentIndex = Number(tr.dataset.player);
       Scorecard.player.removeByIndex(currentIndex);
     });
     
@@ -4137,9 +4086,9 @@
     nameCellContainer.appendChild(deleteBtn);
     nameCellContainer.appendChild(nameInput);
     nameTd.appendChild(nameCellContainer);
-    trFixed.appendChild(nameTd);
+    tr.appendChild(nameTd);
     
-    // Course Handicap input (in fixed table)
+    // Course Handicap input
     const chTd = document.createElement("td");
     const chInput = document.createElement("input");
     chInput.type = "text";
@@ -4163,9 +4112,9 @@
       Storage.saveDebounced();
     });
     chTd.appendChild(chInput);
-    trFixed.appendChild(chTd);
+    tr.appendChild(chTd);
     
-    // Score inputs for each hole (in scrollable table)
+    // Score inputs for each hole
     const MIN_SCORE = 1;
     const MAX_SCORE = 20;
     for(let h=1; h<=HOLES; h++) {
@@ -4232,7 +4181,7 @@
       tr.appendChild(td);
     }
     
-    // Summary cells: Out, In, Total, To Par, Net (in scrollable table)
+    // Summary cells: Out, In, Total, To Par, Net
     const outTd = document.createElement("td");
     outTd.className = "split";
     const inTd = document.createElement("td");
@@ -4246,7 +4195,6 @@
     tr.append(outTd, inTd, totalTd, toParTd, netTd);
     
     tbody.appendChild(tr);
-    tbodyFixed.appendChild(trFixed);
     
     // Increment player count
     PLAYERS++;
@@ -4434,31 +4382,27 @@
     }
     
     const rows = $$('#scorecard .player-row');
-    const rowsFixed = $$('#scorecardFixed .player-row');
     const targetRow = rows[playerIndex];
-    const targetRowFixed = rowsFixed[playerIndex];
-    
-    if(!targetRow || !targetRowFixed) {
+
+    if(!targetRow) {
       Utils.announce('Player not found.');
       return;
     }
     
     // Get player name for confirmation
-    const nameInput = $('.name-edit', targetRowFixed);
+    const nameInput = $('.name-edit', targetRow);
     const playerName = nameInput?.value || `Player ${playerIndex + 1}`;
     
     // Show custom confirmation modal
     showDeleteConfirmModal(playerName, (confirmed) => {
       if (!confirmed) return;
       
-      // Remove the rows
+      // Remove the row
       targetRow.remove();
-      targetRowFixed.remove();
       PLAYERS--;
       
       // Update remaining player indices
       const updatedRows = $$('#scorecard .player-row');
-      const updatedRowsFixed = $$('#scorecardFixed .player-row');
       
       updatedRows.forEach((row, idx) => {
         row.dataset.player = String(idx);
@@ -4468,8 +4412,7 @@
         });
       });
       
-      updatedRowsFixed.forEach((row, idx) => {
-        row.dataset.player = String(idx);
+      updatedRows.forEach((row, idx) => {
         const nameInp = $('.name-edit', row);
         if(nameInp && !nameInp.value) {
           nameInp.placeholder = `Player ${idx + 1}`;
@@ -4502,14 +4445,12 @@
     }
     
     const rows = $$('#scorecard .player-row');
-    const rowsFixed = $$('#scorecardFixed .player-row');
     const lastRow = rows[rows.length - 1];
-    const lastRowFixed = rowsFixed[rowsFixed.length - 1];
-    
-    if(lastRow && lastRowFixed) {
-      // First, clear all data in both rows
-      const nameInput = $(".name-edit", lastRowFixed);
-      const chInput = $(".ch-input", lastRowFixed);
+
+    if(lastRow) {
+      // First, clear all data in the row
+      const nameInput = $(".name-edit", lastRow);
+      const chInput = $(".ch-input", lastRow);
       const scoreInputs = $$("input.score-input", lastRow);
       
       if(nameInput) nameInput.value = '';
@@ -4521,9 +4462,8 @@
       Scorecard.calc.recalcTotalsRow();
       AppManager.recalcGames();
       
-      // Now remove both rows
+      // Now remove the row
       lastRow.remove();
-      lastRowFixed.remove();
       PLAYERS--;
       
       // Update display and recalculate after DOM settles
@@ -4682,8 +4622,7 @@
     syncDisplayedAppVersion();
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
     Scorecard.player.syncOverlay();
-    setupScorecardScrollSync();
-    setupIOSScorecardOverscrollGuard();
+    // Unified table mode no longer requires dual-pane scroll synchronization.
     setupIOSStickyHeaders();
     setupGamesPanelScrollSync();
     syncHeaderBadgeButtonLabels();

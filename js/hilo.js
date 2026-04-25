@@ -26,7 +26,7 @@
 
   function getPlayerCount() {
     try {
-      return document.querySelectorAll('#scorecardFixed .player-row').length;
+      return document.querySelectorAll('#scorecard .player-row').length;
     } catch (error) {
       console.error('[HiLo] Error getting player count:', error);
       return 0;
@@ -36,7 +36,7 @@
   function getPlayerNames() {
     try {
       const names = [];
-      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const playerRows = document.querySelectorAll('#scorecard .player-row');
       playerRows.forEach((row, idx) => {
         const nameInput = row.querySelector('.name-edit');
         const name = nameInput?.value?.trim() || `Player ${idx + 1}`;
@@ -52,7 +52,7 @@
   function getHandicaps() {
     try {
       const handicaps = [];
-      const playerRows = document.querySelectorAll('#scorecardFixed .player-row');
+      const playerRows = document.querySelectorAll('#scorecard .player-row');
       playerRows.forEach(row => {
         const chInput = row.querySelector('.ch-input');
         const ch = (typeof window.getActualHandicapValue === 'function' ? window.getActualHandicapValue(chInput) : Number(chInput?.value)) || 0;

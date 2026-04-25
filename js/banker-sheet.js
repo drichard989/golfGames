@@ -123,13 +123,13 @@
 
   function getPlayerCount(){
     try { if (typeof window.getPlayerCount === 'function') return window.getPlayerCount(); } catch(_){}
-    const rows = document.querySelectorAll('#scorecardFixed .player-row');
+    const rows = document.querySelectorAll('#scorecard .player-row');
     return rows.length || 0;
   }
   function getPlayerNames(){
     const n = getPlayerCount();
     const names = [];
-    const rows = document.querySelectorAll('#scorecardFixed .player-row');
+    const rows = document.querySelectorAll('#scorecard .player-row');
     for (let i = 0; i < n; i++){
       const nameInput = rows[i]?.querySelector('.name-edit');
       names.push(nameInput?.value?.trim() || `Player ${i+1}`);
@@ -213,7 +213,7 @@
 
   function getCourseHandicapByPlayer(){
     const playerCount = getPlayerCount();
-    const rows = document.querySelectorAll('#scorecardFixed .player-row');
+    const rows = document.querySelectorAll('#scorecard .player-row');
     const handicaps = [];
     for (let p = 0; p < playerCount; p++) {
       const chInput = rows[p]?.querySelector('.ch-input');

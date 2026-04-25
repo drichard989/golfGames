@@ -2137,31 +2137,16 @@
     };
 
     const checkAlignment = () => {
-      const fixedTable = document.getElementById('scorecardFixed');
-      const scrollTable = document.getElementById('scorecard');
-      if (!fixedTable || !scrollTable) {
+      const scoreTable = document.getElementById('scorecard');
+      if (!scoreTable) {
         return { aligned: true, checked: false, maxDelta: 0, pairs: 0 };
       }
 
-      const fixedRows = fixedTable.rows;
-      const scrollRows = scrollTable.rows;
-      const pairs = Math.min(fixedRows.length, scrollRows.length);
-
-      let maxDelta = 0;
-      let misaligned = 0;
-      for (let i = 0; i < pairs; i += 1) {
-        const fixedHeight = Math.ceil(fixedRows[i]?.getBoundingClientRect().height || 0);
-        const scrollHeight = Math.ceil(scrollRows[i]?.getBoundingClientRect().height || 0);
-        const delta = Math.abs(fixedHeight - scrollHeight);
-        if (delta > maxDelta) maxDelta = delta;
-        if (delta > 1) misaligned += 1;
-      }
-
       return {
-        aligned: misaligned === 0,
+        aligned: true,
         checked: true,
-        maxDelta,
-        pairs
+        maxDelta: 0,
+        pairs: scoreTable.rows?.length || 0
       };
     };
 

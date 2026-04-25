@@ -47,14 +47,14 @@
     try {
       if (typeof window.getPlayerCount === 'function') return window.getPlayerCount();
     } catch(_){}
-    return document.querySelectorAll('#scorecardFixed .player-row').length;
+    return document.querySelectorAll('#scorecard .player-row').length;
   }
 
   function getPlayerNames(){
     try {
       if (typeof window.getPlayerNames === 'function') return window.getPlayerNames();
     } catch(_){}
-    const rows = Array.from(document.querySelectorAll('#scorecardFixed .player-row'));
+    const rows = Array.from(document.querySelectorAll('#scorecard .player-row'));
     return rows.map((row, i) => {
       const nameInput = row.querySelector('.name-edit');
       const v = nameInput?.value?.trim() || nameInput?.placeholder?.trim();
