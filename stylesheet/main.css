@@ -1174,11 +1174,6 @@ body.mode-score #main-scorecard {
     background: var(--panel);
   }
 
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table {
-    width: 100%;
-    table-layout: fixed;
-  }
-
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
     transform: translateX(0);
     will-change: transform;
