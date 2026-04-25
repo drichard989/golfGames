@@ -180,6 +180,7 @@ body.score-sheet-active #scorecard .score-input {
   display: block;
   font-size: var(--text-2xl);
   font-weight: 700;
+  text-align: right;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
