@@ -88,7 +88,7 @@
     'wolfLiveResultsBtn'
   ]);
 
-  const VIEWER_BLOCK_CONTAINERS = '#main-scorecard, #vegasSection, #bankerSection, #skinsSection, #junkSection, #hiloSection';
+  const VIEWER_BLOCK_CONTAINERS = '#main-scorecard, #vegasSection, #bankerSection, #skinsSection, #junkSection, #hiloSection, #wolfSection';
 
   const state = {
     initialized: false,
