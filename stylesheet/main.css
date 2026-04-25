@@ -1100,11 +1100,13 @@ body.mode-score #main-scorecard {
   min-width: var(--scorecard-fixed-width);
   max-width: var(--scorecard-fixed-width);
   width: var(--scorecard-fixed-width);
+  height: min(62vh, 560px);
+  max-height: min(62vh, 560px);
   border-right: 2px solid rgba(168, 179, 191, 0.4);
   background: var(--panel);
   z-index: 10;
   box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
-  overflow-y: visible;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior: auto;
@@ -1114,10 +1116,10 @@ body.mode-score #main-scorecard {
 .scorecard-scroll {
   flex: 1;
   position: relative;
-  height: auto;
-  max-height: none;
+  height: min(62vh, 560px);
+  max-height: min(62vh, 560px);
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
   scrollbar-gutter: stable;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
@@ -1126,8 +1128,20 @@ body.mode-score #main-scorecard {
   scroll-behavior: auto;
 }
 
-/* iOS only: prevent pane rubber-band while allowing page-level score scroll. */
+/* iOS only: let scorecard grow with players and scroll at page level. */
 @supports (-webkit-touch-callout: none) {
+  .scorecard-fixed {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .scorecard-scroll {
+    height: auto;
+    max-height: none;
+    overflow-y: visible;
+  }
+
   #scoreEntryPanel,
   .scorecard-fixed,
   .scorecard-scroll {
