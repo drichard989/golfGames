@@ -6,6 +6,7 @@
   const BANKER_REMOTE_APPLY_GRACE_MS = 1200;
   const GAME_REMOTE_APPLY_GRACE_MS = 1200;
   const GAME_INTERACTION_SECTIONS = '#bankerSection, #wolfSection, #vegasSection, #skinsSection, #junkSection, #hiloSection';
+  const GAME_TAB_INTERACTION_SELECTORS = '#entrySwitcherScoreBtn, #entrySwitcherGamesBtn, #toggleVegas, #toggleBanker, #toggleSkins, #toggleJunk, #toggleHilo, #toggleWolf';
   const PUSH_DEBOUNCE_MS = 900;
   const MIN_PUSH_INTERVAL_MS = 1200;
   const SNAPSHOT_LIST_LIMIT = 20;
@@ -1489,7 +1490,7 @@
 
   function markGameInteraction(target) {
     if (!(target instanceof HTMLElement)) return;
-    if (target.closest(GAME_INTERACTION_SECTIONS)) {
+    if (target.closest(GAME_INTERACTION_SECTIONS) || target.closest(GAME_TAB_INTERACTION_SELECTORS)) {
       state.lastGameInteractionAt = Date.now();
     }
   }
@@ -1545,8 +1546,22 @@
       return;
     }
 
+    const incomingContentHash = getSyncContentHash(syncGame);
+    const isUnchangedContent = !!incomingContentHash && incomingContentHash === state.lastPushedContentHash;
+
     state.currentLiveState = syncGame;
-    state.lastPushedContentHash = getSyncContentHash(syncGame);
+    if (incomingContentHash) {
+      state.lastPushedContentHash = incomingContentHash;
+    }
+
+    if (isUnchangedContent) {
+      if (state.needsPostJoinAlignment) {
+        state.needsPostJoinAlignment = false;
+        scheduleScorecardAlignmentAfterJoin();
+      }
+      state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
+      return;
+    }
 
     if (state.isViewingSnapshot) {
       state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
@@ -1554,7 +1569,7 @@
       return;
     }
 
-    if (state.session?.role === 'editor' && (isBankerInputFocused() || isBankerInteractionActive() || isGameInteractionActive())) {
+    if (isBankerInputFocused() || isBankerInteractionActive() || isGameInteractionActive()) {
       state.pendingRemoteState = syncGame;
       if (!state.pendingRemoteTimer) {
         state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
@@ -1836,6 +1851,9 @@
       markGameInteraction(e.target);
     }, true);
     document.addEventListener('change', (e) => markGameInteraction(e.target), true);
+    document.addEventListener('golf:game-tab-changed', () => {
+      state.lastGameInteractionAt = Date.now();
+    });
 
     EL.createBtn()?.addEventListener('click',
       withCloudOp('create session', 'Cloud: creating session...', createSession));

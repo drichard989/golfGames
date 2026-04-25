@@ -2781,12 +2781,31 @@
       try {
         if (!syncGame || typeof syncGame !== 'object') return false;
 
+        const getComparableSyncHash = (game) => {
+          try {
+            return JSON.stringify({
+              scorecard: game?.scorecard || {},
+              games: game?.games || {}
+            });
+          } catch {
+            return '';
+          }
+        };
+
         let existing = {};
         try {
           const raw = localStorage.getItem(this.KEY);
           existing = raw ? JSON.parse(raw) : {};
         } catch {
           existing = {};
+        }
+
+        if (source === 'remote') {
+          const currentHash = getComparableSyncHash(existing?.sync?.game);
+          const incomingHash = getComparableSyncHash(syncGame);
+          if (currentHash && incomingHash && currentHash === incomingHash) {
+            return true;
+          }
         }
 
         const merged = {
