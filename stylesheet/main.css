@@ -1332,10 +1332,15 @@ td {
 }
 
 #scorecardFixed .ch-input {
-  width: 49px;
+  width: var(--table-input-width);
+  min-width: var(--table-input-width);
+  height: var(--table-input-width);
+  min-height: var(--table-input-width);
+  aspect-ratio: 1 / 1;
   font-size: var(--scorecard-data-font-size);
-  padding: 6px 3px;
+  padding: 0;
   text-align: center;
+  line-height: 1;
 }
 
 #scorecardFixed thead th:first-child {
@@ -1493,7 +1498,13 @@ input[type="number"] {
 }
 
 .ch-input {
-  width: var(--table-ch-width);
+  width: var(--table-input-width);
+  min-width: var(--table-input-width);
+  height: var(--table-input-width);
+  min-height: var(--table-input-width);
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  line-height: 1;
 }
 
 .score-input.invalid {
