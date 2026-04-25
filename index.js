@@ -4122,6 +4122,30 @@
     }
   }
 
+  function syncPlayerEntryModalPosition() {
+    if (!playerEntryModalSheet) return;
+
+    const rootStyles = getComputedStyle(document.documentElement);
+    const safeTop = parseFloat(rootStyles.getPropertyValue('--safe-top-dynamic')) || 0;
+    const entrySwitcher = document.querySelector('.entry-switcher');
+    const headerEl = document.querySelector('header');
+
+    const switcherBottom = entrySwitcher
+      ? Math.round(entrySwitcher.getBoundingClientRect().bottom)
+      : Math.round(safeTop + 64);
+
+    // Hidden mode: keep modal just below Score/Games switcher.
+    const hiddenModeTop = Math.max(Math.round(safeTop + 12), switcherBottom + 8);
+    // Expanded mode: stay near hidden-mode position instead of dropping far down page.
+    const expandedModeTargetTop = Math.round(safeTop + 80);
+    const isHeaderCollapsed = !!headerEl?.classList?.contains('header-collapsed');
+    const modalTop = isHeaderCollapsed
+      ? hiddenModeTop
+      : Math.min(hiddenModeTop, expandedModeTargetTop);
+
+    playerEntryModalSheet.style.setProperty('--player-entry-modal-top', `${modalTop}px`);
+  }
+
   function emitPlayersChanged(reason = 'updated') {
     try {
       document.dispatchEvent(new CustomEvent('players:changed', {
@@ -4182,13 +4206,10 @@
       handicapLabel.className = 'player-entry-field';
       handicapLabel.textContent = 'Handicap';
 
-      const actionsRow = document.createElement('div');
-      actionsRow.className = 'player-entry-row-actions';
-
       const removeBtn = document.createElement('button');
       removeBtn.type = 'button';
       removeBtn.className = 'btn player-entry-remove-btn';
-      removeBtn.textContent = 'Remove Player';
+      removeBtn.textContent = 'Remove';
       removeBtn.disabled = PLAYERS <= MIN_PLAYERS;
       removeBtn.setAttribute('aria-label', `Remove player ${idx + 1}`);
 
@@ -4264,12 +4285,10 @@
         Scorecard.player.removeByIndex(idx);
       });
 
-      handicapControl.append(minusBtn, handicapEditor, plusBtn);
-      actionsRow.appendChild(removeBtn);
-
+      handicapControl.append(minusBtn, handicapEditor, plusBtn, removeBtn);
       nameLabel.appendChild(nameEditor);
       handicapLabel.appendChild(handicapControl);
-      wrapper.append(title, nameLabel, handicapLabel, actionsRow);
+      wrapper.append(title, nameLabel, handicapLabel);
       playerEntryModalList.appendChild(wrapper);
     });
 
@@ -4336,6 +4355,25 @@
       renderPlayerEntryModalRows();
     });
 
+    window.addEventListener('resize', () => {
+      if (!playerEntryModalSheet || playerEntryModalSheet.hidden) return;
+      syncPlayerEntryModalPosition();
+    });
+
+    window.addEventListener('scroll', () => {
+      if (!playerEntryModalSheet || playerEntryModalSheet.hidden) return;
+      syncPlayerEntryModalPosition();
+    }, { passive: true });
+
+    const headerCollapseBtn = document.getElementById('headerCollapseBtn');
+    if (headerCollapseBtn) {
+      headerCollapseBtn.addEventListener('click', () => {
+        if (!playerEntryModalSheet || playerEntryModalSheet.hidden) return;
+        requestAnimationFrame(syncPlayerEntryModalPosition);
+        setTimeout(syncPlayerEntryModalPosition, 240);
+      });
+    }
+
     document.body.appendChild(playerEntryModalBackdrop);
     document.body.appendChild(playerEntryModalSheet);
   }
@@ -4349,9 +4387,12 @@
     };
 
     renderPlayerEntryModalRows();
+    syncPlayerEntryModalPosition();
     if (playerEntryModalBackdrop) playerEntryModalBackdrop.hidden = false;
     if (playerEntryModalSheet) playerEntryModalSheet.hidden = false;
     document.body.classList.add('player-entry-modal-open');
+    requestAnimationFrame(syncPlayerEntryModalPosition);
+    setTimeout(syncPlayerEntryModalPosition, 240);
   }
 
   function bindPlayerEntryModalTriggers() {
@@ -4598,7 +4639,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 10000;
+      z-index: 10060;
       animation: fadeIn 0.2s ease;
     `;
     
