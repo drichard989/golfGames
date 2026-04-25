@@ -959,6 +959,21 @@
     panel.style.maxHeight = `${available}px`;
   }
 
+  function syncScorePanelHeight() {
+    const panel = document.getElementById('scoreEntryPanel');
+    if (!panel) return;
+
+    const viewportHeight = (window.visualViewport?.height) || window.innerHeight || document.documentElement.clientHeight || 0;
+    const navBar = document.querySelector('.sticky-nav-bar');
+    const navBarRect = navBar?.getBoundingClientRect();
+
+    // Keep score panel strictly below the sticky nav so top controls stay visible.
+    const topBoundary = navBarRect ? navBarRect.bottom + 4 : 120;
+    const available = Math.max(260, Math.floor(viewportHeight - topBoundary));
+    panel.style.height = `${available}px`;
+    panel.style.maxHeight = `${available}px`;
+  }
+
   function syncSafeTopInset() {
     const root = document.documentElement;
     if (!root) return;
@@ -1097,6 +1112,10 @@
         }
       });
     } else {
+      requestAnimationFrame(() => {
+        syncScorePanelHeight();
+        setTimeout(() => syncScorePanelHeight(), 300);
+      });
       restorePrimaryTabScroll(which);
     }
 
@@ -1269,6 +1288,7 @@
     const syncLayout = () => {
       syncSafeTopInset();
       syncGamesPanelHeight();
+      syncScorePanelHeight();
     };
 
     let scrollSyncScheduled = false;
@@ -1279,6 +1299,7 @@
         scrollSyncScheduled = false;
         // Safe-area inset is layout/device driven and handled by resize/pageshow.
         syncGamesPanelHeight();
+        syncScorePanelHeight();
       });
     };
 
@@ -5316,6 +5337,7 @@
           // and rerender active game content after the panel state settles.
           requestAnimationFrame(() => {
             syncGamesPanelHeight();
+            syncScorePanelHeight();
             syncAllStandaloneGameHeaderClones();
             AppManager.recalcGamesDebounced?.();
           });
@@ -5504,14 +5526,20 @@
       syncHeaderCollapseBtn();
       // Re-measure at multiple points after the header transition (220ms) completes.
       requestAnimationFrame(() => syncGamesPanelHeight());
+      requestAnimationFrame(() => syncScorePanelHeight());
       setTimeout(() => syncGamesPanelHeight(), 240);
+      setTimeout(() => syncScorePanelHeight(), 240);
       setTimeout(() => syncGamesPanelHeight(), 400);
+      setTimeout(() => syncScorePanelHeight(), 400);
     });
     // Re-measure whenever the header finishes its CSS transition.
     // Wrap in rAF so the sticky nav has been composited before we measure its position.
     document.querySelector('header')?.addEventListener('transitionend', (e) => {
       if (e.propertyName === 'max-height') {
-        requestAnimationFrame(() => syncGamesPanelHeight());
+        requestAnimationFrame(() => {
+          syncGamesPanelHeight();
+          syncScorePanelHeight();
+        });
       }
     });
     syncHeaderCollapseBtn();

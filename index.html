@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.52" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.53" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.52" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.52" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.53" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.53" />
     <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.1.6" />
     <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.1.2" />
   </head>
@@ -189,13 +189,12 @@
           <button id="clearAllBtn" class="btn">Clear Names &amp; Scores</button>
           <button id="advanceToggle" class="btn" title="Toggle auto-advance direction"><span id="advanceLabel">Advance: ↓ Down</span></button>
         </div>
+        <div class="scorecard-help-notes">
+          <p class="small">Swipe the table left/right. Player names stay pinned. Pars &amp; Men's HCP are fixed from the card.</p>
+          <p class="small">If a player is a + handicap, enter it with a leading plus sign (e.g., +2).</p>
+          <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Raw Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
+        </div>
       </div>
-    </div>
-
-    <div class="scorecard-help-notes">
-      <p class="small">Swipe the table left/right. Player names stay pinned. Pars &amp; Men's HCP are fixed from the card.</p>
-      <p class="small">If a player is a + handicap, enter it with a leading plus sign (e.g., +2).</p>
-      <p class="small"><strong>Handicap Modes:</strong> <em>Gross</em> = no adjustments. <em>Play Off Low</em> = strokes relative to lowest handicap (green highlight). <em>Raw Handicap</em> = everyone gets their full strokes (green = receives strokes, red = plus handicap gives strokes).</p>
     </div>
     </section>
 

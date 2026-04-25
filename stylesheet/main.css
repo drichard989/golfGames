@@ -1018,7 +1018,27 @@ select:not(.select-plain) option {
 }
 
 #scoreEntryPanel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-lg));
+}
+
+#scoreEntryPanel > #main-scorecard {
+  order: 1;
+}
+
+#scoreEntryPanel > .scorecard-help-notes {
+  order: 2;
+  max-height: 22vh;
+  overflow: auto;
+}
+
+#scoreEntryPanel > .scorecard-controls-shell {
+  order: 3;
+  margin-top: auto;
+  margin-bottom: 0;
 }
 
 #gamesEntryPanel {
@@ -1090,6 +1110,10 @@ body.mode-games .entry-switcher {
 }
 
 body.mode-score #main-scorecard {
+  flex: 1 1 auto;
+  min-height: 180px;
+  height: auto;
+  max-height: none;
   margin-top: 0;
 }
 
@@ -1099,20 +1123,20 @@ body.mode-score #main-scorecard {
   height: min(62vh, 560px);
   max-height: min(62vh, 560px);
   overflow: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior: auto;
   scroll-behavior: auto;
   scrollbar-gutter: stable both-edges;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
 }
 
-/* iOS: keep gestures anchored to the scorecard pane. */
+/* iOS: allow page scroll handoff when scorecard reaches its edges. */
 @supports (-webkit-touch-callout: none) {
   #scoreEntryPanel,
   .scorecard-container {
-    overscroll-behavior: none;
-    overscroll-behavior-x: none;
-    overscroll-behavior-y: none;
+    overscroll-behavior: auto;
+    overscroll-behavior-x: auto;
+    overscroll-behavior-y: auto;
   }
 
   #scoreEntryPanel {
@@ -3073,6 +3097,10 @@ body.mode-games .gamesbar {
 
 .scorecard-help-notes {
   margin: 6px var(--space-lg) 0;
+}
+
+.scorecard-options-panel .scorecard-help-notes {
+  margin: 10px 0 0;
 }
 
 .scorecard-help-notes .small {
