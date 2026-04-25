@@ -1142,8 +1142,11 @@ body.mode-score #main-scorecard {
     position: sticky;
     top: var(--score-sticky-head-top, 0px);
     z-index: 14;
-    height: 0;
-    overflow: visible;
+    border-right: 2px solid var(--line);
+    border-top: 2px solid var(--line);
+    border-bottom: 2px solid var(--line);
+    background: var(--panel);
+    box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
     pointer-events: none;
   }
@@ -1152,28 +1155,20 @@ body.mode-score #main-scorecard {
     position: sticky;
     top: var(--score-sticky-head-top, 0px);
     z-index: 13;
-    height: 0;
     overflow: visible;
+    border-top: 2px solid var(--line);
+    border-bottom: 2px solid var(--line);
+    background: var(--panel);
     box-sizing: border-box;
     pointer-events: none;
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table,
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
-    position: absolute;
-    top: 0;
-    left: 0;
     width: max-content;
     border-collapse: separate;
     border-spacing: 0;
     background: var(--panel);
-    border-top: 2px solid var(--line);
-    border-bottom: 2px solid var(--line);
-  }
-
-  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table {
-    border-right: 2px solid var(--line);
-    box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table th,

@@ -1470,10 +1470,6 @@
       fixedCloneTable.style.maxWidth = `${fixedWidth}px`;
       scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${scrollViewportWidth}px`;
 
-      const fixedCloneHeight = fixedCloneTable.getBoundingClientRect().height || 0;
-      const scrollCloneHeight = scrollCloneTable.getBoundingClientRect().height || 0;
-      fixedTableSource.style.marginTop = `${fixedCloneHeight}px`;
-      scrollTableSource.style.marginTop = `${scrollCloneHeight}px`;
     };
 
     const scheduleSync = () => {
