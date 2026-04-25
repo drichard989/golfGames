@@ -182,7 +182,7 @@ body.junk-mobile-summary-active #junkSection .live-results-header-clone-table th
   left: 0;
   right: 0;
   bottom: 0;
-  max-height: 90vh;
+  max-height: min(90dvh, 90svh);
   display: flex;
   flex-direction: column;
   background: var(--panel);
