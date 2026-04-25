@@ -978,11 +978,31 @@ select:not(.select-plain) option {
   border-top: 2px solid rgba(168, 179, 191, 0.15);
   border-radius: 0;
   margin: 0;
-  padding: 8px 12px;
+  padding: 6px 10px;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
+  gap: 6px;
+  min-height: 40px;
+}
+
+.scorecard-footer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.scorecard-footer-toggle {
+  min-height: 30px;
+  padding: 4px 10px;
+  font-size: var(--text-sm);
+}
+
+.scorecard-card-footer.is-compact {
+  padding: 4px 8px;
+  min-height: 34px;
+  gap: 0;
 }
 
 .scorecard-controls-shell {

@@ -172,7 +172,7 @@ exports.createGameSession = onCall(CALLABLE_OPTS, async (request) => {
     },
     scorecard: {
       course: 'manito',
-      handicapMode: 'playOffLow',
+      handicapMode: 'rawHandicap',
       players: []
     },
     games: {

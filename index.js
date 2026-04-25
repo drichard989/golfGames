@@ -768,7 +768,7 @@
 
     runFlush();
   }
-  let headerVisible = true;             // true = header shown
+  let headerVisible = false;             // true = header shown
   let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
 
   function applyHeaderVisibility() {
@@ -1727,7 +1727,7 @@
         
         // Check current handicap mode
         const modeBtn = document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]');
-        const mode = modeBtn ? modeBtn.dataset.value : 'playOffLow';
+        const mode = modeBtn ? modeBtn.dataset.value : 'rawHandicap';
         
         // Mode 1: GROSS - no adjustments (return all zeros)
         if (mode === 'gross') {
@@ -2220,7 +2220,7 @@
         },
         scorecard: {
           course: ACTIVE_COURSE,
-          handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'playOffLow',
+          handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'rawHandicap',
           players: players.map((p) => ({
             id: p.id,
             name: p.name,
@@ -2538,7 +2538,7 @@
           version: this.CURRENT_VERSION,
         course: ACTIVE_COURSE,
         advanceDirection: Config.ADVANCE_DIRECTION,
-        handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'playOffLow',
+        handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'rawHandicap',
         players: players,
         vegas: { 
           teams: window.Vegas?.getTeamAssignments(), 
@@ -3252,7 +3252,7 @@
       this.clearAll();
 
       // Reset primary scorecard options
-      setHandicapModeButtonState('handicapModePlayOffLow');
+      setHandicapModeButtonState('handicapModeRawHandicap');
 
       Config.ADVANCE_DIRECTION = 'down';
       const advanceLabel = document.getElementById('advanceLabel');
@@ -3483,7 +3483,7 @@
     });
 
     if (!matched) {
-      const fallbackBtn = document.getElementById('handicapModePlayOffLow');
+      const fallbackBtn = document.getElementById('handicapModeRawHandicap');
       if (fallbackBtn) {
         fallbackBtn.dataset.active = 'true';
         fallbackBtn.setAttribute('aria-checked', 'true');
@@ -5003,6 +5003,40 @@
       });
     };
     bindGameOptionsToggles();
+
+    const bindScorecardFooterToggle = () => {
+      const footerToggleBtn = document.getElementById('scorecardFooterToggle');
+      const footerControls = document.getElementById('scorecardFooterControls');
+      const scorecardOptionsBtn = document.getElementById('scorecardOptionsToggle');
+      const scorecardOptionsPanel = document.getElementById('scorecardOptionsPanel');
+      const scorecardFooter = footerToggleBtn?.closest('.scorecard-card-footer');
+      if (!footerToggleBtn || !footerControls || !scorecardFooter) return;
+
+      const syncFooterState = (showControls) => {
+        footerControls.hidden = !showControls;
+        scorecardFooter.classList.toggle('is-compact', !showControls);
+        footerToggleBtn.setAttribute('aria-expanded', showControls ? 'true' : 'false');
+        footerToggleBtn.textContent = showControls ? 'Hide Controls' : 'Show Controls';
+
+        if (!showControls && scorecardOptionsPanel) {
+          scorecardOptionsPanel.hidden = true;
+          if (scorecardOptionsBtn) {
+            scorecardOptionsBtn.classList.remove('is-open');
+            scorecardOptionsBtn.setAttribute('aria-expanded', 'false');
+          }
+        }
+
+        requestAnimationFrame(() => {
+          syncScorePanelHeight();
+        });
+      };
+
+      syncFooterState(false);
+      footerToggleBtn.addEventListener('click', () => {
+        syncFooterState(footerControls.hidden);
+      });
+    };
+    bindScorecardFooterToggle();
     
     // Clear Junk Achievements button
     document.getElementById('clearJunkAchievements')?.addEventListener('click', () => {
@@ -5181,6 +5215,7 @@
         });
       }
     });
+    applyHeaderVisibility();
     syncHeaderCollapseBtn();
 
     // Ensure font size controls exist (fallback for stale cached HTML)
