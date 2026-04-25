@@ -257,7 +257,7 @@
 
     const spinner = overlay.querySelector('.cloud-join-progress-spinner');
     const textEl = overlay.querySelector('.cloud-join-progress-text');
-    const mode = role === 'editor' ? 'edit' : 'view';
+    const mode = role === 'editor' ? 'EDIT' : 'VIEW';
 
     if (spinner) {
       spinner.style.animation = 'none';
@@ -273,9 +273,13 @@
     }
 
     if (textEl) {
-      textEl.textContent = `Connected - live ${mode} mode`;
+      textEl.textContent = `Joined as ${mode} mode`;
       textEl.style.color = 'var(--ink)';
       textEl.style.fontWeight = '600';
+    }
+
+    if (typeof window.announce === 'function') {
+      window.announce(`Joined as ${mode} mode`);
     }
 
     state.joinProgressHideTimer = setTimeout(() => {
@@ -469,8 +473,8 @@
   }
 
   function showJoinSuccessToast(role) {
-    const mode = role === 'editor' ? 'edit' : 'view';
-    const message = `Joined live ${mode}`;
+    const mode = role === 'editor' ? 'EDIT' : 'VIEW';
+    const message = `Joined as ${mode}`;
 
     const existing = document.getElementById('cloudJoinSuccessOverlay');
     if (existing) existing.remove();
