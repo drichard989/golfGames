@@ -5382,9 +5382,6 @@
       const emailBtn = document.getElementById('emailCSVBtn');
       if (emailBtn) emailBtn.addEventListener('click', () => window.Export?.emailCurrentScorecard());
 
-      const scanQRBtn = document.getElementById('scanQRBtn');
-      if (scanQRBtn) scanQRBtn.addEventListener('click', () => window.QRShare?.scan?.());
-
       const archivedToolsToggle = document.getElementById('archivedToolsToggle');
       const archivedToolsSection = document.getElementById('archivedToolsSection');
       if (archivedToolsToggle && archivedToolsSection) {

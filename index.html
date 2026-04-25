@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.6" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.7" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.6" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.6" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.7" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.7" />
     <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.1.6" />
     <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.1.2" />
   </head>
@@ -87,7 +87,6 @@
               <button id="dlTemplateBtn" class="btn">Download CSV Template</button>
               <button id="exportCSVBtn" class="btn">📤 Export Current Scorecard</button>
               <button id="emailCSVBtn" class="btn">📧 Email Scorecard</button>
-              <button id="scanQRBtn" class="btn">📸 Scan QR Code (Import)</button>
             </div>
           </div>
 
@@ -644,12 +643,6 @@
     <script src="js/firebase-config.js" defer></script>
     <script src="js/cloudsync.js" defer></script>
     <!-- QR Code Libraries (must load before qrcode.js) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-    
-    <!-- QR Code Share Module -->
-    <script src="js/qrcode.js"></script>
-
     <!-- =====================================================================
          TOP-PINNED-SHELL HEIGHT TRACKER + BANKER LIVE RESULTS PIN
          Publishes the rendered BOTTOM of `.top-pinned-shell` (in viewport
