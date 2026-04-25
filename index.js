@@ -1306,7 +1306,10 @@
 
     games_open(which);
 
-    AppManager.flushGame(which, false);
+    // Defer heavy game calculation to next frame so tab visually opens first
+    requestAnimationFrame(() => {
+      AppManager.flushGame(which, false);
+    });
 
     syncGameTabUi(which);
 
