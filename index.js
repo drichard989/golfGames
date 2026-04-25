@@ -1292,6 +1292,145 @@
     };
   }
 
+  function setupIOSScorecardCloneHeader() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+
+    if (window.__iosScorecardCloneHeaderReady) {
+      window.__iosScorecardCloneHeaderResync?.();
+      return;
+    }
+
+    const navBar = document.querySelector('.sticky-nav-bar');
+    const switcher = navBar?.querySelector('.entry-switcher');
+    const scorePanel = document.getElementById('scoreEntryPanel');
+    const scorecard = document.getElementById('main-scorecard');
+    const fixedPane = document.querySelector('.scorecard-fixed');
+    const scrollPane = document.querySelector('.scorecard-scroll');
+    const fixedHeaderRow = document.getElementById('holesHeaderFixed');
+    const scrollHeaderRow = document.getElementById('holesHeader');
+    if (!navBar || !switcher || !scorePanel || !scorecard || !fixedPane || !scrollPane || !fixedHeaderRow || !scrollHeaderRow) {
+      return;
+    }
+
+    let shell = navBar.querySelector('.ios-scorecard-clone-shell');
+    if (!shell) {
+      shell = document.createElement('div');
+      shell.className = 'ios-scorecard-clone-shell';
+      shell.hidden = true;
+      shell.innerHTML = [
+        '<div class="ios-scorecard-clone-fixed"><table><thead><tr></tr></thead></table></div>',
+        '<div class="ios-scorecard-clone-scroll"><table><thead><tr></tr></thead></table></div>'
+      ].join('');
+      switcher.insertAdjacentElement('afterend', shell);
+    }
+
+    const fixedCloneRow = shell.querySelector('.ios-scorecard-clone-fixed tr');
+    const scrollCloneTable = shell.querySelector('.ios-scorecard-clone-scroll table');
+    const scrollCloneRow = shell.querySelector('.ios-scorecard-clone-scroll tr');
+    const fixedCloneWrap = shell.querySelector('.ios-scorecard-clone-fixed');
+
+    if (!fixedCloneRow || !scrollCloneRow || !scrollCloneTable || !fixedCloneWrap) return;
+
+    document.body.classList.add('ios-scorecard-clone-active');
+
+    const copyCells = (sourceRow, targetRow) => {
+      const sourceCells = Array.from(sourceRow?.querySelectorAll('th,td') || []);
+      if (!sourceCells.length) {
+        targetRow.innerHTML = '';
+        return;
+      }
+
+      targetRow.innerHTML = sourceCells.map((sourceCell) => {
+        const tag = sourceCell.tagName.toLowerCase();
+        const classAttr = sourceCell.className ? ` class="${sourceCell.className}"` : '';
+        return `<${tag}${classAttr}>${sourceCell.innerHTML}</${tag}>`;
+      }).join('');
+    };
+
+    const syncCellWidths = (sourceRow, targetRow) => {
+      const sourceCells = Array.from(sourceRow?.querySelectorAll('th,td') || []);
+      const targetCells = Array.from(targetRow?.querySelectorAll('th,td') || []);
+      sourceCells.forEach((sourceCell, idx) => {
+        const targetCell = targetCells[idx];
+        if (!targetCell) return;
+        const width = Math.ceil(sourceCell.getBoundingClientRect().width);
+        if (width <= 0) return;
+        targetCell.style.width = `${width}px`;
+        targetCell.style.minWidth = `${width}px`;
+        targetCell.style.maxWidth = `${width}px`;
+      });
+    };
+
+    let rafId = null;
+    const syncNow = () => {
+      rafId = null;
+
+      const scoreVisible = !scorePanel.hidden && document.body.classList.contains('mode-score');
+      shell.hidden = !scoreVisible;
+      if (!scoreVisible) return;
+
+      copyCells(fixedHeaderRow, fixedCloneRow);
+      copyCells(scrollHeaderRow, scrollCloneRow);
+
+      syncCellWidths(fixedHeaderRow, fixedCloneRow);
+      syncCellWidths(scrollHeaderRow, scrollCloneRow);
+
+      const navRect = navBar.getBoundingClientRect();
+      const cardRect = scorecard.getBoundingClientRect();
+      const fixedRect = fixedPane.getBoundingClientRect();
+      const scrollRect = scrollPane.getBoundingClientRect();
+      const scrollTableWidth = Math.ceil(document.getElementById('scorecard')?.getBoundingClientRect().width || 0);
+      const leftOffset = Math.max(0, Math.round(cardRect.left - navRect.left));
+
+      shell.style.marginLeft = `${leftOffset}px`;
+      fixedCloneWrap.style.width = `${Math.round(fixedRect.width)}px`;
+      scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${Math.round(scrollRect.width)}px`;
+      scrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
+    };
+
+    const scheduleSync = () => {
+      if (rafId != null) return;
+      rafId = requestAnimationFrame(syncNow);
+    };
+
+    const onScroll = () => {
+      if (shell.hidden) return;
+      scrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
+    };
+
+    scrollPane.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', scheduleSync, { passive: true });
+    window.addEventListener('orientationchange', scheduleSync, { passive: true });
+
+    const headerMutationObserver = 'MutationObserver' in window
+      ? new MutationObserver(() => scheduleSync())
+      : null;
+    if (headerMutationObserver) {
+      headerMutationObserver.observe(fixedHeaderRow, { childList: true, subtree: true, characterData: true });
+      headerMutationObserver.observe(scrollHeaderRow, { childList: true, subtree: true, characterData: true });
+      headerMutationObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+      headerMutationObserver.observe(scorePanel, { attributes: true, attributeFilter: ['hidden'] });
+    }
+
+    const resizeObserver = 'ResizeObserver' in window
+      ? new ResizeObserver(() => scheduleSync())
+      : null;
+    if (resizeObserver) {
+      resizeObserver.observe(scorecard);
+      resizeObserver.observe(fixedPane);
+      resizeObserver.observe(scrollPane);
+      resizeObserver.observe(switcher);
+    }
+
+    window.__iosScorecardCloneHeaderReady = true;
+    window.__iosScorecardCloneHeaderResync = scheduleSync;
+    scheduleSync();
+    setTimeout(scheduleSync, 120);
+    setTimeout(scheduleSync, 320);
+  }
+
   function setupGamesPanelScrollSync() {
     const panel = getGamesScrollContainer();
     if (!panel) return;
@@ -4684,6 +4823,7 @@
     Scorecard.player.syncOverlay();
     setupScorecardScrollSync();
     setupIOSScorecardOverscrollGuard();
+    setupIOSScorecardCloneHeader();
     setupIOSStickyHeaders();
     setupGamesPanelScrollSync();
     syncHeaderBadgeButtonLabels();

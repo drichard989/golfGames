@@ -1085,6 +1085,10 @@ body.mode-games .entry-switcher {
   background: var(--panel-alt);
 }
 
+.ios-scorecard-clone-shell {
+  display: none;
+}
+
 /* Utility class — preserves text-align from cloned source cells */
 .align-left {
   text-align: left !important;
@@ -1130,6 +1134,69 @@ body.mode-score #main-scorecard {
 
 /* iOS only: let scorecard grow with players and scroll at page level. */
 @supports (-webkit-touch-callout: none) {
+  body.ios-scorecard-clone-active .sticky-nav-bar {
+    overflow: visible;
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-shell {
+    display: flex;
+    width: max-content;
+    max-width: none;
+    margin: 0;
+    border-top: 2px solid rgba(168, 179, 191, 0.4);
+    border-bottom: 2px solid rgba(168, 179, 191, 0.4);
+    background: var(--panel-alt);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed {
+    flex: 0 0 auto;
+    border-right: 2px solid rgba(168, 179, 191, 0.4);
+    background: var(--panel-alt);
+    box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll {
+    flex: 0 0 auto;
+    overflow: visible;
+    background: var(--panel-alt);
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
+    width: max-content;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: var(--panel-alt);
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
+    transform: translateX(0);
+    will-change: transform;
+  }
+
+  body.ios-scorecard-clone-active.mode-games .ios-scorecard-clone-shell {
+    display: none;
+  }
+
+  body.ios-scorecard-clone-active #scorecard thead,
+  body.ios-scorecard-clone-active #scorecardFixed thead,
+  body.ios-scorecard-clone-active #scorecard th,
+  body.ios-scorecard-clone-active #scorecardFixed th,
+  body.ios-scorecard-clone-active #scorecard #parRow td,
+  body.ios-scorecard-clone-active #scorecard #parRow th,
+  body.ios-scorecard-clone-active #scorecardFixed #parRowFixed td,
+  body.ios-scorecard-clone-active #scorecardFixed #parRowFixed th,
+  body.ios-scorecard-clone-active #scorecard #hcpRow td,
+  body.ios-scorecard-clone-active #scorecard #hcpRow th,
+  body.ios-scorecard-clone-active #scorecardFixed #hcpRowFixed td,
+  body.ios-scorecard-clone-active #scorecardFixed #hcpRowFixed th {
+    position: static !important;
+    top: auto !important;
+    transform: none !important;
+  }
+
   .scorecard-fixed {
     height: auto;
     max-height: none;
