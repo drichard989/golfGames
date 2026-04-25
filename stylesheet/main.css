@@ -1128,14 +1128,14 @@ body.mode-score #main-scorecard {
   scroll-behavior: auto;
 }
 
-/* iOS only: allow scorecard edge drags to chain into surrounding page scroll. */
+/* iOS only: prevent pane rubber-band; JS edge-handoff transfers drag to page. */
 @supports (-webkit-touch-callout: none) {
   #scoreEntryPanel,
   .scorecard-fixed,
   .scorecard-scroll {
-    overscroll-behavior: auto;
-    overscroll-behavior-x: auto;
-    overscroll-behavior-y: auto;
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: none;
   }
 
   .scorecard-fixed,

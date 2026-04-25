@@ -1176,14 +1176,22 @@
 
         const atTop = pane.scrollTop <= 0;
         const atBottom = pane.scrollTop >= maxTop - 1;
+        const pageTop = window.scrollY || window.pageYOffset || 0;
         const pageMaxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-        const pageCanScroll = pageMaxTop > 1;
+        const draggingPastTop = atTop && dyStep > 0;
+        const draggingPastBottom = atBottom && dyStep < 0;
 
-        // Finger moving down at top, or up at bottom:
-        // block pane bounce and hand motion to page scroll.
-        if (pageCanScroll && ((atTop && dyStep > 0) || (atBottom && dyStep < 0))) {
+        // At pane edges, always suppress rubber-band. If page can still move,
+        // transfer the drag distance into page scroll for natural handoff.
+        if (draggingPastTop || draggingPastBottom) {
           e.preventDefault();
-          window.scrollBy({ top: -dyStep, left: 0, behavior: 'auto' });
+
+          if (pageMaxTop > 0) {
+            const nextTop = Math.min(pageMaxTop, Math.max(0, pageTop - dyStep));
+            if (nextTop !== pageTop) {
+              window.scrollTo({ top: nextTop, left: 0, behavior: 'auto' });
+            }
+          }
         }
 
         lastY = t.clientY;
