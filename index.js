@@ -1359,6 +1359,20 @@
       return clone;
     };
 
+    const syncRowCellWidths = (sourceRow, cloneRow) => {
+      const sourceCells = Array.from(sourceRow?.children || []);
+      const cloneCells = Array.from(cloneRow?.children || []);
+      sourceCells.forEach((sourceCell, idx) => {
+        const cloneCell = cloneCells[idx];
+        if (!cloneCell) return;
+        const width = Math.ceil(sourceCell.getBoundingClientRect().width || 0);
+        if (width <= 0) return;
+        cloneCell.style.width = `${width}px`;
+        cloneCell.style.minWidth = `${width}px`;
+        cloneCell.style.maxWidth = `${width}px`;
+      });
+    };
+
     let rafId = null;
     const syncNow = () => {
       rafId = null;
@@ -1369,6 +1383,27 @@
 
       const fixedCloneTable = buildHeaderCloneTable(fixedTableSource, 'ios-scorecard-clone-fixed-table');
       const scrollCloneTable = buildHeaderCloneTable(scrollTableSource, 'ios-scorecard-clone-scroll-table');
+
+      const fixedSourceHead = fixedTableSource.querySelector('thead tr');
+      const fixedSourcePar = fixedTableSource.querySelector('tbody tr.par-row');
+      const fixedSourceHcp = fixedTableSource.querySelector('tbody tr.hcp-row');
+      const scrollSourceHead = scrollTableSource.querySelector('thead tr');
+      const scrollSourcePar = scrollTableSource.querySelector('tbody tr.par-row');
+      const scrollSourceHcp = scrollTableSource.querySelector('tbody tr.hcp-row');
+
+      const fixedCloneHead = fixedCloneTable.querySelector('thead tr');
+      const fixedClonePar = fixedCloneTable.querySelector('tbody tr.par-row');
+      const fixedCloneHcp = fixedCloneTable.querySelector('tbody tr.hcp-row');
+      const scrollCloneHead = scrollCloneTable.querySelector('thead tr');
+      const scrollClonePar = scrollCloneTable.querySelector('tbody tr.par-row');
+      const scrollCloneHcp = scrollCloneTable.querySelector('tbody tr.hcp-row');
+
+      syncRowCellWidths(fixedSourceHead, fixedCloneHead);
+      syncRowCellWidths(fixedSourcePar, fixedClonePar);
+      syncRowCellWidths(fixedSourceHcp, fixedCloneHcp);
+      syncRowCellWidths(scrollSourceHead, scrollCloneHead);
+      syncRowCellWidths(scrollSourcePar, scrollClonePar);
+      syncRowCellWidths(scrollSourceHcp, scrollCloneHcp);
 
       fixedCloneWrap.replaceChildren(fixedCloneTable);
       scrollCloneWrap.replaceChildren(scrollCloneTable);

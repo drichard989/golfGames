@@ -1204,6 +1204,13 @@ body.mode-score #main-scorecard {
     font-size: var(--scorecard-header-font-size);
   }
 
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.par-row td,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.hcp-row td,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.par-row th,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table tr.hcp-row th {
+    background-color: var(--panel-alt);
+  }
+
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
     transform: translateX(0);
     will-change: transform;
