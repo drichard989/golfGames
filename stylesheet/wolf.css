@@ -67,6 +67,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   text-overflow: clip;
   word-break: break-word;
   line-height: 1.3;
+  text-align: right;
 }
 
 /* Large text mode: keep the Wolf mobile chart readable by reclaiming
