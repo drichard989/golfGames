@@ -249,16 +249,16 @@ body.score-sheet-active #scorecard .score-input {
 .score-sheet-card-controls {
   --score-sheet-control-size: 56px;
   display: grid;
-  grid-template-columns: repeat(3, var(--score-sheet-control-size));
+  grid-template-columns: 1fr var(--score-sheet-control-size) 1fr;
   gap: 8px;
   align-items: end;
-  justify-content: space-between;
 }
 
 .score-sheet-score-col {
   display: grid;
   gap: 4px;
   width: var(--score-sheet-control-size);
+  justify-self: center;
 }
 
 .score-sheet-gross-label {
@@ -295,7 +295,7 @@ body.score-sheet-active #scorecard .score-input {
 }
 
 .score-sheet-stepbtn-sm {
-  width: var(--score-sheet-control-size);
+  width: 100%;
   min-height: var(--score-sheet-control-size);
   height: var(--score-sheet-control-size);
   font-size: 24px;
