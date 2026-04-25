@@ -1,8 +1,10 @@
 {
   "scripts": {
     "bump:cache": "node scripts/bump-cache-version.js",
+    "bump:cache:check": "node scripts/bump-cache-version.js --check",
     "hooks:install": "git config core.hooksPath .githooks",
-    "prepare": "npm run --silent hooks:install || true"
+    "hooks:verify": "test \"$(git config --get core.hooksPath)\" = '.githooks'",
+    "prepare": "npm run --silent hooks:install"
   },
   "dependencies": {
     "firebase": "^12.12.1",

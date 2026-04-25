@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+
+# Guardrail: block push if cache/version tokens drift out of sync.
+npm run --silent bump:cache:check

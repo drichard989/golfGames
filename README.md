@@ -107,6 +107,13 @@ http://127.0.0.1:8000/index.html
 - CSS asset query versions in [index.html](./index.html) are used for cache busting.
 - The app is optimized for touch/mobile first, then desktop.
 
+### Cache Versioning Policy (Strict)
+
+- Do not manually edit CACHE_VERSION or ?v= query tokens.
+- Pre-commit hook auto-bumps versions and stages [sw.js](./sw.js) + [index.html](./index.html).
+- Pre-commit and pre-push both run a strict sync check and fail if versions drift.
+- Ensure hooks are installed with: `npm run hooks:install`.
+
 ## Documentation
 
 - [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
