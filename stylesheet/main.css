@@ -1128,19 +1128,19 @@ body.mode-score #main-scorecard {
   scroll-behavior: auto;
 }
 
-/* iOS only: suppress scorecard rubber-banding in both fixed and scroll panes. */
+/* iOS only: allow scorecard edge drags to chain into surrounding page scroll. */
 @supports (-webkit-touch-callout: none) {
   #scoreEntryPanel,
   .scorecard-fixed,
   .scorecard-scroll {
-    overscroll-behavior: none;
-    overscroll-behavior-x: none;
-    overscroll-behavior-y: none;
+    overscroll-behavior: auto;
+    overscroll-behavior-x: auto;
+    overscroll-behavior-y: auto;
   }
 
   .scorecard-fixed,
   .scorecard-scroll {
-    -webkit-overflow-scrolling: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
