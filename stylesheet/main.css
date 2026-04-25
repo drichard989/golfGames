@@ -4130,6 +4130,206 @@ input[type="text"] {
   border-color: #dc3545;
 }
 
+/* Mobile/Tablet Player Entry Modal */
+.player-entry-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 10040;
+}
+
+.player-entry-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(760px, calc(100vw - 20px));
+  max-height: calc(100vh - 28px);
+  overflow: auto;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  padding: 16px;
+  z-index: 10041;
+  animation: slideUp 0.22s ease;
+}
+
+.player-entry-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.player-entry-modal-header h3 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.player-entry-close-btn {
+  border: 1px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--ink);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.player-entry-modal-note {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.player-entry-modal-list {
+  display: grid;
+  gap: 10px;
+}
+
+.player-entry-row {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.player-entry-row-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+
+.player-entry-row-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.player-entry-remove-btn {
+  background: rgba(220, 53, 69, 0.12);
+  border-color: rgba(220, 53, 69, 0.35);
+  color: #ff8f99;
+}
+
+.player-entry-remove-btn:hover:not(:disabled) {
+  background: rgba(220, 53, 69, 0.2);
+  border-color: rgba(220, 53, 69, 0.55);
+}
+
+.player-entry-remove-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-entry-field {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.player-entry-name-input,
+.player-entry-handicap-input {
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--ink);
+  padding: 8px 10px;
+  font-size: 16px;
+}
+
+.player-entry-handicap-input {
+  text-align: center;
+  width: 88px;
+}
+
+.player-entry-handicap-input::placeholder {
+  color: var(--muted);
+  opacity: 0.9;
+}
+
+.player-entry-handicap-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.player-entry-step-btn {
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.player-entry-step-btn:hover {
+  border-color: rgba(74, 158, 255, 0.6);
+}
+
+.player-entry-modal-footer {
+  margin-top: 14px;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+:root[data-theme="light"] .player-entry-modal-backdrop {
+  background: rgba(15, 19, 24, 0.38);
+}
+
+:root[data-theme="light"] .player-entry-row {
+  background: #f7f9fc;
+}
+
+:root[data-theme="light"] .player-entry-remove-btn {
+  background: rgba(220, 53, 69, 0.08);
+  border-color: rgba(220, 53, 69, 0.28);
+  color: #b42232;
+}
+
+:root[data-theme="light"] .player-entry-name-input,
+:root[data-theme="light"] .player-entry-handicap-input,
+:root[data-theme="light"] .player-entry-step-btn,
+:root[data-theme="light"] .player-entry-close-btn {
+  background: #ffffff;
+}
+
+@media (max-width: 1024px) {
+  .player-entry-modal {
+    width: calc(100vw - 12px);
+    max-height: calc(100vh - 12px);
+    border-radius: 14px;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .player-entry-modal {
+    width: calc(100vw - 8px);
+    max-height: calc(100vh - 8px);
+    border-radius: 12px;
+    padding: 10px;
+  }
+
+  .player-entry-modal-footer {
+    justify-content: stretch;
+  }
+
+  .player-entry-modal-footer .btn {
+    flex: 1 1 auto;
+  }
+}
+
 /* Modal animations */
 @keyframes fadeIn {
   from {

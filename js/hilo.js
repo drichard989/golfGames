@@ -124,7 +124,8 @@
     
     // Sort players by handicap with their original indices
     const indexed = handicaps.map((ch, idx) => ({ ch, idx }));
-    indexed.sort((a, b) => a.ch - b.ch);
+    // Deterministic tie-breaker by original player index when handicaps match.
+    indexed.sort((a, b) => (a.ch - b.ch) || (a.idx - b.idx));
     
     // Team A: lowest + highest handicap
     const teamA = [indexed[0].idx, indexed[3].idx];

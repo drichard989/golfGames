@@ -570,6 +570,7 @@
   };
   const TAB_FLIP_BURST_MS = 420;
   const IDLE_HIDDEN_FLUSH_DELAY_MS = 220;
+  const PLAYER_ENTRY_MODAL_QUERY = '(max-width: 1024px)';
   const GAME_INIT_FLAGS = {
     junkAchievementsRestored: false,
     initialized: {
@@ -599,6 +600,11 @@
     tabSwitchFlushTimer: null,
     pendingTabFlushGame: null
   };
+
+  let playerEntryModalBackdrop = null;
+  let playerEntryModalSheet = null;
+  let playerEntryModalList = null;
+  let playerEntryModalFocusTarget = null;
 
   function isRemoteViewerSession() {
     const session = window.CloudSync?.getSession?.();
@@ -4060,6 +4066,313 @@
   // =============================================================================
   // PLAYER MANAGEMENT (ADD/REMOVE)
   // =============================================================================
+
+  function isPlayerEntryModalViewport() {
+    try {
+      return !!window.matchMedia?.(PLAYER_ENTRY_MODAL_QUERY)?.matches;
+    } catch {
+      return false;
+    }
+  }
+
+  function getPlayerIdentityControls(playerIdx) {
+    const row = document.querySelector(`#scorecard .player-row[data-player="${playerIdx}"]`);
+    if (!row) return { row: null, nameInput: null, chInput: null };
+    return {
+      row,
+      nameInput: row.querySelector('.name-edit'),
+      chInput: row.querySelector('.ch-input')
+    };
+  }
+
+  function setModalHandicapValue(chInput, actualValue) {
+    if (!chInput) return;
+    const safeActual = clampInt(actualValue, LIMITS.MIN_HANDICAP, LIMITS.MAX_HANDICAP);
+    chInput.dataset.actualValue = String(safeActual);
+    // Keep zero as a placeholder so it is visible but visually de-emphasized.
+    chInput.value = safeActual === 0 ? '' : formatDisplayedHandicap(safeActual);
+  }
+
+  function applyPlayerNameFromModal(playerIdx, nextName) {
+    const { nameInput } = getPlayerIdentityControls(playerIdx);
+    if (!nameInput) return;
+    nameInput.value = String(nextName ?? '');
+    nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  function applyPlayerHandicapFromModal(playerIdx, actualValue) {
+    const { chInput } = getPlayerIdentityControls(playerIdx);
+    if (!chInput) return;
+    const safeActual = clampInt(actualValue, LIMITS.MIN_HANDICAP, LIMITS.MAX_HANDICAP);
+    setHandicapInputValue(chInput, String(safeActual));
+    chInput.dispatchEvent(new Event('input', { bubbles: true }));
+    chInput.dispatchEvent(new Event('blur', { bubbles: true }));
+  }
+
+  function closePlayerEntryModal() {
+    if (playerEntryModalBackdrop) playerEntryModalBackdrop.hidden = true;
+    if (playerEntryModalSheet) playerEntryModalSheet.hidden = true;
+    document.body.classList.remove('player-entry-modal-open');
+    playerEntryModalFocusTarget = null;
+  }
+
+  function emitPlayersChanged(reason = 'updated') {
+    try {
+      document.dispatchEvent(new CustomEvent('players:changed', {
+        detail: { reason, count: PLAYERS }
+      }));
+    } catch {}
+  }
+
+  function focusPlayerEntryModalTarget() {
+    if (!playerEntryModalSheet || !playerEntryModalFocusTarget) return;
+    const { playerIdx, field } = playerEntryModalFocusTarget;
+    const selector = field === 'handicap'
+      ? `.player-entry-handicap-input[data-player="${playerIdx}"]`
+      : `.player-entry-name-input[data-player="${playerIdx}"]`;
+    const el = playerEntryModalSheet.querySelector(selector);
+    if (!el) return;
+    requestAnimationFrame(() => {
+      el.focus();
+      if (typeof el.select === 'function') el.select();
+    });
+  }
+
+  function renderPlayerEntryModalRows() {
+    if (!playerEntryModalList) return;
+    playerEntryModalList.innerHTML = '';
+
+    const rows = $$('#scorecard .player-row');
+    rows.forEach((row, idx) => {
+      const { nameInput, chInput } = getPlayerIdentityControls(idx);
+      if (!nameInput || !chInput) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'player-entry-row';
+
+      const title = document.createElement('div');
+      title.className = 'player-entry-row-title';
+      title.textContent = `Player ${idx + 1}`;
+
+      const nameLabel = document.createElement('label');
+      nameLabel.className = 'player-entry-field';
+      nameLabel.textContent = 'Name';
+
+      const nameEditor = document.createElement('input');
+      nameEditor.type = 'text';
+      nameEditor.className = 'player-entry-name-input';
+      nameEditor.dataset.player = String(idx);
+      nameEditor.placeholder = `Player ${idx + 1}`;
+      nameEditor.autocomplete = 'off';
+      nameEditor.value = nameInput.value || '';
+      nameEditor.addEventListener('input', () => {
+        applyPlayerNameFromModal(idx, nameEditor.value);
+      });
+
+      const handicapLabel = document.createElement('label');
+      handicapLabel.className = 'player-entry-field';
+      handicapLabel.textContent = 'Handicap';
+
+      const actionsRow = document.createElement('div');
+      actionsRow.className = 'player-entry-row-actions';
+
+      const removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'btn player-entry-remove-btn';
+      removeBtn.textContent = 'Remove Player';
+      removeBtn.disabled = PLAYERS <= MIN_PLAYERS;
+      removeBtn.setAttribute('aria-label', `Remove player ${idx + 1}`);
+
+      const handicapControl = document.createElement('div');
+      handicapControl.className = 'player-entry-handicap-control';
+
+      const minusBtn = document.createElement('button');
+      minusBtn.type = 'button';
+      minusBtn.className = 'player-entry-step-btn';
+      minusBtn.textContent = '-';
+      minusBtn.setAttribute('aria-label', `Decrease handicap for player ${idx + 1}`);
+
+      const handicapEditor = document.createElement('input');
+      handicapEditor.type = 'text';
+      handicapEditor.className = 'player-entry-handicap-input';
+      handicapEditor.dataset.player = String(idx);
+      handicapEditor.placeholder = '0';
+      handicapEditor.inputMode = 'text';
+      handicapEditor.pattern = '[+\\-]?[0-9]*';
+      handicapEditor.autocomplete = 'off';
+
+      const plusBtn = document.createElement('button');
+      plusBtn.type = 'button';
+      plusBtn.className = 'player-entry-step-btn';
+      plusBtn.textContent = '+';
+      plusBtn.setAttribute('aria-label', `Increase handicap for player ${idx + 1}`);
+
+      const readActual = () => {
+        const fromDataset = Number(handicapEditor.dataset.actualValue);
+        if (Number.isFinite(fromDataset)) return fromDataset;
+        const parsed = parseDisplayedHandicap(handicapEditor.value);
+        return parsed === null ? 0 : parsed;
+      };
+
+      const applyActual = (actual) => {
+        const safeActual = clampInt(actual, LIMITS.MIN_HANDICAP, LIMITS.MAX_HANDICAP);
+        setModalHandicapValue(handicapEditor, safeActual);
+        applyPlayerHandicapFromModal(idx, safeActual);
+      };
+
+      setModalHandicapValue(handicapEditor, getActualHandicapValue(chInput));
+
+      minusBtn.addEventListener('click', () => {
+        applyActual(readActual() - 1);
+      });
+
+      plusBtn.addEventListener('click', () => {
+        applyActual(readActual() + 1);
+      });
+
+      handicapEditor.addEventListener('input', () => {
+        const raw = String(handicapEditor.value ?? '').trim();
+        if (raw === '' || raw === '+' || raw === '-') {
+          handicapEditor.dataset.actualValue = '0';
+          applyPlayerHandicapFromModal(idx, 0);
+          return;
+        }
+        const parsed = parseDisplayedHandicap(raw);
+        if (parsed === null) return;
+        handicapEditor.dataset.actualValue = String(parsed);
+        applyPlayerHandicapFromModal(idx, parsed);
+      });
+
+      handicapEditor.addEventListener('blur', () => {
+        const parsed = parseDisplayedHandicap(handicapEditor.value);
+        const actual = parsed === null ? 0 : parsed;
+        setModalHandicapValue(handicapEditor, actual);
+      });
+
+      removeBtn.addEventListener('click', () => {
+        if (PLAYERS <= MIN_PLAYERS) return;
+        // Reuse existing confirmation/delete flow so behavior is consistent.
+        Scorecard.player.removeByIndex(idx);
+      });
+
+      handicapControl.append(minusBtn, handicapEditor, plusBtn);
+      actionsRow.appendChild(removeBtn);
+
+      nameLabel.appendChild(nameEditor);
+      handicapLabel.appendChild(handicapControl);
+      wrapper.append(title, nameLabel, handicapLabel, actionsRow);
+      playerEntryModalList.appendChild(wrapper);
+    });
+
+    focusPlayerEntryModalTarget();
+  }
+
+  function ensurePlayerEntryModal() {
+    if (playerEntryModalBackdrop && playerEntryModalSheet && playerEntryModalList) return;
+
+    playerEntryModalBackdrop = document.createElement('div');
+    playerEntryModalBackdrop.className = 'player-entry-modal-backdrop';
+    playerEntryModalBackdrop.hidden = true;
+    playerEntryModalBackdrop.addEventListener('click', closePlayerEntryModal);
+
+    playerEntryModalSheet = document.createElement('div');
+    playerEntryModalSheet.className = 'player-entry-modal';
+    playerEntryModalSheet.hidden = true;
+    playerEntryModalSheet.setAttribute('role', 'dialog');
+    playerEntryModalSheet.setAttribute('aria-modal', 'true');
+    playerEntryModalSheet.setAttribute('aria-labelledby', 'playerEntryModalTitle');
+    playerEntryModalSheet.innerHTML = `
+      <div class="player-entry-modal-header">
+        <h3 id="playerEntryModalTitle">Players</h3>
+        <button type="button" class="player-entry-close-btn" aria-label="Close player editor">x</button>
+      </div>
+      <p class="player-entry-modal-note">Leave handicap empty to keep it at 0. Use − to go below 0 (displayed as + index).</p>
+      <div class="player-entry-modal-list" id="playerEntryModalList"></div>
+      <div class="player-entry-modal-footer">
+        <button type="button" class="btn" id="playerEntryAddBtn">+ Add Player</button>
+        <button type="button" class="btn" id="playerEntryDoneBtn">Done</button>
+      </div>
+    `;
+
+    playerEntryModalList = playerEntryModalSheet.querySelector('#playerEntryModalList');
+
+    playerEntryModalSheet.querySelector('.player-entry-close-btn')?.addEventListener('click', closePlayerEntryModal);
+    playerEntryModalSheet.querySelector('#playerEntryDoneBtn')?.addEventListener('click', closePlayerEntryModal);
+    playerEntryModalSheet.querySelector('#playerEntryAddBtn')?.addEventListener('click', () => {
+      addPlayer();
+      renderPlayerEntryModalRows();
+      playerEntryModalFocusTarget = { playerIdx: Math.max(0, PLAYERS - 1), field: 'name' };
+      focusPlayerEntryModalTarget();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!playerEntryModalSheet || playerEntryModalSheet.hidden) return;
+      if (e.key === 'Escape') closePlayerEntryModal();
+    });
+
+    document.addEventListener('players:changed', () => {
+      if (!playerEntryModalSheet || playerEntryModalSheet.hidden) return;
+      renderPlayerEntryModalRows();
+    });
+
+    document.body.appendChild(playerEntryModalBackdrop);
+    document.body.appendChild(playerEntryModalSheet);
+  }
+
+  function openPlayerEntryModal(options = {}) {
+    ensurePlayerEntryModal();
+    const playerIdx = Number(options.playerIdx);
+    playerEntryModalFocusTarget = {
+      playerIdx: Number.isFinite(playerIdx) ? Math.max(0, playerIdx) : 0,
+      field: options.field === 'handicap' ? 'handicap' : 'name'
+    };
+
+    renderPlayerEntryModalRows();
+    if (playerEntryModalBackdrop) playerEntryModalBackdrop.hidden = false;
+    if (playerEntryModalSheet) playerEntryModalSheet.hidden = false;
+    document.body.classList.add('player-entry-modal-open');
+  }
+
+  function bindPlayerEntryModalTriggers() {
+    const table = document.getElementById('scorecard');
+    if (!table) return;
+
+    const handleInteractiveTarget = (target) => {
+      if (!target || !isPlayerEntryModalViewport()) return false;
+      const isName = target.classList?.contains('name-edit');
+      const isHcp = target.classList?.contains('ch-input');
+      if (!isName && !isHcp) return false;
+      const row = target.closest('.player-row');
+      if (!row) return false;
+
+      const playerIdx = Number(row.dataset.player || 0);
+      openPlayerEntryModal({
+        playerIdx: Number.isFinite(playerIdx) ? playerIdx : 0,
+        field: isHcp ? 'handicap' : 'name'
+      });
+      return true;
+    };
+
+    table.addEventListener('click', (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!handleInteractiveTarget(target)) return;
+      e.preventDefault();
+      target.blur();
+    });
+
+    table.addEventListener('focusin', (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLElement)) return;
+      if (!handleInteractiveTarget(target)) return;
+      target.blur();
+    });
+
+    const openBtn = document.getElementById('openPlayerEntryModalBtn');
+    if (openBtn) {
+      openBtn.addEventListener('click', () => openPlayerEntryModal());
+    }
+  }
   
   /**
    * Add a new player row to the scorecard
@@ -4238,6 +4551,7 @@
         Scorecard.calc.applyStrokeHighlighting();
         Scorecard.build.syncRowHeights();
       });    Storage.saveDebounced();
+    emitPlayersChanged('added');
     Utils.announce(`Player ${PLAYERS} added.`);
   }
   
@@ -4460,6 +4774,7 @@
       });
       
       Storage.saveDebounced();
+      emitPlayersChanged('removed');
       Utils.announce(`${playerName} removed. ${PLAYERS} player${PLAYERS === 1 ? '' : 's'} remaining.`);
     });
   }
@@ -5200,6 +5515,7 @@
     const removePlayerBtn = document.getElementById('removePlayerBtn');
     if (addPlayerBtn) addPlayerBtn.addEventListener("click", addPlayer);
     if (removePlayerBtn) removePlayerBtn.addEventListener("click", removePlayer);
+    bindPlayerEntryModalTriggers();
 
     // Header collapse toggle
     document.getElementById('headerCollapseBtn')?.addEventListener('click', () => {
@@ -5426,7 +5742,7 @@
       if (typeof delayedSync === 'function') {
         resizeAnimationFrame = requestAnimationFrame(() => delayedSync());
       }
-    }, TIMING.RESIZE_DEBOUNCE_MS);
+    }, window.GolfApp?.constants?.TIMING?.RESIZE_DEBOUNCE_MS || 150);
   });
 
   window.addEventListener('load', () => {
