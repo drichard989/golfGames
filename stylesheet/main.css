@@ -1355,6 +1355,16 @@ td {
   font-weight: 500;
 }
 
+/* Make player names look editable on touch devices */
+@media (pointer: coarse) {
+  #scorecard .name-edit {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 6px;
+    padding: 6px 8px;
+  }
+}
+
 #scorecard .ch-input {
   width: var(--table-input-width);
   min-width: var(--table-input-width);
@@ -1415,7 +1425,6 @@ tr:last-child td {
 /* Emphasize Par and Handicap rows */
 .par-row th,
 .par-row td {
-  background: var(--panel-alt);
   border-left: 2px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 2px solid rgba(255, 255, 255, 0.3);
@@ -1424,7 +1433,6 @@ tr:last-child td {
 
 .hcp-row th,
 .hcp-row td {
-  background: var(--panel-alt);
   border-left: 2px solid rgba(255, 255, 255, 0.15);
   border-right: none;
   border-top: 2px solid rgba(255, 255, 255, 0.3);
