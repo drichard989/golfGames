@@ -4431,11 +4431,6 @@
       if (!handleInteractiveTarget(target)) return;
       target.blur();
     });
-
-    const openBtn = document.getElementById('openPlayerEntryModalBtn');
-    if (openBtn) {
-      openBtn.addEventListener('click', () => openPlayerEntryModal());
-    }
   }
   
   /**

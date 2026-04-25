@@ -4335,7 +4335,10 @@ input[type="text"] {
 @media (max-width: 1024px) {
   .player-entry-modal {
     width: calc(100vw - 12px);
-    max-height: min(calc(100dvh - 12px), calc(100svh - 12px));
+    max-height: min(
+      calc(100dvh - var(--player-entry-modal-top, 80px) - 12px),
+      calc(100svh - var(--player-entry-modal-top, 80px) - 12px)
+    );
     border-radius: 14px;
   }
   .player-entry-modal-header {
@@ -4355,7 +4358,10 @@ input[type="text"] {
 @media (max-width: 768px) {
   .player-entry-modal {
     width: calc(100vw - 8px);
-    max-height: min(calc(100dvh - 8px), calc(100svh - 8px));
+    max-height: min(
+      calc(100dvh - var(--player-entry-modal-top, 80px) - env(safe-area-inset-bottom, 0px) - 8px),
+      calc(100svh - var(--player-entry-modal-top, 80px) - env(safe-area-inset-bottom, 0px) - 8px)
+    );
     border-radius: 12px;
   }
   .player-entry-modal-header {
