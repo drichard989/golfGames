@@ -1372,7 +1372,6 @@
     state.pendingRemoteState = null;
     state.pushSuspended = false;
     state.remoteApplySuspendedUntil = 0;
-    state.viewerLockApplied = false;
     state.needsPostJoinAlignment = false;
     state.session = null;
     state.lastSeenRevision = 0;
