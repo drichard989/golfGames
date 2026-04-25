@@ -492,20 +492,42 @@
      * Each call is guarded so a missing or uninitialized module never
      * prevents the rest from updating.
      */
-    recalcGames() {
-      try { if (AppManager._isSectionOpen('vegasSection')) window.Vegas?.recalc(); } catch (e) { console.warn('[AppManager] Vegas recalc failed', e); }
-      try { if (AppManager._isSectionOpen('skinsSection')) window.Skins?.update(); } catch (e) { /* skins may not be initialized yet */ }
-      try { if (AppManager._isSectionOpen('junkSection')) window.Junk?.update(); } catch (e) { /* junk may not be initialized yet */ }
-      try { if (AppManager._isSectionOpen('hiloSection')) window.HiLo?.update(); } catch (e) { /* hilo may not be initialized yet */ }
-      try { if (AppManager._isSectionOpen('bankerSection')) window.Banker?.update(); } catch (e) { /* banker may not be initialized yet */ }
-      try { if (AppManager._isSectionOpen('wolfSection')) window.Wolf?.update(); } catch (e) { /* wolf may not be initialized yet */ }
+    recalcGames(force = true) {
+      if (force) {
+        markGamesDirty();
+      }
+      GAME_TAB_ORDER.forEach((gameKey) => {
+        const sectionId = GAME_SECTION_BY_KEY[gameKey];
+        if (!sectionId || !AppManager._isSectionOpen(sectionId)) return;
+        if (!force && !isGameDirty(gameKey)) return;
+
+        ensureGameInitialized(gameKey);
+        try {
+          runGameUpdate(gameKey);
+          clearGameDirty(gameKey);
+        } catch (error) {
+          console.warn(`[AppManager] ${gameKey} update failed`, error);
+        }
+      });
+      scheduleIdleDirtyGameFlush();
+    },
+    flushGame(gameKey, force = false) {
+      if (!GAME_TAB_ORDER.includes(gameKey)) return;
+      if (!force && !isGameDirty(gameKey)) return;
+      ensureGameInitialized(gameKey);
+      runGameUpdate(gameKey);
+      clearGameDirty(gameKey);
+      scheduleIdleDirtyGameFlush();
     },
     // Debounced version for score inputs — coalesces rapid keystrokes before running all game calcs
     recalcGamesDebounced: (() => {
-      let _timer = null;
       return function() {
-        clearTimeout(_timer);
-        _timer = setTimeout(() => AppManager.recalcGames(), TIMING.GAME_RECALC_DEBOUNCE_MS);
+        markGamesDirty();
+        clearTimeout(GAME_RUNTIME_STATE.recalcTimer);
+        GAME_RUNTIME_STATE.recalcTimer = setTimeout(() => {
+          GAME_RUNTIME_STATE.recalcTimer = null;
+          AppManager.recalcGames(false);
+        }, TIMING.GAME_RECALC_DEBOUNCE_MS);
       };
     })()
   };
@@ -537,6 +559,16 @@
 
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker', 'wolf'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
+  const GAME_SECTION_BY_KEY = {
+    junk: 'junkSection',
+    skins: 'skinsSection',
+    vegas: 'vegasSection',
+    hilo: 'hiloSection',
+    banker: 'bankerSection',
+    wolf: 'wolfSection'
+  };
+  const TAB_FLIP_BURST_MS = 420;
+  const IDLE_HIDDEN_FLUSH_DELAY_MS = 220;
   const GAME_INIT_FLAGS = {
     junkAchievementsRestored: false,
     initialized: {
@@ -549,6 +581,151 @@
     },
     warmedAfterLoad: false
   };
+  const GAME_RUNTIME_STATE = {
+    dirty: {
+      junk: true,
+      skins: true,
+      vegas: true,
+      hilo: true,
+      banker: true,
+      wolf: true
+    },
+    burstUntil: 0,
+    deferredSaveTimer: null,
+    recalcTimer: null,
+    idleCallbackId: null,
+    idleFallbackTimer: null
+  };
+
+  function markGamesDirty(gameKeys = GAME_TAB_ORDER) {
+    gameKeys.forEach((gameKey) => {
+      if (Object.prototype.hasOwnProperty.call(GAME_RUNTIME_STATE.dirty, gameKey)) {
+        GAME_RUNTIME_STATE.dirty[gameKey] = true;
+      }
+    });
+    scheduleIdleDirtyGameFlush();
+  }
+
+  function clearGameDirty(gameKey) {
+    if (!Object.prototype.hasOwnProperty.call(GAME_RUNTIME_STATE.dirty, gameKey)) return;
+    GAME_RUNTIME_STATE.dirty[gameKey] = false;
+  }
+
+  function isGameDirty(gameKey) {
+    return !!GAME_RUNTIME_STATE.dirty[gameKey];
+  }
+
+  function beginTabFlipBurst() {
+    GAME_RUNTIME_STATE.burstUntil = Date.now() + TAB_FLIP_BURST_MS;
+  }
+
+  function inTabFlipBurstWindow() {
+    return Date.now() < GAME_RUNTIME_STATE.burstUntil;
+  }
+
+  function scheduleSaveAfterFlipBurst() {
+    const now = Date.now();
+    const remaining = Math.max(0, GAME_RUNTIME_STATE.burstUntil - now);
+    clearTimeout(GAME_RUNTIME_STATE.deferredSaveTimer);
+    GAME_RUNTIME_STATE.deferredSaveTimer = setTimeout(() => {
+      GAME_RUNTIME_STATE.deferredSaveTimer = null;
+      saveDebounced();
+    }, remaining + 24);
+  }
+
+  function runGameUpdate(gameKey) {
+    switch (gameKey) {
+      case 'vegas':
+        window.Vegas?.recalc?.();
+        break;
+      case 'skins':
+        window.Skins?.update?.();
+        break;
+      case 'junk':
+        window.Junk?.update?.();
+        break;
+      case 'hilo':
+        window.HiLo?.update?.();
+        break;
+      case 'banker':
+        window.Banker?.update?.();
+        break;
+      case 'wolf':
+        window.Wolf?.update?.();
+        break;
+      default:
+        break;
+    }
+  }
+
+  function clearIdleDirtyGameFlushHandles() {
+    if (GAME_RUNTIME_STATE.idleCallbackId != null && typeof window.cancelIdleCallback === 'function') {
+      window.cancelIdleCallback(GAME_RUNTIME_STATE.idleCallbackId);
+    }
+    if (GAME_RUNTIME_STATE.idleFallbackTimer != null) {
+      clearTimeout(GAME_RUNTIME_STATE.idleFallbackTimer);
+    }
+    GAME_RUNTIME_STATE.idleCallbackId = null;
+    GAME_RUNTIME_STATE.idleFallbackTimer = null;
+  }
+
+  function flushDirtyHiddenGamesInIdle(deadline = null) {
+    clearIdleDirtyGameFlushHandles();
+
+    if (inTabFlipBurstWindow()) {
+      scheduleIdleDirtyGameFlush();
+      return;
+    }
+
+    const activeGame = getActiveGameTab();
+    let hasPending = false;
+    for (const gameKey of GAME_TAB_ORDER) {
+      if (!isGameDirty(gameKey)) continue;
+      if (gameKey === activeGame) continue;
+
+      if (deadline && typeof deadline.timeRemaining === 'function' && deadline.timeRemaining() < 2) {
+        hasPending = true;
+        break;
+      }
+
+      try {
+        ensureGameInitialized(gameKey);
+        runGameUpdate(gameKey);
+        clearGameDirty(gameKey);
+      } catch (error) {
+        console.warn(`[IdleFlush] ${gameKey} update failed`, error);
+        hasPending = true;
+      }
+    }
+
+    if (!hasPending) {
+      hasPending = GAME_TAB_ORDER.some((gameKey) => {
+        if (!isGameDirty(gameKey)) return false;
+        return gameKey !== activeGame;
+      });
+    }
+
+    if (hasPending) {
+      scheduleIdleDirtyGameFlush();
+    }
+  }
+
+  function scheduleIdleDirtyGameFlush() {
+    if (!GAME_TAB_ORDER.some((gameKey) => isGameDirty(gameKey))) return;
+    clearIdleDirtyGameFlushHandles();
+
+    if (typeof window.requestIdleCallback === 'function') {
+      GAME_RUNTIME_STATE.idleCallbackId = window.requestIdleCallback(
+        (deadline) => flushDirtyHiddenGamesInIdle(deadline),
+        { timeout: 1500 }
+      );
+      return;
+    }
+
+    GAME_RUNTIME_STATE.idleFallbackTimer = setTimeout(() => {
+      flushDirtyHiddenGamesInIdle(null);
+    }, IDLE_HIDDEN_FLUSH_DELAY_MS);
+  }
   let headerVisible = true;             // true = header shown
   let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
 
@@ -676,12 +853,15 @@
       });
 
       // Prime render/cache paths up front so active tab flipping is fast.
-      try { window.Junk?.update?.(); } catch (_) {}
-      try { window.Skins?.update?.(); } catch (_) {}
-      try { window.Vegas?.recalc?.(); } catch (_) {}
-      try { window.HiLo?.update?.(); } catch (_) {}
-      try { window.Banker?.update?.(); } catch (_) {}
-      try { window.Wolf?.update?.(); } catch (_) {}
+      GAME_TAB_ORDER.forEach((gameKey) => {
+        try {
+          runGameUpdate(gameKey);
+          clearGameDirty(gameKey);
+        } catch (_) {
+          markGamesDirty([gameKey]);
+        }
+      });
+      scheduleIdleDirtyGameFlush();
     };
 
     if (typeof window.requestIdleCallback === 'function') {
@@ -843,6 +1023,8 @@
   function setPrimaryTab(which, { save = true } = {}) {
     if (which !== 'score' && which !== 'games') return;
 
+    beginTabFlipBurst();
+
     const currentTab = getPrimaryTab();
     if (currentTab === 'games') {
       rememberGameTabScroll(getActiveGameTab());
@@ -866,6 +1048,7 @@
         setTimeout(() => syncGamesPanelHeight(), 300);
         const activeGame = getActiveGameTab();
         if (activeGame) {
+          AppManager.flushGame(activeGame, false);
           restoreGameTabScroll(activeGame);
         } else {
           restorePrimaryTabScroll(which);
@@ -875,7 +1058,7 @@
       restorePrimaryTabScroll(which);
     }
 
-    if (save) saveDebounced();
+    if (save) scheduleSaveAfterFlipBurst();
   }
 
   function setupScorecardScrollSync() {
@@ -1101,18 +1284,29 @@
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
     if (!GAME_TAB_ORDER.includes(which)) return;
 
+    beginTabFlipBurst();
+
     const previousGame = getActiveGameTab();
     if (previousGame) {
       rememberGameTabScroll(previousGame);
     }
 
+    if (previousGame && previousGame !== which) {
+      games_close(previousGame);
+    }
+
+    // Defensive cleanup for stale multi-open state (should be rare).
     GAME_TAB_ORDER.forEach((gameKey) => {
-      if (gameKey === which) {
-        games_open(gameKey);
-      } else {
+      if (gameKey === which || gameKey === previousGame) return;
+      const sectionId = GAME_SECTION_BY_KEY[gameKey];
+      if (sectionId && AppManager._isSectionOpen(sectionId)) {
         games_close(gameKey);
       }
     });
+
+    games_open(which);
+
+    AppManager.flushGame(which, false);
 
     syncGameTabUi(which);
 
@@ -1128,7 +1322,7 @@
       detail: { game: which, previousGame }
     }));
 
-    if (save) saveDebounced();
+    if (save) scheduleSaveAfterFlipBurst();
   }
 
   let scoreInputRecalcFrame = null;
@@ -4811,6 +5005,13 @@
         let rafId = null;
         let cloneTable = null;
 
+        const isCloneActive = () => {
+          const sectionOpen = section.classList.contains('open') && section.getAttribute('aria-hidden') !== 'true';
+          if (!sectionOpen) return false;
+          if (standalone) return true;
+          return hostParent instanceof HTMLElement ? !hostParent.hidden : true;
+        };
+
         const host = document.createElement('div');
         host.className = 'live-results-header-clone';
         if (standalone) {
@@ -4928,11 +5129,13 @@
         };
 
         const scheduleSync = () => {
+          if (!isCloneActive()) return;
           if (rafId != null) return;
           rafId = requestAnimationFrame(syncNow);
         };
 
         const onWrapScroll = () => {
+          if (!isCloneActive()) return;
           if (!cloneTable || !wrap) return;
           cloneTable.style.transform = `translateX(${-wrap.scrollLeft}px)`;
         };
@@ -5120,6 +5323,12 @@
       });
 
       document.addEventListener('golf:game-tab-changed', () => {
+        liveHeaderClones.forEach((_state, section) => {
+          const sectionOpen = section.classList.contains('open') && section.getAttribute('aria-hidden') !== 'true';
+          if (!sectionOpen) {
+            clearLiveHeaderClone(section);
+          }
+        });
         syncAllStandaloneGameHeaderClones();
       });
 
@@ -5357,6 +5566,8 @@
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
         flushSave();
+      } else {
+        scheduleIdleDirtyGameFlush();
       }
     });
     
