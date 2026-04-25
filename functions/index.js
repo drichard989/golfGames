@@ -275,12 +275,10 @@ exports.redeemGameCode = onCall(CALLABLE_OPTS, async (request) => {
 
   const memberRef = db.ref(`games/${gameId}/members/${uid}`);
   const currentMemberSnap = await memberRef.get();
-  const currentRole = currentMemberSnap.val()?.role;
 
-  let targetRole = role;
-  if (currentRole === 'editor') {
-    targetRole = 'editor';
-  }
+  // Respect the redeemed code role exactly.
+  // A view code must stay viewer-only even if this uid was previously editor.
+  const targetRole = role;
 
   await memberRef.set({
     role: targetRole,
