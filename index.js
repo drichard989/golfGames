@@ -346,8 +346,9 @@
     chInput.value = formatDisplayedHandicap(actual);
   }
 
-  function syncHandicapInput(chInput) {
+  function syncHandicapInput(chInput, options = {}) {
     if (!chInput) return false;
+    const normalizeDisplay = !!options.normalizeDisplay;
 
     const raw = String(chInput.value ?? '').trim();
     if (raw === '' || raw === '+' || raw === '-') {
@@ -362,7 +363,9 @@
     }
 
     chInput.dataset.actualValue = String(actual);
-    chInput.value = formatDisplayedHandicap(actual);
+    if (normalizeDisplay) {
+      chInput.value = formatDisplayedHandicap(actual);
+    }
     return true;
   }
 
@@ -1565,6 +1568,9 @@
               Scorecard.calc.applyStrokeHighlighting();
             }
             Storage.saveDebounced(); 
+          });
+          chInput.addEventListener('blur', () => {
+            syncHandicapInput(chInput, { normalizeDisplay: true });
           });
           chTd.appendChild(chInput); 
           tr.appendChild(chTd);
@@ -4131,6 +4137,9 @@
       Scorecard.calc.recalcAll();
       AppManager.recalcGames();
       Storage.saveDebounced();
+    });
+    chInput.addEventListener('blur', () => {
+      syncHandicapInput(chInput, { normalizeDisplay: true });
     });
     chTd.appendChild(chInput);
     tr.appendChild(chTd);
