@@ -142,12 +142,13 @@
     if (!grossLabel || !inputEl) return grossLabel;
 
     const receivesStroke = inputEl.classList.contains('receives-stroke');
+    const givesStroke = inputEl.classList.contains('gives-stroke');
     const strokeCount = Number(inputEl.dataset.strokes || 0);
-    if (!receivesStroke || !Number.isFinite(strokeCount) || strokeCount <= 0) {
+    if ((!receivesStroke && !givesStroke) || !Number.isFinite(strokeCount) || strokeCount <= 0) {
       return grossLabel;
     }
 
-    const netScore = score - strokeCount;
+    const netScore = receivesStroke ? (score - strokeCount) : (score + strokeCount);
     const netLabel = getGrossResultLabel(netScore, par);
     if (!netLabel || netLabel === grossLabel) return grossLabel;
 
