@@ -1070,8 +1070,26 @@
     gamesBtn.classList.toggle('active', !isScore);
     scoreBtn.setAttribute('aria-selected', isScore ? 'true' : 'false');
     gamesBtn.setAttribute('aria-selected', !isScore ? 'true' : 'false');
-    scorePanel.hidden = !isScore;
-    gamesPanel.hidden = isScore;
+
+    const incoming = isScore ? scorePanel : gamesPanel;
+    const outgoing  = isScore ? gamesPanel : scorePanel;
+
+    // Crossfade on touch devices only
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    if (isTouch && !incoming.hidden) {
+      // Already showing correct panel — nothing to do
+    } else if (isTouch && incoming.hidden) {
+      outgoing.hidden = true;
+      incoming.hidden = false;
+      incoming.classList.remove('panel-entering');
+      void incoming.offsetWidth; // force reflow
+      incoming.classList.add('panel-entering');
+      incoming.addEventListener('animationend', () => incoming.classList.remove('panel-entering'), { once: true });
+      setTimeout(() => incoming.classList.remove('panel-entering'), 250); // fallback
+    } else {
+      scorePanel.hidden = !isScore;
+      gamesPanel.hidden = isScore;
+    }
   }
 
   function syncGameTabUi(activeGame) {
@@ -1081,9 +1099,42 @@
       if (!toggleBtn) return;
 
       const isActive = activeGame === gameKey;
+      const wasActive = toggleBtn.classList.contains('active');
       toggleBtn.classList.toggle('active', isActive);
       toggleBtn.setAttribute('aria-selected', isActive ? 'true' : 'false');
       toggleBtn.setAttribute('tabindex', isActive ? '0' : '-1');
+
+      // Pop animation on newly activated tab
+      if (isActive && !wasActive) {
+        toggleBtn.classList.remove('tab-activating');
+        void toggleBtn.offsetWidth; // force reflow to restart animation
+        toggleBtn.classList.add('tab-activating');
+        toggleBtn.addEventListener('animationend', () => toggleBtn.classList.remove('tab-activating'), { once: true });
+      }
+    });
+
+    // Slide pill indicator to active button (touch/mobile only)
+    requestAnimationFrame(() => {
+      const gamesbar = document.getElementById('gamesLauncher');
+      if (!gamesbar) return;
+
+      let pill = gamesbar.querySelector('.gamesbar-pill');
+      if (!pill) {
+        pill = document.createElement('div');
+        pill.className = 'gamesbar-pill';
+        gamesbar.insertBefore(pill, gamesbar.firstChild);
+      }
+
+      const activeBtn = gamesbar.querySelector('.game-toggle.active');
+      if (!activeBtn) { pill.classList.remove('is-ready'); return; }
+
+      const barRect = gamesbar.getBoundingClientRect();
+      const btnRect = activeBtn.getBoundingClientRect();
+      pill.style.left   = (btnRect.left - barRect.left) + 'px';
+      pill.style.top    = (btnRect.top  - barRect.top)  + 'px';
+      pill.style.width  = btnRect.width  + 'px';
+      pill.style.height = btnRect.height + 'px';
+      pill.classList.add('is-ready');
     });
   }
 
@@ -1327,6 +1378,8 @@
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
     if (!GAME_TAB_ORDER.includes(which)) return;
+
+    navigator.vibrate?.(6);
 
     if (isRemoteViewerSession()) {
       window.CloudSync?.suspendRemoteApplies?.(900);

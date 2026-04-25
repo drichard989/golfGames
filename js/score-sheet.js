@@ -280,6 +280,7 @@
     document.body.classList.add('score-sheet-open');
     backdropEl.classList.add('is-open');
     sheetEl.classList.add('is-open');
+    navigator.vibrate?.(8);
   }
 
   function closeSheet(reason = 'unknown') {
@@ -349,6 +350,7 @@
   }
 
   function nudgePlayer(playerIdx, delta) {
+    navigator.vibrate?.(4);
     const current = toScoreOrNull(draftScoresByPlayer[playerIdx]);
     let next;
     if (current == null) {

@@ -7,6 +7,31 @@ body.score-sheet-active #scorecard .score-input {
   caret-color: transparent;
 }
 
+/* On touch screens, score cells look like tappable tiles rather than form inputs */
+@media (pointer: coarse) {
+  body.score-sheet-active #scorecard .score-input {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    font-weight: 700;
+    -moz-appearance: textfield;
+  }
+
+  body.score-sheet-active #scorecard .score-input::-webkit-inner-spin-button,
+  body.score-sheet-active #scorecard .score-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  :root[data-theme="light"] body.score-sheet-active #scorecard .score-input {
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    background: rgba(0, 0, 0, 0.04) !important;
+  }
+}
+
 .score-sheet-backdrop {
   position: fixed;
   inset: 0;
