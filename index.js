@@ -605,6 +605,7 @@
   let playerEntryModalSheet = null;
   let playerEntryModalList = null;
   let playerEntryModalFocusTarget = null;
+  let playerEntryModalClosedAt = 0;
 
   function isRemoteViewerSession() {
     const session = window.CloudSync?.getSession?.();
@@ -4110,10 +4111,15 @@
   }
 
   function closePlayerEntryModal() {
+    playerEntryModalClosedAt = Date.now();
     if (playerEntryModalBackdrop) playerEntryModalBackdrop.hidden = true;
     if (playerEntryModalSheet) playerEntryModalSheet.hidden = true;
     document.body.classList.remove('player-entry-modal-open');
     playerEntryModalFocusTarget = null;
+    // Blur active element so focus doesn't return to a scorecard input and re-trigger the modal
+    if (document.activeElement && document.activeElement !== document.body) {
+      document.activeElement.blur();
+    }
   }
 
   function emitPlayersChanged(reason = 'updated') {
@@ -4126,6 +4132,9 @@
 
   function focusPlayerEntryModalTarget() {
     if (!playerEntryModalSheet || !playerEntryModalFocusTarget) return;
+    // Don't auto-focus on touch devices — keyboard would appear and cause layout shifts
+    // that make the Done/X buttons unreliable to tap
+    if (window.matchMedia?.('(hover: none) and (pointer: coarse)').matches) return;
     const { playerIdx, field } = playerEntryModalFocusTarget;
     const selector = field === 'handicap'
       ? `.player-entry-handicap-input[data-player="${playerIdx}"]`
@@ -4296,14 +4305,26 @@
 
     playerEntryModalList = playerEntryModalSheet.querySelector('#playerEntryModalList');
 
-    playerEntryModalSheet.querySelector('.player-entry-close-btn')?.addEventListener('click', closePlayerEntryModal);
-    playerEntryModalSheet.querySelector('#playerEntryDoneBtn')?.addEventListener('click', closePlayerEntryModal);
-    playerEntryModalSheet.querySelector('#playerEntryAddBtn')?.addEventListener('click', () => {
-      addPlayer();
-      renderPlayerEntryModalRows();
-      playerEntryModalFocusTarget = { playerIdx: Math.max(0, PLAYERS - 1), field: 'name' };
-      focusPlayerEntryModalTarget();
-    });
+    // Use a single delegated handler on the sheet so buttons always work even after
+    // content re-renders, and use touchend as the primary trigger on mobile so that
+    // keyboard-dismiss layout shifts can't cause a missed click.
+    const handleSheetButton = (e) => {
+      const target = e.target.closest('.player-entry-close-btn, #playerEntryDoneBtn, #playerEntryAddBtn');
+      if (!target) return;
+      e.preventDefault();
+      if (target.id === 'playerEntryAddBtn') {
+        addPlayer();
+        renderPlayerEntryModalRows();
+        playerEntryModalFocusTarget = { playerIdx: Math.max(0, PLAYERS - 1), field: 'name' };
+        focusPlayerEntryModalTarget();
+      } else {
+        closePlayerEntryModal();
+      }
+    };
+    // touchend fires first on mobile; preventDefault stops the subsequent ghost click
+    // so closePlayerEntryModal won't be called twice. Click handles desktop.
+    playerEntryModalSheet.addEventListener('touchend', handleSheetButton);
+    playerEntryModalSheet.addEventListener('click', handleSheetButton);
 
     document.addEventListener('keydown', (e) => {
       if (!playerEntryModalSheet || playerEntryModalSheet.hidden) return;
@@ -4339,6 +4360,8 @@
 
     const handleInteractiveTarget = (target) => {
       if (!target || !isPlayerEntryModalViewport()) return false;
+      // Ignore for a brief window after the modal was closed to prevent focus-return re-opening it
+      if (Date.now() - playerEntryModalClosedAt < 500) return false;
       const isName = target.classList?.contains('name-edit');
       const isHcp = target.classList?.contains('ch-input');
       if (!isName && !isHcp) return false;
