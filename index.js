@@ -538,7 +538,16 @@
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker', 'wolf'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
   const GAME_INIT_FLAGS = {
-    junkAchievementsRestored: false
+    junkAchievementsRestored: false,
+    initialized: {
+      junk: false,
+      skins: false,
+      vegas: false,
+      hilo: false,
+      banker: false,
+      wolf: false
+    },
+    warmedAfterLoad: false
   };
   let headerVisible = true;             // true = header shown
   let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
@@ -634,6 +643,52 @@
       hilo: { section: ids.hiloSection, toggle: ids.toggleHilo, init: () => window.HiLo?.init?.() },
       wolf: { section: ids.wolfSection, toggle: ids.toggleWolf, init: () => window.Wolf?.init?.() }
     }[which] || null;
+  }
+
+  function ensureGameInitialized(which) {
+    if (!GAME_TAB_ORDER.includes(which)) return false;
+    if (GAME_INIT_FLAGS.initialized[which]) return true;
+
+    const config = getGameConfig(which);
+    if (!config?.init) {
+      GAME_INIT_FLAGS.initialized[which] = true;
+      return true;
+    }
+
+    try {
+      config.init();
+      GAME_INIT_FLAGS.initialized[which] = true;
+      return true;
+    } catch (error) {
+      console.error(`[Games] Error initializing ${which}:`, error);
+      ErrorHandler.show(`Error opening ${which}`, error.message);
+      return false;
+    }
+  }
+
+  function warmAllGamesAfterLoad() {
+    if (GAME_INIT_FLAGS.warmedAfterLoad) return;
+    GAME_INIT_FLAGS.warmedAfterLoad = true;
+
+    const warm = () => {
+      GAME_TAB_ORDER.forEach((gameKey) => {
+        ensureGameInitialized(gameKey);
+      });
+
+      // Prime render/cache paths up front so active tab flipping is fast.
+      try { window.Junk?.update?.(); } catch (_) {}
+      try { window.Skins?.update?.(); } catch (_) {}
+      try { window.Vegas?.recalc?.(); } catch (_) {}
+      try { window.HiLo?.update?.(); } catch (_) {}
+      try { window.Banker?.update?.(); } catch (_) {}
+      try { window.Wolf?.update?.(); } catch (_) {}
+    };
+
+    if (typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(warm, { timeout: 1200 });
+    } else {
+      setTimeout(warm, 250);
+    }
   }
 
   function getActiveGameTab() {
@@ -736,12 +791,6 @@
     const top = Number(PRIMARY_TAB_SCROLL_POSITIONS[which]) || 0;
     const applyScroll = () => {
       window.scrollTo({ top, left: 0, behavior: 'auto' });
-      if (which === 'score') {
-        const syncRowHeights = window.GolfApp?.scorecard?.build?.syncRowHeights;
-        if (typeof syncRowHeights === 'function') {
-          syncRowHeights(true);
-        }
-      }
     };
 
     requestAnimationFrame(applyScroll);
@@ -3240,14 +3289,7 @@
       section.setAttribute('aria-hidden', 'false');
       if (toggleBtn) toggleBtn.classList.add('active');
       
-      if (config.init) {
-        try {
-          config.init();
-        } catch (error) {
-          console.error(`[Games] Error initializing ${which}:`, error);
-          ErrorHandler.show(`Error opening ${which}`, error.message);
-        }
-      }
+      ensureGameInitialized(which);
     } catch (error) {
       console.error('[Games] Error in games_open:', error);
       ErrorHandler.show('Error opening game', error.message);
@@ -5290,6 +5332,9 @@
 
     // Load saved state first, then recalc (loading will trigger its own recalcAll)
     Storage.load();
+
+    // Warm game modules once after load so frequent score<->games flipping stays snappy.
+    warmAllGamesAfterLoad();
     
     // If no saved state was loaded, do initial calculation
     if(!localStorage.getItem(Storage.KEY)) {
