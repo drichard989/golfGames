@@ -1134,42 +1134,33 @@ body.mode-score #main-scorecard {
 
 /* iOS only: let scorecard grow with players and scroll at page level. */
 @supports (-webkit-touch-callout: none) {
-  body.ios-scorecard-clone-active .sticky-nav-bar {
-    overflow: visible;
-  }
-
   body.ios-scorecard-clone-active .ios-scorecard-clone-shell {
-    display: flex;
-    width: max-content;
-    max-width: none;
-    margin: 0;
-    border: 2px solid var(--line);
-    border-top: none;
-    border-left: none;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
-    background: var(--panel);
-    pointer-events: none;
-    z-index: 2;
-    box-sizing: border-box;
+    display: none;
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-fixed {
-    flex: 0 0 auto;
-    position: relative;
-    z-index: 2;
+    position: sticky;
+    top: var(--score-sticky-head-top, 0px);
+    z-index: 14;
     border-right: 2px solid var(--line);
+    border-top: 2px solid var(--line);
+    border-bottom: 2px solid var(--line);
     background: var(--panel);
     box-shadow: 3px 0 3px rgba(0, 0, 0, 0.2);
     box-sizing: border-box;
+    pointer-events: none;
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll {
-    flex: 0 0 auto;
-    overflow: hidden;
+    position: sticky;
+    top: var(--score-sticky-head-top, 0px);
+    z-index: 13;
+    overflow: visible;
+    border-top: 2px solid var(--line);
+    border-bottom: 2px solid var(--line);
     background: var(--panel);
     box-sizing: border-box;
-    pointer-events: auto;
-    touch-action: pan-x;
+    pointer-events: none;
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table,
@@ -1218,15 +1209,11 @@ body.mode-score #main-scorecard {
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
-    transform: translate3d(0, 0, 0);
+    transform: none;
     backface-visibility: hidden;
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  body.ios-scorecard-clone-active.mode-games .ios-scorecard-clone-shell {
     display: none;
   }
 

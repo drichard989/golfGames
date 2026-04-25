@@ -1302,44 +1302,41 @@
       return;
     }
 
-    const navBar = document.querySelector('.sticky-nav-bar');
-    const switcher = navBar?.querySelector('.entry-switcher');
     const scorePanel = document.getElementById('scoreEntryPanel');
-    const scorecard = document.getElementById('main-scorecard');
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
     const fixedTableSource = document.getElementById('scorecardFixed');
     const scrollTableSource = document.getElementById('scorecard');
     if (
-      !navBar || !switcher || !scorePanel || !scorecard || !fixedPane || !scrollPane ||
+      !scorePanel || !fixedPane || !scrollPane ||
       !fixedTableSource || !scrollTableSource
     ) {
       return;
     }
 
-    let shell = navBar.querySelector('.ios-scorecard-clone-shell');
-    if (!shell) {
-      shell = document.createElement('div');
-      shell.className = 'ios-scorecard-clone-shell';
-      shell.hidden = true;
-      shell.innerHTML = [
-        '<div class="ios-scorecard-clone-fixed"></div>',
-        '<div class="ios-scorecard-clone-scroll"></div>'
-      ].join('');
-      switcher.insertAdjacentElement('afterend', shell);
+    let fixedCloneWrap = fixedPane.querySelector('.ios-scorecard-clone-fixed');
+    if (!fixedCloneWrap) {
+      fixedCloneWrap = document.createElement('div');
+      fixedCloneWrap.className = 'ios-scorecard-clone-fixed';
+      fixedCloneWrap.hidden = true;
+      fixedPane.insertBefore(fixedCloneWrap, fixedTableSource);
     }
 
-    const fixedCloneWrap = shell.querySelector('.ios-scorecard-clone-fixed');
-    const scrollCloneWrap = shell.querySelector('.ios-scorecard-clone-scroll');
+    let scrollCloneWrap = scrollPane.querySelector('.ios-scorecard-clone-scroll');
+    if (!scrollCloneWrap) {
+      scrollCloneWrap = document.createElement('div');
+      scrollCloneWrap.className = 'ios-scorecard-clone-scroll';
+      scrollCloneWrap.hidden = true;
+      scrollPane.insertBefore(scrollCloneWrap, scrollTableSource);
+    }
+
     if (!scrollCloneWrap || !fixedCloneWrap) return;
 
     document.body.classList.add('ios-scorecard-clone-active');
 
-    let activeScrollCloneTable = null;
     let cachedFixedCloneTable = null;
     let cachedScrollCloneTable = null;
     let lastCloneSignature = '';
-    let appliedCloneScrollLeft = Number.NaN;
 
     const buildHeaderCloneTable = (sourceTable, cloneClassName) => {
       const clone = sourceTable.cloneNode(true);
@@ -1397,19 +1394,13 @@
       return [fixedHead, fixedPar, fixedHcp, scrollHead, scrollPar, scrollHcp].join('|');
     };
 
-    const applyCloneScrollTransform = (left) => {
-      if (shell.hidden || !activeScrollCloneTable) return;
-      if (left === appliedCloneScrollLeft) return;
-      activeScrollCloneTable.style.transform = `translate3d(${-left}px, 0, 0)`;
-      appliedCloneScrollLeft = left;
-    };
-
     let rafId = null;
     const syncNow = () => {
       rafId = null;
 
       const scoreVisible = !scorePanel.hidden && document.body.classList.contains('mode-score');
-      shell.hidden = !scoreVisible;
+      fixedCloneWrap.hidden = !scoreVisible;
+      scrollCloneWrap.hidden = !scoreVisible;
       if (!scoreVisible) return;
 
       const signature = getHeaderSignature();
@@ -1419,9 +1410,7 @@
         cachedScrollCloneTable = buildHeaderCloneTable(scrollTableSource, 'ios-scorecard-clone-scroll-table');
         fixedCloneWrap.replaceChildren(cachedFixedCloneTable);
         scrollCloneWrap.replaceChildren(cachedScrollCloneTable);
-        activeScrollCloneTable = cachedScrollCloneTable;
         lastCloneSignature = signature;
-        appliedCloneScrollLeft = Number.NaN;
       }
 
       const fixedCloneTable = cachedFixedCloneTable;
@@ -1457,12 +1446,9 @@
       syncRowHeights(fixedClonePar, scrollClonePar);
       syncRowHeights(fixedCloneHcp, scrollCloneHcp);
 
-      const navRect = navBar.getBoundingClientRect();
-      const cardRect = scorecard.getBoundingClientRect();
       const fixedRect = fixedPane.getBoundingClientRect();
       const scrollRect = scrollPane.getBoundingClientRect();
-      const scrollTableWidth = document.getElementById('scorecard')?.getBoundingClientRect().width || 0;
-      const leftOffset = Math.max(0, fixedRect.left - navRect.left);
+      const scrollTableWidth = scrollTableSource.getBoundingClientRect().width || 0;
       const fixedWidth = Math.max(
         1,
         fixedRect.width || fixedPane.clientWidth || fixedPane.offsetWidth || 0
@@ -1473,20 +1459,16 @@
           scrollRect.width ||
           scrollPane.clientWidth ||
           scrollPane.offsetWidth ||
-          (cardRect.width - fixedWidth)
+          scrollPane.scrollWidth
         )
       );
-      const totalCloneWidth = fixedWidth + scrollViewportWidth;
 
-      shell.style.marginLeft = `${leftOffset}px`;
-      shell.style.width = `${totalCloneWidth}px`;
       fixedCloneWrap.style.width = `${fixedWidth}px`;
       scrollCloneWrap.style.width = `${scrollViewportWidth}px`;
       fixedCloneTable.style.width = `${fixedWidth}px`;
       fixedCloneTable.style.minWidth = `${fixedWidth}px`;
       fixedCloneTable.style.maxWidth = `${fixedWidth}px`;
       scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${scrollViewportWidth}px`;
-      applyCloneScrollTransform(scrollPane.scrollLeft || 0);
     };
 
     const scheduleSync = () => {
@@ -1494,53 +1476,6 @@
       rafId = requestAnimationFrame(syncNow);
     };
 
-    const onMainPaneScroll = () => {
-      if (!activeScrollCloneTable) return;
-      applyCloneScrollTransform(scrollPane.scrollLeft || 0);
-    };
-
-    scrollPane.addEventListener('scroll', onMainPaneScroll, { passive: true });
-
-    // Allow dragging directly on cloned hole labels by proxying horizontal touch
-    // movement into the real score pane (single source of truth).
-    let dragStartX = 0;
-    let dragStartY = 0;
-    let dragStartScrollLeft = 0;
-    let dragIsHorizontal = false;
-
-    scrollCloneWrap.addEventListener('touchstart', (e) => {
-      const t = e.touches && e.touches[0];
-      if (!t) return;
-      dragStartX = t.clientX;
-      dragStartY = t.clientY;
-      dragStartScrollLeft = scrollPane.scrollLeft || 0;
-      dragIsHorizontal = false;
-    }, { passive: true });
-
-    scrollCloneWrap.addEventListener('touchmove', (e) => {
-      const t = e.touches && e.touches[0];
-      if (!t) return;
-
-      const dx = t.clientX - dragStartX;
-      const dy = t.clientY - dragStartY;
-      if (!dragIsHorizontal) {
-        dragIsHorizontal = Math.abs(dx) > Math.abs(dy);
-      }
-
-      if (!dragIsHorizontal) return;
-
-      e.preventDefault();
-      scrollPane.scrollLeft = Math.max(0, dragStartScrollLeft - dx);
-      applyCloneScrollTransform(scrollPane.scrollLeft || 0);
-    }, { passive: false });
-
-    scrollCloneWrap.addEventListener('touchend', () => {
-      dragIsHorizontal = false;
-    }, { passive: true });
-
-    scrollCloneWrap.addEventListener('touchcancel', () => {
-      dragIsHorizontal = false;
-    }, { passive: true });
     window.addEventListener('resize', scheduleSync, { passive: true });
     window.addEventListener('orientationchange', scheduleSync, { passive: true });
 
@@ -1558,10 +1493,10 @@
       ? new ResizeObserver(() => scheduleSync())
       : null;
     if (resizeObserver) {
-      resizeObserver.observe(scorecard);
       resizeObserver.observe(fixedPane);
       resizeObserver.observe(scrollPane);
-      resizeObserver.observe(switcher);
+      resizeObserver.observe(fixedTableSource);
+      resizeObserver.observe(scrollTableSource);
     }
 
     window.__iosScorecardCloneHeaderReady = true;
