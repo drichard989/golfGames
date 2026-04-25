@@ -434,6 +434,7 @@
    */
   function updateSkins() {
     ensureSkinsTableBuilt();
+    refreshSkinsHeaderNames();
 
     const activeBtn = document.querySelector('#skinsHcpModeGroup .hcp-mode-btn[data-active="true"]');
     const mode = activeBtn?.dataset.value || 'gross';
