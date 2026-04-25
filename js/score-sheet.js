@@ -22,6 +22,7 @@
   const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
   const OPEN_TO_BACKDROP_GUARD_MS = 900;
   const AUTO_CLOSE_LOCK_MS = 1600;
+  const SWIPE_CLOSE_THRESHOLD_PX = 80;
 
   let isMobileMode = false;
   let currentHole = null;
@@ -31,6 +32,7 @@
   let lastOpenedAt = 0;
   let viewportMq = null;
   let coarseTouchMq = null;
+  let touchStartY = null;
 
   let backdropEl = null;
   let sheetEl = null;
@@ -252,6 +254,9 @@
     sheetEl.addEventListener('click', onSheetClick);
     sheetEl.addEventListener('input', onSheetInput);
     sheetEl.addEventListener('keydown', onSheetKeydown);
+    sheetEl.addEventListener('touchstart', onSheetTouchStart, { passive: true });
+    sheetEl.addEventListener('touchmove', onSheetTouchMove, { passive: true });
+    sheetEl.addEventListener('touchend', onSheetTouchEnd);
 
     document.addEventListener('keydown', (e) => {
       if (!sheetEl?.classList.contains('is-open')) return;
@@ -491,6 +496,32 @@
 
     if (currentHole >= HOLES) return;
     navigateHole(1, player);
+  }
+
+  function onSheetTouchStart(e) {
+    touchStartY = e.touches?.[0]?.clientY || null;
+  }
+
+  function onSheetTouchMove(e) {
+    if (!touchStartY || e.touches?.length !== 1) return;
+    const dy = (e.touches[0].clientY || 0) - touchStartY;
+    if (dy > 0 && dy < SWIPE_CLOSE_THRESHOLD_PX) {
+      sheetEl.style.transform = `translateY(${dy}px)`;
+    }
+  }
+
+  function onSheetTouchEnd(e) {
+    if (!touchStartY || !sheetEl) {
+      touchStartY = null;
+      return;
+    }
+    const dy = (e.changedTouches?.[0]?.clientY || 0) - touchStartY;
+    touchStartY = null;
+    sheetEl.style.transform = '';
+
+    if (dy > SWIPE_CLOSE_THRESHOLD_PX) {
+      closeSheet('swipe');
+    }
   }
 
   function onScoreInputClick(e) {

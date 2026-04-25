@@ -1334,6 +1334,13 @@ td {
   transform: scale(0.95);
 }
 
+/* Hide delete button on touch screens */
+@media (pointer: coarse) {
+  .player-delete-btn {
+    display: none !important;
+  }
+}
+
 /* Input styling for first columns */
 #scorecard .name-edit {
   flex: 1;
@@ -1438,6 +1445,20 @@ tr:last-child td {
   min-height: var(--touch-min);
   font-size: clamp(14px, calc(var(--text-base) + var(--font-data-adjust) + var(--font-size-step)), 22px);
   line-height: 1.05;
+  cursor: pointer;
+  opacity: 0.75;
+}
+
+.par-row input:hover,
+.hcp-row input:hover {
+  opacity: 1;
+}
+
+.par-row input:focus,
+.hcp-row input:focus {
+  opacity: 1;
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
   pointer-events: none;
   touch-action: manipulation;
 }
@@ -1456,6 +1477,20 @@ tr:last-child td {
   min-height: var(--touch-min);
   font-size: var(--scorecard-data-font-size);
   touch-action: manipulation;
+}
+
+/* On touch screens, enhance score input affordance to show they're interactive */
+@media (pointer: coarse) {
+  .score-input {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+  }
+
+  :root[data-theme="light"] .score-input {
+    background: rgba(0, 0, 0, 0.05);
+    border-color: rgba(0, 0, 0, 0.15);
+  }
 }
 
 /* Divider between hole 18 and Out — matches the front/back 9 divider weight */

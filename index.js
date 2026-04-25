@@ -3613,11 +3613,28 @@
   const btn = document.getElementById('themeToggle');
   if(!btn) return;
 
-  // Restore persisted theme
+  // Helper to update button text
+  const updateButtonText = (isLight) => {
+    btn.textContent = isLight ? '🌙 Dark Mode' : '☀️ Light Mode';
+  };
+
+  // Restore persisted theme, or detect device preference
   const saved = localStorage.getItem('theme');
   if(saved === 'light'){
     document.documentElement.setAttribute('data-theme','light');
-    btn.textContent = '🌙 Dark Mode';
+    updateButtonText(true);
+  } else if(!saved) {
+    // No saved preference — check device preference
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    if(prefersLight){
+      document.documentElement.setAttribute('data-theme','light');
+      updateButtonText(true);
+    } else if(prefersDark){
+      document.documentElement.removeAttribute('data-theme');
+      updateButtonText(false);
+    }
+    // If neither matches (rare), default to dark (current behavior)
   }
 
   btn.addEventListener('click', () => {
@@ -3625,11 +3642,11 @@
     if(isLight){
       document.documentElement.removeAttribute('data-theme');
       localStorage.removeItem('theme');
-      btn.textContent = '☀️ Light Mode';
+      updateButtonText(false);
     }else{
       document.documentElement.setAttribute('data-theme','light');
       localStorage.setItem('theme','light');
-      btn.textContent = '🌙 Dark Mode';
+      updateButtonText(true);
     }
   });
 })();
