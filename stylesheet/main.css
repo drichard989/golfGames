@@ -1174,6 +1174,36 @@ body.mode-score #main-scorecard {
     background: var(--panel);
   }
 
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table th,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table td,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table th,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table td {
+    background: var(--panel-alt);
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table th:first-child,
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table td:first-child {
+    text-align: left;
+    padding: var(--space-xs) 6px;
+    min-width: 120px;
+    max-width: 120px;
+    width: 120px;
+    background-color: var(--panel);
+    font-size: var(--scorecard-header-font-size);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table th:nth-child(2),
+  body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table td:nth-child(2) {
+    min-width: 55px;
+    max-width: 55px;
+    width: 55px;
+    padding: var(--space-xs) 3px;
+    background-color: var(--panel);
+    font-size: var(--scorecard-header-font-size);
+  }
+
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
     transform: translateX(0);
     will-change: transform;
