@@ -4131,6 +4131,12 @@ input[type="text"] {
 }
 
 /* Mobile/Tablet Player Entry Modal */
+/* Ensure [hidden] attribute works even though we set explicit display values on these elements */
+.player-entry-modal[hidden],
+.player-entry-modal-backdrop[hidden] {
+  display: none !important;
+}
+
 .player-entry-modal-backdrop {
   position: fixed;
   inset: 0;
