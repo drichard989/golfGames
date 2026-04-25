@@ -1313,6 +1313,7 @@
     clearTimeout(state.pendingRemoteTimer);
     state.pendingRemoteTimer = null;
     state.pendingRemoteState = null;
+    state.pushSuspended = false;
     state.session = null;
     state.lastSeenRevision = 0;
     state.lastSnapshotAt = 0;
@@ -1327,7 +1328,7 @@
     if (!state.session || state.session.role !== 'editor' || !state.db || !syncGame) return Promise.resolve(null);
 
     const timestamp = Date.now();
-    const snapshotPath = `games/${state.session.gameId}/snapshots/${timestamp}`;
+    const gameRoot = `games/${state.session.gameId}`;
     const payload = {
       createdAt: timestamp,
       createdBy: state.user?.uid || 'unknown',
@@ -1338,12 +1339,13 @@
 
     state.lastSnapshotAt = timestamp;
 
-    const updates = {
-      [snapshotPath]: payload,
-      [`games/${state.session.gameId}/meta/lastSnapshotAt`]: timestamp
-    };
+    const snapshotRef = state.db.ref(`${gameRoot}/snapshots/${timestamp}`);
+    const metaRef = state.db.ref(`${gameRoot}/meta`);
 
-    return state.db.ref().update(updates).then(() => payload).catch((err) => {
+    return Promise.all([
+      snapshotRef.set(payload),
+      metaRef.update({ lastSnapshotAt: timestamp })
+    ]).then(() => payload).catch((err) => {
       console.warn('[CloudSync] snapshot write failed:', err);
       return null;
     });
@@ -1387,22 +1389,23 @@
       ? state.currentLiveState
       : null;
 
-    const rootUpdates = {
-      [`${gameRoot}/meta/updatedAt`]: now,
-      [`${gameRoot}/meta/updatedBy`]: state.user?.uid || 'local-client'
-    };
+    const metaRef = state.db.ref(`${gameRoot}/meta`);
+    const liveStateRef = state.db.ref(`${gameRoot}/state`);
 
     if (!prevSyncState) {
-      rootUpdates[`${gameRoot}/state`] = syncGame;
+      await liveStateRef.set(syncGame);
     } else {
       const stateUpdates = {};
       buildDiffUpdates(prevSyncState, syncGame, '', stateUpdates);
-      Object.keys(stateUpdates).forEach((path) => {
-        rootUpdates[`${gameRoot}/state/${path}`] = stateUpdates[path];
-      });
+      if (Object.keys(stateUpdates).length > 0) {
+        await liveStateRef.update(stateUpdates);
+      }
     }
 
-    await state.db.ref().update(rootUpdates);
+    await metaRef.update({
+      updatedAt: now,
+      updatedBy: state.user?.uid || 'local-client'
+    });
 
     state.lastSeenRevision = nextRevision;
     state.currentLiveState = syncGame;
@@ -1426,6 +1429,13 @@
     state.pushTimer = setTimeout(() => {
       pushNow().catch((err) => {
         console.error(`[CloudSync] push failed (${reason}):`, err);
+        const code = String(err?.code || '').toLowerCase();
+        const msg = String(err?.message || '').toLowerCase();
+        if (code.includes('permission_denied') || msg.includes('permission denied')) {
+          state.pushSuspended = true;
+          setStatus('Cloud: write blocked (permission denied)');
+          return;
+        }
         setStatus('Cloud: push failed (see console)');
       });
     }, delay);
@@ -1695,6 +1705,7 @@
       editCode: result.editCode,
       viewCode: result.viewCode
     };
+    state.pushSuspended = false;
 
     storeSession({
       gameId: result.gameId,
@@ -1746,6 +1757,7 @@
         editCode: normalizeCode(result.editCode || ''),
         viewCode: normalizeCode(result.viewCode || '')
       };
+      state.pushSuspended = false;
 
       storeSession({
         gameId: result.gameId,
@@ -1980,6 +1992,7 @@
       editCode: normalizeCode(stored.editCode || ''),
       viewCode: normalizeCode(stored.viewCode || '')
     };
+    state.pushSuspended = false;
 
     updateUiForSession();
     await subscribeRealtime(state.session.gameId);
