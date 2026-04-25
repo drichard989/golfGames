@@ -1327,11 +1327,12 @@
     }
 
     const fixedCloneRow = shell.querySelector('.ios-scorecard-clone-fixed tr');
+    const scrollCloneWrap = shell.querySelector('.ios-scorecard-clone-scroll');
     const scrollCloneTable = shell.querySelector('.ios-scorecard-clone-scroll table');
     const scrollCloneRow = shell.querySelector('.ios-scorecard-clone-scroll tr');
     const fixedCloneWrap = shell.querySelector('.ios-scorecard-clone-fixed');
 
-    if (!fixedCloneRow || !scrollCloneRow || !scrollCloneTable || !fixedCloneWrap) return;
+    if (!fixedCloneRow || !scrollCloneRow || !scrollCloneWrap || !scrollCloneTable || !fixedCloneWrap) return;
 
     document.body.classList.add('ios-scorecard-clone-active');
 
@@ -1385,7 +1386,9 @@
       const leftOffset = Math.max(0, Math.round(cardRect.left - navRect.left));
 
       shell.style.marginLeft = `${leftOffset}px`;
+      shell.style.width = `${Math.round(fixedRect.width + scrollRect.width)}px`;
       fixedCloneWrap.style.width = `${Math.round(fixedRect.width)}px`;
+      scrollCloneWrap.style.width = `${Math.round(scrollRect.width)}px`;
       scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${Math.round(scrollRect.width)}px`;
       scrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
     };
