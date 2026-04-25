@@ -117,6 +117,7 @@
     lockObserver: null,
     lastViewerBlockedNoticeAt: 0,
     pushSuspended: false,
+    needsPostJoinAlignment: false,
     joinProgressOverlayEl: null,
     joinProgressHideTimer: null
   };
@@ -1314,6 +1315,7 @@
     state.pendingRemoteTimer = null;
     state.pendingRemoteState = null;
     state.pushSuspended = false;
+    state.needsPostJoinAlignment = false;
     state.session = null;
     state.lastSeenRevision = 0;
     state.lastSnapshotAt = 0;
@@ -1498,6 +1500,9 @@
       const ok = window.GolfApp?.storage?.applySyncGameState?.(syncGame, 'remote');
       if (!ok) {
         console.warn('[CloudSync] Failed to apply remote sync state');
+      } else if (state.needsPostJoinAlignment) {
+        state.needsPostJoinAlignment = false;
+        scheduleScorecardAlignmentAfterJoin();
       }
       state.lastSeenRevision = Math.max(state.lastSeenRevision, Number(revision) || 0);
     } finally {
@@ -1768,8 +1773,8 @@
       window.GolfApp?.storage?.prepareForIncomingSyncState?.(undefined, { resetSharedGames: false });
       updateUiForSession();
       updateJoinProgressOverlay('Loading live scorecard...');
+      state.needsPostJoinAlignment = true;
       await subscribeRealtime(result.gameId);
-      scheduleScorecardAlignmentAfterJoin();
       if (showSuccessToast) {
         showJoinSuccessToast(state.session.role);
       }
@@ -1995,6 +2000,7 @@
     state.pushSuspended = false;
 
     updateUiForSession();
+    state.needsPostJoinAlignment = true;
     await subscribeRealtime(state.session.gameId);
   }
 
