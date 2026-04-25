@@ -117,6 +117,8 @@
     lastPushAt: 0,
     lastPushedContentHash: '',
     lockObserver: null,
+    viewerLockApplied: false,
+    viewerLockMutationTimer: null,
     lastViewerBlockedNoticeAt: 0,
     pushSuspended: false,
     remoteApplySuspendedUntil: 0,
@@ -591,6 +593,13 @@
     });
   }
 
+  function clearViewerLockMutationTimer() {
+    if (state.viewerLockMutationTimer) {
+      clearTimeout(state.viewerLockMutationTimer);
+      state.viewerLockMutationTimer = null;
+    }
+  }
+
   function isViewerSession() {
     return state.session?.role === 'viewer';
   }
@@ -635,7 +644,7 @@
 
       event.preventDefault();
       event.stopPropagation();
-      syncViewerLock();
+      syncViewerLock({ force: true, syncRows: false });
       setStatus('Cloud: connected (viewer) • Read-only mode');
       notifyViewerReadOnly();
     };
@@ -651,18 +660,13 @@
     if (state.lockObserver || typeof MutationObserver === 'undefined') return;
     if (!document.body) return;
 
-    const syncRowHeights = () => {
-      const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
-      if (typeof sync === 'function') {
-        requestAnimationFrame(() => sync(true));
-      }
-    };
-
     state.lockObserver = new MutationObserver(() => {
       if (!isViewerSession()) return;
-      setViewerLockEnabled(true);
-      setViewModeBannersVisible(true);
-      syncRowHeights();
+      clearViewerLockMutationTimer();
+      state.viewerLockMutationTimer = setTimeout(() => {
+        state.viewerLockMutationTimer = null;
+        syncViewerLock({ force: true, syncRows: false });
+      }, 80);
     });
 
     state.lockObserver.observe(document.body, {
@@ -671,14 +675,23 @@
     });
   }
 
-  function syncViewerLock() {
+  function syncViewerLock(options = {}) {
+    const { force = false, syncRows = false } = options || {};
     const shouldLock = state.session?.role === 'viewer';
+
+    if (!force && shouldLock === state.viewerLockApplied) {
+      return;
+    }
+
     setViewerLockEnabled(shouldLock);
     setViewModeBannersVisible(shouldLock);
+    state.viewerLockApplied = shouldLock;
 
-    const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
-    if (typeof sync === 'function') {
-      requestAnimationFrame(() => sync(true));
+    if (syncRows) {
+      const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
+      if (typeof sync === 'function') {
+        requestAnimationFrame(() => sync(true));
+      }
     }
   }
 
@@ -1351,10 +1364,12 @@
     clearTimeout(state.pushTimer);
     clearTimeout(state.pendingRemoteTimer);
     clearRemoteApplyResumeTimer();
+    clearViewerLockMutationTimer();
     state.pendingRemoteTimer = null;
     state.pendingRemoteState = null;
     state.pushSuspended = false;
     state.remoteApplySuspendedUntil = 0;
+    state.viewerLockApplied = false;
     state.needsPostJoinAlignment = false;
     state.session = null;
     state.lastSeenRevision = 0;
@@ -1891,9 +1906,9 @@
       if (utilitiesSection) utilitiesSection.classList.add('open');
     }
 
-    window.addEventListener('pageshow', () => syncViewerLock());
+    window.addEventListener('pageshow', () => syncViewerLock({ force: true, syncRows: false }));
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) syncViewerLock();
+      if (!document.hidden) syncViewerLock({ force: true, syncRows: false });
     });
 
     document.addEventListener('pointerdown', (e) => {
