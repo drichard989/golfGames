@@ -168,7 +168,7 @@ body.score-sheet-active #scorecard .score-input {
 
 .score-sheet-meta-label {
   display: block;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -178,7 +178,7 @@ body.score-sheet-active #scorecard .score-input {
 
 .score-sheet-meta-value {
   display: block;
-  font-size: var(--text-lg);
+  font-size: var(--text-2xl);
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
