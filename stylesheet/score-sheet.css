@@ -266,16 +266,16 @@ body.score-sheet-active #scorecard .score-input {
 }
 
 .score-sheet-gross-label {
-  min-height: 16px;
+  min-height: 28px;
   padding-right: 0;
-  font-size: 11px;
-  line-height: 1.2;
+  font-size: 10px;
+  line-height: 1.15;
   font-weight: 700;
   color: var(--muted);
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 :root[data-theme="light"] .score-sheet-gross-label {
@@ -433,9 +433,12 @@ body.score-sheet-active #scorecard .score-input {
 
   .score-sheet-gross-label {
     font-size: 20px;
-    min-height: 31px;
+    min-height: 56px;
     padding-right: 0;
-    line-height: 1.25;
+    line-height: 1.15;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
   }
 
   .score-sheet-card-controls {

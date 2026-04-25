@@ -137,6 +137,23 @@
     return result;
   }
 
+  function getResultLabelWithNet(inputEl, score, par) {
+    const grossLabel = getGrossResultLabel(score, par);
+    if (!grossLabel || !inputEl) return grossLabel;
+
+    const receivesStroke = inputEl.classList.contains('receives-stroke');
+    const strokeCount = Number(inputEl.dataset.strokes || 0);
+    if (!receivesStroke || !Number.isFinite(strokeCount) || strokeCount <= 0) {
+      return grossLabel;
+    }
+
+    const netScore = score - strokeCount;
+    const netLabel = getGrossResultLabel(netScore, par);
+    if (!netLabel || netLabel === grossLabel) return grossLabel;
+
+    return `${grossLabel} (Net ${netLabel})`;
+  }
+
   function updateGrossLabel(playerIdx, rawValue) {
     if (!sheetEl || !Number.isFinite(currentHole)) return;
     const labelEl = sheetEl.querySelector(`.score-sheet-gross-label[data-player="${playerIdx}"]`);
@@ -144,7 +161,8 @@
 
     const par = getPar(currentHole);
     const gross = toScoreOrNull(rawValue);
-    labelEl.textContent = getGrossResultLabel(gross, par);
+    const input = getScoreInput(playerIdx, currentHole);
+    labelEl.textContent = getResultLabelWithNet(input, gross, par);
   }
 
   function queueRecalcAndSave() {
@@ -364,7 +382,7 @@
       }
 
       const gross = toScoreOrNull(val);
-      const grossLabel = getGrossResultLabel(gross, par);
+      const grossLabel = getResultLabelWithNet(input, gross, par);
 
       card.innerHTML = `
         <div class="score-sheet-card-head">
