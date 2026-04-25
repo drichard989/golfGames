@@ -1220,6 +1220,15 @@ body.mode-score #main-scorecard {
     display: none;
   }
 
+  body.ios-scorecard-clone-active.mode-score #scorecard thead,
+  body.ios-scorecard-clone-active.mode-score #scorecardFixed thead,
+  body.ios-scorecard-clone-active.mode-score #scorecard #parRow,
+  body.ios-scorecard-clone-active.mode-score #scorecard #hcpRow,
+  body.ios-scorecard-clone-active.mode-score #scorecardFixed #parRowFixed,
+  body.ios-scorecard-clone-active.mode-score #scorecardFixed #hcpRowFixed {
+    display: none;
+  }
+
   body.ios-scorecard-clone-active #scorecard thead,
   body.ios-scorecard-clone-active #scorecardFixed thead,
   body.ios-scorecard-clone-active #scorecard th,
