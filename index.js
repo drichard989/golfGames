@@ -1336,6 +1336,12 @@
     document.body.classList.add('ios-scorecard-clone-active');
 
     let activeScrollCloneTable = null;
+    let cachedFixedCloneTable = null;
+    let cachedScrollCloneTable = null;
+    let lastCloneSignature = '';
+    let scrollRafId = null;
+    let pendingScrollLeft = 0;
+    let appliedScrollLeft = Number.NaN;
 
     const buildHeaderCloneTable = (sourceTable, cloneClassName) => {
       const clone = sourceTable.cloneNode(true);
@@ -1373,6 +1379,24 @@
       });
     };
 
+    const getHeaderSignature = () => {
+      const fixedHead = fixedTableSource.querySelector('thead')?.innerHTML || '';
+      const fixedPar = fixedTableSource.querySelector('tbody tr.par-row')?.innerHTML || '';
+      const fixedHcp = fixedTableSource.querySelector('tbody tr.hcp-row')?.innerHTML || '';
+      const scrollHead = scrollTableSource.querySelector('thead')?.innerHTML || '';
+      const scrollPar = scrollTableSource.querySelector('tbody tr.par-row')?.innerHTML || '';
+      const scrollHcp = scrollTableSource.querySelector('tbody tr.hcp-row')?.innerHTML || '';
+      return [fixedHead, fixedPar, fixedHcp, scrollHead, scrollPar, scrollHcp].join('|');
+    };
+
+    const applyScrollTransform = () => {
+      scrollRafId = null;
+      if (shell.hidden || !activeScrollCloneTable) return;
+      if (pendingScrollLeft === appliedScrollLeft) return;
+      activeScrollCloneTable.style.transform = `translateX(${-pendingScrollLeft}px)`;
+      appliedScrollLeft = pendingScrollLeft;
+    };
+
     let rafId = null;
     const syncNow = () => {
       rafId = null;
@@ -1381,8 +1405,21 @@
       shell.hidden = !scoreVisible;
       if (!scoreVisible) return;
 
-      const fixedCloneTable = buildHeaderCloneTable(fixedTableSource, 'ios-scorecard-clone-fixed-table');
-      const scrollCloneTable = buildHeaderCloneTable(scrollTableSource, 'ios-scorecard-clone-scroll-table');
+      const signature = getHeaderSignature();
+      const needsRebuild = !cachedFixedCloneTable || !cachedScrollCloneTable || signature !== lastCloneSignature;
+      if (needsRebuild) {
+        cachedFixedCloneTable = buildHeaderCloneTable(fixedTableSource, 'ios-scorecard-clone-fixed-table');
+        cachedScrollCloneTable = buildHeaderCloneTable(scrollTableSource, 'ios-scorecard-clone-scroll-table');
+        fixedCloneWrap.replaceChildren(cachedFixedCloneTable);
+        scrollCloneWrap.replaceChildren(cachedScrollCloneTable);
+        activeScrollCloneTable = cachedScrollCloneTable;
+        lastCloneSignature = signature;
+        appliedScrollLeft = Number.NaN;
+      }
+
+      const fixedCloneTable = cachedFixedCloneTable;
+      const scrollCloneTable = cachedScrollCloneTable;
+      if (!fixedCloneTable || !scrollCloneTable) return;
 
       const fixedSourceHead = fixedTableSource.querySelector('thead tr');
       const fixedSourcePar = fixedTableSource.querySelector('tbody tr.par-row');
@@ -1404,10 +1441,6 @@
       syncRowCellWidths(scrollSourceHead, scrollCloneHead);
       syncRowCellWidths(scrollSourcePar, scrollClonePar);
       syncRowCellWidths(scrollSourceHcp, scrollCloneHcp);
-
-      fixedCloneWrap.replaceChildren(fixedCloneTable);
-      scrollCloneWrap.replaceChildren(scrollCloneTable);
-      activeScrollCloneTable = scrollCloneTable;
 
       const navRect = navBar.getBoundingClientRect();
       const cardRect = scorecard.getBoundingClientRect();
@@ -1438,7 +1471,8 @@
       fixedCloneTable.style.minWidth = `${fixedWidth}px`;
       fixedCloneTable.style.maxWidth = `${fixedWidth}px`;
       scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${scrollViewportWidth}px`;
-      scrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
+      pendingScrollLeft = scrollPane.scrollLeft || 0;
+      applyScrollTransform();
     };
 
     const scheduleSync = () => {
@@ -1449,7 +1483,9 @@
     const onScroll = () => {
       if (shell.hidden) return;
       if (!activeScrollCloneTable) return;
-      activeScrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
+      pendingScrollLeft = scrollPane.scrollLeft || 0;
+      if (scrollRafId != null) return;
+      scrollRafId = requestAnimationFrame(applyScrollTransform);
     };
 
     scrollPane.addEventListener('scroll', onScroll, { passive: true });
