@@ -594,8 +594,15 @@
     deferredSaveTimer: null,
     recalcTimer: null,
     idleCallbackId: null,
-    idleFallbackTimer: null
+    idleFallbackTimer: null,
+    tabSwitchFlushTimer: null,
+    pendingTabFlushGame: null
   };
+
+  function isRemoteViewerSession() {
+    const session = window.CloudSync?.getSession?.();
+    return !!(session && session.role === 'viewer');
+  }
 
   function markGamesDirty(gameKeys = GAME_TAB_ORDER) {
     gameKeys.forEach((gameKey) => {
@@ -672,6 +679,12 @@
   function flushDirtyHiddenGamesInIdle(deadline = null) {
     clearIdleDirtyGameFlushHandles();
 
+    // In cloud viewer mode, avoid background churn on hidden games.
+    // Hidden tabs will flush on demand when the user opens them.
+    if (isRemoteViewerSession()) {
+      return;
+    }
+
     if (inTabFlipBurstWindow()) {
       scheduleIdleDirtyGameFlush();
       return;
@@ -712,6 +725,7 @@
 
   function scheduleIdleDirtyGameFlush() {
     if (!GAME_TAB_ORDER.some((gameKey) => isGameDirty(gameKey))) return;
+    if (isRemoteViewerSession()) return;
     clearIdleDirtyGameFlushHandles();
 
     if (typeof window.requestIdleCallback === 'function') {
@@ -725,6 +739,28 @@
     GAME_RUNTIME_STATE.idleFallbackTimer = setTimeout(() => {
       flushDirtyHiddenGamesInIdle(null);
     }, IDLE_HIDDEN_FLUSH_DELAY_MS);
+  }
+
+  function scheduleGameTabFlush(gameKey) {
+    if (!GAME_TAB_ORDER.includes(gameKey)) return;
+
+    const runFlush = () => {
+      GAME_RUNTIME_STATE.tabSwitchFlushTimer = null;
+      const targetGame = GAME_RUNTIME_STATE.pendingTabFlushGame || gameKey;
+      GAME_RUNTIME_STATE.pendingTabFlushGame = null;
+      requestAnimationFrame(() => {
+        AppManager.flushGame(targetGame, false);
+      });
+    };
+
+    if (isRemoteViewerSession()) {
+      GAME_RUNTIME_STATE.pendingTabFlushGame = gameKey;
+      clearTimeout(GAME_RUNTIME_STATE.tabSwitchFlushTimer);
+      GAME_RUNTIME_STATE.tabSwitchFlushTimer = setTimeout(runFlush, 90);
+      return;
+    }
+
+    runFlush();
   }
   let headerVisible = true;             // true = header shown
   let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
@@ -1306,10 +1342,8 @@
 
     games_open(which);
 
-    // Defer heavy game calculation to next frame so tab visually opens first
-    requestAnimationFrame(() => {
-      AppManager.flushGame(which, false);
-    });
+    // Defer/coalesce heavy game calculation so tab visuals open first.
+    scheduleGameTabFlush(which);
 
     syncGameTabUi(which);
 
