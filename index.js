@@ -1384,12 +1384,26 @@
       const scrollRect = scrollPane.getBoundingClientRect();
       const scrollTableWidth = Math.ceil(document.getElementById('scorecard')?.getBoundingClientRect().width || 0);
       const leftOffset = Math.max(0, Math.round(cardRect.left - navRect.left));
+      const fixedWidth = Math.max(
+        1,
+        Math.round(fixedRect.width || fixedPane.clientWidth || fixedPane.offsetWidth || 0)
+      );
+      const scrollViewportWidth = Math.max(
+        1,
+        Math.round(
+          scrollRect.width ||
+          scrollPane.clientWidth ||
+          scrollPane.offsetWidth ||
+          (cardRect.width - fixedWidth)
+        )
+      );
+      const totalCloneWidth = fixedWidth + scrollViewportWidth;
 
       shell.style.marginLeft = `${leftOffset}px`;
-      shell.style.width = `${Math.round(fixedRect.width + scrollRect.width)}px`;
-      fixedCloneWrap.style.width = `${Math.round(fixedRect.width)}px`;
-      scrollCloneWrap.style.width = `${Math.round(scrollRect.width)}px`;
-      scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${Math.round(scrollRect.width)}px`;
+      shell.style.width = `${totalCloneWidth}px`;
+      fixedCloneWrap.style.width = `${fixedWidth}px`;
+      scrollCloneWrap.style.width = `${scrollViewportWidth}px`;
+      scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${scrollViewportWidth}px`;
       scrollCloneTable.style.transform = `translateX(${-scrollPane.scrollLeft}px)`;
     };
 
