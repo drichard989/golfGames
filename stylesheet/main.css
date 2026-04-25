@@ -1661,8 +1661,8 @@ body.mode-games .gamesbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0 0 8px;
   position: relative;
   z-index: 31;
@@ -1675,6 +1675,8 @@ body.mode-games .gamesbar {
 }
 
 .game-section-header .controls {
+  display: flex;
+  align-items: center;
   margin: 0;
   flex: 0 1 auto;
   flex-wrap: nowrap;
@@ -1692,26 +1694,18 @@ body.mode-games .gamesbar {
 /* Keep live-results option panels pinned near the top of the games scroll
    container so each game's table scrolls underneath them. */
 .game-section .live-results-panel:not([hidden]) {
-  --live-panel-overlap: 20px;
   position: sticky;
   top: var(--game-sticky-head-top, 0px);
   z-index: 30;
   /* Solid bg so game rows do not show through behind the card while sticky. */
   background: var(--panel-alt);
-  /* Pull panel slightly under the button row without adding spacer height. */
-  margin: calc(-1 * var(--live-panel-overlap)) 0 6px;
+  margin: 0 0 6px;
   padding: 0;
 }
 
 /* Add breathing room between the button row and the live results card border. */
 .game-section .live-results-panel:not([hidden]) > :first-child {
-  margin-top: 8px;
-}
-
-@media (max-width: 640px) {
-  .game-section .live-results-panel:not([hidden]) {
-    --live-panel-overlap: 16px;
-  }
+  margin-top: 0;
 }
 
 .live-results-card {
@@ -1935,6 +1929,7 @@ body.mode-games .gamesbar {
   gap: 10px;
   border-color: #2b3a47;
   background: #182430;
+  white-space: nowrap;
 }
 
 .game-options-toggle::after {
