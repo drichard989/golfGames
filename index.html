@@ -18,10 +18,10 @@
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .git/hooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.8" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.9" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.8" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.8" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.9" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.9" />
     <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.1.6" />
     <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.1.2" />
   </head>
@@ -640,6 +640,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-functions-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-check-compat.js" defer></script>
+    <!-- Cloud QR dependencies (used by js/cloudsync.js for share/join QR) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
     <script src="js/firebase-config.js" defer></script>
     <script src="js/cloudsync.js" defer></script>
     <!-- QR Code Libraries (must load before qrcode.js) -->
