@@ -911,10 +911,27 @@
 
   function onTableClick(e){
     // Only intercept rows when the sheet is the active input mode.
-    if (!document.body.classList.contains('banker-sheet-active')) return;
-    const tbody = e.target.closest('#bankerBody');
+    if (!document.body.classList.contains('banker-sheet-active')) {
+      if (typeof shouldUseCompactMode === 'function' && shouldUseCompactMode()) {
+        activate();
+      } else {
+        return;
+      }
+    }
+    const targetEl = e.target instanceof Element ? e.target : e.target?.parentElement;
+    if (!targetEl) return;
+
+    const tbody = targetEl.closest('#bankerBody');
     if (!tbody) return;
-    const tr = e.target.closest('tr');
+    let tr = null;
+    let node = targetEl;
+    while (node && node !== tbody) {
+      if (node.tagName === 'TR' && node.parentElement === tbody) {
+        tr = node;
+        break;
+      }
+      node = node.parentElement;
+    }
     if (!tr) return;
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const idx = rows.indexOf(tr);
@@ -942,6 +959,19 @@
     const pc = getPlayerCount();
     rows.forEach((tr, i) => {
       const h = i + 1;
+
+      // Bind directly on each summary row so opening works reliably even when
+      // nested rich markup changes inside the cell.
+      tr.onclick = (evt) => {
+        if (!_active || !document.body.classList.contains('banker-sheet-active')) return;
+        const target = evt?.target;
+        const interactive = target instanceof Element
+          ? target.closest('button, input, select, textarea, a, label')
+          : null;
+        if (interactive) return;
+        openSheet(h);
+      };
+
       let summary = tr.querySelector('.banker-sheet-summary-cell');
       if (!summary) {
         summary = document.createElement('td');
@@ -1168,6 +1198,7 @@
       _listenersBound = true;
       // Bind row click delegation (guarded by banker-sheet-active in handler)
       document.addEventListener('click', onTableClick);
+      document.addEventListener('pointerup', onTableClick, true);
 
       // Also update on any save event the app fires
       document.addEventListener('input', (e) => {
@@ -1229,21 +1260,34 @@
     document.querySelectorAll('#bankerBody tr.banker-sheet-row-empty').forEach(tr => tr.classList.remove('banker-sheet-row-empty'));
   }
 
-  // Use viewport width only: windows ≥1024px should show the full banker table
-  // interface with headers and input cells visible. Below 1024px, activate compact modal.
-  const DESKTOP_MQ = window.matchMedia('(min-width: 1024px)');
+  // Compact mode should activate for true tablet/phone widths OR whenever
+  // the banker table cannot fully fit its container (desktop but cramped).
+  const COMPACT_MQ = window.matchMedia('(max-width: 1023px)');
+
+  function isBankerTableCramped(){
+    const table = document.getElementById('bankerTable');
+    const wrap = table ? table.closest('.banker-wrap') : null;
+    if (!table || !wrap) return false;
+    return table.scrollWidth > (wrap.clientWidth + 1);
+  }
+
+  function shouldUseCompactMode(){
+    return COMPACT_MQ.matches || isBankerTableCramped();
+  }
+
   function applyViewportMode(){
-    if (DESKTOP_MQ.matches) {
-      deactivate();
-    } else {
+    if (shouldUseCompactMode()) {
       activate();
+    } else {
+      deactivate();
     }
   }
+
   try {
-    DESKTOP_MQ.addEventListener('change', applyViewportMode);
+    COMPACT_MQ.addEventListener('change', applyViewportMode);
   } catch(_) {
     // Safari < 14 fallback
-    DESKTOP_MQ.addListener(applyViewportMode);
+    COMPACT_MQ.addListener(applyViewportMode);
   }
 
   // Some browsers/devtools resize paths can skip firing MediaQueryList
