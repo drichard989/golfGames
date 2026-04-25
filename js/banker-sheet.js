@@ -1232,9 +1232,9 @@
     document.querySelectorAll('#bankerBody tr.banker-sheet-row-empty').forEach(tr => tr.classList.remove('banker-sheet-row-empty'));
   }
 
-  // Use viewport width only: tablet-sized desktop windows should behave like
-  // tablets and open the banker modal from row taps/clicks.
-  const DESKTOP_MQ = window.matchMedia('(min-width: 1200px)');
+  // Use viewport width only: tablet-sized (≥768px) and desktop windows should
+  // show the full banker table interface with headers and input cells visible.
+  const DESKTOP_MQ = window.matchMedia('(min-width: 768px)');
   function applyViewportMode(){
     if (DESKTOP_MQ.matches) {
       deactivate();

@@ -12,10 +12,31 @@ body.banker-sheet-active #bankerBody tr > td:nth-child(3),
 body.banker-sheet-active #bankerBody tr > td:nth-child(5) {
   display: none !important;
 }
+
+/* On tablets (≥768px), restore full table inputs alongside native headers */
+@media (min-width: 768px) {
+  body.banker-sheet-active #bankerBody td.banker-cell-pad,
+  body.banker-sheet-active #bankerBody td.banker-bets-cell,
+  body.banker-sheet-active #bankerBody td.banker-result-cell,
+  body.banker-sheet-active #bankerBody tr > td:nth-child(3),
+  body.banker-sheet-active #bankerBody tr > td:nth-child(5) {
+    display: table-cell !important;
+  }
+  body.banker-sheet-active #bankerBody .banker-sheet-summary-cell {
+    display: none !important;
+  }
+}
 /* Hide the original table headers — the compact summary cell has its own
    per-column micro-labels so duplicating them would waste space. */
 body.banker-sheet-active #bankerTable thead tr th:not(:first-child) {
   display: none !important;
+}
+
+/* On tablets (≥768px), restore the native headers so column labels are visible */
+@media (min-width: 768px) {
+  body.banker-sheet-active #bankerTable thead tr th:not(:first-child) {
+    display: table-cell !important;
+  }
 }
 
 body.banker-sheet-active #bankerBody tr { cursor: pointer; }

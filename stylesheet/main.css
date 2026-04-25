@@ -989,7 +989,8 @@ select:not(.select-plain) option {
   background: var(--panel-alt);
   border: 2px solid var(--line);
   border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
-  margin: 0 0 8px;
+  margin: 0;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
 }
 
 .scorecard-add-player-btn {
@@ -1022,7 +1023,7 @@ select:not(.select-plain) option {
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--space-lg));
+  padding-bottom: 0;
 }
 
 #scoreEntryPanel > #main-scorecard {
@@ -1046,7 +1047,7 @@ select:not(.select-plain) option {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding-top: 6px;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
 }
 
 /* Games mode: keep launcher/header area attached to the sticky primary tabs
