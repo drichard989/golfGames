@@ -85,7 +85,7 @@
   --score-header-height-scale: 1.1;
   --score-sticky-head-top: 0px;
   --game-header-height-scale: 1.1;
-  --game-sticky-head-top: -2px;
+  --game-sticky-head-top: 0px;
   --score-sticky-par-top: 39px;
   --score-sticky-hcp-top: 100px;
   --safe-top-dynamic: 0px;
@@ -1682,74 +1682,6 @@ body.mode-games .gamesbar {
   margin-top: 8px;
 }
 
-.live-results-header-clone {
-  margin-top: 0;
-  overflow: hidden;
-  background: var(--panel);
-  border: 2px solid var(--line);
-  border-radius: var(--radius-lg);
-}
-
-.live-results-header-clone.is-standalone {
-  position: sticky;
-  top: var(--game-sticky-head-top, 0px);
-  z-index: 30;
-  margin: -6px 0 6px;
-  padding-top: 6px;
-  background: var(--panel-alt);
-}
-
-.live-results-header-clone-table {
-  border-collapse: separate;
-  border-spacing: 0;
-  background: var(--panel);
-}
-
-.live-results-header-clone-table thead th {
-  position: static !important;
-  top: auto !important;
-  z-index: auto !important;
-  background: var(--panel-alt);
-  border-bottom: 2px solid var(--line);
-  color: var(--ink);
-  font-weight: 700;
-  padding-top: calc(4px * var(--game-header-height-scale, 1));
-  padding-bottom: calc(4px * var(--game-header-height-scale, 1));
-  opacity: 1;
-  visibility: visible;
-}
-
-/* When cloned headers are active, hide the original sticky table headers so
-   rows scroll cleanly under the live-results card + clone strip. */
-.game-section.live-header-clone-active #vegasTable thead,
-.game-section.live-header-clone-active #bankerTable thead,
-.game-section.live-header-clone-active #junkTable thead,
-.game-section.live-header-clone-active #wolfTable thead,
-.game-section.live-header-clone-active #skinsTable thead,
-.game-section.live-header-clone-active #hiloTable thead,
-.game-section.live-header-clone-active #hiloHoleTable thead {
-  visibility: hidden;
-  height: 0 !important;
-  min-height: 0 !important;
-}
-
-.game-section.live-header-clone-active #vegasTable thead th,
-.game-section.live-header-clone-active #bankerTable thead th,
-.game-section.live-header-clone-active #junkTable thead th,
-.game-section.live-header-clone-active #wolfTable thead th,
-.game-section.live-header-clone-active #skinsTable thead th,
-.game-section.live-header-clone-active #hiloTable thead th,
-.game-section.live-header-clone-active #hiloHoleTable thead th {
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  border-top: 0 !important;
-  border-bottom: 0 !important;
-  height: 0 !important;
-  min-height: 0 !important;
-  line-height: 0 !important;
-  font-size: 0 !important;
-}
-
 @media (max-width: 640px) {
   .game-section .live-results-panel:not([hidden]) {
     --live-panel-overlap: 16px;
@@ -2361,9 +2293,11 @@ body.mode-games .gamesbar {
 .vegas-wrap,
 .banker-wrap {
   overflow-x: auto;
-  overflow-y: visible !important;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
+  overscroll-behavior: auto;
+  max-height: min(52vh, 460px);
   border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
@@ -2528,15 +2462,13 @@ body.mode-games .gamesbar {
 /* Large font mode: banker headers need wider Hole and Banker 2x columns to
    prevent label clipping in both native and cloned sticky headers. */
 :root[data-font-size="large"] #bankerTable thead th:first-child,
-:root[data-font-size="large"] #bankerTable tbody td:first-child,
-:root[data-font-size="large"] #bankerSection .live-results-header-clone-table thead th:first-child {
+:root[data-font-size="large"] #bankerTable tbody td:first-child {
   width: 56px;
   min-width: 56px;
 }
 
 :root[data-font-size="large"] #bankerTable thead th:nth-child(5),
-:root[data-font-size="large"] #bankerTable tbody td:nth-child(5),
-:root[data-font-size="large"] #bankerSection .live-results-header-clone-table thead th:nth-child(5) {
+:root[data-font-size="large"] #bankerTable tbody td:nth-child(5) {
   width: 116px;
   min-width: 116px;
 }
@@ -2548,8 +2480,7 @@ body.mode-games .gamesbar {
 }
 
 :root[data-font-size="large"] #wolfTable thead th:first-child,
-:root[data-font-size="large"] #wolfTable tbody td:first-child,
-:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:first-child {
+:root[data-font-size="large"] #wolfTable tbody td:first-child {
   width: 34px;
   min-width: 34px;
   max-width: 34px;
@@ -2558,15 +2489,13 @@ body.mode-games .gamesbar {
 }
 
 :root[data-font-size="large"] #wolfTable thead th:nth-child(2),
-:root[data-font-size="large"] #wolfTable tbody td:nth-child(2),
-:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:nth-child(2) {
+:root[data-font-size="large"] #wolfTable tbody td:nth-child(2) {
   width: 90px;
   min-width: 90px;
 }
 
 :root[data-font-size="large"] #wolfTable thead th:nth-child(3),
-:root[data-font-size="large"] #wolfTable tbody td:nth-child(3),
-:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:nth-child(3) {
+:root[data-font-size="large"] #wolfTable tbody td:nth-child(3) {
   width: 132px;
   min-width: 132px;
 }
