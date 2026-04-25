@@ -214,25 +214,31 @@ body::before {
 }
 
 header {
+  /* Outer shell: only controls the collapse animation */
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  transition: grid-template-rows 0.22s ease, opacity 0.20s ease;
+}
+
+header.header-collapsed {
+  grid-template-rows: 0fr !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.header-inner {
+  /* Inner content wrapper — must have min-height: 0 for grid collapse to work */
+  min-height: 0;
+  overflow: hidden;
   padding: var(--space-md) var(--space-lg) var(--space-sm);
   display: grid;
   gap: calc(var(--space-sm) / 2);
-  /* Smooth collapse when Games tab is active */
-  transition: max-height 0.22s ease, opacity 0.18s ease, padding 0.22s ease;
-  max-height: min(800px, calc(100dvh - var(--safe-top-inset) - 52px));
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-}
-
-header.header-collapsed {
-  max-height: 0 !important;
-  padding-top: 0 !important;
-  padding-bottom: 0 !important;
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
+  max-height: min(800px, calc(100dvh - var(--safe-top-inset) - 52px));
 }
 
 /* In collapsed (Hide) mode only show the status badge, go-live toggle and share QR */
@@ -1612,32 +1618,6 @@ tfoot td {
   align-items: center;
   overflow: visible;
   position: relative;
-}
-
-/* Sliding pill indicator — positioned by JS in syncGameTabUi */
-.gamesbar-pill {
-  position: absolute;
-  pointer-events: none;
-  border-radius: var(--radius-3xl);
-  background: rgba(74, 158, 255, 0.14);
-  border: 2px solid rgba(74, 158, 255, 0.6);
-  box-shadow: 0 0 0 1px rgba(74, 158, 255, 0.2), inset 0 0 0 1px rgba(74, 158, 255, 0.08);
-  transition: left 220ms cubic-bezier(0.34, 1.2, 0.64, 1),
-              top 220ms cubic-bezier(0.34, 1.2, 0.64, 1),
-              width 220ms cubic-bezier(0.34, 1.2, 0.64, 1),
-              height 200ms ease;
-  z-index: 0;
-  opacity: 0;
-}
-
-.gamesbar-pill.is-ready {
-  opacity: 1;
-}
-
-:root[data-theme="light"] .gamesbar-pill {
-  background: rgba(37, 99, 235, 0.09);
-  border-color: rgba(37, 99, 235, 0.45);
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.15);
 }
 
 body.mode-games .gamesbar {

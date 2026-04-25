@@ -1118,23 +1118,8 @@
       const gamesbar = document.getElementById('gamesLauncher');
       if (!gamesbar) return;
 
-      let pill = gamesbar.querySelector('.gamesbar-pill');
-      if (!pill) {
-        pill = document.createElement('div');
-        pill.className = 'gamesbar-pill';
-        gamesbar.insertBefore(pill, gamesbar.firstChild);
-      }
-
-      const activeBtn = gamesbar.querySelector('.game-toggle.active');
-      if (!activeBtn) { pill.classList.remove('is-ready'); return; }
-
-      const barRect = gamesbar.getBoundingClientRect();
-      const btnRect = activeBtn.getBoundingClientRect();
-      pill.style.left   = (btnRect.left - barRect.left) + 'px';
-      pill.style.top    = (btnRect.top  - barRect.top)  + 'px';
-      pill.style.width  = btnRect.width  + 'px';
-      pill.style.height = btnRect.height + 'px';
-      pill.classList.add('is-ready');
+      // Remove any leftover pill from previous implementation
+      gamesbar.querySelector('.gamesbar-pill')?.remove();
     });
   }
 
