@@ -20,7 +20,7 @@
   if (window.WOLF_BOTTOM_SHEET === false) return;
 
   const HOLES = 18;
-  const MOBILE_QUERY = '(max-width: 1024px)';
+  const MOBILE_QUERY = '(max-width: 720px)';
   const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
   const OPEN_TO_BACKDROP_GUARD_MS = 900;
   const AUTO_CLOSE_LOCK_MS = 1600;
@@ -50,7 +50,14 @@
     const byViewport = !!viewportMq?.matches;
     const byCoarsePointer = !!coarseTouchMq?.matches;
     const byTouchCapability = supportsTouchInput();
-    return byViewport || byCoarsePointer || byTouchCapability;
+    const viewportWidth = Math.min(
+      Number(window.innerWidth) || Number.POSITIVE_INFINITY,
+      Number(window.visualViewport?.width) || Number.POSITIVE_INFINITY
+    );
+
+    // Keep the bottom-sheet interaction for true phone-sized layouts only.
+    // Touch tablets should keep the full table columns visible.
+    return viewportWidth <= 720 && (byViewport || byCoarsePointer || byTouchCapability);
   }
 
   function onBackdropClick(){
