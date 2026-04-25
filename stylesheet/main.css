@@ -1165,13 +1165,11 @@ body.mode-score #main-scorecard {
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll {
     flex: 0 0 auto;
-    overflow-x: auto;
-    overflow-y: hidden;
+    overflow: hidden;
     background: var(--panel);
     box-sizing: border-box;
     pointer-events: auto;
     touch-action: pan-x;
-    -webkit-overflow-scrolling: touch;
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table,

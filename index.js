@@ -1339,7 +1339,7 @@
     let cachedFixedCloneTable = null;
     let cachedScrollCloneTable = null;
     let lastCloneSignature = '';
-    let isSyncingHorizontal = false;
+    let appliedCloneScrollLeft = Number.NaN;
 
     const buildHeaderCloneTable = (sourceTable, cloneClassName) => {
       const clone = sourceTable.cloneNode(true);
@@ -1397,20 +1397,11 @@
       return [fixedHead, fixedPar, fixedHcp, scrollHead, scrollPar, scrollHcp].join('|');
     };
 
-    const syncCloneToMainScroll = () => {
-      if (shell.hidden) return;
-      if (isSyncingHorizontal) return;
-      isSyncingHorizontal = true;
-      scrollCloneWrap.scrollLeft = scrollPane.scrollLeft || 0;
-      isSyncingHorizontal = false;
-    };
-
-    const syncMainToCloneScroll = () => {
-      if (shell.hidden) return;
-      if (isSyncingHorizontal) return;
-      isSyncingHorizontal = true;
-      scrollPane.scrollLeft = scrollCloneWrap.scrollLeft || 0;
-      isSyncingHorizontal = false;
+    const applyCloneScrollTransform = (left) => {
+      if (shell.hidden || !activeScrollCloneTable) return;
+      if (left === appliedCloneScrollLeft) return;
+      activeScrollCloneTable.style.transform = `translate3d(${-left}px, 0, 0)`;
+      appliedCloneScrollLeft = left;
     };
 
     let rafId = null;
@@ -1430,6 +1421,7 @@
         scrollCloneWrap.replaceChildren(cachedScrollCloneTable);
         activeScrollCloneTable = cachedScrollCloneTable;
         lastCloneSignature = signature;
+        appliedCloneScrollLeft = Number.NaN;
       }
 
       const fixedCloneTable = cachedFixedCloneTable;
@@ -1494,7 +1486,7 @@
       fixedCloneTable.style.minWidth = `${fixedWidth}px`;
       fixedCloneTable.style.maxWidth = `${fixedWidth}px`;
       scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${scrollViewportWidth}px`;
-      syncCloneToMainScroll();
+      applyCloneScrollTransform(scrollPane.scrollLeft || 0);
     };
 
     const scheduleSync = () => {
@@ -1504,16 +1496,51 @@
 
     const onMainPaneScroll = () => {
       if (!activeScrollCloneTable) return;
-      syncCloneToMainScroll();
-    };
-
-    const onCloneScroll = () => {
-      if (!activeScrollCloneTable) return;
-      syncMainToCloneScroll();
+      applyCloneScrollTransform(scrollPane.scrollLeft || 0);
     };
 
     scrollPane.addEventListener('scroll', onMainPaneScroll, { passive: true });
-    scrollCloneWrap.addEventListener('scroll', onCloneScroll, { passive: true });
+
+    // Allow dragging directly on cloned hole labels by proxying horizontal touch
+    // movement into the real score pane (single source of truth).
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let dragStartScrollLeft = 0;
+    let dragIsHorizontal = false;
+
+    scrollCloneWrap.addEventListener('touchstart', (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+      dragStartX = t.clientX;
+      dragStartY = t.clientY;
+      dragStartScrollLeft = scrollPane.scrollLeft || 0;
+      dragIsHorizontal = false;
+    }, { passive: true });
+
+    scrollCloneWrap.addEventListener('touchmove', (e) => {
+      const t = e.touches && e.touches[0];
+      if (!t) return;
+
+      const dx = t.clientX - dragStartX;
+      const dy = t.clientY - dragStartY;
+      if (!dragIsHorizontal) {
+        dragIsHorizontal = Math.abs(dx) > Math.abs(dy);
+      }
+
+      if (!dragIsHorizontal) return;
+
+      e.preventDefault();
+      scrollPane.scrollLeft = Math.max(0, dragStartScrollLeft - dx);
+      applyCloneScrollTransform(scrollPane.scrollLeft || 0);
+    }, { passive: false });
+
+    scrollCloneWrap.addEventListener('touchend', () => {
+      dragIsHorizontal = false;
+    }, { passive: true });
+
+    scrollCloneWrap.addEventListener('touchcancel', () => {
+      dragIsHorizontal = false;
+    }, { passive: true });
     window.addEventListener('resize', scheduleSync, { passive: true });
     window.addEventListener('orientationchange', scheduleSync, { passive: true });
 
