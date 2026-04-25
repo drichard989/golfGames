@@ -750,6 +750,14 @@
       GAME_RUNTIME_STATE.pendingTabFlushGame = null;
       requestAnimationFrame(() => {
         AppManager.flushGame(targetGame, false);
+        if (isRemoteViewerSession()) {
+          // Resume deferred cloud applies once tab render + game flush have settled.
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              window.CloudSync?.resumeRemoteApplies?.();
+            });
+          });
+        }
       });
     };
 
@@ -1319,6 +1327,10 @@
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {
     if (!GAME_TAB_ORDER.includes(which)) return;
+
+    if (isRemoteViewerSession()) {
+      window.CloudSync?.suspendRemoteApplies?.(900);
+    }
 
     beginTabFlipBurst();
 

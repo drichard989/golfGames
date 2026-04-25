@@ -3,6 +3,7 @@
 
   const CLOUD_SESSION_KEY = 'golf_cloud_session_v1';
   const SNAPSHOT_INTERVAL_MS = 10 * 60 * 1000;
+  const REMOTE_APPLY_SUSPEND_MAX_MS = 5000;
   const BANKER_REMOTE_APPLY_GRACE_MS = 1200;
   const GAME_REMOTE_APPLY_GRACE_MS = 1200;
   const GAME_INTERACTION_SECTIONS = '#bankerSection, #wolfSection, #vegasSection, #skinsSection, #junkSection, #hiloSection';
@@ -118,10 +119,46 @@
     lockObserver: null,
     lastViewerBlockedNoticeAt: 0,
     pushSuspended: false,
+    remoteApplySuspendedUntil: 0,
+    remoteApplyResumeTimer: null,
     needsPostJoinAlignment: false,
     joinProgressOverlayEl: null,
     joinProgressHideTimer: null
   };
+
+  function clearRemoteApplyResumeTimer() {
+    if (state.remoteApplyResumeTimer) {
+      clearTimeout(state.remoteApplyResumeTimer);
+      state.remoteApplyResumeTimer = null;
+    }
+  }
+
+  function isRemoteApplySuspended() {
+    return Date.now() < state.remoteApplySuspendedUntil;
+  }
+
+  function suspendRemoteApplies(durationMs = 700) {
+    const requested = Number(durationMs);
+    const clamped = Number.isFinite(requested)
+      ? Math.max(0, Math.min(REMOTE_APPLY_SUSPEND_MAX_MS, requested))
+      : 700;
+
+    if (!clamped) return;
+
+    state.remoteApplySuspendedUntil = Math.max(state.remoteApplySuspendedUntil, Date.now() + clamped);
+
+    clearRemoteApplyResumeTimer();
+    state.remoteApplyResumeTimer = setTimeout(() => {
+      state.remoteApplyResumeTimer = null;
+      flushPendingRemoteState();
+    }, clamped + 24);
+  }
+
+  function resumeRemoteApplies() {
+    state.remoteApplySuspendedUntil = 0;
+    clearRemoteApplyResumeTimer();
+    flushPendingRemoteState();
+  }
 
   function clearJoinProgressOverlay() {
     if (state.joinProgressHideTimer) {
@@ -1313,9 +1350,11 @@
     unbindRealtime();
     clearTimeout(state.pushTimer);
     clearTimeout(state.pendingRemoteTimer);
+    clearRemoteApplyResumeTimer();
     state.pendingRemoteTimer = null;
     state.pendingRemoteState = null;
     state.pushSuspended = false;
+    state.remoteApplySuspendedUntil = 0;
     state.needsPostJoinAlignment = false;
     state.session = null;
     state.lastSeenRevision = 0;
@@ -1522,6 +1561,12 @@
       return;
     }
 
+    if (isRemoteApplySuspended()) {
+      const remaining = Math.max(24, state.remoteApplySuspendedUntil - Date.now() + 24);
+      state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, remaining);
+      return;
+    }
+
     if (isBankerInputFocused() || isBankerInteractionActive() || isGameInteractionActive()) {
       state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, 500);
       return;
@@ -1566,6 +1611,15 @@
     if (state.isViewingSnapshot) {
       state.lastSeenRevision = Math.max(state.lastSeenRevision, revision);
       setStatus(`Cloud: viewing snapshot • live updated to rev ${state.lastSeenRevision}`);
+      return;
+    }
+
+    if (isRemoteApplySuspended()) {
+      state.pendingRemoteState = syncGame;
+      if (!state.pendingRemoteTimer) {
+        const remaining = Math.max(24, state.remoteApplySuspendedUntil - Date.now() + 24);
+        state.pendingRemoteTimer = setTimeout(flushPendingRemoteState, remaining);
+      }
       return;
     }
 
@@ -2182,6 +2236,8 @@
     generateLiveViewQrCode,
     generateLiveEditQrCode,
     queuePush,
+    suspendRemoteApplies,
+    resumeRemoteApplies,
     getSession: () => state.session,
     isApplyingRemote: () => state.isApplyingRemote,
     refreshHeaderBadgeButtons: syncHeaderCodeBadgeButtons,
