@@ -1378,6 +1378,16 @@
       });
     };
 
+    const syncRowHeights = (leftRow, rightRow) => {
+      if (!leftRow || !rightRow) return;
+      leftRow.style.height = '';
+      rightRow.style.height = '';
+      const h = Math.max(leftRow.getBoundingClientRect().height || 0, rightRow.getBoundingClientRect().height || 0);
+      if (h <= 0) return;
+      leftRow.style.height = `${h}px`;
+      rightRow.style.height = `${h}px`;
+    };
+
     const getHeaderSignature = () => {
       const fixedHead = fixedTableSource.querySelector('thead')?.innerHTML || '';
       const fixedPar = fixedTableSource.querySelector('tbody tr.par-row')?.innerHTML || '';
@@ -1422,9 +1432,11 @@
       const fixedSourceHead = fixedTableSource.querySelector('thead tr');
       const fixedSourcePar = fixedTableSource.querySelector('tbody tr.par-row');
       const fixedSourceHcp = fixedTableSource.querySelector('tbody tr.hcp-row');
+      const fixedSourcePlayer = fixedTableSource.querySelector('tbody tr.player-row');
       const scrollSourceHead = scrollTableSource.querySelector('thead tr');
       const scrollSourcePar = scrollTableSource.querySelector('tbody tr.par-row');
       const scrollSourceHcp = scrollTableSource.querySelector('tbody tr.hcp-row');
+      const scrollSourcePlayer = scrollTableSource.querySelector('tbody tr.player-row');
 
       const fixedCloneHead = fixedCloneTable.querySelector('thead tr');
       const fixedClonePar = fixedCloneTable.querySelector('tbody tr.par-row');
@@ -1433,19 +1445,25 @@
       const scrollClonePar = scrollCloneTable.querySelector('tbody tr.par-row');
       const scrollCloneHcp = scrollCloneTable.querySelector('tbody tr.hcp-row');
 
-      syncRowCellWidths(fixedSourceHead, fixedCloneHead);
-      syncRowCellWidths(fixedSourcePar, fixedClonePar);
-      syncRowCellWidths(fixedSourceHcp, fixedCloneHcp);
-      syncRowCellWidths(scrollSourceHead, scrollCloneHead);
-      syncRowCellWidths(scrollSourcePar, scrollClonePar);
-      syncRowCellWidths(scrollSourceHcp, scrollCloneHcp);
+      // Source header/par/hcp rows are hidden in clone mode; use visible player rows
+      // as the width source so clone columns stay aligned with live score cells.
+      syncRowCellWidths(fixedSourcePlayer || fixedSourceHead, fixedCloneHead);
+      syncRowCellWidths(fixedSourcePlayer || fixedSourcePar, fixedClonePar);
+      syncRowCellWidths(fixedSourcePlayer || fixedSourceHcp, fixedCloneHcp);
+      syncRowCellWidths(scrollSourcePlayer || scrollSourceHead, scrollCloneHead);
+      syncRowCellWidths(scrollSourcePlayer || scrollSourcePar, scrollClonePar);
+      syncRowCellWidths(scrollSourcePlayer || scrollSourceHcp, scrollCloneHcp);
+
+      syncRowHeights(fixedCloneHead, scrollCloneHead);
+      syncRowHeights(fixedClonePar, scrollClonePar);
+      syncRowHeights(fixedCloneHcp, scrollCloneHcp);
 
       const navRect = navBar.getBoundingClientRect();
       const cardRect = scorecard.getBoundingClientRect();
       const fixedRect = fixedPane.getBoundingClientRect();
       const scrollRect = scrollPane.getBoundingClientRect();
       const scrollTableWidth = document.getElementById('scorecard')?.getBoundingClientRect().width || 0;
-      const leftOffset = Math.max(0, cardRect.left - navRect.left);
+      const leftOffset = Math.max(0, fixedRect.left - navRect.left);
       const fixedWidth = Math.max(
         1,
         fixedRect.width || fixedPane.clientWidth || fixedPane.offsetWidth || 0

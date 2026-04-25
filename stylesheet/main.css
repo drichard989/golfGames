@@ -1145,6 +1145,7 @@ body.mode-score #main-scorecard {
     margin: 0;
     border: 2px solid var(--line);
     border-top: none;
+    border-left: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22);
     background: var(--panel);
     pointer-events: none;
