@@ -1165,9 +1165,13 @@ body.mode-score #main-scorecard {
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll {
     flex: 0 0 auto;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     background: var(--panel);
     box-sizing: border-box;
+    pointer-events: auto;
+    touch-action: pan-x;
+    -webkit-overflow-scrolling: touch;
   }
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-fixed table,
@@ -1217,8 +1221,11 @@ body.mode-score #main-scorecard {
 
   body.ios-scorecard-clone-active .ios-scorecard-clone-scroll table {
     transform: translate3d(0, 0, 0);
-    will-change: transform;
     backface-visibility: hidden;
+  }
+
+  body.ios-scorecard-clone-active .ios-scorecard-clone-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   body.ios-scorecard-clone-active.mode-games .ios-scorecard-clone-shell {

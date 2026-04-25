@@ -1339,8 +1339,7 @@
     let cachedFixedCloneTable = null;
     let cachedScrollCloneTable = null;
     let lastCloneSignature = '';
-    let pendingScrollLeft = 0;
-    let appliedScrollLeft = Number.NaN;
+    let isSyncingHorizontal = false;
 
     const buildHeaderCloneTable = (sourceTable, cloneClassName) => {
       const clone = sourceTable.cloneNode(true);
@@ -1398,11 +1397,20 @@
       return [fixedHead, fixedPar, fixedHcp, scrollHead, scrollPar, scrollHcp].join('|');
     };
 
-    const applyScrollTransform = () => {
-      if (shell.hidden || !activeScrollCloneTable) return;
-      if (pendingScrollLeft === appliedScrollLeft) return;
-      activeScrollCloneTable.style.transform = `translate3d(${-pendingScrollLeft}px, 0, 0)`;
-      appliedScrollLeft = pendingScrollLeft;
+    const syncCloneToMainScroll = () => {
+      if (shell.hidden) return;
+      if (isSyncingHorizontal) return;
+      isSyncingHorizontal = true;
+      scrollCloneWrap.scrollLeft = scrollPane.scrollLeft || 0;
+      isSyncingHorizontal = false;
+    };
+
+    const syncMainToCloneScroll = () => {
+      if (shell.hidden) return;
+      if (isSyncingHorizontal) return;
+      isSyncingHorizontal = true;
+      scrollPane.scrollLeft = scrollCloneWrap.scrollLeft || 0;
+      isSyncingHorizontal = false;
     };
 
     let rafId = null;
@@ -1422,7 +1430,6 @@
         scrollCloneWrap.replaceChildren(cachedScrollCloneTable);
         activeScrollCloneTable = cachedScrollCloneTable;
         lastCloneSignature = signature;
-        appliedScrollLeft = Number.NaN;
       }
 
       const fixedCloneTable = cachedFixedCloneTable;
@@ -1487,8 +1494,7 @@
       fixedCloneTable.style.minWidth = `${fixedWidth}px`;
       fixedCloneTable.style.maxWidth = `${fixedWidth}px`;
       scrollCloneTable.style.width = scrollTableWidth > 0 ? `${scrollTableWidth}px` : `${scrollViewportWidth}px`;
-      pendingScrollLeft = scrollPane.scrollLeft || 0;
-      applyScrollTransform();
+      syncCloneToMainScroll();
     };
 
     const scheduleSync = () => {
@@ -1496,14 +1502,18 @@
       rafId = requestAnimationFrame(syncNow);
     };
 
-    const onScroll = () => {
-      if (shell.hidden) return;
+    const onMainPaneScroll = () => {
       if (!activeScrollCloneTable) return;
-      pendingScrollLeft = scrollPane.scrollLeft || 0;
-      applyScrollTransform();
+      syncCloneToMainScroll();
     };
 
-    scrollPane.addEventListener('scroll', onScroll, { passive: true });
+    const onCloneScroll = () => {
+      if (!activeScrollCloneTable) return;
+      syncMainToCloneScroll();
+    };
+
+    scrollPane.addEventListener('scroll', onMainPaneScroll, { passive: true });
+    scrollCloneWrap.addEventListener('scroll', onCloneScroll, { passive: true });
     window.addEventListener('resize', scheduleSync, { passive: true });
     window.addEventListener('orientationchange', scheduleSync, { passive: true });
 
