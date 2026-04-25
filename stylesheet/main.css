@@ -2915,6 +2915,24 @@ body.mode-games .gamesbar {
   font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step));
 }
 
+#hiloHoleTable .hilo-team-label-full {
+  display: inline;
+}
+
+#hiloHoleTable .hilo-team-label-short {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  #hiloHoleTable .hilo-team-label-full {
+    display: none;
+  }
+
+  #hiloHoleTable .hilo-team-label-short {
+    display: inline;
+  }
+}
+
 /* =========================
    Junk (Dots) — Table + Dropdown
    ========================= */

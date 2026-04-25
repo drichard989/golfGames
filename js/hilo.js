@@ -49,6 +49,33 @@
     }
   }
 
+  function getPlayerInitial(name) {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) return '?';
+
+    const parts = trimmed.split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+
+    if (parts.length === 1) {
+      return parts[0].charAt(0).toUpperCase();
+    }
+
+    return parts
+      .slice(0, 2)
+      .map(part => part.charAt(0).toUpperCase())
+      .join('');
+  }
+
+  function formatTeamLabel(team, names) {
+    const full = `${names[team[0]]} + ${names[team[1]]}`;
+    const short = `${getPlayerInitial(names[team[0]])} + ${getPlayerInitial(names[team[1]])}`;
+    return { full, short };
+  }
+
+  function renderResponsiveTeamLabel(label) {
+    return `<span class="hilo-team-label-full">${label.full}</span><span class="hilo-team-label-short">${label.short}</span>`;
+  }
+
   function getHandicaps() {
     try {
       const handicaps = [];
@@ -331,8 +358,12 @@
       return;
     }
     
-    const teamALabel = `${names[teamA[0]]} + ${names[teamA[1]]}`;
-    const teamBLabel = `${names[teamB[0]]} + ${names[teamB[1]]}`;
+    const teamALabelObj = formatTeamLabel(teamA, names);
+    const teamBLabelObj = formatTeamLabel(teamB, names);
+    const teamALabel = teamALabelObj.full;
+    const teamBLabel = teamBLabelObj.full;
+    const teamALabelResponsive = renderResponsiveTeamLabel(teamALabelObj);
+    const teamBLabelResponsive = renderResponsiveTeamLabel(teamBLabelObj);
     const strokeInfo = strokePlayer >= 0 ? ` (${names[strokePlayer]} gets ${strokesGiven} strokes)` : '';
     
     if (teamAEl) {
@@ -448,15 +479,15 @@
       holeResults.forEach(hole => {
         if (hole.teamALow === 0) return; // Skip holes with no scores
         
-        const lowWinnerText = hole.lowWinner === 'A' ? teamALabel : hole.lowWinner === 'B' ? teamBLabel : 'Tie';
-        const highWinnerText = hole.highWinner === 'A' ? teamALabel : hole.highWinner === 'B' ? teamBLabel : 'Tie';
+        const lowWinnerText = hole.lowWinner === 'A' ? teamALabelResponsive : hole.lowWinner === 'B' ? teamBLabelResponsive : 'Tie';
+        const highWinnerText = hole.highWinner === 'A' ? teamALabelResponsive : hole.highWinner === 'B' ? teamBLabelResponsive : 'Tie';
         
         holeHtml += `
           <tr>
             <td>${hole.hole}</td>
             <td>${hole.teamALow} vs ${hole.teamBLow} → ${lowWinnerText}</td>
             <td>${hole.teamAHigh} vs ${hole.teamBHigh} → ${highWinnerText}</td>
-            <td>A: ${hole.teamAPoints}, B: ${hole.teamBPoints}</td>
+            <td>${teamALabelResponsive}: ${hole.teamAPoints}, ${teamBLabelResponsive}: ${hole.teamBPoints}</td>
           </tr>
         `;
       });
