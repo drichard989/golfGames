@@ -1358,10 +1358,15 @@ td {
 /* Make player names look editable on touch devices */
 @media (pointer: coarse) {
   #scorecard .name-edit {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.12);
+    border: 2px solid rgba(255, 255, 255, 0.22);
     border-radius: 6px;
     padding: 6px 8px;
+  }
+
+  :root[data-theme="light"] #scorecard .name-edit {
+    background: #ffffff;
+    border-color: #bcc7d2;
   }
 }
 
@@ -1485,20 +1490,6 @@ tr:last-child td {
   min-height: var(--touch-min);
   font-size: var(--scorecard-data-font-size);
   touch-action: manipulation;
-}
-
-/* On touch screens, enhance score input affordance to show they're interactive */
-@media (pointer: coarse) {
-  .score-input {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.18);
-    border-radius: 8px;
-  }
-
-  :root[data-theme="light"] .score-input {
-    background: rgba(0, 0, 0, 0.05);
-    border-color: rgba(0, 0, 0, 0.15);
-  }
 }
 
 /* Divider between hole 18 and Out — matches the front/back 9 divider weight */
@@ -3897,15 +3888,15 @@ input[type="text"] {
 /* Light theme table adjustments */
 :root[data-theme="light"] .par-row th,
 :root[data-theme="light"] .par-row td {
-  border-left: 2px solid rgba(0, 0, 0, 0.15);
-  border-top: 2px solid rgba(0, 0, 0, 0.3);
+  border-left: 2px solid #bcc7d2;
+  border-top: none;
 }
 
 :root[data-theme="light"] .hcp-row th,
 :root[data-theme="light"] .hcp-row td {
-  border-left: 2px solid rgba(0, 0, 0, 0.15);
-  border-top: 2px solid rgba(0, 0, 0, 0.3);
-  border-bottom: 2px solid rgba(0, 0, 0, 0.3);
+  border-left: 2px solid #bcc7d2;
+  border-top: none;
+  border-bottom: 2px solid #bcc7d2;
 }
 
 /* Light theme: divider between CH and Hole 1 */
@@ -4193,12 +4184,19 @@ input[type="text"] {
 :root[data-theme="light"] input[type="number"] {
   background: #ffffff;
   color: #1a1c1f;
-  border: 2px solid #d3d7dc;
+  border: 2px solid #bcc7d2;
 }
 
 :root[data-theme="light"] input[type="number"]:focus {
   border-color: #0090e0;
   outline: none;
+}
+
+/* Keep Par/HCP header values as plain table cells in light theme (no inner input box). */
+:root[data-theme="light"] #scorecard .par-row input,
+:root[data-theme="light"] #scorecard .hcp-row input {
+  background: transparent;
+  border: none;
 }
 
 :root[data-theme="light"] #skinsBuyIn {
