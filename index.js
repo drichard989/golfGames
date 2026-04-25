@@ -1309,8 +1309,16 @@
     const fixedPane = document.querySelector('.scorecard-fixed');
     const scrollPane = document.querySelector('.scorecard-scroll');
     const fixedHeaderRow = document.getElementById('holesHeaderFixed');
+    const fixedParRow = document.getElementById('parRowFixed');
+    const fixedHcpRow = document.getElementById('hcpRowFixed');
     const scrollHeaderRow = document.getElementById('holesHeader');
-    if (!navBar || !switcher || !scorePanel || !scorecard || !fixedPane || !scrollPane || !fixedHeaderRow || !scrollHeaderRow) {
+    const scrollParRow = document.getElementById('parRow');
+    const scrollHcpRow = document.getElementById('hcpRow');
+    if (
+      !navBar || !switcher || !scorePanel || !scorecard || !fixedPane || !scrollPane ||
+      !fixedHeaderRow || !fixedParRow || !fixedHcpRow ||
+      !scrollHeaderRow || !scrollParRow || !scrollHcpRow
+    ) {
       return;
     }
 
@@ -1320,19 +1328,27 @@
       shell.className = 'ios-scorecard-clone-shell';
       shell.hidden = true;
       shell.innerHTML = [
-        '<div class="ios-scorecard-clone-fixed"><table><thead><tr></tr></thead></table></div>',
-        '<div class="ios-scorecard-clone-scroll"><table><thead><tr></tr></thead></table></div>'
+        '<div class="ios-scorecard-clone-fixed"><table><tbody><tr class="clone-row-head"></tr><tr class="clone-row-par"></tr><tr class="clone-row-hcp"></tr></tbody></table></div>',
+        '<div class="ios-scorecard-clone-scroll"><table><tbody><tr class="clone-row-head"></tr><tr class="clone-row-par"></tr><tr class="clone-row-hcp"></tr></tbody></table></div>'
       ].join('');
       switcher.insertAdjacentElement('afterend', shell);
     }
 
-    const fixedCloneRow = shell.querySelector('.ios-scorecard-clone-fixed tr');
+    const fixedCloneHeadRow = shell.querySelector('.ios-scorecard-clone-fixed .clone-row-head');
+    const fixedCloneParRow = shell.querySelector('.ios-scorecard-clone-fixed .clone-row-par');
+    const fixedCloneHcpRow = shell.querySelector('.ios-scorecard-clone-fixed .clone-row-hcp');
     const scrollCloneWrap = shell.querySelector('.ios-scorecard-clone-scroll');
     const scrollCloneTable = shell.querySelector('.ios-scorecard-clone-scroll table');
-    const scrollCloneRow = shell.querySelector('.ios-scorecard-clone-scroll tr');
+    const scrollCloneHeadRow = shell.querySelector('.ios-scorecard-clone-scroll .clone-row-head');
+    const scrollCloneParRow = shell.querySelector('.ios-scorecard-clone-scroll .clone-row-par');
+    const scrollCloneHcpRow = shell.querySelector('.ios-scorecard-clone-scroll .clone-row-hcp');
     const fixedCloneWrap = shell.querySelector('.ios-scorecard-clone-fixed');
 
-    if (!fixedCloneRow || !scrollCloneRow || !scrollCloneWrap || !scrollCloneTable || !fixedCloneWrap) return;
+    if (
+      !fixedCloneHeadRow || !fixedCloneParRow || !fixedCloneHcpRow ||
+      !scrollCloneHeadRow || !scrollCloneParRow || !scrollCloneHcpRow ||
+      !scrollCloneWrap || !scrollCloneTable || !fixedCloneWrap
+    ) return;
 
     document.body.classList.add('ios-scorecard-clone-active');
 
@@ -1372,11 +1388,21 @@
       shell.hidden = !scoreVisible;
       if (!scoreVisible) return;
 
-      copyCells(fixedHeaderRow, fixedCloneRow);
-      copyCells(scrollHeaderRow, scrollCloneRow);
+      copyCells(fixedHeaderRow, fixedCloneHeadRow);
+      copyCells(fixedParRow, fixedCloneParRow);
+      copyCells(fixedHcpRow, fixedCloneHcpRow);
 
-      syncCellWidths(fixedHeaderRow, fixedCloneRow);
-      syncCellWidths(scrollHeaderRow, scrollCloneRow);
+      copyCells(scrollHeaderRow, scrollCloneHeadRow);
+      copyCells(scrollParRow, scrollCloneParRow);
+      copyCells(scrollHcpRow, scrollCloneHcpRow);
+
+      syncCellWidths(fixedHeaderRow, fixedCloneHeadRow);
+      syncCellWidths(fixedParRow, fixedCloneParRow);
+      syncCellWidths(fixedHcpRow, fixedCloneHcpRow);
+
+      syncCellWidths(scrollHeaderRow, scrollCloneHeadRow);
+      syncCellWidths(scrollParRow, scrollCloneParRow);
+      syncCellWidths(scrollHcpRow, scrollCloneHcpRow);
 
       const navRect = navBar.getBoundingClientRect();
       const cardRect = scorecard.getBoundingClientRect();
@@ -1426,7 +1452,11 @@
       : null;
     if (headerMutationObserver) {
       headerMutationObserver.observe(fixedHeaderRow, { childList: true, subtree: true, characterData: true });
+      headerMutationObserver.observe(fixedParRow, { childList: true, subtree: true, characterData: true });
+      headerMutationObserver.observe(fixedHcpRow, { childList: true, subtree: true, characterData: true });
       headerMutationObserver.observe(scrollHeaderRow, { childList: true, subtree: true, characterData: true });
+      headerMutationObserver.observe(scrollParRow, { childList: true, subtree: true, characterData: true });
+      headerMutationObserver.observe(scrollHcpRow, { childList: true, subtree: true, characterData: true });
       headerMutationObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
       headerMutationObserver.observe(scorePanel, { attributes: true, attributeFilter: ['hidden'] });
     }
