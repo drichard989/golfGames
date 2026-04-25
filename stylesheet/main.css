@@ -2915,19 +2915,23 @@ body.mode-games .gamesbar {
   font-size: calc(var(--text-md) + var(--font-data-adjust) + var(--font-size-step));
 }
 
+#hiloTable .hilo-team-label-full,
 #hiloHoleTable .hilo-team-label-full {
   display: inline;
 }
 
+#hiloTable .hilo-team-label-short,
 #hiloHoleTable .hilo-team-label-short {
   display: none;
 }
 
 @media (max-width: 768px) {
+  #hiloTable .hilo-team-label-full,
   #hiloHoleTable .hilo-team-label-full {
     display: none;
   }
 
+  #hiloTable .hilo-team-label-short,
   #hiloHoleTable .hilo-team-label-short {
     display: inline;
   }

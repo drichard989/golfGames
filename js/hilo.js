@@ -72,8 +72,17 @@
     return { full, short };
   }
 
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
   function renderResponsiveTeamLabel(label) {
-    return `<span class="hilo-team-label-full">${label.full}</span><span class="hilo-team-label-short">${label.short}</span>`;
+    return `<span class="hilo-team-label-full">${escapeHtml(label.full)}</span><span class="hilo-team-label-short">${escapeHtml(label.short)}</span>`;
   }
 
   function getHandicaps() {
@@ -372,8 +381,8 @@
     if (teamBEl) {
       teamBEl.textContent = `Team B: ${teamBLabel}${strokeInfo}`;
     }
-    if (colAEl) colAEl.textContent = teamALabel;
-    if (colBEl) colBEl.textContent = teamBLabel;
+    if (colAEl) colAEl.innerHTML = teamALabelResponsive;
+    if (colBEl) colBEl.innerHTML = teamBLabelResponsive;
     
     // Build table with all games and presses
     let tableHtml = '';
@@ -390,10 +399,10 @@
       let winner = '';
       
       if (press.teamA > press.teamB) {
-        winner = 'Team A';
+        winner = teamALabelResponsive;
         totalUnitsA += 1;
       } else if (press.teamB > press.teamA) {
-        winner = 'Team B';
+        winner = teamBLabelResponsive;
         totalUnitsB += 1;
       } else {
         winner = press.teamA === 0 && press.teamB === 0 ? '—' : 'Push';
@@ -420,10 +429,10 @@
       let winner = '';
       
       if (press.teamA > press.teamB) {
-        winner = 'Team A';
+        winner = teamALabelResponsive;
         totalUnitsA += 1;
       } else if (press.teamB > press.teamA) {
-        winner = 'Team B';
+        winner = teamBLabelResponsive;
         totalUnitsB += 1;
       } else {
         winner = press.teamA === 0 && press.teamB === 0 ? '—' : 'Push';
@@ -442,10 +451,10 @@
     // Full 18 (no presses, just main game worth 2 units)
     let full18Winner = '';
     if (full18.teamA > full18.teamB) {
-      full18Winner = 'Team A';
+      full18Winner = teamALabelResponsive;
       totalUnitsA += 2;
     } else if (full18.teamB > full18.teamA) {
-      full18Winner = 'Team B';
+      full18Winner = teamBLabelResponsive;
       totalUnitsB += 2;
     } else {
       full18Winner = full18.teamA === 0 ? '—' : 'Push';
