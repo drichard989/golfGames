@@ -980,7 +980,7 @@ select:not(.select-plain) option {
   margin: 0;
   padding: 6px 10px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
   min-height: 40px;
@@ -994,14 +994,14 @@ select:not(.select-plain) option {
 }
 
 .scorecard-footer-toggle {
-  min-height: 30px;
-  padding: 4px 10px;
-  font-size: var(--text-sm);
+  margin-left: auto;
+  min-height: 36px;
+  padding: 8px 14px;
 }
 
 .scorecard-card-footer.is-compact {
   padding: 4px 8px;
-  min-height: 34px;
+  min-height: 36px;
   gap: 0;
 }
 

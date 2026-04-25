@@ -5016,7 +5016,8 @@
         footerControls.hidden = !showControls;
         scorecardFooter.classList.toggle('is-compact', !showControls);
         footerToggleBtn.setAttribute('aria-expanded', showControls ? 'true' : 'false');
-        footerToggleBtn.textContent = showControls ? 'Hide Controls' : 'Show Controls';
+        footerToggleBtn.textContent = showControls ? '▲ Hide' : '▼ Show';
+        footerToggleBtn.setAttribute('aria-label', showControls ? 'Hide scorecard controls' : 'Show scorecard controls');
 
         if (!showControls && scorecardOptionsPanel) {
           scorecardOptionsPanel.hidden = true;
