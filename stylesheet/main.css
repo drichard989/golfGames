@@ -1128,7 +1128,7 @@ body.mode-score #main-scorecard {
   scroll-behavior: auto;
 }
 
-/* iOS only: prevent pane rubber-band; JS edge-handoff transfers drag to page. */
+/* iOS only: fixed score-entry scrolling (no page handoff, no pane rubber-band). */
 @supports (-webkit-touch-callout: none) {
   #scoreEntryPanel,
   .scorecard-fixed,
@@ -1136,6 +1136,10 @@ body.mode-score #main-scorecard {
     overscroll-behavior: none;
     overscroll-behavior-x: none;
     overscroll-behavior-y: none;
+  }
+
+  #scoreEntryPanel {
+    overflow: hidden;
   }
 
   .scorecard-fixed,

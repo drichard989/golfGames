@@ -1129,8 +1129,8 @@
   }
 
   /**
-   * iOS edge handoff for score panes.
-   * When pane scroll reaches top/bottom, transfer drag motion to page scroll.
+   * iOS edge guard for score panes.
+   * Keep scroll fixed to pane content and suppress edge rubber-band.
    */
   function setupIOSScorecardOverscrollGuard() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -1176,22 +1176,13 @@
 
         const atTop = pane.scrollTop <= 0;
         const atBottom = pane.scrollTop >= maxTop - 1;
-        const pageTop = window.scrollY || window.pageYOffset || 0;
-        const pageMaxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
         const draggingPastTop = atTop && dyStep > 0;
         const draggingPastBottom = atBottom && dyStep < 0;
 
-        // At pane edges, always suppress rubber-band. If page can still move,
-        // transfer the drag distance into page scroll for natural handoff.
+        // At pane edges, always suppress rubber-band and do not hand off
+        // movement to page scroll (fixed-score mode on iOS).
         if (draggingPastTop || draggingPastBottom) {
           e.preventDefault();
-
-          if (pageMaxTop > 0) {
-            const nextTop = Math.min(pageMaxTop, Math.max(0, pageTop - dyStep));
-            if (nextTop !== pageTop) {
-              window.scrollTo({ top: nextTop, left: 0, behavior: 'auto' });
-            }
-          }
         }
 
         lastY = t.clientY;
