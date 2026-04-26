@@ -11,19 +11,19 @@
     <meta http-equiv="Expires" content="0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.10" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.10" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.10" />
-    <link rel="manifest" href="/manifest.json?v=v3.3.10" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.29" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.29" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.29" />
+    <link rel="manifest" href="/manifest.json?v=v3.3.29" />
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .githooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.10" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.29" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.10" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.10" />
-    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.10" />
-    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.10" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.29" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.29" />
+    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.29" />
+    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.29" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -59,6 +59,7 @@
           <div class="utilities-row utilities-row-actions">
             <button id="saveBtn" class="btn">💾 Save</button>
             <button id="refreshAllBtn" class="btn" title="Recalculate all games and totals">🔄 Recalculate Everything</button>
+            <button id="clearGamesDataBtn" class="btn">Clear All Games Data</button>
             <button id="clearEverythingBtn" class="btn" style="background: var(--danger); color: white;">Clear Everything</button>
             <button id="resetBtn" class="btn">Reset Scores</button>
             <button id="forceRefresh" class="btn" type="button">🔄 Refresh</button>
@@ -290,12 +291,9 @@
       <div class="game-section-header">
         <h2>Vegas Game</h2>
         <div class="controls">
-          <button type="button" class="btn game-options-toggle" id="vegasLiveResultsBtn" data-target="vegasLiveResultsPanel" aria-controls="vegasLiveResultsPanel" aria-expanded="false">Vegas Results</button>
-          <button type="button" class="btn game-options-toggle" data-target="vegasOptionsPanel" aria-controls="vegasOptionsPanel" aria-expanded="false">Vegas Options</button>
+          <button type="button" class="btn standings-toggle-btn" data-target="vegasResultsBottom" data-game-key="vegas" aria-controls="vegasResultsBottom" aria-expanded="true" aria-label="Hide Vegas standings" title="Hide Vegas standings">👁</button>
+          <button type="button" class="btn game-options-toggle game-options-icon-btn" data-target="vegasOptionsPanel" aria-controls="vegasOptionsPanel" aria-expanded="false" aria-label="Vegas Options" title="Vegas Options">🔧</button>
         </div>
-      </div>
-      <div id="vegasLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
-        <div id="vegasLiveResults" class="live-results-card" aria-live="polite"></div>
       </div>
       <div id="vegasOptionsPanel" class="game-options-panel" hidden>
       <div class="vegas-controls">
@@ -360,12 +358,8 @@
       <div class="game-section-header">
         <h2>🏦 Banker</h2>
         <div class="controls">
-          <button type="button" class="btn game-options-toggle" id="bankerLiveResultsBtn" data-target="bankerLiveResultsPanel" aria-controls="bankerLiveResultsPanel" aria-expanded="false">Results</button>
-          <button type="button" class="btn game-options-toggle" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false">Banker Options</button>
+          <button type="button" class="btn game-options-toggle banker-options-icon-btn" data-target="bankerOptionsPanel" aria-controls="bankerOptionsPanel" aria-expanded="false" aria-label="Banker Options" title="Banker Options">🔧</button>
         </div>
-      </div>
-      <div id="bankerLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
-        <div id="bankerHeaderTotals" class="banker-header-totals" aria-live="polite"></div>
       </div>
       <div id="bankerOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
@@ -438,6 +432,7 @@
       <p class="note"><strong>Scoring:</strong> Each hole awards 2 points (1 for low ball, 1 for high ball). Compare each team's lowest score for 1 point, then compare each team's highest score for 1 point. Ties = no points awarded.</p>
       <p class="note"><strong>Games:</strong> Three main games run simultaneously: <strong>Front 9</strong> (holes 1-9, worth 1 unit), <strong>Back 9</strong> (holes 10-18, worth 1 unit), <strong>Full 18</strong> (all holes, worth 2 units) = 4 total units at stake.</p>
       <p class="note"><strong>Auto-Press:</strong> When a team wins a hole 2-0 (both low and high), an automatic press starts on the next hole. Front 9 presses run through hole 9, Back 9 presses run through hole 18. Each press is worth 1 unit (Full 18 has no presses). The leading team does NOT need to approve - presses trigger automatically!</p>
+      <button id="clearHiloDataBtn" class="btn" style="margin: 8px 12px 0;">Clear Hi-Lo Data</button>
       </div>
 
       <div class="vegas-controls">
@@ -486,12 +481,9 @@
       <div class="game-section-header">
         <h2>Junk (Dots)</h2>
         <div class="controls">
-          <button type="button" class="btn game-options-toggle" id="junkLiveResultsBtn" data-target="junkLiveResultsPanel" aria-controls="junkLiveResultsPanel" aria-expanded="false">Junk Results</button>
-          <button type="button" class="btn game-options-toggle" data-target="junkOptionsPanel" aria-controls="junkOptionsPanel" aria-expanded="false">Junk Options</button>
+          <button type="button" class="btn standings-toggle-btn" data-target="junkResultsBottom" data-game-key="junk" aria-controls="junkResultsBottom" aria-expanded="true" aria-label="Hide Junk standings" title="Hide Junk standings">👁</button>
+          <button type="button" class="btn game-options-toggle game-options-icon-btn" data-target="junkOptionsPanel" aria-controls="junkOptionsPanel" aria-expanded="false" aria-label="Junk Options" title="Junk Options">🔧</button>
         </div>
-      </div>
-      <div id="junkLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
-        <div id="junkLiveResults" class="live-results-card" aria-live="polite"></div>
       </div>
       <div id="junkOptionsPanel" class="game-options-panel" hidden>
       <div class="banker-controls">
@@ -552,12 +544,9 @@
       <div class="game-section-header">
         <h2>🐺 Wolf</h2>
         <div class="controls">
-          <button type="button" class="btn game-options-toggle" id="wolfLiveResultsBtn" data-target="wolfLiveResultsPanel" aria-controls="wolfLiveResultsPanel" aria-expanded="false">Wolf Results</button>
-          <button type="button" class="btn game-options-toggle" data-target="wolfOptionsPanel" aria-controls="wolfOptionsPanel" aria-expanded="false">Wolf Options</button>
+          <button type="button" class="btn standings-toggle-btn" data-target="wolfResultsBottom" data-game-key="wolf" aria-controls="wolfResultsBottom" aria-expanded="true" aria-label="Hide Wolf standings" title="Hide Wolf standings">👁</button>
+          <button type="button" class="btn game-options-toggle game-options-icon-btn" data-target="wolfOptionsPanel" aria-controls="wolfOptionsPanel" aria-expanded="false" aria-label="Wolf Options" title="Wolf Options">🔧</button>
         </div>
-      </div>
-      <div id="wolfLiveResultsPanel" class="game-options-panel live-results-panel" hidden>
-        <div id="wolfLiveResults" class="live-results-card" aria-live="polite"></div>
       </div>
       <div id="wolfOptionsPanel" class="game-options-panel" hidden>
         <div class="banker-controls">
@@ -607,10 +596,8 @@
           <tfoot></tfoot>
         </table>
       </div>
+      <div id="wolfResultsBottom" class="live-results-card wolf-bottom-results" aria-live="polite"></div>
     </section>
-    <div class="controls games-actions-row">
-      <button id="clearGamesDataBtn" class="btn">Clear All Game Data</button>
-    </div>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
 
     <div class="games-controls-shell">
@@ -646,18 +633,18 @@
       </div>
     </div>
     </section>
-    <script src="index.js?v=v3.3.10" defer></script>
-    <script src="js/export.js?v=v3.3.10" defer></script>
-    <script src="js/vegas.js?v=v3.3.10" defer></script>
-    <script src="js/banker.js?v=v3.3.10" defer></script>
-    <script src="js/banker-sheet.js?v=v3.3.10" defer></script>
-    <script src="js/hilo.js?v=v3.3.10" defer></script>
-    <script src="js/skins.js?v=v3.3.10" defer></script>
-    <script src="js/junk.js?v=v3.3.10" defer></script>
-    <script src="js/junk-sheet.js?v=v3.3.10" defer></script>
-    <script src="js/wolf.js?v=v3.3.10" defer></script>
-    <script src="js/wolf-sheet.js?v=v3.3.10" defer></script>
-    <script src="js/score-sheet.js?v=v3.3.10" defer></script>
+    <script src="index.js?v=v3.3.29" defer></script>
+    <script src="js/export.js?v=v3.3.29" defer></script>
+    <script src="js/vegas.js?v=v3.3.29" defer></script>
+    <script src="js/banker.js?v=v3.3.29" defer></script>
+    <script src="js/banker-sheet.js?v=v3.3.29" defer></script>
+    <script src="js/hilo.js?v=v3.3.29" defer></script>
+    <script src="js/skins.js?v=v3.3.29" defer></script>
+    <script src="js/junk.js?v=v3.3.29" defer></script>
+    <script src="js/junk-sheet.js?v=v3.3.29" defer></script>
+    <script src="js/wolf.js?v=v3.3.29" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.3.29" defer></script>
+    <script src="js/score-sheet.js?v=v3.3.29" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
@@ -668,15 +655,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
     <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-    <script src="js/firebase-config.js?v=v3.3.10" defer></script>
-    <script src="js/cloudsync.js?v=v3.3.10" defer></script>
+    <script src="js/firebase-config.js?v=v3.3.29" defer></script>
+    <script src="js/cloudsync.js?v=v3.3.29" defer></script>
     <!-- Cloud QR libraries must load before js/cloudsync.js -->
-    <!-- =====================================================================
-         TOP-PINNED-SHELL HEIGHT TRACKER + BANKER LIVE RESULTS PIN
+        <!-- =====================================================================
+          TOP-PINNED-SHELL HEIGHT TRACKER
          Publishes the rendered BOTTOM of `.top-pinned-shell` (in viewport
          coords) to a CSS variable `--top-pinned-shell-h` on :root. Used
-         by #bankerLiveResultsPanel (position: sticky) so it pins right
-         below the shell as the banker section scrolls.
+          by sticky in-panel game elements that pin below the shell.
 
          Why bottom and not height? The shell is itself sticky at top:0
          with optional safe-area padding above. Reading `bottom` of its

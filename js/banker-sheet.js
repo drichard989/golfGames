@@ -35,6 +35,7 @@
 
   const STORAGE_KEY = 'banker_sheet_prefs_v1';
   const BANKER_PRESELECT_META_KEY = 'banker_preselect_meta_v1';
+  const OPEN_TO_BACKDROP_GUARD_MS = 500;
 
   const DOM_IDS = {
     bankerSelect: (h) => `banker_h${h}`,
@@ -49,7 +50,14 @@
   let sheetEl = null;
   let backdropEl = null;
   let currentHole = null;
+  let lastOpenedAt = 0;
   let prefs = loadPrefs();
+
+  function onBackdropClick(){
+    const elapsed = Date.now() - lastOpenedAt;
+    if (elapsed >= 0 && elapsed < OPEN_TO_BACKDROP_GUARD_MS) return;
+    closeSheet();
+  }
 
   function loadPrefs(){
     try {
@@ -415,7 +423,7 @@
     if (sheetEl) return;
     backdropEl = document.createElement('div');
     backdropEl.className = 'banker-sheet-backdrop';
-    backdropEl.addEventListener('click', closeSheet);
+    backdropEl.addEventListener('click', onBackdropClick);
 
     sheetEl = document.createElement('div');
     sheetEl.className = 'banker-sheet';
@@ -895,6 +903,7 @@
 
   function openSheet(hole){
     renderSheet(hole);
+    lastOpenedAt = Date.now();
 
     document.body.classList.add('banker-sheet-open');
     backdropEl.classList.add('is-open');
@@ -955,7 +964,8 @@
     const tbody = document.getElementById('bankerBody');
     if (!tbody) return;
 
-    // Disconnect observer before mutating summary DOM to avoid feedback loops.
+    // Disconnect both observers before mutating summary DOM to avoid feedback loops.
+    _tableStructureObserver?.disconnect();
     _tbodyObserver?.disconnect();
 
     const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -967,11 +977,6 @@
       // Bind directly on each summary row so opening works reliably even when
       // nested rich markup changes inside the cell.
       tr.onclick = (evt) => {
-
-    // Reconnect observer after mutations are complete.
-    if (_tbodyObserver) {
-      _tbodyObserver.observe(tbody, { childList: true, subtree: true });
-    }
         if (!_active || !document.body.classList.contains('banker-sheet-active')) return;
         const target = evt?.target;
         const interactive = target instanceof Element
@@ -1003,6 +1008,9 @@
 
       tr.classList.remove('banker-sheet-row-empty');
       const bankerName = escapeHtml(names[bankerIdx] || `P${bankerIdx+1}`);
+      let activeBetCount = 0;
+      let totalBetAmount = 0;
+      let doubledBetCount = 0;
       // Banker's own stroke status (green tint when receiving, red when giving)
       const bankerStroke = getStrokeIndicatorFor(bankerIdx, h);
       const showTabletStrokeIndicator = window.matchMedia('(min-width: 481px)').matches;
@@ -1032,6 +1040,11 @@
         const stroke = getStrokeIndicatorFor(p, h);
         const nm = escapeHtml(names[p] || `P${p+1}`);
         const amt = b > 0 ? `$${b}` : '—';
+        if (b > 0) {
+          activeBetCount += 1;
+          totalBetAmount += b;
+        }
+        if (dbl) doubledBetCount += 1;
         const strokeHtml = '';
         let strokeChipCls = '';
         if (stroke && stroke.text) {
@@ -1154,6 +1167,24 @@
       // the only child of the td so it stretches naturally.
       const phone = window.matchMedia('(max-width: 480px)').matches;
       if (phone) {
+        if (pc >= 5) {
+          const summaryText = (resultCellEl?.querySelector('.banker-result-summary')?.textContent || '').trim();
+          const compactResult = summaryText || (activeBetCount > 0 ? `${activeBetCount} active bet${activeBetCount === 1 ? '' : 's'}` : 'No bets');
+          const compactB2x = bankerDbl ? multLabel : '—';
+          summary.style.padding = '4px 0';
+          summary.innerHTML = `
+            <div class="bss-phone-compact" role="note" aria-label="Banker hole summary">
+              <span class="bss-phone-chip bss-phone-chip-banker" title="Banker">🏦 ${bankerName}</span>
+              <span class="bss-phone-chip" title="Max bet">Max $${maxBet || 0}</span>
+              <span class="bss-phone-chip" title="Total bets">Bets ${activeBetCount}/${Math.max(0, pc - 1)} · $${totalBetAmount}</span>
+              <span class="bss-phone-chip" title="Opponent doubles">P2X ${doubledBetCount}</span>
+              <span class="bss-phone-chip" title="Banker double">B2X ${compactB2x}</span>
+            </div>
+            <div class="bss-phone-compact-result">${escapeHtml(compactResult)}</div>
+          `;
+          return;
+        }
+
         summary.style.padding = '4px 0';
         summary.innerHTML = resultBlock || '<span class="banker-sheet-summary-empty">—</span>';
         // Force the result block to fill the td content area
@@ -1181,6 +1212,15 @@
         }
       }
     });
+
+    // Reconnect both observers after all DOM mutations are complete.
+    const bankerTableEl = document.getElementById('bankerTable');
+    if (_tableStructureObserver && bankerTableEl) {
+      _tableStructureObserver.observe(bankerTableEl, { childList: true, subtree: true });
+    }
+    if (_tbodyObserver) {
+      _tbodyObserver.observe(tbody, { childList: true, subtree: true });
+    }
   }
 
   // Re-render summaries whenever banker state could have changed.
@@ -1197,6 +1237,66 @@
   let _active = false;
   let _listenersBound = false;
   let _tbodyObserver = null;
+  let _tbodyAttachObserver = null;
+  let _tableStructureObserver = null;
+  let _startupSummaryTimers = [];
+
+  function scheduleStartupSummaryPasses(){
+    _startupSummaryTimers.forEach((t) => clearTimeout(t));
+    _startupSummaryTimers = [];
+
+    const run = () => {
+      if (!_active) return;
+      ensureTbodyObserverAndSummaries();
+      buildSummaryRows();
+    };
+
+    _startupSummaryTimers.push(setTimeout(run, 0));
+    _startupSummaryTimers.push(setTimeout(run, 120));
+    _startupSummaryTimers.push(setTimeout(run, 320));
+  }
+
+  function ensureTbodyObserverAndSummaries(){
+    const table = document.getElementById('bankerTable');
+    if (table && !_tableStructureObserver) {
+      _tableStructureObserver = new MutationObserver(() => {
+        if (!_active) return;
+        ensureTbodyObserverAndSummaries();
+      });
+      _tableStructureObserver.observe(table, { childList: true, subtree: true });
+    }
+
+    const tbody = document.getElementById('bankerBody');
+
+    if (!tbody) {
+      if (!_tbodyAttachObserver && document.body) {
+        _tbodyAttachObserver = new MutationObserver(() => {
+          if (!_active) return;
+          ensureTbodyObserverAndSummaries();
+        });
+        _tbodyAttachObserver.observe(document.body, { childList: true, subtree: true });
+      }
+      return false;
+    }
+
+    if (_tbodyAttachObserver) {
+      _tbodyAttachObserver.disconnect();
+      _tbodyAttachObserver = null;
+    }
+
+    const observedTbody = _tbodyObserver?._tbody || null;
+    if (!_tbodyObserver || observedTbody !== tbody) {
+      _tbodyObserver?.disconnect();
+      _tbodyObserver = new MutationObserver(() => {
+        if (_active) scheduleSummaryUpdate();
+      });
+      _tbodyObserver.observe(tbody, { childList: true, subtree: true });
+      _tbodyObserver._tbody = tbody;
+    }
+
+    scheduleSummaryUpdate();
+    return true;
+  }
 
   function activate(){
     if (_active) return;
@@ -1240,28 +1340,29 @@
       }, { passive: true });
     }
 
-    // When the banker module rebuilds its table (name change, player count change),
-    // the tbody innerHTML is replaced. Use a MutationObserver to re-apply summaries.
-    const tbody = document.getElementById('bankerBody');
-    if (tbody && !_tbodyObserver) {
-      _tbodyObserver = new MutationObserver(() => {
-        if (_active) scheduleSummaryUpdate();
-      });
-      _tbodyObserver.observe(tbody, { childList: true, subtree: true });
-    }
-
-    // Initial render (banker table may not exist yet; MutationObserver handles it)
-    scheduleSummaryUpdate();
+    // Ensure summaries initialize even if banker tbody is created after activation.
+    ensureTbodyObserverAndSummaries();
+    scheduleStartupSummaryPasses();
   }
 
   function deactivate(){
     if (!_active) return;
     _active = false;
+    _startupSummaryTimers.forEach((t) => clearTimeout(t));
+    _startupSummaryTimers = [];
     if (scheduleSummaryUpdate._t) {
       cancelAnimationFrame(scheduleSummaryUpdate._t);
       scheduleSummaryUpdate._t = null;
     }
     document.body.classList.remove('banker-sheet-active');
+    _tbodyObserver?.disconnect();
+    _tbodyObserver = null;
+    _tableStructureObserver?.disconnect();
+    _tableStructureObserver = null;
+    if (_tbodyAttachObserver) {
+      _tbodyAttachObserver.disconnect();
+      _tbodyAttachObserver = null;
+    }
     // Close any open sheet
     try { closeSheet(); } catch(_) {}
     // Remove summary cells so the original banker inputs are fully visible again
@@ -1304,6 +1405,11 @@
   // resize/orientation to guarantee cleanup when returning to desktop width.
   window.addEventListener('resize', applyViewportMode, { passive: true });
   window.addEventListener('orientationchange', applyViewportMode, { passive: true });
+  document.addEventListener('golf:game-tab-changed', (e) => {
+    if (!_active) return;
+    if (e?.detail?.game !== 'banker') return;
+    scheduleStartupSummaryPasses();
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', applyViewportMode, { once: true });

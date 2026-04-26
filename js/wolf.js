@@ -493,10 +493,16 @@
   }
 
   function renderLiveResults(totals, names, valid) {
-    const container = document.getElementById('wolfLiveResults');
-    if (!container) return;
+    const containers = [
+      document.getElementById('wolfLiveResults'),
+      document.getElementById('wolfResultsBottom')
+    ].filter(Boolean);
+    if (!containers.length) return;
+
     if (!valid) {
-      container.innerHTML = '<div class="small" style="padding:8px;">Wolf requires exactly 4 players.</div>';
+      containers.forEach((container) => {
+        container.innerHTML = '<div class="small" style="padding:8px;">Wolf requires exactly 4 players.</div>';
+      });
       return;
     }
     const headerCells = Array.from({ length: REQUIRED_PLAYERS }, (_, p) =>
@@ -505,7 +511,7 @@
     const totalCells = Array.from({ length: REQUIRED_PLAYERS }, (_, p) =>
       `<td>${Number.isFinite(totals[p]) ? totals[p] : '—'}</td>`
     ).join('');
-    container.innerHTML = `
+    const html = `
       <table class="live-results-table wolf-results-table" aria-label="Live Wolf results">
         <tbody>
           <tr class="live-results-title-row"><th colspan="${REQUIRED_PLAYERS + 1}">Totals</th></tr>
@@ -514,6 +520,9 @@
         </tbody>
       </table>
     `;
+    containers.forEach((container) => {
+      container.innerHTML = html;
+    });
   }
 
   window.Wolf = Wolf;

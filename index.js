@@ -1005,6 +1005,20 @@
     return document.getElementById('gamesEntryPanel');
   }
 
+  let panelSyncRaf = 0;
+  let lastGamesPanelHeightPx = -1;
+  let lastScorePanelHeightPx = -1;
+  let lastScorecardHeightPx = -1;
+
+  function schedulePanelHeightSync() {
+    if (panelSyncRaf) return;
+    panelSyncRaf = requestAnimationFrame(() => {
+      panelSyncRaf = 0;
+      syncGamesPanelHeight();
+      syncScorePanelHeight();
+    });
+  }
+
   function getGamesScrollTop() {
     const container = getGamesScrollContainer();
     if (!container) return 0;
@@ -1035,8 +1049,11 @@
     // This is reliable regardless of what's above (header shown/hidden, transitions).
     const topBoundary = navBarRect ? navBarRect.bottom + 4 : 120;
     const available = Math.max(220, Math.floor(viewportHeight - topBoundary));
-    panel.style.height = `${available}px`;
-    panel.style.maxHeight = `${available}px`;
+    if (available !== lastGamesPanelHeightPx) {
+      panel.style.height = `${available}px`;
+      panel.style.maxHeight = `${available}px`;
+      lastGamesPanelHeightPx = available;
+    }
   }
 
   function syncScorePanelHeight() {
@@ -1052,8 +1069,11 @@
     // Keep score panel strictly below the sticky nav so top controls stay visible.
     const topBoundary = navBarRect ? navBarRect.bottom + 4 : 120;
     const available = Math.max(260, Math.floor(viewportHeight - topBoundary));
-    panel.style.height = `${available}px`;
-    panel.style.maxHeight = `${available}px`;
+    if (available !== lastScorePanelHeightPx) {
+      panel.style.height = `${available}px`;
+      panel.style.maxHeight = `${available}px`;
+      lastScorePanelHeightPx = available;
+    }
     if (scorecard) {
       // Footer is position:fixed — compute top from offsetHeight to avoid
       // read-after-write layout thrash (getBoundingClientRect forces reflow).
@@ -1061,8 +1081,11 @@
       const footerTop = viewportHeight - footerHeight;
       const scorecardTop = topBoundary;
       const scorecardHeight = Math.max(180, footerTop - scorecardTop - 8);
-      scorecard.style.height = `${scorecardHeight}px`;
-      scorecard.style.maxHeight = `${scorecardHeight}px`;
+      if (scorecardHeight !== lastScorecardHeightPx) {
+        scorecard.style.height = `${scorecardHeight}px`;
+        scorecard.style.maxHeight = `${scorecardHeight}px`;
+        lastScorecardHeightPx = scorecardHeight;
+      }
     }
   }
 
@@ -5574,24 +5597,24 @@
     Storage.clearEverything();
   });
 
-  const clearGamesDataBtn = document.getElementById('clearGamesDataBtn');
-  if (clearGamesDataBtn) {
-    clearGamesDataBtn.addEventListener('click', async () => {
-      const cloudSession = window.CloudSync?.getSession?.();
-      const confirmed = window.confirm(
-        cloudSession
-          ? 'Clear all game data and leave the live cloud session? You will need a new code to go live again.'
-          : 'Clear all game data and reset game options to defaults?'
-      );
-      if (!confirmed) return;
+    const clearGamesDataBtn = document.getElementById('clearGamesDataBtn');
+    if (clearGamesDataBtn) {
+      clearGamesDataBtn.addEventListener('click', async () => {
+        const cloudSession = window.CloudSync?.getSession?.();
+        const confirmed = window.confirm(
+          cloudSession
+            ? 'Clear all games data and leave the live cloud session? You will need a new code to go live again.'
+            : 'Clear all games data and reset game options to defaults?'
+        );
+        if (!confirmed) return;
 
-      window.CloudSync?.suspendPushes?.();
-      if (cloudSession) {
-        await window.CloudSync.leaveSession?.();
-      }
-      Storage.clearGamesData();
-    });
-  }
+        window.CloudSync?.suspendPushes?.();
+        if (cloudSession) {
+          await window.CloudSync.leaveSession?.();
+        }
+        Storage.clearGamesData();
+      });
+    }
 
   const wireGameClearButton = (buttonId, gameKey, label) => {
     const btn = document.getElementById(buttonId);
@@ -5853,11 +5876,8 @@
           toggleBtn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
 
           // Panel height changes affect visible games area; re-measure and rerender.
-          requestAnimationFrame(() => {
-            syncGamesPanelHeight();
-            syncScorePanelHeight();
-            AppManager.recalcGamesDebounced?.();
-          });
+          schedulePanelHeightSync();
+          AppManager.recalcGamesDebounced?.();
         };
 
         syncState(!panel.hidden);
@@ -5868,13 +5888,55 @@
       });
 
       document.addEventListener('golf:game-tab-changed', () => {
-        requestAnimationFrame(() => {
-          syncGamesPanelHeight();
-          AppManager.recalcGamesDebounced?.();
-        });
+        schedulePanelHeightSync();
+        AppManager.recalcGamesDebounced?.();
       });
     };
     bindGameOptionsToggles();
+
+    const bindStandingsVisibilityToggles = () => {
+      const STORAGE_KEY = 'golf_standings_visibility_v1';
+      let visibilityState = {};
+      try {
+        visibilityState = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+      } catch (_) {
+        visibilityState = {};
+      }
+
+      document.querySelectorAll('.standings-toggle-btn[data-target]').forEach((toggleBtn) => {
+        const targetId = toggleBtn.getAttribute('data-target');
+        if (!targetId) return;
+
+        const gameKey = toggleBtn.getAttribute('data-game-key') || targetId;
+        const targetCard = document.getElementById(targetId);
+        if (!targetCard) return;
+
+        const applyState = (isVisible) => {
+          targetCard.hidden = !isVisible;
+          toggleBtn.classList.toggle('is-collapsed', !isVisible);
+          toggleBtn.setAttribute('aria-expanded', isVisible ? 'true' : 'false');
+          toggleBtn.setAttribute('aria-label', isVisible ? 'Hide standings' : 'Show standings');
+          toggleBtn.setAttribute('title', isVisible ? 'Hide standings' : 'Show standings');
+          toggleBtn.textContent = isVisible ? '👁' : '📉';
+          schedulePanelHeightSync();
+        };
+
+        const initialVisible = visibilityState[gameKey] !== false;
+        applyState(initialVisible);
+
+        toggleBtn.addEventListener('click', () => {
+          const nextVisible = targetCard.hidden;
+          visibilityState[gameKey] = nextVisible;
+          applyState(nextVisible);
+          try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(visibilityState));
+          } catch (_) {
+            // Ignore storage failures; UI still updates in-memory.
+          }
+        });
+      });
+    };
+    bindStandingsVisibilityToggles();
 
     const footerMainOptionsToggle = document.getElementById('footerMainOptionsToggle');
     const headerOptionsPanel = document.getElementById('headerOptionsPanel');

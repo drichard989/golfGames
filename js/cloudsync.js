@@ -86,10 +86,6 @@
     'toggleWolf',
     'gamesLauncherBtn',
     'scorecardLauncherBtn',
-    'vegasLiveResultsBtn',
-    'bankerLiveResultsBtn',
-    'junkLiveResultsBtn',
-    'wolfLiveResultsBtn',
     'strokeIndicatorHighlight',
     'strokeIndicatorSymbols',
     'strokeIndicatorBoth'
