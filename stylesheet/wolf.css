@@ -15,6 +15,26 @@ body.wolf-sheet-active #wolfTable tfoot {
   display: none !important;
 }
 
+/* Keep Hole column compact in the mobile chart view; without this the first
+   column can expand to ~50% in medium/large font modes. */
+body.wolf-sheet-active #wolfTable {
+  table-layout: auto !important;
+}
+
+body.wolf-sheet-active #wolfTable thead th:first-child,
+body.wolf-sheet-active #wolfBody tr > td:first-child {
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  padding-left: 2px !important;
+  padding-right: 2px !important;
+}
+
+body.wolf-sheet-active #wolfBody tr > td:first-child {
+  white-space: nowrap;
+  text-align: center;
+}
+
 body.wolf-sheet-active #wolfBody tr {
   cursor: pointer;
 }
@@ -100,6 +120,32 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   text-overflow: clip;
   line-height: 1.25;
   word-break: break-word;
+}
+
+/* Medium/large font modes: keep Hole column tight so Decision/Result keep space. */
+:root[data-font-size="medium"] #wolfTable,
+:root[data-font-size="large"] #wolfTable {
+  table-layout: fixed;
+}
+
+:root[data-font-size="medium"] #wolfTable th:first-child,
+:root[data-font-size="medium"] #wolfTable td:first-child,
+:root[data-font-size="medium"] #wolfSection .live-results-header-clone-table thead th:first-child {
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
+  padding-left: 1px;
+  padding-right: 1px;
+}
+
+:root[data-font-size="large"] #wolfTable th:first-child,
+:root[data-font-size="large"] #wolfTable td:first-child,
+:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:first-child {
+  width: 30px;
+  min-width: 30px;
+  max-width: 30px;
+  padding-left: 1px;
+  padding-right: 1px;
 }
 
 .wolf-sheet-backdrop {
