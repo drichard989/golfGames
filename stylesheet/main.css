@@ -1194,10 +1194,13 @@ select:not(.select-plain) option {
   display: none !important;
 }
 
-/* Panel crossfade — touch devices only (class added by JS) */
+/* Panel crossfade — touch devices only (class added by JS).
+   Note: do NOT animate transform on the panel — fixed-position footer
+   shells inside become positioned relative to a transformed ancestor and
+   visibly slide during the animation. Opacity only avoids that bounce. */
 @keyframes entryPanelFadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .entry-panel.panel-entering {
@@ -1887,6 +1890,41 @@ tfoot td {
 .games-controls-shell .games-launcher-shell {
   margin: 0;
   width: 100%;
+  position: relative;
+}
+
+/* Mini scroll indicator track + thumb shown only when gamesbar overflows. */
+.gamesbar-scroll-indicator {
+  position: relative;
+  height: 3px;
+  margin: 4px 8px 0;
+  border-radius: 2px;
+  background: rgba(74, 158, 255, 0.18);
+  display: none;
+  pointer-events: none;
+}
+
+.gamesbar-scroll-indicator__thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: #4a9eff;
+  opacity: 0.95;
+  transition: left 80ms linear, width 120ms ease;
+}
+
+.games-launcher-shell.has-scroll-overflow .gamesbar-scroll-indicator {
+  display: block;
+}
+
+:root[data-theme="light"] .gamesbar-scroll-indicator {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+:root[data-theme="light"] .gamesbar-scroll-indicator__thumb {
+  background: #2563eb;
 }
 
 .games-controls-shell .gamesbar {
@@ -1894,6 +1932,11 @@ tfoot td {
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+
+.games-controls-shell .game-toggle-item {
+  scroll-snap-align: start;
 }
 
 .games-controls-shell .gamesbar::-webkit-scrollbar {

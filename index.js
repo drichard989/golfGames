@@ -1298,9 +1298,48 @@
   function bindGamesLauncherControls() {
     window.addEventListener('resize', () => {
       syncGamesLauncherUi();
+      updateGamesbarScrollHint();
     }, { passive: true });
 
+    const bar = document.getElementById('gamesLauncher');
+    if (bar) {
+      bar.addEventListener('scroll', updateGamesbarScrollHint, { passive: true });
+      // Recompute after layout settles (fonts, images, etc.)
+      requestAnimationFrame(updateGamesbarScrollHint);
+      setTimeout(updateGamesbarScrollHint, 250);
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(() => updateGamesbarScrollHint());
+        ro.observe(bar);
+      }
+    }
+
     syncGamesLauncherUi(getActiveGameTab());
+  }
+
+  function updateGamesbarScrollHint() {
+    const shell = document.getElementById('gamesLauncherShell');
+    const bar = document.getElementById('gamesLauncher');
+    if (!shell || !bar) return;
+    const overflow = bar.scrollWidth - bar.clientWidth > 4;
+    shell.classList.toggle('has-scroll-overflow', overflow);
+    if (!overflow) return;
+
+    let indicator = shell.querySelector('.gamesbar-scroll-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.className = 'gamesbar-scroll-indicator';
+      const thumb = document.createElement('div');
+      thumb.className = 'gamesbar-scroll-indicator__thumb';
+      indicator.appendChild(thumb);
+      shell.appendChild(indicator);
+    }
+    const thumb = indicator.firstElementChild;
+    const ratio = bar.clientWidth / bar.scrollWidth;
+    const thumbW = Math.max(ratio * 100, 12);
+    const maxScroll = bar.scrollWidth - bar.clientWidth;
+    const pos = maxScroll > 0 ? (bar.scrollLeft / maxScroll) * (100 - thumbW) : 0;
+    thumb.style.width = thumbW + '%';
+    thumb.style.left = pos + '%';
   }
 
   function setPrimaryTab(which, { save = true } = {}) {
