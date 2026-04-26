@@ -1020,8 +1020,9 @@ select:not(.select-plain) option {
 .scorecard-footer-controls .scorecard-theme-toggle {
   min-width: 40px;
   width: 40px;
-  height: 40px;
-  min-height: 40px;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
   padding: 0;
 }
 
@@ -1029,8 +1030,9 @@ select:not(.select-plain) option {
   margin-left: 0;
   min-width: 40px;
   width: 40px;
-  height: 40px;
-  min-height: 40px;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
   padding: 0;
   gap: 0;
   border-radius: var(--radius-md);
@@ -3967,8 +3969,9 @@ input[type="text"] {
   .scorecard-footer-controls .scorecard-theme-toggle {
     min-width: 40px;
     width: 40px;
-    height: 40px;
-    min-height: 40px;
+    height: auto;
+    min-height: 0;
+    align-self: stretch;
     padding: 0;
   }
 }

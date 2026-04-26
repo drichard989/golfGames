@@ -1164,7 +1164,7 @@
     drawFallbackQrCanvas(qrWrap, text);
   }
 
-  function openQrModalFromText(text, title = 'Live Share QR', subtitleText = 'Scan to open the live view scorecard.', mode = 'view') {
+  function openQrModalFromText(text, title = 'Real-Time View QR', subtitleText = 'Scan to open the real-time scorecard.', mode = 'view') {
 
     const modal = document.createElement('div');
     modal.id = 'cloudLiveQrModal';
@@ -1412,7 +1412,7 @@
     setStatus('Cloud: preparing live QR...');
     const viewCode = await ensureShareSessionWithViewCode();
     const url = buildViewShareUrl(viewCode);
-    openQrModalFromText(url, 'Live View QR', 'Scan to open the live scorecard in read-only mode.', 'view');
+    openQrModalFromText(url, 'Real-Time View QR', 'Scan to open the real-time scorecard in read-only mode.', 'view');
     setStatus(`Cloud: live QR ready • Game ${state.session?.gameId || ''}`);
   }
 
@@ -1432,8 +1432,8 @@
     setStatus('Cloud: preparing edit QR...');
     const editCode = await ensureShareSessionWithEditCode();
     const url = buildEditShareUrl(editCode);
-    openQrModalFromText(url, 'Live Edit QR', 'Scan to open the live scorecard with edit access.', 'edit');
-    setStatus(`Cloud: live edit QR ready • Game ${state.session?.gameId || ''}`);
+    openQrModalFromText(url, 'Real-Time Edit QR', 'Scan to open the real-time scorecard with edit access.', 'edit');
+    setStatus(`Cloud: real-time edit QR ready • Game ${state.session?.gameId || ''}`)
   }
 
   function updateUiForSession() {
