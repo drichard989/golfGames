@@ -231,7 +231,7 @@ header.header-collapsed {
   /* Inner content wrapper — must have min-height: 0 for grid collapse to work */
   min-height: 0;
   overflow: hidden;
-  padding: var(--space-md) var(--space-lg) var(--space-sm);
+  padding: var(--space-md) var(--space-lg) var(--space-xs);
   display: grid;
   gap: calc(var(--space-sm) / 2);
   overflow-x: hidden;
@@ -256,22 +256,35 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   top: auto;
   z-index: 1;
   background: var(--bg);
-  padding-bottom: 2px;
+  padding-bottom: 0;
 }
 
 .header-collapse-bar {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 2px var(--space-lg) 0;
+  padding: 0 var(--space-lg) 7px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.header-collapse-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .header-cloud-status-group {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   min-width: 0;
+  white-space: nowrap;
+}
+
+.header-cloud-status-group > * {
+  flex: 0 0 auto;
 }
 
 /* Don't let the cloud status badge get clipped to just the ☁ emoji.
@@ -1072,6 +1085,7 @@ select:not(.select-plain) option {
 
 .scorecard-controls-shell.has-main-options-open {
   z-index: 120;
+  overflow: visible;
 }
 
 #scoreEntryPanel {
@@ -1142,7 +1156,7 @@ select:not(.select-plain) option {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding-top: 6px;
+  padding-top: 0;
   padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 130px);
   background: var(--bg);
 }
@@ -1150,7 +1164,7 @@ select:not(.select-plain) option {
 /* Games mode: keep launcher/header area attached to the sticky primary tabs
    so no dark strip appears between the switcher and game content. */
 body.mode-games #gamesEntryPanel {
-  padding-top: 2px;
+  padding-top: 0;
 }
 
 .entry-switcher {
@@ -1177,9 +1191,9 @@ body.mode-games .entry-switcher {
 
 /* Switcher row inside a fixed footer shell — tighter margins, separated from game row */
 .footer-entry-switcher {
-  margin: 4px 10px 0;
+  margin: 6px 10px 0;
   border-top: 2px solid var(--line);
-  padding-top: 4px;
+  padding-top: 6px;
   padding-bottom: 4px;
   box-shadow: none;
   background: var(--panel-alt);
@@ -1789,8 +1803,8 @@ tfoot td {
 }
 
 .games-card-footer {
-  min-height: 56px;
-  padding: 6px 8px;
+  min-height: 44px;
+  padding: 3px 8px 0;
   border-top: none;
 }
 
@@ -1866,8 +1880,8 @@ body.mode-games .gamesbar {
   border: 2px solid var(--line);
   background: var(--panel-alt);
   border-radius: var(--radius-3xl);
-  padding: 7px 2px;
-  min-height: 36px;
+  padding: 10px 2px;
+  min-height: 40px;
   font-size: var(--text-md);
   font-weight: 600;
   color: var(--muted);
@@ -1935,8 +1949,8 @@ body.mode-games .gamesbar {
 
 .game-section {
   display: none;
-  margin: var(--games-launcher-gap, 6px) 0 32px;
-  padding: var(--space-lg);
+  margin: 0 0 24px;
+  padding: 0 var(--space-md) var(--space-md);
   border: none;
   border-top: 2px solid var(--line);
   border-bottom: 2px solid var(--line);
@@ -1949,20 +1963,25 @@ body.mode-games .gamesbar {
 }
 
 .game-section h2 {
-  margin: 0 0 var(--space-sm);
-  font-size: var(--text-2xl);
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.1;
 }
 
 .game-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 8px;
-  position: relative;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 0;
+  min-height: 0;
+  position: sticky;
+  top: 0;
   z-index: 31;
   background: var(--panel-alt);
+  box-shadow: 0 2px 0 0 var(--line);
 }
 
 .game-section-header h2 {
@@ -2156,7 +2175,8 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 126px);
+  /* Sit flush above the fixed games footer. JS sets --games-footer-h. */
+  bottom: var(--games-footer-h, 126px);
   z-index: 33;
   margin: 0;
   pointer-events: none;
@@ -2267,12 +2287,14 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
 
 .game-options-icon-btn,
 .banker-options-icon-btn {
-  min-width: 40px;
-  width: 40px;
-  min-height: 36px;
-  padding: 0;
+  min-width: 40px !important;
+  width: 40px !important;
+  min-height: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
   justify-content: center;
-  font-size: 16px;
+  font-size: 16px !important;
+  line-height: 1 !important;
 }
 
 .game-options-icon-btn::after,
@@ -2684,7 +2706,6 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
   overscroll-behavior: auto;
-  max-height: min(52vh, 460px);
   border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
@@ -3870,14 +3891,14 @@ input[type="text"] {
 @media (max-width: 900px) {
   .header-collapse-bar {
     gap: 6px;
-    padding: 2px var(--space-md) 0;
+    padding: 0 var(--space-md) 7px;
     flex-wrap: nowrap;
   }
 
   .header-cloud-status-group {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 4px;
-    flex: 1 1 auto;
+    flex: 0 0 auto;
     min-width: 0;
   }
 
@@ -4025,6 +4046,11 @@ input[type="text"] {
     min-height: 44px;
   }
 
+  .scorecard-card-footer.games-card-footer {
+    padding: 3px 8px 0;
+    min-height: 40px;
+  }
+
   .scorecard-card-footer .btn,
   .scorecard-card-footer .game-options-toggle {
     min-height: 40px;
@@ -4042,6 +4068,12 @@ input[type="text"] {
     padding: 8px;
   }
 
+  .entry-switcher.footer-entry-switcher {
+    margin: 6px 10px 0;
+    padding: 6px 6px 4px;
+    gap: 6px;
+  }
+
   .entry-switcher-btn {
     padding: 10px 12px;
     font-size: var(--text-sm);
@@ -4052,21 +4084,23 @@ input[type="text"] {
   }
 
   .game-section {
-    margin: var(--games-launcher-gap, 6px) 0 28px;
-    padding: var(--text-md);
+    margin: 0 0 24px;
+    padding: 0 var(--text-md) var(--text-md);
   }
 
   h2 {
-    font-size: 19px;
-    margin: 10px 0;
+    font-size: 15px;
+    margin: 0;
   }
 
   .game-section-header {
-    gap: 10px;
+    gap: 6px;
+    padding: 2px 0;
+    margin: 0;
   }
 
   .game-section-header .controls {
-    gap: 6px;
+    gap: 4px;
   }
 
   #junkTable th:not(:first-child),
@@ -4088,7 +4122,7 @@ input[type="text"] {
   }
 
   .header-inner {
-    padding: var(--space-xs) var(--space-md) var(--space-sm);
+    padding: var(--space-xs) var(--space-md) var(--space-xs);
     gap: var(--space-xs);
   }
 

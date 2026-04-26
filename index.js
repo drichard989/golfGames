@@ -1016,7 +1016,19 @@
       panelSyncRaf = 0;
       syncGamesPanelHeight();
       syncScorePanelHeight();
+      syncGamesFooterHeightVar();
     });
+  }
+
+  let lastGamesFooterHeightPx = -1;
+  function syncGamesFooterHeightVar() {
+    const shell = document.querySelector('.games-controls-shell');
+    if (!shell) return;
+    const h = shell.offsetHeight || 0;
+    if (h !== lastGamesFooterHeightPx) {
+      document.documentElement.style.setProperty('--games-footer-h', `${h}px`);
+      lastGamesFooterHeightPx = h;
+    }
   }
 
   function getGamesScrollTop() {
