@@ -1017,6 +1017,14 @@ select:not(.select-plain) option {
   border-radius: var(--radius-md);
 }
 
+.scorecard-footer-controls .scorecard-theme-toggle {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+}
+
 .scorecard-main-options-icon {
   margin-left: 0;
   min-width: 40px;
@@ -3954,6 +3962,14 @@ input[type="text"] {
     min-height: var(--touch-comfortable);
     padding: var(--text-md) 18px;
     font-size: var(--text-xl);
+  }
+
+  .scorecard-footer-controls .scorecard-theme-toggle {
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 0;
   }
 }
 
