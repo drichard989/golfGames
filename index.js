@@ -5450,7 +5450,8 @@
         const matched = courseIds.filter((id) => COURSES[id].name.toLowerCase().includes(normalized));
 
         const visible = matched.slice();
-        if (preferredId && COURSES[preferredId] && !visible.includes(preferredId)) {
+        // Keep selected course pinned only when browsing the full list.
+        if (!normalized && preferredId && COURSES[preferredId] && !visible.includes(preferredId)) {
           visible.unshift(preferredId);
         }
 
@@ -5497,13 +5498,13 @@
 
       courseSearch.addEventListener('focus', () => {
         const selectedId = getSelectedCourseId();
-        renderCourseOptions(courseSearch.value, selectedId);
+        renderCourseOptions('', selectedId);
         setDropdownOpen(true);
       });
 
       courseSearch.addEventListener('click', () => {
         const selectedId = getSelectedCourseId();
-        renderCourseOptions(courseSearch.value, selectedId);
+        renderCourseOptions('', selectedId);
         setDropdownOpen(true);
       });
 
