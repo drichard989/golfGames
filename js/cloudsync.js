@@ -36,12 +36,16 @@
 
   const VIEWER_LOCK_SELECTORS = [
     '#courseSelect',
+    '#courseSearch',
+    '#coursePickerToggle',
+    '#courseOptionsList .course-option',
     '#addPlayerBtn',
     '#clearAllBtn',
     '#resetBtn',
     '#saveBtn',
     '#refreshAllBtn',
     '#advanceToggle',
+    '#handicapModeGroup .hcp-mode-btn',
     '#csvInput',
     'input[name="handicapMode"]',
     '#main-scorecard input',
@@ -85,7 +89,10 @@
     'vegasLiveResultsBtn',
     'bankerLiveResultsBtn',
     'junkLiveResultsBtn',
-    'wolfLiveResultsBtn'
+    'wolfLiveResultsBtn',
+    'strokeIndicatorHighlight',
+    'strokeIndicatorSymbols',
+    'strokeIndicatorBoth'
   ]);
 
   const VIEWER_BLOCK_CONTAINERS = '#main-scorecard, #vegasSection, #bankerSection, #skinsSection, #junkSection, #hiloSection, #wolfSection';
