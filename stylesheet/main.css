@@ -44,7 +44,7 @@
   --touch-comfortable: 48px;
   
   /* Z-index layers */
-  --z-sticky-col: 2;
+  --z-sticky-col: 30;
   --z-sticky-header: 3;
   --z-sticky-corner: 4;
   --z-sticky-first-col: 5;
@@ -1462,7 +1462,7 @@ tr:last-child td {
 #scorecard #parRow td:nth-child(2),
 #scorecard #hcpRow td:first-child,
 #scorecard #hcpRow td:nth-child(2) {
-  z-index: 6;
+  z-index: 55;
 }
 
 /* Divider between front 9 and back 9 (after hole 9, before hole 10) */
