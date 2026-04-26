@@ -1142,7 +1142,7 @@ select:not(.select-plain) option {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding-top: 6px;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 12px);
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
 }
 
 /* Games mode: keep launcher/header area attached to the sticky primary tabs
@@ -1756,6 +1756,50 @@ tfoot td {
    ========================= */
 .games-launcher-shell {
   margin: var(--space-xs) var(--space-lg) 0;
+}
+
+.games-controls-shell {
+  background: var(--panel-alt);
+  border-top: 2px solid var(--line);
+  border-left: 2px solid var(--line);
+  border-right: 2px solid var(--line);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  margin: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 34;
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.games-card-footer {
+  min-height: 56px;
+  padding: 6px 8px;
+  border-top: none;
+}
+
+.games-controls-shell .games-launcher-shell {
+  margin: 0;
+  width: 100%;
+}
+
+.games-controls-shell .gamesbar {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.games-controls-shell .gamesbar::-webkit-scrollbar {
+  display: none;
+}
+
+.games-controls-shell .game-toggle-item {
+  flex: 0 0 auto;
+  min-width: 128px;
 }
 
 .games-launcher-toolbar {
@@ -3806,8 +3850,8 @@ input[type="text"] {
 }
 
 @media (max-width: 1024px) {
-  .games-launcher-shell {
-    margin: 4px var(--space-md) 0;
+  .games-controls-shell .games-launcher-shell {
+    margin: 0;
   }
 
   .games-launcher-shell.is-compact .games-launcher-toolbar {
