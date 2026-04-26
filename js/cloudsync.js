@@ -710,8 +710,14 @@
       return;
     }
 
+    // Disconnect observer while mutating DOM to prevent feedback loop
+    state.lockObserver?.disconnect();
     setViewerLockEnabled(shouldLock);
     setViewModeBannersVisible(shouldLock);
+    // Reconnect after mutations are flushed
+    if (state.lockObserver) {
+      state.lockObserver.observe(document.body, { childList: true, subtree: true });
+    }
     state.viewerLockApplied = shouldLock;
 
     if (syncRows) {

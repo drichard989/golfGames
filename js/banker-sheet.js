@@ -954,6 +954,10 @@
     // opens the full bottom sheet for editing.
     const tbody = document.getElementById('bankerBody');
     if (!tbody) return;
+
+    // Disconnect observer before mutating summary DOM to avoid feedback loops.
+    _tbodyObserver?.disconnect();
+
     const rows = Array.from(tbody.querySelectorAll('tr'));
     const names = getPlayerNames();
     const pc = getPlayerCount();
@@ -963,6 +967,11 @@
       // Bind directly on each summary row so opening works reliably even when
       // nested rich markup changes inside the cell.
       tr.onclick = (evt) => {
+
+    // Reconnect observer after mutations are complete.
+    if (_tbodyObserver) {
+      _tbodyObserver.observe(tbody, { childList: true, subtree: true });
+    }
         if (!_active || !document.body.classList.contains('banker-sheet-active')) return;
         const target = evt?.target;
         const interactive = target instanceof Element

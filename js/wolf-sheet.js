@@ -338,6 +338,9 @@
     const tbody = document.getElementById('wolfBody');
     if (!tbody) return;
 
+    // Disconnect observer before mutating summary DOM to avoid feedback loops.
+    summaryObserver?.disconnect();
+
     const rows = Array.from(tbody.querySelectorAll('tr'));
     rows.forEach((tr, idx) => {
       const hole = idx + 1;
@@ -360,6 +363,15 @@
         </div>
       `;
     });
+
+    // Reconnect observer after mutations are complete.
+    if (summaryObserver) {
+      summaryObserver.observe(tbody, {
+        childList: true,
+        subtree: true,
+        characterData: true
+      });
+    }
   }
 
   function scheduleSummaryBuild(){

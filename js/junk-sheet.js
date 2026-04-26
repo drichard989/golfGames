@@ -294,6 +294,9 @@
         }
       });
       obs.observe(tbody, { childList: true, subtree: true, characterData: true });
+      // Store so buildJunkSummaryRows can disconnect before mutating
+      scheduleJunkSummaryUpdate._observer = obs;
+      scheduleJunkSummaryUpdate._tbody = tbody;
     }
     document.addEventListener('input', (e) => {
       if (!document.body.classList.contains('junk-mobile-summary-active')) return;
@@ -326,6 +329,11 @@
 
     const tbody = document.getElementById('junkBody');
     if (!tbody) return;
+
+    // Disconnect observer before mutating DOM to prevent feedback loop
+    const obs = scheduleJunkSummaryUpdate._observer;
+    obs?.disconnect();
+
     const names = getPlayerNames();
     const pc = names.length;
     const rows = Array.from(tbody.querySelectorAll('tr'));
@@ -366,6 +374,11 @@
       }
       cell.innerHTML = lines.join('') || `<span class="junk-mini-empty">Tap to score</span>`;
     });
+
+    // Reconnect observer after all mutations are flushed
+    if (obs && scheduleJunkSummaryUpdate._tbody) {
+      obs.observe(scheduleJunkSummaryUpdate._tbody, { childList: true, subtree: true, characterData: true });
+    }
   }
 
   function clearJunkSummaryRows(){

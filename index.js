@@ -1055,10 +1055,11 @@
     panel.style.height = `${available}px`;
     panel.style.maxHeight = `${available}px`;
     if (scorecard) {
-      const scorecardTop = Math.round(scorecard.getBoundingClientRect().top) || topBoundary;
-      const footerTop = footerShell
-        ? Math.round(footerShell.getBoundingClientRect().top)
-        : viewportHeight;
+      // Footer is position:fixed — compute top from offsetHeight to avoid
+      // read-after-write layout thrash (getBoundingClientRect forces reflow).
+      const footerHeight = footerShell ? footerShell.offsetHeight : 0;
+      const footerTop = viewportHeight - footerHeight;
+      const scorecardTop = topBoundary;
       const scorecardHeight = Math.max(180, footerTop - scorecardTop - 8);
       scorecard.style.height = `${scorecardHeight}px`;
       scorecard.style.maxHeight = `${scorecardHeight}px`;
@@ -1155,6 +1156,17 @@
     gamesBtn.classList.toggle('active', !isScore);
     scoreBtn.setAttribute('aria-selected', isScore ? 'true' : 'false');
     gamesBtn.setAttribute('aria-selected', !isScore ? 'true' : 'false');
+
+    const gamesFooterScoreBtn = document.getElementById('gamesFooterScoreBtn');
+    const gamesFooterGamesBtn = document.getElementById('gamesFooterGamesBtn');
+    if (gamesFooterScoreBtn) {
+      gamesFooterScoreBtn.classList.toggle('active', isScore);
+      gamesFooterScoreBtn.setAttribute('aria-selected', isScore ? 'true' : 'false');
+    }
+    if (gamesFooterGamesBtn) {
+      gamesFooterGamesBtn.classList.toggle('active', !isScore);
+      gamesFooterGamesBtn.setAttribute('aria-selected', !isScore ? 'true' : 'false');
+    }
 
     const incoming = isScore ? scorePanel : gamesPanel;
     const outgoing  = isScore ? gamesPanel : scorePanel;
@@ -1470,6 +1482,18 @@
       syncScorePanelHeight();
     };
 
+    // Debounced resize: collapse rapid-fire visualViewport/window resize events
+    // (mobile browser chrome show/hide) into a single RAF to prevent idle CPU burn.
+    let resizeSyncScheduled = false;
+    const syncLayoutDebounced = () => {
+      if (resizeSyncScheduled) return;
+      resizeSyncScheduled = true;
+      requestAnimationFrame(() => {
+        resizeSyncScheduled = false;
+        syncLayout();
+      });
+    };
+
     let scrollSyncScheduled = false;
     const syncOnScroll = () => {
       if (scrollSyncScheduled) return;
@@ -1483,10 +1507,10 @@
     };
 
     syncLayout();
-    window.addEventListener('resize', syncLayout, { passive: true });
+    window.addEventListener('resize', syncLayoutDebounced, { passive: true });
     window.addEventListener('orientationchange', syncLayout, { passive: true });
     window.addEventListener('scroll', syncOnScroll, { passive: true });
-    window.visualViewport?.addEventListener('resize', syncLayout, { passive: true });
+    window.visualViewport?.addEventListener('resize', syncLayoutDebounced, { passive: true });
     window.visualViewport?.addEventListener('scroll', syncOnScroll, { passive: true });
     // Re-measure once all resources are loaded (env() is reliably resolved by then)
     // and again on pageshow so PWA home-screen launches always get the correct value.
@@ -5300,6 +5324,11 @@
     gamesBtn.addEventListener('click', () => {
       setPrimaryTab('games');
     });
+
+    const gamesFooterScoreBtn = document.getElementById('gamesFooterScoreBtn');
+    const gamesFooterGamesBtn = document.getElementById('gamesFooterGamesBtn');
+    if (gamesFooterScoreBtn) gamesFooterScoreBtn.addEventListener('click', () => setPrimaryTab('score'));
+    if (gamesFooterGamesBtn) gamesFooterGamesBtn.addEventListener('click', () => setPrimaryTab('games'));
 
     syncPrimaryTabUi(getPrimaryTab());
     syncGameTabUi(getActiveGameTab());

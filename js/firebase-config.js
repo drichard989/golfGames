@@ -27,4 +27,5 @@ window.FIREBASE_APPCHECK_SITE_KEY = '6LeJxsQsAAAAADaVnKaFJs6qqZg_Q5RdCtgn0dyD';
 
 // Optional for local debugging only:
 // set to true OR to a debug token string from browser console/App Check logs.
-window.FIREBASE_APPCHECK_DEBUG_TOKEN = false;
+// Auto-enabled on localhost to prevent the reCAPTCHA retry loop from pegging CPU.
+window.FIREBASE_APPCHECK_DEBUG_TOKEN = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? true : false;
