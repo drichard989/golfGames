@@ -326,9 +326,20 @@
     };
 
     if (!data?.valid) {
+      const placeholderHtml = `
+        <table class="live-results-table vegas-results-table vegas-results-placeholder" aria-label="Live Vegas results">
+          <colgroup><col class="lr-col-label"><col><col></colgroup>
+          <tbody>
+            <tr class="live-results-title-row"><th colspan="3">Totals</th></tr>
+            <tr class="live-results-data-row live-results-warning-row"><td colspan="3">Assign teams in settings 🔧</td></tr>
+          </tbody>
+        </table>
+      `;
       containers.forEach(c => {
-        if (!c.innerHTML) return;
-        c.innerHTML = '';
+        c.classList.add('is-disabled');
+        if (c.dataset.renderCache === placeholderHtml) return;
+        c.innerHTML = placeholderHtml;
+        c.dataset.renderCache = placeholderHtml;
       });
       return;
     }
@@ -346,6 +357,7 @@
       </table>
     `;
     containers.forEach(c => {
+      c.classList.remove('is-disabled');
       if (c.dataset.renderCache === html) return;
       c.innerHTML = html;
       c.dataset.renderCache = html;

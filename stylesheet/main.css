@@ -324,7 +324,8 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding: 0 var(--space-lg) 7px;
+  position: relative;
+  padding: 0 var(--space-lg) 11px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -346,6 +347,33 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
 
 .header-cloud-status-group > * {
   flex: 0 0 auto;
+}
+
+/* Mini scroll indicator for cloud icon row overflow. */
+.header-cloud-scroll-indicator {
+  position: absolute;
+  left: var(--space-lg);
+  right: var(--space-lg);
+  bottom: 3px;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(74, 158, 255, 0.18);
+  pointer-events: none;
+}
+
+.header-cloud-scroll-indicator__thumb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  border-radius: 2px;
+  background: #4a9eff;
+  opacity: 0;
+  transition: left 80ms linear, width 120ms ease, opacity 120ms ease;
+}
+
+.header-collapse-bar.has-cloud-scroll-overflow .header-cloud-scroll-indicator__thumb {
+  opacity: 0.95;
 }
 
 /* Don't let the cloud status badge get clipped to just the ☁ emoji.
@@ -400,6 +428,14 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   color: #475569;
   background: rgba(148, 163, 184, 0.3);
   border-color: rgba(100, 116, 139, 0.68);
+}
+
+:root[data-theme="light"] .header-cloud-scroll-indicator {
+  background: rgba(37, 99, 235, 0.18);
+}
+
+:root[data-theme="light"] .header-cloud-scroll-indicator__thumb {
+  background: #2563eb;
 }
 
 h1 {
@@ -2207,6 +2243,27 @@ body.mode-games .gamesbar {
 
 .live-results-table tr:last-child td {
   border-bottom: none;
+}
+
+.live-results-card.is-disabled {
+  background: color-mix(in srgb, var(--panel) 82%, #808080 18%);
+}
+
+.live-results-card.is-disabled .live-results-table {
+  opacity: 0.72;
+}
+
+.live-results-card.is-disabled .live-results-warning-row td {
+  opacity: 1;
+  text-align: center;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.vegas-results-placeholder .live-results-warning-row td {
+  height: 34px;
+  padding-top: 4px;
+  padding-bottom: 4px;
 }
 
 .vegas-results-table {
@@ -4029,8 +4086,14 @@ input[type="text"] {
 @media (max-width: 900px) {
   .header-collapse-bar {
     gap: 6px;
-    padding: 0 var(--space-md) 7px;
+    padding: 0 var(--space-md) 10px;
     flex-wrap: nowrap;
+  }
+
+  .header-cloud-scroll-indicator {
+    left: var(--space-md);
+    right: var(--space-md);
+    bottom: 2px;
   }
 
   .header-cloud-status-group {

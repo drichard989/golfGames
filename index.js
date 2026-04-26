@@ -883,7 +883,72 @@
       btn.textContent = compact ? short : full;
     });
 
+    updateHeaderCloudScrollHint();
     syncHeaderCollapseBtn();
+  }
+
+  function ensureHeaderCloudScrollIndicator() {
+    const bar = document.querySelector('.header-collapse-bar');
+    if (!bar) return null;
+    let indicator = bar.querySelector('.header-cloud-scroll-indicator');
+    if (!indicator) {
+      indicator = document.createElement('div');
+      indicator.className = 'header-cloud-scroll-indicator';
+      const thumb = document.createElement('div');
+      thumb.className = 'header-cloud-scroll-indicator__thumb';
+      indicator.appendChild(thumb);
+      bar.appendChild(indicator);
+    }
+    return indicator;
+  }
+
+  function updateHeaderCloudScrollHint() {
+    const bar = document.querySelector('.header-collapse-bar');
+    if (!bar) return;
+    const indicator = ensureHeaderCloudScrollIndicator();
+    if (!indicator) return;
+
+    const overflow = bar.scrollWidth - bar.clientWidth > 4;
+    bar.classList.toggle('has-cloud-scroll-overflow', overflow);
+
+    const thumb = indicator.firstElementChild;
+    if (!thumb) return;
+    if (!overflow) {
+      thumb.style.width = '0%';
+      thumb.style.left = '0%';
+      return;
+    }
+
+    const ratio = bar.clientWidth / bar.scrollWidth;
+    const thumbW = Math.max(ratio * 100, 12);
+    const maxScroll = bar.scrollWidth - bar.clientWidth;
+    const pos = maxScroll > 0 ? (bar.scrollLeft / maxScroll) * (100 - thumbW) : 0;
+    thumb.style.width = thumbW + '%';
+    thumb.style.left = pos + '%';
+  }
+
+  function bindHeaderCloudScrollIndicator() {
+    const bar = document.querySelector('.header-collapse-bar');
+    const group = document.querySelector('.header-cloud-status-group');
+    if (!bar) return;
+
+    ensureHeaderCloudScrollIndicator();
+    bar.addEventListener('scroll', updateHeaderCloudScrollHint, { passive: true });
+    window.addEventListener('resize', updateHeaderCloudScrollHint, { passive: true });
+
+    requestAnimationFrame(updateHeaderCloudScrollHint);
+    setTimeout(updateHeaderCloudScrollHint, 250);
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => updateHeaderCloudScrollHint());
+      ro.observe(bar);
+      if (group) ro.observe(group);
+    }
+
+    if (typeof MutationObserver !== 'undefined' && group) {
+      const mo = new MutationObserver(() => updateHeaderCloudScrollHint());
+      mo.observe(group, { childList: true, subtree: true, attributes: true });
+    }
   }
 
   const PRIMARY_TAB_SCROLL_POSITIONS = { score: 0, games: 0 };
@@ -5467,6 +5532,7 @@
     // Unified table mode no longer requires dual-pane scroll synchronization.
     setupIOSStickyHeaders();
     setupGamesPanelScrollSync();
+    bindHeaderCloudScrollIndicator();
     syncHeaderBadgeButtonLabels();
     window.addEventListener('resize', syncHeaderBadgeButtonLabels, { passive: true });
     
