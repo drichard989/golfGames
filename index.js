@@ -1861,11 +1861,18 @@
         const clearSymbol = () => {
           if (!cell) return;
           if (cell.hasAttribute('data-stroke-symbol')) cell.removeAttribute('data-stroke-symbol');
+          if (cell.hasAttribute('data-stroke-dots')) cell.removeAttribute('data-stroke-dots');
         };
 
-        const setSymbol = (symbol) => {
+        const setSymbol = (symbol, count = 1) => {
           if (!cell) return;
           cell.setAttribute('data-stroke-symbol', symbol);
+          if (symbol === 'dot') {
+            const dotCount = Math.max(1, Math.min(4, Number(count) || 1));
+            cell.setAttribute('data-stroke-dots', String(dotCount));
+          } else if (cell.hasAttribute('data-stroke-dots')) {
+            cell.removeAttribute('data-stroke-dots');
+          }
         };
 
         if(sr > 0) {
@@ -1877,7 +1884,7 @@
           }
 
           if (showSymbols) {
-            setSymbol('dot');
+            setSymbol('dot', sr);
           } else {
             clearSymbol();
           }

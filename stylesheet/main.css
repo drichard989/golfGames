@@ -1635,6 +1635,18 @@ input[type="number"] {
   background: currentColor;
 }
 
+#scorecard .player-row td:nth-child(n+3)[data-stroke-symbol="dot"][data-stroke-dots="2"]::after {
+  box-shadow: -10px 0 0 currentColor;
+}
+
+#scorecard .player-row td:nth-child(n+3)[data-stroke-symbol="dot"][data-stroke-dots="3"]::after {
+  box-shadow: -10px 0 0 currentColor, -20px 0 0 currentColor;
+}
+
+#scorecard .player-row td:nth-child(n+3)[data-stroke-symbol="dot"][data-stroke-dots="4"]::after {
+  box-shadow: -10px 0 0 currentColor, -20px 0 0 currentColor, -30px 0 0 currentColor;
+}
+
 #scorecard .player-row td:nth-child(n+3)[data-stroke-symbol="plus"]::after {
   width: 10px;
   height: 10px;
