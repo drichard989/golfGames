@@ -93,17 +93,17 @@
 }
 
 /* In standalone/PWA mode, bootstrap a conservative safe-area default so the
-   first CSS paint is correct before JS has a chance to measure the real value.
+   first CSS paint does not clip under the status bar before JS measures.
    JS (syncSafeTopInset) will overwrite --safe-top-dynamic with the exact px. */
 @media (display-mode: standalone) {
   :root {
-    --safe-top-dynamic: 44px;
+    --safe-top-dynamic: 20px;
   }
 }
 
 @media (display-mode: fullscreen) {
   :root {
-    --safe-top-dynamic: 44px;
+    --safe-top-dynamic: 20px;
   }
 }
 

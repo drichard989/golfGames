@@ -1083,11 +1083,15 @@
     } catch (_) {}
 
     // Platform fallbacks when env(safe-area-inset-top) is 0 in standalone mode.
-    // iOS portrait: 44px typical dynamic island / notch height.
+    // iOS portrait: pick a conservative value based on screen class.
     // Android: 24px minimum status bar; modern Android Chrome returns correct env() so fallback rarely fires.
     let fallbackTop = 0;
     if (standalone && envTop === 0) {
-      if (isIOS && portrait) fallbackTop = 44;
+      if (isIOS && portrait) {
+        const longestEdge = Math.max(window.screen?.height || 0, window.screen?.width || 0);
+        // Notch/Dynamic-Island iPhones are typically >= 812pt in portrait.
+        fallbackTop = longestEdge >= 812 ? 44 : 20;
+      }
       else if (isAndroid) fallbackTop = 24;
     }
 
