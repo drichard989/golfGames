@@ -1439,12 +1439,12 @@ td {
 
 #scorecard thead th:first-child {
   background-color: var(--panel-alt);
-  z-index: 21;
+  z-index: 72;
 }
 
 #scorecard thead th:nth-child(2) {
   background-color: var(--panel-alt);
-  z-index: 21;
+  z-index: 71;
 }
 
 tr:last-child td {
