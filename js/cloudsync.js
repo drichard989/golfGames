@@ -1076,10 +1076,95 @@
     setStatus('Cloud: live view link ready');
   }
 
-  function openQrModalFromText(text, title = 'Live Share QR', subtitleText = 'Scan to open the live view scorecard.') {
+  function buildQrCenterIconDataUrl(mode = 'view') {
+    const eyeSvg = `
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
+        <rect x='8' y='8' width='80' height='80' rx='18' fill='#ffffff' stroke='#0f172a' stroke-width='6'/>
+        <path d='M16 48c8-14 19-21 32-21s24 7 32 21c-8 14-19 21-32 21S24 62 16 48z' fill='none' stroke='#0f172a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
+        <circle cx='48' cy='48' r='9' fill='#0f172a'/>
+      </svg>`;
+
+    const pencilSvg = `
+      <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
+        <rect x='8' y='8' width='80' height='80' rx='18' fill='#ffffff' stroke='#0f172a' stroke-width='6'/>
+        <path d='M28 64l7-2 30-30-5-5-30 30-2 7z' fill='none' stroke='#0f172a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
+        <path d='M58 26l5-5 7 7-5 5z' fill='none' stroke='#0f172a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
+      </svg>`;
+
+    const svg = mode === 'edit' ? pencilSvg : eyeSvg;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
+
+  function drawFallbackQrCanvas(qrWrap, text) {
     if (typeof qrcode === 'undefined') {
       throw new Error('QR library unavailable. Refresh and try again.');
     }
+
+    const qr = qrcode(0, 'H');
+    qr.addData(String(text));
+    qr.make();
+
+    const size = 260;
+    const cellSize = Math.floor(size / qr.getModuleCount());
+    const actualSize = cellSize * qr.getModuleCount();
+    const canvas = document.createElement('canvas');
+    canvas.width = actualSize;
+    canvas.height = actualSize;
+    const ctx = canvas.getContext('2d');
+
+    for (let row = 0; row < qr.getModuleCount(); row++) {
+      for (let col = 0; col < qr.getModuleCount(); col++) {
+        ctx.fillStyle = qr.isDark(row, col) ? '#000000' : '#ffffff';
+        ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
+      }
+    }
+
+    qrWrap.appendChild(canvas);
+  }
+
+  function renderBrandedQr(qrWrap, text, mode = 'view') {
+    const iconDataUrl = buildQrCenterIconDataUrl(mode);
+    if (typeof QRCodeStyling !== 'undefined') {
+      const qrStyled = new QRCodeStyling({
+        width: 260,
+        height: 260,
+        type: 'canvas',
+        data: String(text),
+        margin: 0,
+        qrOptions: {
+          errorCorrectionLevel: 'H'
+        },
+        dotsOptions: {
+          color: '#000000',
+          type: 'rounded'
+        },
+        cornersSquareOptions: {
+          color: '#000000',
+          type: 'extra-rounded'
+        },
+        cornersDotOptions: {
+          color: '#000000',
+          type: 'dot'
+        },
+        backgroundOptions: {
+          color: '#ffffff'
+        },
+        image: iconDataUrl,
+        imageOptions: {
+          hideBackgroundDots: true,
+          imageSize: 0.22,
+          margin: 4,
+          crossOrigin: 'anonymous'
+        }
+      });
+      qrStyled.append(qrWrap);
+      return;
+    }
+
+    drawFallbackQrCanvas(qrWrap, text);
+  }
+
+  function openQrModalFromText(text, title = 'Live Share QR', subtitleText = 'Scan to open the live view scorecard.', mode = 'view') {
 
     const modal = document.createElement('div');
     modal.id = 'cloudLiveQrModal';
@@ -1134,26 +1219,7 @@
     modal.appendChild(card);
     document.body.appendChild(modal);
 
-    const qr = qrcode(0, 'M');
-    qr.addData(String(text));
-    qr.make();
-
-    const size = 260;
-    const cellSize = Math.floor(size / qr.getModuleCount());
-    const actualSize = cellSize * qr.getModuleCount();
-    const canvas = document.createElement('canvas');
-    canvas.width = actualSize;
-    canvas.height = actualSize;
-    const ctx = canvas.getContext('2d');
-
-    for (let row = 0; row < qr.getModuleCount(); row++) {
-      for (let col = 0; col < qr.getModuleCount(); col++) {
-        ctx.fillStyle = qr.isDark(row, col) ? '#000000' : '#ffffff';
-        ctx.fillRect(col * cellSize, row * cellSize, cellSize, cellSize);
-      }
-    }
-
-    qrWrap.appendChild(canvas);
+    renderBrandedQr(qrWrap, text, mode);
   }
 
   function extractCodeFromScannedQrText(rawText) {
@@ -1346,7 +1412,7 @@
     setStatus('Cloud: preparing live QR...');
     const viewCode = await ensureShareSessionWithViewCode();
     const url = buildViewShareUrl(viewCode);
-    openQrModalFromText(url, 'Live View QR', 'Scan to open the live scorecard in read-only mode.');
+    openQrModalFromText(url, 'Live View QR', 'Scan to open the live scorecard in read-only mode.', 'view');
     setStatus(`Cloud: live QR ready • Game ${state.session?.gameId || ''}`);
   }
 
@@ -1366,7 +1432,7 @@
     setStatus('Cloud: preparing edit QR...');
     const editCode = await ensureShareSessionWithEditCode();
     const url = buildEditShareUrl(editCode);
-    openQrModalFromText(url, 'Live Edit QR', 'Scan to open the live scorecard with edit access. Share with trusted players only.');
+    openQrModalFromText(url, 'Live Edit QR', 'Scan to open the live scorecard with edit access. Share with trusted players only.', 'edit');
     setStatus(`Cloud: live edit QR ready • Game ${state.session?.gameId || ''}`);
   }
 
