@@ -803,7 +803,7 @@
     const labels = [
       { id: 'cloudCreateBadgeBtn', full: 'Go live', compact: 'Live' },
       { id: 'cloudQrBadgeBtn', full: 'Share QR', compact: 'QR' },
-      { id: 'cloudEditCodeBadgeBtn', full: 'Edit code', compact: 'Edit' },
+      { id: 'cloudEditCodeBadgeBtn', full: 'Scorekeeping QR', compact: 'Score QR' },
       { id: 'cloudViewCodeBadgeBtn', full: 'View code', compact: 'View' }
     ];
 
@@ -971,6 +971,8 @@
 
   function syncScorePanelHeight() {
     const panel = document.getElementById('scoreEntryPanel');
+    const scorecard = document.getElementById('main-scorecard');
+    const footerShell = document.querySelector('.scorecard-controls-shell');
     if (!panel) return;
 
     const viewportHeight = (window.visualViewport?.height) || window.innerHeight || document.documentElement.clientHeight || 0;
@@ -982,6 +984,15 @@
     const available = Math.max(260, Math.floor(viewportHeight - topBoundary));
     panel.style.height = `${available}px`;
     panel.style.maxHeight = `${available}px`;
+    if (scorecard) {
+      const scorecardTop = Math.round(scorecard.getBoundingClientRect().top) || topBoundary;
+      const footerTop = footerShell
+        ? Math.round(footerShell.getBoundingClientRect().top)
+        : viewportHeight;
+      const scorecardHeight = Math.max(180, footerTop - scorecardTop - 8);
+      scorecard.style.height = `${scorecardHeight}px`;
+      scorecard.style.maxHeight = `${scorecardHeight}px`;
+    }
   }
 
   function syncSafeTopInset() {
@@ -5463,40 +5474,9 @@
     };
     bindGameOptionsToggles();
 
-    const bindScorecardFooterToggle = () => {
-      const footerToggleBtn = document.getElementById('scorecardFooterToggle');
-      const footerControls = document.getElementById('scorecardFooterControls');
-      const scorecardOptionsBtn = document.getElementById('scorecardOptionsToggle');
-      const scorecardOptionsPanel = document.getElementById('scorecardOptionsPanel');
-      const scorecardFooter = footerToggleBtn?.closest('.scorecard-card-footer');
-      if (!footerToggleBtn || !footerControls || !scorecardFooter) return;
-
-      const syncFooterState = (showControls) => {
-        footerControls.hidden = !showControls;
-        scorecardFooter.classList.toggle('is-compact', !showControls);
-        footerToggleBtn.setAttribute('aria-expanded', showControls ? 'true' : 'false');
-        footerToggleBtn.textContent = showControls ? '▲ Hide' : '▼ Show';
-        footerToggleBtn.setAttribute('aria-label', showControls ? 'Hide scorecard controls' : 'Show scorecard controls');
-
-        if (!showControls && scorecardOptionsPanel) {
-          scorecardOptionsPanel.hidden = true;
-          if (scorecardOptionsBtn) {
-            scorecardOptionsBtn.classList.remove('is-open');
-            scorecardOptionsBtn.setAttribute('aria-expanded', 'false');
-          }
-        }
-
-        requestAnimationFrame(() => {
-          syncScorePanelHeight();
-        });
-      };
-
-      syncFooterState(false);
-      footerToggleBtn.addEventListener('click', () => {
-        syncFooterState(footerControls.hidden);
-      });
-    };
-    bindScorecardFooterToggle();
+    requestAnimationFrame(() => {
+      syncScorePanelHeight();
+    });
     
     // Clear Junk Achievements button
     document.getElementById('clearJunkAchievements')?.addEventListener('click', () => {
@@ -5593,7 +5573,7 @@
 
         const editBtn = document.createElement('button');
         editBtn.className = 'btn';
-        editBtn.textContent = 'Edit QR';
+        editBtn.textContent = 'Scorekeeping QR';
         editBtn.style.cssText = 'flex: 1 1 120px; background: var(--warn); color: #111;';
 
         const cancelBtn = document.createElement('button');
@@ -5669,7 +5649,7 @@
     // Re-measure whenever the header finishes its CSS transition.
     // Wrap in rAF so the sticky nav has been composited before we measure its position.
     document.querySelector('header')?.addEventListener('transitionend', (e) => {
-      if (e.propertyName === 'max-height') {
+      if (e.propertyName === 'max-height' || e.propertyName === 'grid-template-rows') {
         requestAnimationFrame(() => {
           syncGamesPanelHeight();
           syncScorePanelHeight();
@@ -5678,6 +5658,18 @@
     });
     applyHeaderVisibility();
     syncHeaderCollapseBtn();
+    requestAnimationFrame(() => {
+      syncGamesPanelHeight();
+      syncScorePanelHeight();
+    });
+    setTimeout(() => {
+      syncGamesPanelHeight();
+      syncScorePanelHeight();
+    }, 240);
+    setTimeout(() => {
+      syncGamesPanelHeight();
+      syncScorePanelHeight();
+    }, 400);
 
     // Ensure font size controls exist (fallback for stale cached HTML)
     if (!document.getElementById('fontSizeSmall') || !document.getElementById('fontSizeMedium') || !document.getElementById('fontSizeLarge')) {

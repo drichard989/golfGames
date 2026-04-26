@@ -440,11 +440,11 @@
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.className = 'btn';
-      editBtn.textContent = 'Edit QR';
+      editBtn.textContent = 'Scorekeeping QR';
       editBtn.style.cssText = 'flex:1 1 120px;';
       editBtn.disabled = !isEditor;
       if (!isEditor) {
-        editBtn.title = 'Edit QR is only available for editor sessions';
+        editBtn.title = 'Scorekeeping QR is only available for editor sessions';
       }
 
       const cancelBtn = document.createElement('button');

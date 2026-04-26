@@ -33,6 +33,8 @@
   let viewportMq = null;
   let coarseTouchMq = null;
   let touchStartY = null;
+  let touchCurrentY = null;
+  let isDraggingSheet = false;
 
   let backdropEl = null;
   let sheetEl = null;
@@ -250,13 +252,15 @@
     sheetEl.querySelector('#scoreSheetCloseBtn')?.addEventListener('click', () => closeSheet('explicit'));
     sheetEl.querySelector('[data-nav="prev"]')?.addEventListener('click', () => navigateHole(-1));
     sheetEl.querySelector('[data-nav="next"]')?.addEventListener('click', () => navigateHole(1));
+    const headerEl = sheetEl.querySelector('.score-sheet-header');
 
     sheetEl.addEventListener('click', onSheetClick);
     sheetEl.addEventListener('input', onSheetInput);
     sheetEl.addEventListener('keydown', onSheetKeydown);
-    sheetEl.addEventListener('touchstart', onSheetTouchStart, { passive: true });
-    sheetEl.addEventListener('touchmove', onSheetTouchMove, { passive: true });
-    sheetEl.addEventListener('touchend', onSheetTouchEnd);
+    headerEl?.addEventListener('touchstart', onSheetTouchStart, { passive: false });
+    headerEl?.addEventListener('touchmove', onSheetTouchMove, { passive: false });
+    headerEl?.addEventListener('touchend', onSheetTouchEnd);
+    headerEl?.addEventListener('touchcancel', onSheetTouchEnd);
 
     document.addEventListener('keydown', (e) => {
       if (!sheetEl?.classList.contains('is-open')) return;
@@ -285,6 +289,7 @@
     document.body.classList.add('score-sheet-open');
     backdropEl.classList.add('is-open');
     sheetEl.classList.add('is-open');
+    sheetEl.style.transform = '';
     navigator.vibrate?.(8);
   }
 
@@ -299,8 +304,12 @@
     sheetEl.classList.remove('is-open');
     backdropEl.classList.remove('is-open');
     document.body.classList.remove('score-sheet-open');
+    sheetEl.style.transform = '';
     currentHole = null;
     draftScoresByPlayer = {};
+    touchStartY = null;
+    touchCurrentY = null;
+    isDraggingSheet = false;
   }
 
   function loadDraftForHole(holeOneBased) {
@@ -499,24 +508,38 @@
   }
 
   function onSheetTouchStart(e) {
-    touchStartY = e.touches?.[0]?.clientY || null;
+    if (!sheetEl?.classList.contains('is-open')) return;
+    if (e.touches?.length !== 1) return;
+    if (e.target.closest('button')) return;
+
+    touchStartY = e.touches[0].clientY || null;
+    touchCurrentY = touchStartY;
+    isDraggingSheet = Number.isFinite(touchStartY);
   }
 
   function onSheetTouchMove(e) {
-    if (!touchStartY || e.touches?.length !== 1) return;
-    const dy = (e.touches[0].clientY || 0) - touchStartY;
-    if (dy > 0 && dy < SWIPE_CLOSE_THRESHOLD_PX) {
-      sheetEl.style.transform = `translateY(${dy}px)`;
-    }
+    if (!isDraggingSheet || !touchStartY || e.touches?.length !== 1 || !sheetEl) return;
+    touchCurrentY = e.touches[0].clientY || touchStartY;
+    const dy = Math.max(0, touchCurrentY - touchStartY);
+
+    if (e.cancelable) e.preventDefault();
+
+    sheetEl.style.transform = `translateY(${dy}px)`;
   }
 
   function onSheetTouchEnd(e) {
-    if (!touchStartY || !sheetEl) {
+    if (!isDraggingSheet || !touchStartY || !sheetEl) {
       touchStartY = null;
+      touchCurrentY = null;
+      isDraggingSheet = false;
       return;
     }
-    const dy = (e.changedTouches?.[0]?.clientY || 0) - touchStartY;
+
+    const finalY = (e.changedTouches?.[0]?.clientY || touchCurrentY || touchStartY);
+    const dy = Math.max(0, finalY - touchStartY);
     touchStartY = null;
+    touchCurrentY = null;
+    isDraggingSheet = false;
     sheetEl.style.transform = '';
 
     if (dy > SWIPE_CLOSE_THRESHOLD_PX) {

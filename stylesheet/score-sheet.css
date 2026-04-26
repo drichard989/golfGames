@@ -7,6 +7,10 @@ body.score-sheet-active #scorecard .score-input {
   caret-color: transparent;
 }
 
+body.score-sheet-open {
+  overscroll-behavior-y: none;
+}
+
 /* On touch screens, score cells look like tappable tiles rather than form inputs */
 @media (pointer: coarse) {
   body.score-sheet-active #scorecard .score-input {
@@ -104,6 +108,9 @@ body.score-sheet-active #scorecard .score-input {
   padding: 12px 14px;
   border-bottom: 2px solid var(--line);
   background: var(--panel-alt);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 :root[data-theme="light"] .score-sheet-header {
@@ -143,6 +150,7 @@ body.score-sheet-active #scorecard .score-input {
 .score-sheet-body {
   padding: 12px 14px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .score-sheet-hole-card {
