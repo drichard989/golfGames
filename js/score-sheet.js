@@ -22,7 +22,6 @@
   const TOUCH_QUERY = '(hover: none) and (pointer: coarse)';
   const OPEN_TO_BACKDROP_GUARD_MS = 900;
   const AUTO_CLOSE_LOCK_MS = 1600;
-  const SWIPE_CLOSE_THRESHOLD_PX = 80;
 
   let isMobileMode = false;
   let currentHole = null;
@@ -32,9 +31,6 @@
   let lastOpenedAt = 0;
   let viewportMq = null;
   let coarseTouchMq = null;
-  let touchStartY = null;
-  let touchCurrentY = null;
-  let isDraggingSheet = false;
 
   let backdropEl = null;
   let sheetEl = null;
@@ -252,15 +248,10 @@
     sheetEl.querySelector('#scoreSheetCloseBtn')?.addEventListener('click', () => closeSheet('explicit'));
     sheetEl.querySelector('[data-nav="prev"]')?.addEventListener('click', () => navigateHole(-1));
     sheetEl.querySelector('[data-nav="next"]')?.addEventListener('click', () => navigateHole(1));
-    const headerEl = sheetEl.querySelector('.score-sheet-header');
 
     sheetEl.addEventListener('click', onSheetClick);
     sheetEl.addEventListener('input', onSheetInput);
     sheetEl.addEventListener('keydown', onSheetKeydown);
-    headerEl?.addEventListener('touchstart', onSheetTouchStart, { passive: false });
-    headerEl?.addEventListener('touchmove', onSheetTouchMove, { passive: false });
-    headerEl?.addEventListener('touchend', onSheetTouchEnd);
-    headerEl?.addEventListener('touchcancel', onSheetTouchEnd);
 
     document.addEventListener('keydown', (e) => {
       if (!sheetEl?.classList.contains('is-open')) return;
@@ -307,9 +298,6 @@
     sheetEl.style.transform = '';
     currentHole = null;
     draftScoresByPlayer = {};
-    touchStartY = null;
-    touchCurrentY = null;
-    isDraggingSheet = false;
   }
 
   function loadDraftForHole(holeOneBased) {
@@ -505,46 +493,6 @@
 
     if (currentHole >= HOLES) return;
     navigateHole(1, player);
-  }
-
-  function onSheetTouchStart(e) {
-    if (!sheetEl?.classList.contains('is-open')) return;
-    if (e.touches?.length !== 1) return;
-    if (e.target.closest('button')) return;
-
-    touchStartY = e.touches[0].clientY || null;
-    touchCurrentY = touchStartY;
-    isDraggingSheet = Number.isFinite(touchStartY);
-  }
-
-  function onSheetTouchMove(e) {
-    if (!isDraggingSheet || !touchStartY || e.touches?.length !== 1 || !sheetEl) return;
-    touchCurrentY = e.touches[0].clientY || touchStartY;
-    const dy = Math.max(0, touchCurrentY - touchStartY);
-
-    if (e.cancelable) e.preventDefault();
-
-    sheetEl.style.transform = `translateY(${dy}px)`;
-  }
-
-  function onSheetTouchEnd(e) {
-    if (!isDraggingSheet || !touchStartY || !sheetEl) {
-      touchStartY = null;
-      touchCurrentY = null;
-      isDraggingSheet = false;
-      return;
-    }
-
-    const finalY = (e.changedTouches?.[0]?.clientY || touchCurrentY || touchStartY);
-    const dy = Math.max(0, finalY - touchStartY);
-    touchStartY = null;
-    touchCurrentY = null;
-    isDraggingSheet = false;
-    sheetEl.style.transform = '';
-
-    if (dy > SWIPE_CLOSE_THRESHOLD_PX) {
-      closeSheet('swipe');
-    }
   }
 
   function onScoreInputClick(e) {

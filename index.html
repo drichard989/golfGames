@@ -11,19 +11,19 @@
     <meta http-equiv="Expires" content="0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.2.110" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.2.110" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.2.110" />
-    <link rel="manifest" href="/manifest.json?v=v3.2.110" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.2.111" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.2.111" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.2.111" />
+    <link rel="manifest" href="/manifest.json?v=v3.2.111" />
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .githooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.110" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.111" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.110" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.110" />
-    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.2.110" />
-    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.2.110" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.111" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.111" />
+    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.2.111" />
+    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.2.111" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -34,15 +34,6 @@
       <div class="header-inner">
       <div class="header-title-row">
         <h1>Golf Games</h1>
-        <div class="header-action-buttons">
-          <div class="header-course-control">
-            <label for="courseSelect" class="sr-only">Course</label>
-            <select id="courseSelect" aria-label="Course selector">
-              <!-- Options populated dynamically from COURSES in index.js -->
-            </select>
-          </div>
-          <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
-        </div>
       </div>
       <div class="controls header-addplayer-row header-cloud-row" style="display: flex; gap: 12px; align-items: center;">
       </div>
@@ -95,35 +86,35 @@
 
         <button type="button" class="btn game-options-toggle utilities-toggle-btn" id="cloudOptionsToggle" data-target="cloudOptionsPanel" aria-controls="cloudOptionsPanel" aria-expanded="false">☁️ Live Sharing</button>
 
-      </div>
-
-      <div id="cloudOptionsPanel" class="game-options-panel header-cloud-options-panel" hidden>
-        <div class="control cloud-control cloud-control-compact">
-          <div class="cloud-row cloud-row-session">
-            <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
-            <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" />
-            <button id="cloudJoinBtn" class="btn" type="button">Join</button>
-            <button id="cloudJoinQrBtn" class="btn" type="button">Join QR</button>
-            <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
-          </div>
-          <div class="cloud-row cloud-row-share">
-            <button id="generateQRBtn" class="btn" type="button">📷 Share Live via QR</button>
-          </div>
-          <button type="button" class="btn game-options-toggle" id="cloudSnapshotsToggle" data-target="cloudSnapshotsPanel" aria-controls="cloudSnapshotsPanel" aria-expanded="false">Snapshots</button>
-          <div id="cloudSnapshotsPanel" class="game-options-panel cloud-snapshots-panel" hidden>
-            <div class="cloud-row cloud-row-snapshots">
-              <select id="cloudSnapshotSelect">
-                <option value="">Live current version</option>
-              </select>
-              <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
-              <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
-              <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
+        <div id="cloudOptionsPanel" class="game-options-panel header-cloud-options-panel" hidden>
+          <div class="control cloud-control cloud-control-compact">
+            <div class="cloud-row cloud-row-session">
+              <button id="cloudCreateBtn" class="btn" type="button">☁️ Create Live Session</button>
+              <input id="cloudJoinCode" type="text" placeholder="Enter edit/view code" autocomplete="off" />
+              <button id="cloudJoinBtn" class="btn" type="button">Join</button>
+              <button id="cloudJoinQrBtn" class="btn" type="button">Join QR</button>
+              <button id="cloudLeaveBtn" class="btn" type="button">Leave</button>
             </div>
+            <div class="cloud-row cloud-row-share">
+              <button id="generateQRBtn" class="btn" type="button">📷 Share Live via QR</button>
+            </div>
+            <button type="button" class="btn game-options-toggle" id="cloudSnapshotsToggle" data-target="cloudSnapshotsPanel" aria-controls="cloudSnapshotsPanel" aria-expanded="false">Snapshots</button>
+            <div id="cloudSnapshotsPanel" class="game-options-panel cloud-snapshots-panel" hidden>
+              <div class="cloud-row cloud-row-snapshots">
+                <select id="cloudSnapshotSelect">
+                  <option value="">Live current version</option>
+                </select>
+                <button id="cloudLoadSnapshotBtn" class="btn" type="button">Review Snapshot</button>
+                <button id="cloudResumeLiveBtn" class="btn" type="button">Back to Live</button>
+                <button id="cloudSaveSnapshotBtn" class="btn" type="button">Save as Current</button>
+              </div>
+            </div>
+            <div id="cloudStatus" class="small">Cloud: not connected</div>
+            <div id="cloudCodes" class="small" style="display:none;"></div>
+            <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
           </div>
-          <div id="cloudStatus" class="small">Cloud: not connected</div>
-          <div id="cloudCodes" class="small" style="display:none;"></div>
-          <div id="cloudSnapshotStatus" class="small" style="display:none;"></div>
         </div>
+
       </div>
       </div>
     </header>
@@ -139,7 +130,6 @@
           <button id="cloudEditCodeBadgeBtn" class="cloud-code-badge-btn cloud-code-badge-btn-share" type="button" hidden><span class="badge-text">Scorekeeping QR</span><span class="badge-icon" aria-label="Share">⤴</span></button>
           <button id="cloudViewCodeBadgeBtn" class="cloud-code-badge-btn cloud-code-badge-btn-share" type="button" hidden><span class="badge-text">View code</span><span class="badge-icon" aria-label="Share">⤴</span></button>
         </div>
-        <button id="headerCollapseBtn" class="header-collapse-btn" type="button" aria-label="Hide header" aria-expanded="true">▲ Hide</button>
       </div>
       <div class="entry-switcher" role="tablist" aria-label="Switch between scorecard and games">
         <button id="entrySwitcherScoreBtn" class="entry-switcher-btn active" type="button" role="tab" aria-selected="true" aria-controls="scoreEntryPanel">⛳ Score</button>
@@ -173,15 +163,29 @@
       <!-- SCORECARD FOOTER (attached to card) -->
       <div class="scorecard-card-footer">
         <div class="scorecard-footer-controls" id="scorecardFooterControls">
-          <button id="addPlayerBtn" class="btn scorecard-add-player-btn">+ Add Player</button>
+          <button id="addPlayerBtn" class="btn scorecard-add-player-btn">+ Player</button>
           <button type="button" class="btn game-options-toggle" id="scorecardOptionsToggle" data-target="scorecardOptionsPanel" aria-controls="scorecardOptionsPanel" aria-expanded="false">Scorecard Options</button>
           <button id="themeToggle" class="theme-toggle scorecard-theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle light and dark theme">☀️</button>
+          <button type="button" class="btn scorecard-main-options-icon" id="footerMainOptionsToggle" aria-controls="headerOptionsPanel" aria-label="Main options" title="Main options">⚙️</button>
         </div>
       </div>
 
       <!-- SCORECARD OPTIONS -->
       <div id="scorecardOptionsPanel" class="game-options-panel scorecard-options-panel" hidden>
         <div class="controls scorecard-options-controls">
+          <div class="header-course-control">
+            <label for="courseSearch" class="sr-only">Course</label>
+            <div id="coursePicker" class="course-picker">
+              <div class="course-picker-input-wrap">
+                <input id="courseSearch" type="search" aria-label="Course selector" placeholder="Search course" autocomplete="off" aria-haspopup="listbox" aria-expanded="false" aria-controls="courseOptionsList" />
+                <button id="coursePickerToggle" type="button" class="btn course-picker-toggle" aria-label="Show course list" aria-expanded="false" aria-controls="courseOptionsList">▾</button>
+              </div>
+              <div id="courseDropdown" class="course-dropdown" hidden>
+                <div id="courseOptionsList" class="course-options" role="listbox" aria-label="Course options"></div>
+                <div id="courseNoResults" class="small course-no-results" hidden>No matching courses</div>
+              </div>
+            </div>
+          </div>
           <div class="control handicap-mode-control">
             <label>Handicap Mode:</label>
             <div class="hcp-mode-btn-group" id="handicapModeGroup" role="radiogroup" aria-label="Handicap Mode">
@@ -608,18 +612,18 @@
     </div>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     </section>
-    <script src="index.js?v=v3.2.110" defer></script>
-    <script src="js/export.js?v=v3.2.110" defer></script>
-    <script src="js/vegas.js?v=v3.2.110" defer></script>
-    <script src="js/banker.js?v=v3.2.110" defer></script>
-    <script src="js/banker-sheet.js?v=v3.2.110" defer></script>
-    <script src="js/hilo.js?v=v3.2.110" defer></script>
-    <script src="js/skins.js?v=v3.2.110" defer></script>
-    <script src="js/junk.js?v=v3.2.110" defer></script>
-    <script src="js/junk-sheet.js?v=v3.2.110" defer></script>
-    <script src="js/wolf.js?v=v3.2.110" defer></script>
-    <script src="js/wolf-sheet.js?v=v3.2.110" defer></script>
-    <script src="js/score-sheet.js?v=v3.2.110" defer></script>
+    <script src="index.js?v=v3.2.111" defer></script>
+    <script src="js/export.js?v=v3.2.111" defer></script>
+    <script src="js/vegas.js?v=v3.2.111" defer></script>
+    <script src="js/banker.js?v=v3.2.111" defer></script>
+    <script src="js/banker-sheet.js?v=v3.2.111" defer></script>
+    <script src="js/hilo.js?v=v3.2.111" defer></script>
+    <script src="js/skins.js?v=v3.2.111" defer></script>
+    <script src="js/junk.js?v=v3.2.111" defer></script>
+    <script src="js/junk-sheet.js?v=v3.2.111" defer></script>
+    <script src="js/wolf.js?v=v3.2.111" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.2.111" defer></script>
+    <script src="js/score-sheet.js?v=v3.2.111" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
@@ -629,8 +633,8 @@
     <!-- Cloud QR dependencies (required by js/cloudsync.js for share/join QR scanning & generation) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-    <script src="js/firebase-config.js?v=v3.2.110" defer></script>
-    <script src="js/cloudsync.js?v=v3.2.110" defer></script>
+    <script src="js/firebase-config.js?v=v3.2.111" defer></script>
+    <script src="js/cloudsync.js?v=v3.2.111" defer></script>
     <!-- Cloud QR libraries must load before js/cloudsync.js -->
     <!-- =====================================================================
          TOP-PINNED-SHELL HEIGHT TRACKER + BANKER LIVE RESULTS PIN

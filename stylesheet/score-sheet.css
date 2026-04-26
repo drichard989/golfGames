@@ -108,9 +108,6 @@ body.score-sheet-open {
   padding: 12px 14px;
   border-bottom: 2px solid var(--line);
   background: var(--panel-alt);
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 :root[data-theme="light"] .score-sheet-header {

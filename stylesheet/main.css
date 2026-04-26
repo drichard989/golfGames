@@ -262,7 +262,7 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
 .header-collapse-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   padding: 2px var(--space-lg) 0;
 }
 
@@ -1002,12 +1002,22 @@ select:not(.select-plain) option {
 }
 
 .scorecard-theme-toggle {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
+.scorecard-main-options-icon {
   margin-left: auto;
   min-width: 40px;
   width: 40px;
   height: 40px;
   min-height: 40px;
   padding: 0;
+  gap: 0;
   border-radius: var(--radius-md);
 }
 
@@ -1041,6 +1051,10 @@ select:not(.select-plain) option {
   bottom: 0;
   z-index: 35;
   box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.24);
+}
+
+.scorecard-controls-shell.has-main-options-open {
+  z-index: 120;
 }
 
 #scoreEntryPanel {
@@ -2036,6 +2050,17 @@ body.mode-games .gamesbar {
 
 .game-options-toggle.is-open::after {
   transform: rotate(0deg);
+}
+
+.scorecard-footer-controls .scorecard-main-options-icon::after {
+  content: none !important;
+}
+
+.scorecard-main-options-icon.is-open {
+  border-color: var(--accent);
+  background: rgba(104, 211, 145, 0.22);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px rgba(104, 211, 145, 0.35);
 }
 
 /* Dark mode micro-contrast pass for inactive controls */
@@ -3305,11 +3330,15 @@ input[type="text"] {
 }
 
 .header-course-control {
-  flex: 1 1 auto;
+  flex: 1 1 100%;
   min-width: 0;
 }
 
-.header-course-control select {
+.scorecard-options-controls .header-course-control {
+  margin-bottom: 2px;
+}
+
+.header-course-control input {
   width: 100%;
   height: var(--touch-min);
   min-height: var(--touch-min);
@@ -3322,9 +3351,79 @@ input[type="text"] {
   box-sizing: border-box;
 }
 
+.course-picker {
+  position: relative;
+}
+
+.course-picker-input-wrap {
+  position: relative;
+}
+
+.course-picker-input-wrap #courseSearch {
+  padding-right: 44px;
+}
+
+.course-picker-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  width: 34px;
+  min-width: 34px;
+  height: calc(var(--touch-min) - 8px);
+  min-height: calc(var(--touch-min) - 8px);
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
+
+.course-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  border: 2px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--panel-alt);
+  z-index: 85;
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+.course-options {
+  max-height: min(46vh, 280px);
+  overflow-y: auto;
+}
+
+.course-option {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(168, 179, 191, 0.22);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  font-weight: 600;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.course-option:last-child {
+  border-bottom: none;
+}
+
+.course-option:hover,
+.course-option:focus-visible,
+.course-option.is-selected {
+  background: rgba(74, 158, 255, 0.2);
+}
+
+.course-no-results {
+  padding: 10px 12px;
+  color: var(--muted);
+}
+
 .header-action-buttons #headerOptionsToggle,
-.header-action-buttons #cloudOptionsToggle,
-.header-action-buttons #courseSelect {
+.header-action-buttons #cloudOptionsToggle {
   flex: 1 1 auto;
   height: var(--touch-min);
   min-height: var(--touch-min);
@@ -3350,6 +3449,25 @@ input[type="text"] {
   border: 2px solid var(--line);
   border-radius: var(--radius-xl);
   background: var(--panel-alt);
+}
+
+.header-options-panel.footer-mounted-options {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(100% + 8px);
+  margin: 0;
+  padding: var(--space-sm) 12px 10px;
+  border-left: 2px solid var(--line);
+  border-right: 2px solid var(--line);
+  border-top: 2px solid rgba(168, 179, 191, 0.2);
+  border-bottom: 2px solid var(--line);
+  border-radius: var(--radius-xl);
+  background: var(--panel-alt);
+  z-index: 36;
+  max-height: min(56vh, 420px);
+  overflow-y: auto;
+  box-shadow: 0 -10px 24px rgba(0, 0, 0, 0.2);
 }
 
 .header-cloud-options-panel {
@@ -3691,9 +3809,14 @@ input[type="text"] {
 
   .header-action-buttons #headerOptionsToggle,
   .header-action-buttons #cloudOptionsToggle,
-  .header-action-buttons #courseSelect {
+  .header-course-control input {
     height: var(--touch-comfortable);
     min-height: var(--touch-comfortable);
+  }
+
+  .course-picker-toggle {
+    height: calc(var(--touch-comfortable) - 8px);
+    min-height: calc(var(--touch-comfortable) - 8px);
   }
 
   .utilities-row {

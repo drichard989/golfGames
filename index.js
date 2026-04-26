@@ -778,12 +778,12 @@
 
     runFlush();
   }
-  let headerVisible = false;             // true = header shown
-  let headerAutoHiddenByGamesTab = false; // true = games tab auto-hid it (not user-driven)
+  let headerVisible = true;             // Header is always shown.
 
   function applyHeaderVisibility() {
+    headerVisible = true;
     const appHeader = document.querySelector('header');
-    appHeader?.classList.toggle('header-collapsed', !headerVisible);
+    appHeader?.classList.remove('header-collapsed');
     window.CloudSync?.refreshHeaderBadgeButtons?.();
   }
 
@@ -2147,6 +2147,13 @@
         ACTIVE_COURSE = courseId;
         PARS = Config.pars;
         HCPMEN = Config.hcpMen;
+
+        // Keep header course controls synced with current course.
+        const courseSearch = $('#courseSearch');
+        if (courseSearch) {
+          courseSearch.value = COURSES[courseId].name;
+          courseSearch.dataset.selectedCourseId = courseId;
+        }
         
         // Update global references (for Skins/Junk/Vegas modules)
         window.PARS = PARS;
@@ -2959,8 +2966,11 @@
         
         // Restore course selection
         if(s.course && COURSES[s.course]){
-          const courseSelect = $('#courseSelect');
-          if(courseSelect) courseSelect.value = s.course;
+          const courseSearch = $('#courseSearch');
+          if(courseSearch) {
+            courseSearch.value = COURSES[s.course].name;
+            courseSearch.dataset.selectedCourseId = s.course;
+          }
           if(s.course !== ACTIVE_COURSE){
             Scorecard.course.switch(s.course);
           }
@@ -5412,21 +5422,151 @@
     announce('All games refreshed');
   });
 
-  // Course selector - populate options and wire up
-    const courseSelect = $('#courseSelect');
-    if(courseSelect){
-      // Clear existing options and populate from COURSES
-      courseSelect.innerHTML = '';
-      Object.keys(COURSES).forEach(id => {
-        const option = document.createElement('option');
-        option.value = id;
-        option.textContent = COURSES[id].name;
-        if(id === ACTIVE_COURSE) option.selected = true;
-        courseSelect.appendChild(option);
+  // Course selector - custom searchable dropdown
+    const courseSearch = $('#courseSearch');
+    const coursePickerToggle = $('#coursePickerToggle');
+    const courseDropdown = $('#courseDropdown');
+    const courseOptionsList = $('#courseOptionsList');
+    const courseNoResults = $('#courseNoResults');
+    const coursePicker = $('#coursePicker');
+    if(courseSearch && coursePickerToggle && courseDropdown && courseOptionsList && courseNoResults && coursePicker){
+      const courseIds = Object.keys(COURSES);
+      let isDropdownOpen = false;
+
+      const setDropdownOpen = (isOpen) => {
+        isDropdownOpen = isOpen;
+        courseDropdown.hidden = !isOpen;
+        courseSearch.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        coursePickerToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      };
+
+      const getSelectedCourseId = () => {
+        const stored = courseSearch.dataset.selectedCourseId;
+        return stored && COURSES[stored] ? stored : ACTIVE_COURSE;
+      };
+
+      const renderCourseOptions = (searchValue = '', preferredId = ACTIVE_COURSE) => {
+        const normalized = String(searchValue || '').trim().toLowerCase();
+        const matched = courseIds.filter((id) => COURSES[id].name.toLowerCase().includes(normalized));
+
+        const visible = matched.slice();
+        if (preferredId && COURSES[preferredId] && !visible.includes(preferredId)) {
+          visible.unshift(preferredId);
+        }
+
+        courseOptionsList.innerHTML = '';
+        visible.forEach((id) => {
+          const option = document.createElement('button');
+          option.type = 'button';
+          option.className = 'course-option';
+          option.dataset.courseId = id;
+          option.setAttribute('role', 'option');
+          option.setAttribute('aria-selected', id === preferredId ? 'true' : 'false');
+          option.classList.toggle('is-selected', id === preferredId);
+          option.textContent = COURSES[id].name;
+          courseOptionsList.appendChild(option);
+        });
+
+        courseNoResults.hidden = visible.length > 0;
+        return visible;
+      };
+
+      const applySelectedCourse = (selectedId) => {
+        if (!selectedId || !COURSES[selectedId]) return;
+
+        courseSearch.dataset.selectedCourseId = selectedId;
+        courseSearch.value = COURSES[selectedId].name;
+        renderCourseOptions('', selectedId);
+        setDropdownOpen(false);
+        if (selectedId !== ACTIVE_COURSE) {
+          Scorecard.course.switch(selectedId);
+        }
+      };
+
+      const syncCoursePickerWithActiveCourse = () => {
+        const selectedId = getSelectedCourseId();
+        courseSearch.value = COURSES[selectedId].name;
+        courseSearch.dataset.selectedCourseId = selectedId;
+        renderCourseOptions('', selectedId);
+      };
+
+      courseSearch.value = COURSES[ACTIVE_COURSE].name;
+      courseSearch.dataset.selectedCourseId = ACTIVE_COURSE;
+      renderCourseOptions('', ACTIVE_COURSE);
+      setDropdownOpen(false);
+
+      courseSearch.addEventListener('focus', () => {
+        const selectedId = getSelectedCourseId();
+        renderCourseOptions(courseSearch.value, selectedId);
+        setDropdownOpen(true);
       });
-      
-      courseSelect.addEventListener("change", (e) => {
-        Scorecard.course.switch(e.target.value);
+
+      courseSearch.addEventListener('click', () => {
+        const selectedId = getSelectedCourseId();
+        renderCourseOptions(courseSearch.value, selectedId);
+        setDropdownOpen(true);
+      });
+
+      courseSearch.addEventListener('input', () => {
+        renderCourseOptions(courseSearch.value, getSelectedCourseId());
+        setDropdownOpen(true);
+      });
+
+      courseSearch.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const visibleIds = Array.from(courseOptionsList.querySelectorAll('.course-option')).map((option) => option.dataset.courseId);
+          if (visibleIds.length === 1) {
+            applySelectedCourse(visibleIds[0]);
+            return;
+          }
+
+          const raw = String(courseSearch.value || '').trim().toLowerCase();
+          const exact = courseIds.find((id) => COURSES[id].name.toLowerCase() === raw);
+          if (exact) {
+            applySelectedCourse(exact);
+          }
+        }
+
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          syncCoursePickerWithActiveCourse();
+          setDropdownOpen(false);
+          courseSearch.blur();
+        }
+      });
+
+      coursePickerToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (isDropdownOpen) {
+          syncCoursePickerWithActiveCourse();
+          setDropdownOpen(false);
+          return;
+        }
+
+        const selectedId = getSelectedCourseId();
+        renderCourseOptions('', selectedId);
+        setDropdownOpen(true);
+        courseSearch.focus();
+      });
+
+      courseOptionsList.addEventListener('click', (e) => {
+        const option = e.target.closest('.course-option');
+        if (!option) return;
+        applySelectedCourse(option.dataset.courseId);
+      });
+
+      document.addEventListener('click', (e) => {
+        if (coursePicker.contains(e.target)) return;
+        if (!isDropdownOpen) return;
+        syncCoursePickerWithActiveCourse();
+        setDropdownOpen(false);
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape' || !isDropdownOpen) return;
+        syncCoursePickerWithActiveCourse();
+        setDropdownOpen(false);
       });
     }
 
@@ -5475,6 +5615,59 @@
       });
     };
     bindGameOptionsToggles();
+
+    const footerMainOptionsToggle = document.getElementById('footerMainOptionsToggle');
+    const headerOptionsPanel = document.getElementById('headerOptionsPanel');
+    if (footerMainOptionsToggle && headerOptionsPanel) {
+      const scorecardControlsShell = document.querySelector('.scorecard-controls-shell');
+      const scorecardOptionsPanel = document.getElementById('scorecardOptionsPanel');
+      const originalHeaderOptionsParent = headerOptionsPanel.parentElement;
+      const originalHeaderOptionsNextSibling = headerOptionsPanel.nextElementSibling;
+
+      const mountHeaderOptionsInFooter = () => {
+        if (!scorecardControlsShell) return;
+        if (headerOptionsPanel.parentElement !== scorecardControlsShell) {
+          scorecardControlsShell.insertBefore(headerOptionsPanel, scorecardOptionsPanel || null);
+        }
+        scorecardControlsShell.classList.add('has-main-options-open');
+        headerOptionsPanel.classList.add('footer-mounted-options');
+      };
+
+      const restoreHeaderOptionsToHeader = () => {
+        if (!originalHeaderOptionsParent) return;
+        if (headerOptionsPanel.parentElement !== originalHeaderOptionsParent) {
+          if (originalHeaderOptionsNextSibling && originalHeaderOptionsNextSibling.parentElement === originalHeaderOptionsParent) {
+            originalHeaderOptionsParent.insertBefore(headerOptionsPanel, originalHeaderOptionsNextSibling);
+          } else {
+            originalHeaderOptionsParent.appendChild(headerOptionsPanel);
+          }
+        }
+        if (scorecardControlsShell) {
+          scorecardControlsShell.classList.remove('has-main-options-open');
+        }
+        headerOptionsPanel.classList.remove('footer-mounted-options');
+      };
+
+      const syncFooterMainOptionsToggleState = (isOpen) => {
+        footerMainOptionsToggle.classList.toggle('is-open', isOpen);
+        footerMainOptionsToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      };
+
+      syncFooterMainOptionsToggleState(!headerOptionsPanel.hidden);
+
+      footerMainOptionsToggle.addEventListener('click', () => {
+        const willOpen = headerOptionsPanel.hidden;
+        if (willOpen) {
+          mountHeaderOptionsInFooter();
+          headerOptionsPanel.hidden = false;
+        } else {
+          headerOptionsPanel.hidden = true;
+          restoreHeaderOptionsToHeader();
+        }
+
+        syncFooterMainOptionsToggleState(willOpen);
+      });
+    }
 
     requestAnimationFrame(() => {
       syncScorePanelHeight();
@@ -5634,20 +5827,6 @@
     if (removePlayerBtn) removePlayerBtn.addEventListener("click", removePlayer);
     bindPlayerEntryModalTriggers();
 
-    // Header collapse toggle
-    document.getElementById('headerCollapseBtn')?.addEventListener('click', () => {
-      headerVisible = !headerVisible;
-      headerAutoHiddenByGamesTab = false; // user explicitly chose — override auto behaviour
-      applyHeaderVisibility();
-      syncHeaderCollapseBtn();
-      // Re-measure at multiple points after the header transition (220ms) completes.
-      requestAnimationFrame(() => syncGamesPanelHeight());
-      requestAnimationFrame(() => syncScorePanelHeight());
-      setTimeout(() => syncGamesPanelHeight(), 240);
-      setTimeout(() => syncScorePanelHeight(), 240);
-      setTimeout(() => syncGamesPanelHeight(), 400);
-      setTimeout(() => syncScorePanelHeight(), 400);
-    });
     // Re-measure whenever the header finishes its CSS transition.
     // Wrap in rAF so the sticky nav has been composited before we measure its position.
     document.querySelector('header')?.addEventListener('transitionend', (e) => {
