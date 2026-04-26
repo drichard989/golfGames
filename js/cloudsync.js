@@ -381,6 +381,16 @@
   }
 
   async function shareSessionLink(codeType) {
+    const hasEditCode = !!normalizeCode(state.session?.editCode || '');
+    if (codeType === 'edit' && !hasEditCode) {
+      const warning = "Cloud: You don't have Scorekeeping Access. Sharing view-only code instead.";
+      setStatus(warning);
+      if (typeof window.announce === 'function') {
+        window.announce("No Scorekeeping Access. Sharing view-only code.");
+      }
+      codeType = 'view';
+    }
+
     const key = codeType === 'edit' ? 'editCode' : 'viewCode';
     const label = codeType === 'edit' ? 'Edit' : 'View';
     const code = normalizeCode(state.session?.[key] || '');
@@ -409,7 +419,7 @@
   }
 
   async function chooseQrShareMode() {
-    const isEditor = state.session?.role === 'editor' || !state.session;
+    const canShareScorekeepingQr = !!normalizeCode(state.session?.editCode || '') || state.session?.role === 'editor' || !state.session;
 
     return new Promise((resolve) => {
       const dialog = document.createElement('div');
@@ -442,8 +452,8 @@
       editBtn.className = 'btn';
       editBtn.textContent = 'Scorekeeping QR';
       editBtn.style.cssText = 'flex:1 1 120px;';
-      editBtn.disabled = !isEditor;
-      if (!isEditor) {
+      editBtn.disabled = !canShareScorekeepingQr;
+      if (!canShareScorekeepingQr) {
         editBtn.title = 'Scorekeeping QR is only available for editor sessions';
       }
 
@@ -1011,11 +1021,25 @@
   }
 
   async function ensureShareSessionWithViewCode() {
+    const existingViewCode = normalizeCode(state.session?.viewCode || '');
+    if (existingViewCode) return existingViewCode;
+
+    if (state.session?.role === 'viewer') {
+      throw new Error('View code unavailable in this view-only session.');
+    }
+
     const codes = await ensureShareSessionCodes();
     return codes.viewCode;
   }
 
   async function ensureShareSessionWithEditCode() {
+    const existingEditCode = normalizeCode(state.session?.editCode || '');
+    if (existingEditCode) return existingEditCode;
+
+    if (state.session?.role === 'viewer') {
+      throw new Error("You don't have Scorekeeping Access for this session.");
+    }
+
     const codes = await ensureShareSessionCodes();
     return codes.editCode;
   }
@@ -1328,6 +1352,16 @@
 
   async function generateLiveEditQrCode() {
     if (!state.user) throw new Error('Cloud auth is not ready yet.');
+
+    const hasEditCode = !!normalizeCode(state.session?.editCode || '');
+    if (state.session?.role === 'viewer' && !hasEditCode) {
+      setStatus("Cloud: You don't have Scorekeeping Access. Sharing view-only QR.");
+      if (typeof window.announce === 'function') {
+        window.announce('No Scorekeeping Access. Sharing view-only QR.');
+      }
+      await generateLiveViewQrCode();
+      return;
+    }
 
     setStatus('Cloud: preparing edit QR...');
     const editCode = await ensureShareSessionWithEditCode();
@@ -1970,6 +2004,16 @@
 
     EL.qrBadgeBtn()?.addEventListener('click',
       withCloudOp('share QR (badge)', null, async () => {
+        const hasEditCode = !!normalizeCode(state.session?.editCode || '');
+        if (state.session?.role === 'viewer' && !hasEditCode) {
+          setStatus("Cloud: You don't have Scorekeeping Access. Sharing view-only QR.");
+          if (typeof window.announce === 'function') {
+            window.announce('No Scorekeeping Access. Sharing view-only QR.');
+          }
+          await generateLiveViewQrCode();
+          return;
+        }
+
         const mode = await chooseQrShareMode();
         if (!mode) return;
         if (mode === 'edit') {

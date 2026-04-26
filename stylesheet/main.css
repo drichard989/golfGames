@@ -3553,6 +3553,58 @@ input[type="text"] {
     padding-bottom: var(--space-sm);
   }
 
+  #scorecard .par-row th,
+  #scorecard .par-row td,
+  #scorecard .hcp-row th,
+  #scorecard .hcp-row td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  #scorecard .par-row input,
+  #scorecard .hcp-row input {
+    padding: 4px 1px;
+    min-height: 30px;
+    line-height: 1;
+  }
+
+  #scorecard .player-row th,
+  #scorecard .player-row td {
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  #scorecard .name-edit {
+    padding: 4px 8px;
+    min-height: 36px;
+  }
+
+  #scorecard .score-input {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
+    padding: 4px 1px;
+  }
+
+  #scorecard .ch-input {
+    width: 36px;
+    min-width: 36px;
+    height: 36px;
+    min-height: 36px;
+  }
+
+  .scorecard-card-footer {
+    padding: 6px 8px;
+    min-height: 44px;
+  }
+
+  .scorecard-card-footer .btn,
+  .scorecard-card-footer .game-options-toggle {
+    min-height: 40px;
+    padding: 6px 12px;
+  }
+
   .gamesbar {
     gap: var(--games-launcher-gap, 6px);
     margin: var(--space-md) var(--space-md) 0;
@@ -3723,7 +3775,24 @@ input[type="text"] {
      two-digit numbers (e.g. 13, 15, 17) in light mode. */
   #parRow input,
   #hcpRow input {
-    padding: var(--space-md) 2px;
+    padding: 6px 1px;
+    min-height: 34px;
+    line-height: 1;
+  }
+
+  #scorecard .par-row th,
+  #scorecard .par-row td,
+  #scorecard .hcp-row th,
+  #scorecard .hcp-row td {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
+  #scorecard .ch-input {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    min-height: 40px;
   }
 
   .game-toggle {
