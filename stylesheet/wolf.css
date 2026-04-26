@@ -99,8 +99,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 }
 
 :root[data-font-size="large"] #wolfTable th:first-child,
-:root[data-font-size="large"] #wolfTable td:first-child,
-:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:first-child {
+:root[data-font-size="large"] #wolfTable td:first-child {
   width: 32px;
   min-width: 32px;
   max-width: 32px;
@@ -129,8 +128,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 }
 
 :root[data-font-size="medium"] #wolfTable th:first-child,
-:root[data-font-size="medium"] #wolfTable td:first-child,
-:root[data-font-size="medium"] #wolfSection .live-results-header-clone-table thead th:first-child {
+:root[data-font-size="medium"] #wolfTable td:first-child {
   width: 30px;
   min-width: 30px;
   max-width: 30px;
@@ -139,8 +137,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 }
 
 :root[data-font-size="large"] #wolfTable th:first-child,
-:root[data-font-size="large"] #wolfTable td:first-child,
-:root[data-font-size="large"] #wolfSection .live-results-header-clone-table thead th:first-child {
+:root[data-font-size="large"] #wolfTable td:first-child {
   width: 30px;
   min-width: 30px;
   max-width: 30px;

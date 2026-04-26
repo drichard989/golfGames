@@ -1159,7 +1159,7 @@ body.mode-games .entry-switcher {
   background: var(--panel-alt);
 }
 
-/* Utility class — preserves text-align from cloned source cells */
+/* Utility class — force left alignment where needed */
 .align-left {
   text-align: left !important;
 }
@@ -2559,7 +2559,7 @@ body.mode-games .gamesbar {
 }
 
 /* Large font mode: banker headers need wider Hole and Banker 2x columns to
-   prevent label clipping in both native and cloned sticky headers. */
+  prevent label clipping in sticky headers. */
 :root[data-font-size="large"] #bankerTable thead th:first-child,
 :root[data-font-size="large"] #bankerTable tbody td:first-child {
   width: 56px;

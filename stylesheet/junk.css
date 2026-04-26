@@ -80,6 +80,20 @@ body.junk-mobile-summary-active #junkTable td:first-child {
   font-size: var(--text-sm) !important;
   font-weight: 700 !important;
 }
+
+/* Keep the Hole header pinned with the first column in Junk mobile summary mode. */
+body.junk-mobile-summary-active #junkTable thead th:first-child,
+body.junk-mobile-summary-active #junkTable tbody td:first-child {
+  position: sticky !important;
+  left: 0 !important;
+}
+
+body.junk-mobile-summary-active #junkTable thead th:first-child {
+  top: var(--game-sticky-head-top, 0px) !important;
+  z-index: var(--z-sticky-corner) !important;
+  background: var(--panel) !important;
+  border-right: 2px solid var(--line);
+}
 body.junk-mobile-summary-active #junkBody td.junk-mobile-summary-cell {
   width: auto !important;
   max-width: none !important;
@@ -93,20 +107,6 @@ body.junk-mobile-summary-active #junkTable thead tr th:first-child::after {
   font-size: var(--text-sm);
 }
 body.junk-mobile-summary-active #junkTable tfoot { display: none; }
-
-/* The on-screen Junk header at these widths is often the sticky clone table.
-   Mirror the same collapse there: show only Hole + Results. */
-body.junk-mobile-summary-active #junkSection .live-results-header-clone-table thead th:not(:first-child) {
-  display: none !important;
-}
-body.junk-mobile-summary-active #junkSection .live-results-header-clone-table thead th:first-child::after {
-  content: 'Results';
-  display: inline-block;
-  margin-left: 10px;
-  font-weight: 700;
-  color: var(--muted);
-  font-size: var(--text-sm);
-}
 
 .junk-mobile-summary-cell {
   display: block !important;
