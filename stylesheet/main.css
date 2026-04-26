@@ -1623,13 +1623,13 @@ input[type="number"] {
 .score-input.receives-stroke[data-strokes="2"] {
   border: 2px solid var(--accent) !important;
   z-index: 3;
-  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--accent) !important;
 }
 
 .score-input.receives-stroke[data-strokes="3"] {
   border: 2px solid var(--accent) !important;
   z-index: 4;
-  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent) !important;
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--accent), 0 0 0 8px var(--bg), 0 0 0 10px var(--accent) !important;
 }
 
 /* Plus Handicap - Gives Strokes (Red) */
@@ -1643,13 +1643,13 @@ input[type="number"] {
 .score-input.gives-stroke[data-strokes="2"] {
   border: 2px solid var(--danger) !important;
   z-index: 3;
-  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--danger) !important;
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--danger) !important;
 }
 
 .score-input.gives-stroke[data-strokes="3"] {
   border: 2px solid var(--danger) !important;
   z-index: 4;
-  box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--danger), 0 0 0 12px var(--bg), 0 0 0 14px var(--danger) !important;
+  box-shadow: 0 0 0 4px var(--bg), 0 0 0 6px var(--danger), 0 0 0 8px var(--bg), 0 0 0 10px var(--danger) !important;
 }
 
 .total,
@@ -4194,12 +4194,12 @@ input[type="text"] {
 
 :root[data-theme="light"] .score-input.receives-stroke[data-strokes="2"] {
   border: 2px solid #28a745;
-  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #28a745;
+  box-shadow: 0 0 0 4px #ffffff, 0 0 0 6px #28a745;
 }
 
 :root[data-theme="light"] .score-input.receives-stroke[data-strokes="3"] {
   border: 2px solid #28a745;
-  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #28a745, 0 0 0 12px #ffffff, 0 0 0 14px #28a745;
+  box-shadow: 0 0 0 4px #ffffff, 0 0 0 6px #28a745, 0 0 0 8px #ffffff, 0 0 0 10px #28a745;
 }
 
 /* Light theme - Plus Handicap */
@@ -4210,12 +4210,12 @@ input[type="text"] {
 
 :root[data-theme="light"] .score-input.gives-stroke[data-strokes="2"] {
   border: 2px solid #dc3545;
-  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545;
+  box-shadow: 0 0 0 4px #ffffff, 0 0 0 6px #dc3545;
 }
 
 :root[data-theme="light"] .score-input.gives-stroke[data-strokes="3"] {
   border: 2px solid #dc3545;
-  box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545, 0 0 0 12px #ffffff, 0 0 0 14px #dc3545;
+  box-shadow: 0 0 0 4px #ffffff, 0 0 0 6px #dc3545, 0 0 0 8px #ffffff, 0 0 0 10px #dc3545;
 }
 
 /* Mobile: enforce the same stroke-ring visuals used on desktop */
@@ -4238,12 +4238,12 @@ input[type="text"] {
 
   #scorecard .score-input.receives-stroke[data-strokes="2"] {
     z-index: 6;
-    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--accent) !important;
+    box-shadow: 0 0 0 5px var(--bg), 0 0 0 7px var(--accent) !important;
   }
 
   #scorecard .score-input.receives-stroke[data-strokes="3"] {
     z-index: 7;
-    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--accent), 0 0 0 14px var(--bg), 0 0 0 17px var(--accent) !important;
+    box-shadow: 0 0 0 5px var(--bg), 0 0 0 7px var(--accent), 0 0 0 9px var(--bg), 0 0 0 11px var(--accent) !important;
   }
 
   #scorecard .score-input.gives-stroke {
@@ -4254,12 +4254,12 @@ input[type="text"] {
 
   #scorecard .score-input.gives-stroke[data-strokes="2"] {
     z-index: 6;
-    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--danger) !important;
+    box-shadow: 0 0 0 5px var(--bg), 0 0 0 7px var(--danger) !important;
   }
 
   #scorecard .score-input.gives-stroke[data-strokes="3"] {
     z-index: 7;
-    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--danger), 0 0 0 14px var(--bg), 0 0 0 17px var(--danger) !important;
+    box-shadow: 0 0 0 5px var(--bg), 0 0 0 7px var(--danger), 0 0 0 9px var(--bg), 0 0 0 11px var(--danger) !important;
   }
 
   :root[data-theme="light"] #scorecard .score-input.receives-stroke {
@@ -4268,11 +4268,11 @@ input[type="text"] {
   }
 
   :root[data-theme="light"] #scorecard .score-input.receives-stroke[data-strokes="2"] {
-    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #28a745 !important;
+    box-shadow: 0 0 0 5px #ffffff, 0 0 0 7px #28a745 !important;
   }
 
   :root[data-theme="light"] #scorecard .score-input.receives-stroke[data-strokes="3"] {
-    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #28a745, 0 0 0 14px #ffffff, 0 0 0 17px #28a745 !important;
+    box-shadow: 0 0 0 5px #ffffff, 0 0 0 7px #28a745, 0 0 0 9px #ffffff, 0 0 0 11px #28a745 !important;
   }
 
   :root[data-theme="light"] #scorecard .score-input.gives-stroke {
@@ -4281,11 +4281,11 @@ input[type="text"] {
   }
 
   :root[data-theme="light"] #scorecard .score-input.gives-stroke[data-strokes="2"] {
-    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #dc3545 !important;
+    box-shadow: 0 0 0 5px #ffffff, 0 0 0 7px #dc3545 !important;
   }
 
   :root[data-theme="light"] #scorecard .score-input.gives-stroke[data-strokes="3"] {
-    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #dc3545, 0 0 0 14px #ffffff, 0 0 0 17px #dc3545 !important;
+    box-shadow: 0 0 0 5px #ffffff, 0 0 0 7px #dc3545, 0 0 0 9px #ffffff, 0 0 0 11px #dc3545 !important;
   }
 }
 
