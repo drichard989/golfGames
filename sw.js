@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v3.2.108';
+const CACHE_VERSION = 'v3.2.109';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache - comprehensive list
@@ -21,7 +21,6 @@ const FILES_TO_CACHE = [
   '/js/wolf-sheet.js',
   '/js/score-sheet.js',
   '/js/export.js',
-  '/js/qrcode.js',
   '/js/firebase-config.js',
   '/js/cloudsync.js',
   '/stylesheet/main.css',
@@ -36,12 +35,56 @@ const FILES_TO_CACHE = [
   '/images/icon-512.png'
 ];
 
+async function precacheFiles(cache) {
+  // Avoid failing SW install if one optional/static file is missing.
+  const results = await Promise.allSettled(
+    FILES_TO_CACHE.map(async (path) => {
+      const request = new Request(path, { cache: 'no-store' });
+      const response = await fetch(request);
+      if (!response || !response.ok) {
+        throw new Error(`HTTP ${response ? response.status : 'ERR'} for ${path}`);
+      }
+      await cache.put(request, response);
+      return path;
+    })
+  );
+
+  const failed = results.filter((result) => result.status === 'rejected');
+  if (failed.length) {
+    failed.forEach((result) => {
+      console.warn('[SW] Precache skipped:', result.reason?.message || result.reason);
+    });
+  }
+}
+
+async function pruneCacheEntries(cache) {
+  const expectedUrls = new Set(
+    FILES_TO_CACHE.map((path) => new URL(path, self.location.origin).href)
+  );
+  const keys = await cache.keys();
+  const deletions = [];
+
+  keys.forEach((request) => {
+    if (!expectedUrls.has(request.url)) {
+      deletions.push(cache.delete(request));
+    }
+  });
+
+  if (deletions.length) {
+    await Promise.all(deletions);
+    console.log('[SW] Pruned stale cache entries:', deletions.length);
+  }
+}
+
 // Install - cache files
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing version:', CACHE_VERSION);
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(FILES_TO_CACHE))
+      .then(async (cache) => {
+        await precacheFiles(cache);
+        await pruneCacheEntries(cache);
+      })
       .then(() => self.skipWaiting()) // Activate immediately
   );
 });
