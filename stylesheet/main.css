@@ -1615,32 +1615,40 @@ input[type="number"] {
 /* Stroke highlighting with progressive rings */
 .score-input.receives-stroke {
   border: 2px solid var(--accent) !important;
+  position: relative;
+  z-index: 2;
   box-shadow: 0 0 0 1px var(--accent) !important;
 }
 
 .score-input.receives-stroke[data-strokes="2"] {
   border: 2px solid var(--accent) !important;
+  z-index: 3;
   box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent) !important;
 }
 
 .score-input.receives-stroke[data-strokes="3"] {
   border: 2px solid var(--accent) !important;
+  z-index: 4;
   box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--accent), 0 0 0 12px var(--bg), 0 0 0 14px var(--accent) !important;
 }
 
 /* Plus Handicap - Gives Strokes (Red) */
 .score-input.gives-stroke {
   border: 2px solid var(--danger) !important;
+  position: relative;
+  z-index: 2;
   box-shadow: 0 0 0 1px var(--danger) !important;
 }
 
 .score-input.gives-stroke[data-strokes="2"] {
   border: 2px solid var(--danger) !important;
+  z-index: 3;
   box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--danger) !important;
 }
 
 .score-input.gives-stroke[data-strokes="3"] {
   border: 2px solid var(--danger) !important;
+  z-index: 4;
   box-shadow: 0 0 0 6px var(--bg), 0 0 0 8px var(--danger), 0 0 0 12px var(--bg), 0 0 0 14px var(--danger) !important;
 }
 
@@ -4208,6 +4216,77 @@ input[type="text"] {
 :root[data-theme="light"] .score-input.gives-stroke[data-strokes="3"] {
   border: 2px solid #dc3545;
   box-shadow: 0 0 0 6px #ffffff, 0 0 0 8px #dc3545, 0 0 0 12px #ffffff, 0 0 0 14px #dc3545;
+}
+
+/* Mobile: enforce the same stroke-ring visuals used on desktop */
+@media (max-width: 768px) {
+  #scorecard .player-row td:nth-child(n+3) {
+    overflow: visible;
+    position: relative;
+  }
+
+  #scorecard .player-row td:first-child,
+  #scorecard .player-row td:nth-child(2) {
+    overflow: hidden;
+  }
+
+  #scorecard .score-input.receives-stroke {
+    border: 2px solid var(--accent) !important;
+    z-index: 5;
+    box-shadow: 0 0 0 2px var(--accent) !important;
+  }
+
+  #scorecard .score-input.receives-stroke[data-strokes="2"] {
+    z-index: 6;
+    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--accent) !important;
+  }
+
+  #scorecard .score-input.receives-stroke[data-strokes="3"] {
+    z-index: 7;
+    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--accent), 0 0 0 14px var(--bg), 0 0 0 17px var(--accent) !important;
+  }
+
+  #scorecard .score-input.gives-stroke {
+    border: 2px solid var(--danger) !important;
+    z-index: 5;
+    box-shadow: 0 0 0 2px var(--danger) !important;
+  }
+
+  #scorecard .score-input.gives-stroke[data-strokes="2"] {
+    z-index: 6;
+    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--danger) !important;
+  }
+
+  #scorecard .score-input.gives-stroke[data-strokes="3"] {
+    z-index: 7;
+    box-shadow: 0 0 0 7px var(--bg), 0 0 0 10px var(--danger), 0 0 0 14px var(--bg), 0 0 0 17px var(--danger) !important;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input.receives-stroke {
+    border: 2px solid #28a745 !important;
+    box-shadow: 0 0 0 2px #28a745 !important;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input.receives-stroke[data-strokes="2"] {
+    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #28a745 !important;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input.receives-stroke[data-strokes="3"] {
+    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #28a745, 0 0 0 14px #ffffff, 0 0 0 17px #28a745 !important;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input.gives-stroke {
+    border: 2px solid #dc3545 !important;
+    box-shadow: 0 0 0 2px #dc3545 !important;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input.gives-stroke[data-strokes="2"] {
+    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #dc3545 !important;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input.gives-stroke[data-strokes="3"] {
+    box-shadow: 0 0 0 7px #ffffff, 0 0 0 10px #dc3545, 0 0 0 14px #ffffff, 0 0 0 17px #dc3545 !important;
+  }
 }
 
 /* Light theme input fixes */
