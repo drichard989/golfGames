@@ -1432,8 +1432,8 @@
     setStatus('Cloud: preparing edit QR...');
     const editCode = await ensureShareSessionWithEditCode();
     const url = buildEditShareUrl(editCode);
-    openQrModalFromText(url, 'Real-Time Edit QR', 'Scan to open the real-time scorecard with edit access.', 'edit');
-    setStatus(`Cloud: real-time edit QR ready • Game ${state.session?.gameId || ''}`)
+    openQrModalFromText(url, 'Real-Time Scorekeeping QR', 'Scan to open the real-time scorecard with edit access.', 'edit');
+    setStatus(`Cloud: real-time scorekeeping QR ready • Game ${state.session?.gameId || ''}`)
   }
 
   function updateUiForSession() {
