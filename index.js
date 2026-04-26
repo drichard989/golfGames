@@ -890,14 +890,17 @@
   function ensureHeaderCloudScrollIndicator() {
     const bar = document.querySelector('.header-collapse-bar');
     if (!bar) return null;
-    let indicator = bar.querySelector('.header-cloud-scroll-indicator');
+    // Append to bar's parent (sticky-nav-bar) so it is outside the overflow-x
+    // scroll container and does not move with the scrolled content.
+    const container = bar.parentElement || bar;
+    let indicator = container.querySelector('.header-cloud-scroll-indicator');
     if (!indicator) {
       indicator = document.createElement('div');
       indicator.className = 'header-cloud-scroll-indicator';
       const thumb = document.createElement('div');
       thumb.className = 'header-cloud-scroll-indicator__thumb';
       indicator.appendChild(thumb);
-      bar.appendChild(indicator);
+      container.appendChild(indicator);
     }
     return indicator;
   }

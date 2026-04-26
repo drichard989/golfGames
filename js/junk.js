@@ -408,7 +408,7 @@
     const playerCount = getPlayerCount();
     const expectedRows = HOLES;
     const actualRows = tbody.querySelectorAll('tr').length;
-    const thead = document.querySelector('#junkTable thead tr');
+    const thead = document.querySelector('#junkTable thead tr.junk-table-desktop-header');
     const headerPlayerCells = thead ? Math.max(0, thead.children.length - 1) : 0;
 
     const needsRebuild = force ||
@@ -560,7 +560,7 @@
   }
 
   function rebuildJunkTableHeader(){
-    const thead = document.querySelector('#junkTable thead tr');
+    const thead = document.querySelector('#junkTable thead tr.junk-table-desktop-header');
     if(thead){
       // Clear existing headers except first (Hole)
       while(thead.children.length > 1) {
@@ -575,6 +575,10 @@
         th.textContent = `P${p+1}`;
         thead.appendChild(th);
       }
+
+      // Keep the tablet header colspan in sync
+      const tabletResultsTh = document.querySelector('#junkTable thead tr.junk-table-tablet-header th:last-child');
+      if (tabletResultsTh) tabletResultsTh.colSpan = playerCount;
     }
     
     // Rebuild footer (totals rows)

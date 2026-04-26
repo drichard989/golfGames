@@ -176,7 +176,7 @@
     }
   }
 
-  function showJoinProgressOverlay(message = 'Connecting to live game...') {
+  function showJoinProgressOverlay(message = 'Connecting to live game...', titleText = 'Joining Live Game') {
     clearJoinProgressOverlay();
 
     const overlay = document.createElement('div');
@@ -220,7 +220,7 @@
     ].join(';');
 
     const title = document.createElement('div');
-    title.textContent = 'Joining Live Game';
+    title.textContent = titleText;
     title.style.cssText = 'font-size: var(--text-xl); font-weight: 700; margin-bottom: 6px;';
 
     const body = document.createElement('div');
@@ -990,7 +990,12 @@
 
   async function ensureShareSessionCodes() {
     if (!state.session) {
-      await createSession();
+      showJoinProgressOverlay('Setting up your live game\u2026', 'Creating Live Session');
+      try {
+        await createSession();
+      } finally {
+        clearJoinProgressOverlay();
+      }
     }
 
     if (!state.session || state.session.role !== 'editor') {

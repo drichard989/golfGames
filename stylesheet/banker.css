@@ -12,10 +12,14 @@ body.banker-sheet-active #bankerBody tr > td:nth-child(3),
 body.banker-sheet-active #bankerBody tr > td:nth-child(5) {
   display: none !important;
 }
-/* Hide the original table headers — the compact summary cell has its own
-   per-column micro-labels so duplicating them would waste space. */
-body.banker-sheet-active #bankerTable thead tr th:not(:first-child) {
+/* In sheet mode, hide extra cells only for the desktop header row.
+   Keep tablet "Results" header visible so it can remain sticky. */
+body.banker-sheet-active #bankerTable thead.banker-table-desktop-header tr th:not(:first-child) {
   display: none !important;
+}
+
+body.banker-sheet-active #bankerTable thead.banker-table-tablet-header tr th {
+  display: table-cell !important;
 }
 
 /* Tablet header visibility */

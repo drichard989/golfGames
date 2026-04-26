@@ -9,9 +9,10 @@ body.junk-sheet-active #junkBody tr { cursor: pointer; }
 body.junk-sheet-active #junkBody tr:hover td { background: rgba(255,255,255,0.03); }
 :root[data-theme="light"] body.junk-sheet-active #junkBody tr:hover td { background: rgba(0,0,0,0.03); }
 
-/* Header visibility */
+/* Header row visibility — both rows live inside a single <thead>; show/hide
+   at the <tr> level so sticky positioning is inherited correctly. */
 .junk-table-desktop-header {
-  display: table-header-group;
+  display: table-row;
 }
 
 .junk-table-tablet-header {
@@ -25,7 +26,26 @@ body.junk-sheet-active #junkBody tr:hover td { background: rgba(255,255,255,0.03
   }
 
   .junk-table-tablet-header {
-    display: table-header-group;
+    display: table-row;
+  }
+
+  /* Keep only the tablet header cells visible and sticky in narrow layouts.
+     Hiding desktop-row cells directly avoids duplicate/ghost sticky headers. */
+  #junkTable thead tr.junk-table-desktop-header th {
+    display: none !important;
+  }
+
+  #junkTable thead tr.junk-table-tablet-header th {
+    display: table-cell !important;
+    position: sticky;
+    top: 0 !important;
+    z-index: var(--z-sticky-header);
+    background: var(--panel-alt);
+  }
+
+  #junkTable thead tr.junk-table-tablet-header th:first-child {
+    z-index: var(--z-sticky-corner);
+    background: var(--panel);
   }
 }
 
@@ -89,7 +109,7 @@ body.junk-mobile-summary-active #junkTable tbody td:first-child {
 }
 
 body.junk-mobile-summary-active #junkTable thead th:first-child {
-  top: var(--game-sticky-head-top, 0px) !important;
+  top: 0 !important;
   z-index: var(--z-sticky-corner) !important;
   background: var(--panel) !important;
   border-right: 2px solid var(--line);

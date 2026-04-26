@@ -325,7 +325,7 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   align-items: center;
   justify-content: flex-start;
   position: relative;
-  padding: 0 var(--space-lg) 11px;
+  padding: 0 var(--space-lg) 4px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
@@ -349,16 +349,17 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   flex: 0 0 auto;
 }
 
-/* Mini scroll indicator for cloud icon row overflow. */
+/* Mini scroll indicator for cloud icon row overflow.
+   Lives as a sibling of .header-collapse-bar inside .sticky-nav-bar so it
+   does not scroll with the overflow-x content. */
 .header-cloud-scroll-indicator {
-  position: absolute;
-  left: var(--space-lg);
-  right: var(--space-lg);
-  bottom: 3px;
+  display: block;
+  margin: 0 var(--space-lg) 4px;
   height: 3px;
   border-radius: 2px;
   background: rgba(74, 158, 255, 0.18);
   pointer-events: none;
+  position: relative;
 }
 
 .header-cloud-scroll-indicator__thumb {
@@ -372,7 +373,7 @@ header.header-collapsed ~ .sticky-nav-bar #cloudViewCodeBadgeBtn {
   transition: left 80ms linear, width 120ms ease, opacity 120ms ease;
 }
 
-.header-collapse-bar.has-cloud-scroll-overflow .header-cloud-scroll-indicator__thumb {
+.header-collapse-bar.has-cloud-scroll-overflow + .header-cloud-scroll-indicator .header-cloud-scroll-indicator__thumb {
   opacity: 0.95;
 }
 
@@ -2137,8 +2138,8 @@ body.mode-games .gamesbar {
   flex-wrap: nowrap;
   gap: 6px;
   margin: 0;
-  padding: 4px 0;
-  min-height: 0;
+  padding: 6px 0;
+  min-height: 44px;
   position: sticky;
   top: 0;
   z-index: 31;
@@ -4086,14 +4087,13 @@ input[type="text"] {
 @media (max-width: 900px) {
   .header-collapse-bar {
     gap: 6px;
-    padding: 0 var(--space-md) 10px;
+    padding: 0 var(--space-md) 4px;
     flex-wrap: nowrap;
   }
 
   .header-cloud-scroll-indicator {
-    left: var(--space-md);
-    right: var(--space-md);
-    bottom: 2px;
+    margin-left: var(--space-md);
+    margin-right: var(--space-md);
   }
 
   .header-cloud-status-group {
@@ -4177,6 +4177,25 @@ input[type="text"] {
 
   .games-launcher-shell.is-compact .game-pin-btn {
     display: none;
+  }
+}
+
+/* Mobile/tablet game tables: lock header row while body rows scroll beneath. */
+@media (max-width: 1023px) {
+  .game-section .vegas-wrap,
+  .game-section .banker-wrap {
+    max-height: min(62vh, 560px);
+    overflow-y: auto;
+  }
+
+  #vegasTable thead th,
+  #bankerTable thead th,
+  #skinsTable thead th,
+  #junkTable thead th,
+  #wolfTable thead th,
+  #hiloTable thead th,
+  #hiloHoleTable thead th {
+    top: 0;
   }
 }
 

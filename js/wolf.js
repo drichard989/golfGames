@@ -269,8 +269,8 @@
       // Restore selected values in the fresh DOM
       syncDecisionSelectsFromState();
 
-      // Rebuild totals footer to match current player count
-      rebuildFooter(names, validRoster);
+      // Footer totals are intentionally removed; live totals card is the source of truth.
+      rebuildFooter();
     },
 
     compute() {
@@ -379,12 +379,6 @@
         cell.textContent = parts.join(', ') || '—';
       }
 
-      // Footer totals
-      for (let p = 0; p < Math.max(playerCount, REQUIRED_PLAYERS); p++) {
-        const el = document.getElementById(`wolfTotP${p + 1}`);
-        if (el) el.textContent = valid && p < REQUIRED_PLAYERS ? String(totals[p] || 0) : '—';
-      }
-
       // Live results summary (top panel)
       renderLiveResults(totals, names, valid);
 
@@ -457,39 +451,10 @@
     }
   }
 
-  function rebuildFooter(names, validRoster) {
+  function rebuildFooter() {
     const tfoot = document.querySelector('#wolfTable tfoot');
     if (!tfoot) return;
-    const labelRow = ['<td><strong>Player</strong></td>'];
-    const totalRow = ['<td><strong>Points</strong></td>'];
-    // Wolf table has: Hole, Wolf, Decision, Result → 4 header cells.
-    // We repurpose tfoot as its own summary row with player names.
-    // Use colspan to merge existing columns away and render a clean totals block.
-    const colspan = 4;
-    tfoot.innerHTML = `
-      <tr>
-        <td colspan="${colspan}" style="padding: 0;">
-          <table style="width:100%; border-collapse: collapse;">
-            <tbody>
-              <tr class="wolf-totals-label">
-                <td><strong>Player</strong></td>
-                ${Array.from({ length: REQUIRED_PLAYERS }, (_, p) =>
-                  `<td>${validRoster ? escapeHtml(names[p] || `P${p + 1}`) : `P${p + 1}`}</td>`
-                ).join('')}
-              </tr>
-              <tr class="wolf-totals-values">
-                <td><strong>Points</strong></td>
-                ${Array.from({ length: REQUIRED_PLAYERS }, (_, p) =>
-                  `<td id="wolfTotP${p + 1}">—</td>`
-                ).join('')}
-              </tr>
-            </tbody>
-          </table>
-        </td>
-      </tr>
-    `;
-    // Reference usage to silence unused-var noise
-    void labelRow; void totalRow;
+    tfoot.innerHTML = '';
   }
 
   function renderLiveResults(totals, names, valid) {
