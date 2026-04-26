@@ -1148,7 +1148,7 @@ select:not(.select-plain) option {
 /* Games mode: keep launcher/header area attached to the sticky primary tabs
    so no dark strip appears between the switcher and game content. */
 body.mode-games #gamesEntryPanel {
-  padding-top: 6px;
+  padding-top: 2px;
 }
 
 .entry-switcher {
@@ -1754,8 +1754,32 @@ tfoot td {
 /* =========================
    Games Launcher / Sections
    ========================= */
+.games-launcher-shell {
+  margin: var(--space-xs) var(--space-lg) 0;
+}
+
+.games-launcher-toolbar {
+  display: none;
+  margin: 0 0 6px;
+  gap: 6px;
+}
+
+.games-launcher-collapse-btn {
+  min-height: 34px;
+  padding: 6px 10px;
+  font-size: var(--text-sm);
+}
+
+.games-launcher-nav-btn {
+  min-height: 34px;
+  min-width: 34px;
+  width: 34px;
+  padding: 0;
+  font-size: 14px;
+}
+
 .gamesbar {
-  margin: var(--space-md) var(--space-lg) 0;
+  margin: 0;
   display: flex;
   gap: var(--games-launcher-gap, 6px);
   flex-wrap: wrap;
@@ -1768,6 +1792,14 @@ body.mode-games .gamesbar {
   margin-top: 0;
 }
 
+.game-toggle-item {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 6px;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
 .gamesbar::-webkit-scrollbar {
   display: none;
 }
@@ -1777,18 +1809,47 @@ body.mode-games .gamesbar {
   border: 2px solid var(--line);
   background: var(--panel-alt);
   border-radius: var(--radius-3xl);
-  padding: var(--space-md) 18px;
-  min-height: var(--touch-comfortable);
-  font-size: var(--text-lg);
+  padding: 10px 14px;
+  min-height: 40px;
+  font-size: var(--text-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex: 1 1 180px;
+  flex: 1 1 auto;
+  width: 100%;
   white-space: nowrap;
   -webkit-tap-highlight-color: rgba(104, 211, 145, 0.1);
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
   position: relative;
   z-index: 1;
+}
+
+.game-pin-btn {
+  border: 2px solid var(--line);
+  background: var(--panel-alt);
+  color: var(--muted);
+  border-radius: var(--radius-2xl);
+  min-width: 40px;
+  width: 40px;
+  min-height: var(--touch-comfortable);
+  font-size: 16px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.game-pin-btn.is-pinned {
+  color: #ffd166;
+  border-color: rgba(255, 209, 102, 0.75);
+  background: rgba(255, 209, 102, 0.12);
+}
+
+.game-pin-btn:focus-visible {
+  outline: 2px solid rgba(74, 158, 255, 0.9);
+  outline-offset: 1px;
 }
 
 .game-toggle.active {
@@ -3354,7 +3415,7 @@ body.mode-games .gamesbar {
 
 /* Touch target sizing */
 .gamesbar .game-toggle {
-  min-height: var(--touch-comfortable);
+  min-height: 40px;
 }
 
 input[type="number"],
@@ -3744,6 +3805,39 @@ input[type="text"] {
   }
 }
 
+@media (max-width: 1024px) {
+  .games-launcher-shell {
+    margin: 4px var(--space-md) 0;
+  }
+
+  .games-launcher-shell.is-compact .games-launcher-toolbar {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+
+  .games-launcher-shell.is-compact.is-collapsed .gamesbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .games-launcher-shell.is-compact.is-collapsed .gamesbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .games-launcher-shell.is-compact.is-collapsed .game-toggle-item {
+    flex: 0 0 auto;
+    min-width: 128px;
+  }
+
+  .games-launcher-shell.is-compact .game-pin-btn {
+    display: none;
+  }
+}
+
 /* Mobile landscape / Small tablet (768px and below) */
 @media (max-width: 768px) {
   .banker-table th,
@@ -3819,7 +3913,6 @@ input[type="text"] {
 
   .gamesbar {
     gap: var(--games-launcher-gap, 6px);
-    margin: var(--space-md) var(--space-md) 0;
     flex-wrap: wrap;
   }
 
@@ -3834,7 +3927,7 @@ input[type="text"] {
     font-size: var(--text-sm);
   }
 
-  .gamesbar .game-toggle {
+  .gamesbar .game-toggle-item {
     flex: 1 1 auto;
   }
 
@@ -3871,7 +3964,12 @@ input[type="text"] {
 /* Mobile portrait (600px and below) */
 @media (max-width: 600px) {
   header {
-    padding: var(--space-lg) var(--space-md) 10px;
+    padding: 0;
+  }
+
+  .header-inner {
+    padding: var(--space-xs) var(--space-md) var(--space-sm);
+    gap: var(--space-xs);
   }
 
   h1 {
@@ -4013,8 +4111,9 @@ input[type="text"] {
   }
 
   .game-toggle {
-    padding: var(--text-md) var(--space-lg);
-    font-size: var(--text-xl);
+    padding: 10px 14px;
+    min-height: 40px;
+    font-size: var(--text-md);
   }
 
   .btn,

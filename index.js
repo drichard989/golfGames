@@ -621,6 +621,8 @@
 
   const GAME_TAB_ORDER = ['junk', 'skins', 'vegas', 'hilo', 'banker', 'wolf'];
   const DEFAULT_GAME_TAB = GAME_TAB_ORDER[0];
+  const GAME_LAUNCHER_COMPACT_QUERY = '(max-width: 1024px)';
+  const GAME_LAUNCHER_DEFAULT_PINS = ['junk', 'skins'];
   const GAME_SECTION_BY_KEY = {
     junk: 'junkSection',
     skins: 'skinsSection',
@@ -628,6 +630,13 @@
     hilo: 'hiloSection',
     banker: 'bankerSection',
     wolf: 'wolfSection'
+  };
+  const GAME_LAUNCHER_STATE = {
+    collapsed: true,
+    pins: GAME_TAB_ORDER.reduce((acc, gameKey) => {
+      acc[gameKey] = GAME_LAUNCHER_DEFAULT_PINS.includes(gameKey);
+      return acc;
+    }, {})
   };
   const TAB_FLIP_BURST_MS = 420;
   const IDLE_HIDDEN_FLUSH_DELAY_MS = 220;
@@ -1197,6 +1206,54 @@
       // Remove any leftover pill from previous implementation
       gamesbar.querySelector('.gamesbar-pill')?.remove();
     });
+
+    syncGamesLauncherUi(activeGame);
+  }
+
+  function isCompactGamesLauncherViewport() {
+    return window.matchMedia?.(GAME_LAUNCHER_COMPACT_QUERY)?.matches
+      ?? (window.innerWidth <= 1024);
+  }
+
+  function getNormalizedGameLauncherPins(rawPins) {
+    const normalized = {};
+    GAME_TAB_ORDER.forEach((gameKey) => {
+      normalized[gameKey] = !!rawPins?.[gameKey];
+    });
+    return normalized;
+  }
+
+  function applyLoadedGamesLauncherUi(localUi = null) {
+    const persisted = localUi?.gamesLauncher;
+    if (!persisted || typeof persisted !== 'object') return;
+
+    GAME_LAUNCHER_STATE.collapsed = persisted.collapsed !== false;
+    GAME_LAUNCHER_STATE.pins = getNormalizedGameLauncherPins(persisted.pins);
+  }
+
+  function syncGamesLauncherUi(activeGame = getActiveGameTab()) {
+    const shell = document.getElementById('gamesLauncherShell');
+    const bar = document.getElementById('gamesLauncher');
+    if (!shell || !bar) return;
+
+    const compact = isCompactGamesLauncherViewport();
+    shell.classList.toggle('is-compact', compact);
+    shell.classList.add('is-collapsed');
+
+    GAME_TAB_ORDER.forEach((gameKey) => {
+      const item = bar.querySelector(`.game-toggle-item[data-game-key="${gameKey}"]`);
+      if (!item) return;
+      item.hidden = false;
+      item.dataset.pinned = 'true';
+    });
+  }
+
+  function bindGamesLauncherControls() {
+    window.addEventListener('resize', () => {
+      syncGamesLauncherUi();
+    }, { passive: true });
+
+    syncGamesLauncherUi(getActiveGameTab());
   }
 
   function setPrimaryTab(which, { save = true } = {}) {
@@ -2516,6 +2573,10 @@
         })(),
         primaryTab: getPrimaryTab(),
         activeGame: getActiveGameTab(),
+        gamesLauncher: {
+          collapsed: !!GAME_LAUNCHER_STATE.collapsed,
+          pins: getNormalizedGameLauncherPins(GAME_LAUNCHER_STATE.pins)
+        },
         fontSize: Config.FONT_SIZE || 'medium',
         advanceDirection: Config.ADVANCE_DIRECTION || 'down',
         strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'highlight'
@@ -3255,6 +3316,8 @@
         }
 
         if (applyLocalUi) {
+          applyLoadedGamesLauncherUi(s.localUi);
+
           const savedOpenGame = GAME_TAB_ORDER.find((gameKey) => !!s[gameKey]?.open) || null;
           const preferredGame = GAME_TAB_ORDER.includes(s.localUi?.activeGame)
             ? s.localUi.activeGame
@@ -3271,6 +3334,7 @@
           }
 
           syncPrimaryTabUi(preferredPrimaryTab);
+          syncGamesLauncherUi(getActiveGameTab());
 
           // Always start game option panels collapsed on reload, including
           // live-results popouts, regardless of last saved UI state.
@@ -6056,6 +6120,7 @@
     });
     applyFontSize(Config.FONT_SIZE);
     setupEntryTabs();
+    bindGamesLauncherControls();
     
     Scorecard.player.updateCountDisplay();
 
