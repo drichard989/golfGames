@@ -3624,9 +3624,11 @@
   const btn = document.getElementById('themeToggle');
   if(!btn) return;
 
-  // Helper to update button text
+  // Footer theme button is icon-only; aria-label/title carry the action text.
   const updateButtonText = (isLight) => {
-    btn.textContent = isLight ? '🌙 Dark Mode' : '☀️ Light Mode';
+    btn.textContent = isLight ? '🌙' : '☀️';
+    btn.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+    btn.title = isLight ? 'Switch to dark mode' : 'Switch to light mode';
   };
 
   // Restore persisted theme, or detect device preference

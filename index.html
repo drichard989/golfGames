@@ -11,19 +11,19 @@
     <meta http-equiv="Expires" content="0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.2.109" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.2.109" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.2.109" />
-    <link rel="manifest" href="/manifest.json?v=v3.2.109" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.2.110" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.2.110" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.2.110" />
+    <link rel="manifest" href="/manifest.json?v=v3.2.110" />
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .githooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.109" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.2.110" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.109" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.109" />
-    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.2.109" />
-    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.2.109" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.2.110" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.2.110" />
+    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.2.110" />
+    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.2.110" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -35,7 +35,12 @@
       <div class="header-title-row">
         <h1>Golf Games</h1>
         <div class="header-action-buttons">
-          <button id="themeToggle" class="theme-toggle header-theme-toggle" type="button">☀️ Light Mode</button>
+          <div class="header-course-control">
+            <label for="courseSelect" class="sr-only">Course</label>
+            <select id="courseSelect" aria-label="Course selector">
+              <!-- Options populated dynamically from COURSES in index.js -->
+            </select>
+          </div>
           <button type="button" class="btn game-options-toggle" id="headerOptionsToggle" data-target="headerOptionsPanel" aria-controls="headerOptionsPanel" aria-expanded="false">⚙️ Options</button>
         </div>
       </div>
@@ -44,12 +49,6 @@
 
       <div id="headerOptionsPanel" class="game-options-panel header-options-panel" hidden>
         <div class="controls header-options-controls">
-          <div class="control" style="display: inline-block; margin-right: 12px;">
-            <label for="courseSelect" style="margin-right: 4px;">Course:</label>
-            <select id="courseSelect" style="padding: 8px; background: var(--panel); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;">
-              <!-- Options populated dynamically from COURSES in index.js -->
-            </select>
-          </div>
           <span id="playerCountDisplay" class="subtle" style="font-size: 14px;"></span>
           <span class="meta" id="saveStatus" role="status" aria-live="polite"></span>
         </div>
@@ -176,6 +175,7 @@
         <div class="scorecard-footer-controls" id="scorecardFooterControls">
           <button id="addPlayerBtn" class="btn scorecard-add-player-btn">+ Add Player</button>
           <button type="button" class="btn game-options-toggle" id="scorecardOptionsToggle" data-target="scorecardOptionsPanel" aria-controls="scorecardOptionsPanel" aria-expanded="false">Scorecard Options</button>
+          <button id="themeToggle" class="theme-toggle scorecard-theme-toggle" type="button" aria-label="Toggle light and dark theme" title="Toggle light and dark theme">☀️</button>
         </div>
       </div>
 
@@ -206,9 +206,9 @@
     <!-- GAMES LAUNCHER -->
     <div class="gamesbar" id="gamesLauncher" role="tablist" aria-label="Choose a golf game">
       <button id="toggleJunk" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="junkSection">🗑️ Junk</button>
-      <button id="toggleSkins" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="skinsSection">💎 Skins</button>
-      <button id="toggleVegas" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="vegasSection">🎲 Vegas</button>
-      <button id="toggleHilo" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="hiloSection">🎯 Hi-Lo</button>
+      <button id="toggleSkins" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="skinsSection">👑 Skins</button>
+      <button id="toggleVegas" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="vegasSection">🎰 Vegas</button>
+      <button id="toggleHilo" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="hiloSection">↕️ Hi-Lo</button>
       <button id="toggleBanker" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="bankerSection">🏦 Banker</button>
       <button id="toggleWolf" class="game-toggle" type="button" role="tab" aria-selected="false" aria-controls="wolfSection">🐺 Wolf</button>
     </div>
@@ -608,18 +608,18 @@
     </div>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
     </section>
-    <script src="index.js?v=v3.2.109" defer></script>
-    <script src="js/export.js?v=v3.2.109" defer></script>
-    <script src="js/vegas.js?v=v3.2.109" defer></script>
-    <script src="js/banker.js?v=v3.2.109" defer></script>
-    <script src="js/banker-sheet.js?v=v3.2.109" defer></script>
-    <script src="js/hilo.js?v=v3.2.109" defer></script>
-    <script src="js/skins.js?v=v3.2.109" defer></script>
-    <script src="js/junk.js?v=v3.2.109" defer></script>
-    <script src="js/junk-sheet.js?v=v3.2.109" defer></script>
-    <script src="js/wolf.js?v=v3.2.109" defer></script>
-    <script src="js/wolf-sheet.js?v=v3.2.109" defer></script>
-    <script src="js/score-sheet.js?v=v3.2.109" defer></script>
+    <script src="index.js?v=v3.2.110" defer></script>
+    <script src="js/export.js?v=v3.2.110" defer></script>
+    <script src="js/vegas.js?v=v3.2.110" defer></script>
+    <script src="js/banker.js?v=v3.2.110" defer></script>
+    <script src="js/banker-sheet.js?v=v3.2.110" defer></script>
+    <script src="js/hilo.js?v=v3.2.110" defer></script>
+    <script src="js/skins.js?v=v3.2.110" defer></script>
+    <script src="js/junk.js?v=v3.2.110" defer></script>
+    <script src="js/junk-sheet.js?v=v3.2.110" defer></script>
+    <script src="js/wolf.js?v=v3.2.110" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.2.110" defer></script>
+    <script src="js/score-sheet.js?v=v3.2.110" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
@@ -629,8 +629,8 @@
     <!-- Cloud QR dependencies (required by js/cloudsync.js for share/join QR scanning & generation) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-    <script src="js/firebase-config.js?v=v3.2.109" defer></script>
-    <script src="js/cloudsync.js?v=v3.2.109" defer></script>
+    <script src="js/firebase-config.js?v=v3.2.110" defer></script>
+    <script src="js/cloudsync.js?v=v3.2.110" defer></script>
     <!-- Cloud QR libraries must load before js/cloudsync.js -->
     <!-- =====================================================================
          TOP-PINNED-SHELL HEIGHT TRACKER + BANKER LIVE RESULTS PIN

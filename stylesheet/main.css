@@ -1001,6 +1001,16 @@ select:not(.select-plain) option {
   width: 100%;
 }
 
+.scorecard-theme-toggle {
+  margin-left: auto;
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+
 .scorecard-footer-controls[hidden] {
   display: none !important;
 }
@@ -3294,18 +3304,27 @@ input[type="text"] {
   gap: var(--space-xs);
 }
 
-.header-theme-toggle {
-  flex: 0 0 auto;
+.header-course-control {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.header-course-control select {
+  width: 100%;
+  height: var(--touch-min);
   min-height: var(--touch-min);
-  padding: var(--space-md) 10px;
-  font-size: 16px;
-  line-height: 1.1;
+  padding: 0 10px;
+  border: 2px solid var(--line);
   border-radius: var(--radius-md);
+  background: var(--panel);
+  color: var(--ink);
+  font-weight: 700;
+  box-sizing: border-box;
 }
 
 .header-action-buttons #headerOptionsToggle,
 .header-action-buttons #cloudOptionsToggle,
-.header-action-buttons .header-theme-toggle {
+.header-action-buttons #courseSelect {
   flex: 1 1 auto;
   height: var(--touch-min);
   min-height: var(--touch-min);
@@ -3672,7 +3691,7 @@ input[type="text"] {
 
   .header-action-buttons #headerOptionsToggle,
   .header-action-buttons #cloudOptionsToggle,
-  .header-action-buttons .header-theme-toggle {
+  .header-action-buttons #courseSelect {
     height: var(--touch-comfortable);
     min-height: var(--touch-comfortable);
   }
