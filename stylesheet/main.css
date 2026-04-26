@@ -994,11 +994,18 @@ select:not(.select-plain) option {
 }
 
 .scorecard-footer-controls {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 6px;
   width: 100%;
+}
+
+#scorecardOptionsToggle {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .scorecard-theme-toggle {
@@ -1011,7 +1018,7 @@ select:not(.select-plain) option {
 }
 
 .scorecard-main-options-icon {
-  margin-left: auto;
+  margin-left: 0;
   min-width: 40px;
   width: 40px;
   height: 40px;
