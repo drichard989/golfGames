@@ -34,6 +34,7 @@
     STORAGE_KEY: 'golf_scorecard_v5',
     ADVANCE_DIRECTION: 'down',
     FONT_SIZE: 'medium',
+    STROKE_INDICATOR_MODE: 'highlight',
 
     COURSES: {
       manito: {
@@ -1852,9 +1853,35 @@
       applyStrokeVisualState(input, sr) {
         if(!input) return;
 
+        const indicatorMode = Config.STROKE_INDICATOR_MODE || 'highlight';
+        const showHighlight = indicatorMode === 'highlight' || indicatorMode === 'both';
+        const showSymbols = indicatorMode === 'symbols' || indicatorMode === 'both';
+        const cell = input.closest('td');
+
+        const clearSymbol = () => {
+          if (!cell) return;
+          if (cell.hasAttribute('data-stroke-symbol')) cell.removeAttribute('data-stroke-symbol');
+        };
+
+        const setSymbol = (symbol) => {
+          if (!cell) return;
+          cell.setAttribute('data-stroke-symbol', symbol);
+        };
+
         if(sr > 0) {
-          if (!input.classList.contains("receives-stroke")) input.classList.add("receives-stroke");
-          if (input.classList.contains("gives-stroke")) input.classList.remove("gives-stroke");
+          if (showHighlight) {
+            if (!input.classList.contains("receives-stroke")) input.classList.add("receives-stroke");
+            if (input.classList.contains("gives-stroke")) input.classList.remove("gives-stroke");
+          } else {
+            input.classList.remove("receives-stroke", "gives-stroke");
+          }
+
+          if (showSymbols) {
+            setSymbol('dot');
+          } else {
+            clearSymbol();
+          }
+
           const nextStrokes = String(sr);
           if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
           const nextTitle = `Receives ${sr} stroke${sr > 1 ? 's' : ''}`;
@@ -1863,8 +1890,19 @@
         }
 
         if(sr < 0) {
-          if (!input.classList.contains("gives-stroke")) input.classList.add("gives-stroke");
-          if (input.classList.contains("receives-stroke")) input.classList.remove("receives-stroke");
+          if (showHighlight) {
+            if (!input.classList.contains("gives-stroke")) input.classList.add("gives-stroke");
+            if (input.classList.contains("receives-stroke")) input.classList.remove("receives-stroke");
+          } else {
+            input.classList.remove("receives-stroke", "gives-stroke");
+          }
+
+          if (showSymbols) {
+            setSymbol('plus');
+          } else {
+            clearSymbol();
+          }
+
           const nextStrokes = String(Math.abs(sr));
           if (input.dataset.strokes !== nextStrokes) input.dataset.strokes = nextStrokes;
           const nextTitle = `Gives ${Math.abs(sr)} stroke${Math.abs(sr) > 1 ? 's' : ''}`;
@@ -1875,6 +1913,7 @@
         if (input.classList.contains("receives-stroke") || input.classList.contains("gives-stroke")) {
           input.classList.remove("receives-stroke", "gives-stroke");
         }
+        clearSymbol();
         if (input.hasAttribute("data-strokes")) input.removeAttribute("data-strokes");
         if (input.hasAttribute("title")) input.removeAttribute("title");
       },
@@ -2290,6 +2329,7 @@
         scorecard: {
           course: ACTIVE_COURSE,
           handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'rawHandicap',
+          strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'highlight',
           players: players.map((p) => ({
             id: p.id,
             name: p.name,
@@ -2406,7 +2446,8 @@
         primaryTab: getPrimaryTab(),
         activeGame: getActiveGameTab(),
         fontSize: Config.FONT_SIZE || 'medium',
-        advanceDirection: Config.ADVANCE_DIRECTION || 'down'
+        advanceDirection: Config.ADVANCE_DIRECTION || 'down',
+        strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'highlight'
       };
     },
 
@@ -2446,6 +2487,7 @@
         ...rawState,
         course: scorecard.course || rawState.course,
         handicapMode: scorecard.handicapMode || rawState.handicapMode,
+        strokeIndicatorMode: scorecard.strokeIndicatorMode || localUi.strokeIndicatorMode || rawState.strokeIndicatorMode || 'highlight',
         players: normalizedPlayers,
         advanceDirection: localUi.advanceDirection || rawState.advanceDirection,
         fontSize: localUi.fontSize || rawState.fontSize,
@@ -2608,6 +2650,7 @@
         course: ACTIVE_COURSE,
         advanceDirection: Config.ADVANCE_DIRECTION,
         handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'rawHandicap',
+        strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'highlight',
         players: players,
         vegas: { 
           teams: window.Vegas?.getTeamAssignments(), 
@@ -2997,6 +3040,15 @@
           setHandicapModeButtonState(modeId);
         }
 
+        // Restore stroke indicator mode
+        {
+          const mode = ['highlight', 'symbols', 'both'].includes(s.strokeIndicatorMode)
+            ? s.strokeIndicatorMode
+            : 'highlight';
+          const modeId = 'strokeIndicator' + mode.charAt(0).toUpperCase() + mode.slice(1);
+          setStrokeIndicatorModeButtonState(modeId);
+        }
+
         // Restore font size
         if (applyLocalUi && s.fontSize && s.fontSize !== Config.FONT_SIZE) {
           applyFontSize(s.fontSize);
@@ -3325,6 +3377,7 @@
 
       // Reset primary scorecard options
       setHandicapModeButtonState('handicapModeRawHandicap');
+      setStrokeIndicatorModeButtonState('strokeIndicatorHighlight');
 
       Config.ADVANCE_DIRECTION = 'down';
       const advanceLabel = document.getElementById('advanceLabel');
@@ -3561,6 +3614,37 @@
         fallbackBtn.setAttribute('aria-checked', 'true');
       }
     }
+  }
+
+  /**
+   * Set active stroke indicator mode button in the scorecard control group.
+   * @param {string} activeId - Target button id
+   */
+  function setStrokeIndicatorModeButtonState(activeId) {
+    const buttons = document.querySelectorAll('#strokeIndicatorModeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+
+    if (!matched) {
+      const fallback = document.getElementById('strokeIndicatorHighlight');
+      if (fallback) {
+        fallback.dataset.active = 'true';
+        fallback.setAttribute('aria-checked', 'true');
+      }
+    }
+
+    const activeBtn = document.querySelector('#strokeIndicatorModeGroup .hcp-mode-btn[data-active="true"]');
+    const activeValue = activeBtn?.dataset?.value;
+    Config.STROKE_INDICATOR_MODE = ['highlight', 'symbols', 'both'].includes(activeValue)
+      ? activeValue
+      : 'highlight';
   }
   
   // Expose announce globally for external modules
@@ -5391,6 +5475,15 @@
     if (!btn) return;
     setHandicapModeButtonState(btn.id);
     Scorecard.calc.recalcAll();
+    Storage.saveDebounced();
+  });
+
+  // Stroke indicator display mode button group
+  document.getElementById('strokeIndicatorModeGroup')?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.hcp-mode-btn');
+    if (!btn) return;
+    setStrokeIndicatorModeButtonState(btn.id);
+    Scorecard.calc.applyStrokeHighlighting();
     Storage.saveDebounced();
   });
 
