@@ -1893,14 +1893,15 @@ tfoot td {
   position: relative;
 }
 
-/* Mini scroll indicator track + thumb shown only when gamesbar overflows. */
+/* Mini scroll indicator track + thumb. Always rendered so its height is
+   reserved on first paint — prevents the footer from bouncing 7px when JS
+   later adds the overflow class. Thumb is hidden until overflow detected. */
 .gamesbar-scroll-indicator {
   position: relative;
   height: 3px;
   margin: 4px 8px 0;
   border-radius: 2px;
   background: rgba(74, 158, 255, 0.18);
-  display: none;
   pointer-events: none;
 }
 
@@ -1911,12 +1912,12 @@ tfoot td {
   height: 100%;
   border-radius: 2px;
   background: #4a9eff;
-  opacity: 0.95;
-  transition: left 80ms linear, width 120ms ease;
+  opacity: 0;
+  transition: left 80ms linear, width 120ms ease, opacity 120ms ease;
 }
 
-.games-launcher-shell.has-scroll-overflow .gamesbar-scroll-indicator {
-  display: block;
+.games-launcher-shell.has-scroll-overflow .gamesbar-scroll-indicator__thumb {
+  opacity: 0.95;
 }
 
 :root[data-theme="light"] .gamesbar-scroll-indicator {

@@ -1296,6 +1296,11 @@
   }
 
   function bindGamesLauncherControls() {
+    // Pre-create the scroll indicator so its height is reserved on first
+    // render — prevents the games footer from bouncing 7px when overflow is
+    // detected later.
+    ensureGamesScrollIndicator();
+
     window.addEventListener('resize', () => {
       syncGamesLauncherUi();
       updateGamesbarScrollHint();
@@ -1316,14 +1321,9 @@
     syncGamesLauncherUi(getActiveGameTab());
   }
 
-  function updateGamesbarScrollHint() {
+  function ensureGamesScrollIndicator() {
     const shell = document.getElementById('gamesLauncherShell');
-    const bar = document.getElementById('gamesLauncher');
-    if (!shell || !bar) return;
-    const overflow = bar.scrollWidth - bar.clientWidth > 4;
-    shell.classList.toggle('has-scroll-overflow', overflow);
-    if (!overflow) return;
-
+    if (!shell) return null;
     let indicator = shell.querySelector('.gamesbar-scroll-indicator');
     if (!indicator) {
       indicator = document.createElement('div');
@@ -1333,7 +1333,24 @@
       indicator.appendChild(thumb);
       shell.appendChild(indicator);
     }
+    return indicator;
+  }
+
+  function updateGamesbarScrollHint() {
+    const shell = document.getElementById('gamesLauncherShell');
+    const bar = document.getElementById('gamesLauncher');
+    if (!shell || !bar) return;
+    const indicator = ensureGamesScrollIndicator();
+    const overflow = bar.scrollWidth - bar.clientWidth > 4;
+    shell.classList.toggle('has-scroll-overflow', overflow);
+    if (!indicator) return;
     const thumb = indicator.firstElementChild;
+    if (!thumb) return;
+    if (!overflow) {
+      thumb.style.width = '0%';
+      thumb.style.left = '0%';
+      return;
+    }
     const ratio = bar.clientWidth / bar.scrollWidth;
     const thumbW = Math.max(ratio * 100, 12);
     const maxScroll = bar.scrollWidth - bar.clientWidth;
