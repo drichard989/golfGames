@@ -2141,30 +2141,15 @@ body.mode-games .gamesbar {
   z-index: auto;
 }
 
-/* Keep Banker totals pinned above the fixed games footer while Banker is visible. */
-body.mode-games #bankerSection[aria-hidden="false"] {
-  padding-bottom: 108px;
-}
-
+/* Keep game results card pinned above the fixed games footer while a game tab is visible. */
+body.mode-games #bankerSection[aria-hidden="false"],
 body.mode-games #vegasSection[aria-hidden="false"],
 body.mode-games #junkSection[aria-hidden="false"],
 body.mode-games #wolfSection[aria-hidden="false"] {
   padding-bottom: 108px;
 }
 
-body.mode-games #bankerSection[aria-hidden="false"] #bankerFooterTotals {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 126px);
-  z-index: 33;
-  margin: 0;
-  pointer-events: none;
-  border-left: none;
-  border-right: none;
-  border-radius: 0;
-}
-
+body.mode-games #bankerSection[aria-hidden="false"] #bankerFooterTotals,
 body.mode-games #vegasSection[aria-hidden="false"] #vegasResultsBottom,
 body.mode-games #junkSection[aria-hidden="false"] #junkResultsBottom,
 body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {

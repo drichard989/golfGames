@@ -11,19 +11,19 @@
     <meta http-equiv="Expires" content="0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.29" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.29" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.29" />
-    <link rel="manifest" href="/manifest.json?v=v3.3.29" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.31" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.31" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.31" />
+    <link rel="manifest" href="/manifest.json?v=v3.3.31" />
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .githooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.29" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.31" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.29" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.29" />
-    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.29" />
-    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.29" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.31" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.31" />
+    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.31" />
+    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.31" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -633,18 +633,18 @@
       </div>
     </div>
     </section>
-    <script src="index.js?v=v3.3.29" defer></script>
-    <script src="js/export.js?v=v3.3.29" defer></script>
-    <script src="js/vegas.js?v=v3.3.29" defer></script>
-    <script src="js/banker.js?v=v3.3.29" defer></script>
-    <script src="js/banker-sheet.js?v=v3.3.29" defer></script>
-    <script src="js/hilo.js?v=v3.3.29" defer></script>
-    <script src="js/skins.js?v=v3.3.29" defer></script>
-    <script src="js/junk.js?v=v3.3.29" defer></script>
-    <script src="js/junk-sheet.js?v=v3.3.29" defer></script>
-    <script src="js/wolf.js?v=v3.3.29" defer></script>
-    <script src="js/wolf-sheet.js?v=v3.3.29" defer></script>
-    <script src="js/score-sheet.js?v=v3.3.29" defer></script>
+    <script src="index.js?v=v3.3.31" defer></script>
+    <script src="js/export.js?v=v3.3.31" defer></script>
+    <script src="js/vegas.js?v=v3.3.31" defer></script>
+    <script src="js/banker.js?v=v3.3.31" defer></script>
+    <script src="js/banker-sheet.js?v=v3.3.31" defer></script>
+    <script src="js/hilo.js?v=v3.3.31" defer></script>
+    <script src="js/skins.js?v=v3.3.31" defer></script>
+    <script src="js/junk.js?v=v3.3.31" defer></script>
+    <script src="js/junk-sheet.js?v=v3.3.31" defer></script>
+    <script src="js/wolf.js?v=v3.3.31" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.3.31" defer></script>
+    <script src="js/score-sheet.js?v=v3.3.31" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
@@ -655,60 +655,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
     <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-    <script src="js/firebase-config.js?v=v3.3.29" defer></script>
-    <script src="js/cloudsync.js?v=v3.3.29" defer></script>
+    <script src="js/firebase-config.js?v=v3.3.31" defer></script>
+    <script src="js/cloudsync.js?v=v3.3.31" defer></script>
     <!-- Cloud QR libraries must load before js/cloudsync.js -->
-        <!-- =====================================================================
-          TOP-PINNED-SHELL HEIGHT TRACKER
-         Publishes the rendered BOTTOM of `.top-pinned-shell` (in viewport
-         coords) to a CSS variable `--top-pinned-shell-h` on :root. Used
-          by sticky in-panel game elements that pin below the shell.
-
-         Why bottom and not height? The shell is itself sticky at top:0
-         with optional safe-area padding above. Reading `bottom` of its
-         bounding rect gives the exact y-coord of the line beneath which
-         we want the panel to pin — even when the shell isn't yet pinned.
-
-         Fires on scroll + resize + ResizeObserver so the offset is always
-         current as the header collapses or expands.
-         ===================================================================== -->
-    <script>
-      (function () {
-        var rafScheduled = false;
-        function updateTopShellOffset() {
-          rafScheduled = false;
-          try {
-            var shell = document.querySelector('.top-pinned-shell');
-            if (!shell) return;
-            var rect = shell.getBoundingClientRect();
-            // bottom can be negative if scrolled past, but shell is sticky
-            // so it normally pins at top — clamp at >=0 just in case.
-            var offset = Math.max(0, Math.round(rect.bottom));
-            document.documentElement.style.setProperty('--top-pinned-shell-h', offset + 'px');
-          } catch (e) { /* no-op */ }
-        }
-        function schedule() {
-          if (rafScheduled) return;
-          rafScheduled = true;
-          requestAnimationFrame(updateTopShellOffset);
-        }
-        function init() {
-          updateTopShellOffset();
-          var shell = document.querySelector('.top-pinned-shell');
-          if (shell && 'ResizeObserver' in window) {
-            try { new ResizeObserver(schedule).observe(shell); } catch (e) {}
-          }
-          window.addEventListener('scroll', schedule, { passive: true });
-          window.addEventListener('resize', schedule, { passive: true });
-          window.addEventListener('orientationchange', schedule, { passive: true });
-        }
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', init, { once: true });
-        } else {
-          init();
-        }
-      })();
-    </script>
 
     <!-- =====================================================================
          MOBILE DEVTOOLS (eruda) — ENABLE WITH ?debug=1 IN URL

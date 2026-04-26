@@ -1314,9 +1314,9 @@
     if (which === 'games') {
       // Delay one frame so layout settles before measuring.
       requestAnimationFrame(() => {
-        syncGamesPanelHeight();
+        schedulePanelHeightSync();
         // Run again after transitions finish (header/options panels).
-        setTimeout(() => syncGamesPanelHeight(), 300);
+        setTimeout(schedulePanelHeightSync, 300);
         const activeGame = getActiveGameTab();
         if (activeGame) {
           AppManager.flushGame(activeGame, false);
@@ -1327,8 +1327,8 @@
       });
     } else {
       requestAnimationFrame(() => {
-        syncScorePanelHeight();
-        setTimeout(() => syncScorePanelHeight(), 300);
+        schedulePanelHeightSync();
+        setTimeout(schedulePanelHeightSync, 300);
       });
       restorePrimaryTabScroll(which);
     }
@@ -6153,26 +6153,14 @@
     // Wrap in rAF so the sticky nav has been composited before we measure its position.
     document.querySelector('header')?.addEventListener('transitionend', (e) => {
       if (e.propertyName === 'max-height' || e.propertyName === 'grid-template-rows') {
-        requestAnimationFrame(() => {
-          syncGamesPanelHeight();
-          syncScorePanelHeight();
-        });
+        schedulePanelHeightSync();
       }
     });
     applyHeaderVisibility();
     syncHeaderCollapseBtn();
-    requestAnimationFrame(() => {
-      syncGamesPanelHeight();
-      syncScorePanelHeight();
-    });
-    setTimeout(() => {
-      syncGamesPanelHeight();
-      syncScorePanelHeight();
-    }, 240);
-    setTimeout(() => {
-      syncGamesPanelHeight();
-      syncScorePanelHeight();
-    }, 400);
+    schedulePanelHeightSync();
+    setTimeout(schedulePanelHeightSync, 240);
+    setTimeout(schedulePanelHeightSync, 400);
 
     // Ensure font size controls exist (fallback for stale cached HTML)
     if (!document.getElementById('fontSizeSmall') || !document.getElementById('fontSizeMedium') || !document.getElementById('fontSizeLarge')) {
