@@ -46,6 +46,61 @@
         name: 'Dove Canyon Country Club',
         pars: [5, 4, 4, 3, 4, 4, 3, 4, 5, 3, 5, 4, 3, 5, 4, 4, 3, 4],
         hcpMen: [11, 7, 3, 15, 1, 13, 17, 9, 5, 14, 4, 12, 16, 2, 6, 10, 18, 8]
+      },
+      hangman_creek: {
+        name: 'Hangman Creek',
+        pars: [4, 4, 4, 4, 5, 4, 3, 5, 3, 5, 3, 4, 4, 4, 4, 5, 3, 4],
+        hcpMen: [4, 18, 16, 2, 10, 12, 6, 14, 8, 9, 15, 5, 1, 7, 17, 13, 3, 11]
+      },
+      meadowwood: {
+        name: 'MeadowWood',
+        pars: [4, 5, 4, 4, 4, 3, 5, 3, 4, 4, 3, 5, 4, 4, 4, 5, 3, 4],
+        hcpMen: [6, 8, 14, 4, 12, 18, 10, 16, 2, 7, 9, 11, 15, 13, 3, 1, 17, 5]
+      },
+      liberty_lake_golf_course: {
+        name: 'Liberty Lake Golf Course',
+        pars: [4, 4, 3, 4, 4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 4, 3, 4, 4],
+        hcpMen: [13, 5, 7, 17, 1, 11, 15, 9, 3, 14, 12, 10, 4, 6, 8, 18, 2, 16]
+      },
+      bandon_dunes: {
+        name: 'Bandon Dunes',
+        pars: [4, 3, 5, 4, 4, 3, 4, 4, 5, 4, 4, 3, 5, 4, 3, 4, 4, 5],
+        hcpMen: [13, 15, 3, 5, 1, 17, 7, 11, 9, 8, 2, 18, 6, 16, 14, 10, 12, 4]
+      },
+      pacific_dune: {
+        name: 'Pacific Dunes',
+        pars: [4, 4, 5, 4, 3, 4, 4, 4, 4, 3, 3, 5, 4, 3, 5, 4, 3, 5],
+        hcpMen: [9, 11, 7, 3, 17, 14, 1, 5, 15, 14, 18, 6, 2, 16, 10, 12, 8, 4]
+      },
+      old_macdonald: {
+        name: 'Old Macdonald',
+        pars: [4, 3, 4, 4, 3, 5, 4, 3, 4, 4, 4, 3, 4, 4, 5, 4, 5, 4],
+        hcpMen: [11, 15, 9, 1, 17, 3, 5, 13, 7, 6, 4, 16, 18, 14, 12, 2, 10, 8]
+      },
+      sheep_ranch: {
+        name: 'Sheep Ranch',
+        pars: [5, 4, 3, 4, 3, 4, 3, 4, 4, 4, 5, 4, 5, 4, 4, 3, 4, 5],
+        hcpMen: [5, 13, 17, 3, 11, 1, 15, 7, 9, 6, 4, 2, 10, 8, 14, 16, 12, 18]
+      },
+      bandon_trails: {
+        name: 'Bandon Trails',
+        pars: [4, 3, 5, 4, 3, 4, 4, 4, 5, 4, 4, 3, 4, 4, 4, 5, 3, 4],
+        hcpMen: [13, 17, 3, 5, 15, 9, 7, 11, 1, 10, 4, 18, 12, 14, 8, 2, 16, 6]
+      },
+      palouse_ridge: {
+        name: 'Palouse Ridge',
+        pars: [4, 4, 4, 3, 5, 3, 4, 4, 5, 5, 3, 4, 3, 4, 4, 3, 5, 5],
+        hcpMen: [3, 17, 5, 9, 1, 7, 15, 11, 13, 8, 10, 4, 2, 14, 18, 16, 12, 6]
+      },
+      gamble_sands: {
+        name: 'Gamble Sands',
+        pars: [4, 4, 5, 3, 4, 3, 5, 4, 4, 3, 4, 4, 5, 4, 4, 3, 4, 5],
+        hcpMen: [7, 11, 1, 15, 5, 13, 3, 17, 9, 14, 6, 18, 12, 2, 8, 10, 4, 16]
+      },
+      scarecrow: {
+        name: 'Scarecrow',
+        pars: [4, 3, 5, 3, 4, 5, 4, 4, 3, 4, 3, 5, 4, 4, 5, 3, 4, 4],
+        hcpMen: [3, 9, 11, 15, 17, 15, 1, 7, 13, 4, 18, 16, 8, 2, 10, 12, 6, 14]
       }
     },
 
@@ -5530,7 +5585,9 @@
     const courseNoResults = $('#courseNoResults');
     const coursePicker = $('#coursePicker');
     if(courseSearch && coursePickerToggle && courseDropdown && courseOptionsList && courseNoResults && coursePicker){
-      const courseIds = Object.keys(COURSES);
+      const courseIds = Object.keys(COURSES).sort((a, b) =>
+        COURSES[a].name.localeCompare(COURSES[b].name, undefined, { sensitivity: 'base' })
+      );
       let isDropdownOpen = false;
 
       const setDropdownOpen = (isOpen) => {
