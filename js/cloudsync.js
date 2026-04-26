@@ -1079,16 +1079,16 @@
   function buildQrCenterIconDataUrl(mode = 'view') {
     const eyeSvg = `
       <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
-        <rect x='8' y='8' width='80' height='80' rx='18' fill='#ffffff' stroke='#0f172a' stroke-width='6'/>
-        <path d='M16 48c8-14 19-21 32-21s24 7 32 21c-8 14-19 21-32 21S24 62 16 48z' fill='none' stroke='#0f172a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
-        <circle cx='48' cy='48' r='9' fill='#0f172a'/>
+        <rect x='8' y='8' width='80' height='80' rx='18' fill='#eff6ff' stroke='#3b82f6' stroke-width='6'/>
+        <path d='M16 48c8-14 19-21 32-21s24 7 32 21c-8 14-19 21-32 21S24 62 16 48z' fill='none' stroke='#3b82f6' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
+        <circle cx='48' cy='48' r='9' fill='#3b82f6'/>
       </svg>`;
 
     const pencilSvg = `
       <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'>
-        <rect x='8' y='8' width='80' height='80' rx='18' fill='#ffffff' stroke='#0f172a' stroke-width='6'/>
-        <path d='M28 64l7-2 30-30-5-5-30 30-2 7z' fill='none' stroke='#0f172a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
-        <path d='M58 26l5-5 7 7-5 5z' fill='none' stroke='#0f172a' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
+        <rect x='8' y='8' width='80' height='80' rx='18' fill='#fffbeb' stroke='#f59e0b' stroke-width='6'/>
+        <path d='M28 64l7-2 30-30-5-5-30 30-2 7z' fill='none' stroke='#f59e0b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
+        <path d='M58 26l5-5 7 7-5 5z' fill='#f59e0b' stroke='#f59e0b' stroke-width='6' stroke-linecap='round' stroke-linejoin='round'/>
       </svg>`;
 
     const svg = mode === 'edit' ? pencilSvg : eyeSvg;
@@ -1432,7 +1432,7 @@
     setStatus('Cloud: preparing edit QR...');
     const editCode = await ensureShareSessionWithEditCode();
     const url = buildEditShareUrl(editCode);
-    openQrModalFromText(url, 'Live Edit QR', 'Scan to open the live scorecard with edit access. Share with trusted players only.', 'edit');
+    openQrModalFromText(url, 'Live Edit QR', 'Scan to open the live scorecard with edit access.', 'edit');
     setStatus(`Cloud: live edit QR ready • Game ${state.session?.gameId || ''}`);
   }
 
