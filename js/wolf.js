@@ -511,8 +511,10 @@
     const totalCells = Array.from({ length: REQUIRED_PLAYERS }, (_, p) =>
       `<td>${Number.isFinite(totals[p]) ? totals[p] : '—'}</td>`
     ).join('');
+    const playerCols = Array.from({ length: REQUIRED_PLAYERS }, () => '<col>').join('');
     const html = `
       <table class="live-results-table wolf-results-table" aria-label="Live Wolf results">
+        <colgroup><col class="lr-col-label">${playerCols}</colgroup>
         <tbody>
           <tr class="live-results-title-row"><th colspan="${REQUIRED_PLAYERS + 1}">Totals</th></tr>
           <tr class="live-results-data-row"><td class="live-results-label">Player</td>${headerCells}</tr>

@@ -72,7 +72,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 }
 
 .wolf-summary-label {
-  font-size: 10px;
+  font-size: calc(10px + var(--font-size-step));
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);
@@ -80,7 +80,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 }
 
 .wolf-summary-value {
-  font-size: 12px;
+  font-size: calc(12px + var(--font-size-step));
   font-weight: 600;
   white-space: normal;
   overflow: visible;
@@ -251,7 +251,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: calc(16px + var(--font-size-step));
   cursor: pointer;
 }
 
@@ -263,7 +263,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 }
 
 .wolf-sheet-navbtn {
-  font-size: 20px;
+  font-size: calc(20px + var(--font-size-step));
   line-height: 1;
 }
 
@@ -328,7 +328,7 @@ body.wolf-sheet-active .wolf-sheet-summary-cell {
 }
 
 .wolf-sheet-overview-label {
-  font-size: 10px;
+  font-size: calc(10px + var(--font-size-step));
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--muted);

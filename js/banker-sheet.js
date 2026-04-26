@@ -1118,7 +1118,7 @@
           let summCls = 'bsr-summ-push';
           if (summaryEl.classList.contains('banker-result-summary-positive')) summCls = 'bsr-summ-pos';
           else if (summaryEl.classList.contains('banker-result-summary-negative')) summCls = 'bsr-summ-neg';
-          const summStyle = 'display:block;width:100%;box-sizing:border-box;padding:4px 8px;margin-top:4px;font-weight:700;font-size:13px;border-top:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+          const summStyle = 'display:block;width:100%;box-sizing:border-box;padding:4px 8px;margin-top:4px;font-weight:700;font-size:var(--text-base);border-top:1px solid var(--line);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
           parts.push(
             `<div class="bsr-summary ${summCls}" style="${summStyle}">${escapeHtml((summaryEl.textContent || '').trim())}</div>`
           );

@@ -1560,17 +1560,13 @@
       const totalsRow = document.createElement('tr');
       totalsRow.className = 'banker-header-title-row';
       const totalsCell = document.createElement('th');
-      totalsCell.colSpan = playerCount + 1;
+      totalsCell.colSpan = playerCount;
       totalsCell.textContent = 'Totals';
       totalsRow.appendChild(totalsCell);
       tbody.appendChild(totalsRow);
 
       const playerRow = document.createElement('tr');
       playerRow.className = 'banker-header-data-row';
-      const playerLabel = document.createElement('td');
-      playerLabel.textContent = 'Player';
-      playerLabel.className = 'banker-footer-label';
-      playerRow.appendChild(playerLabel);
       for (let p = 0; p < playerCount; p++) {
         const nameCell = document.createElement('td');
         nameCell.id = DOM_IDS.headerName(p);
@@ -1582,10 +1578,6 @@
 
       const netRow = document.createElement('tr');
       netRow.className = 'banker-header-data-row';
-      const netLabel = document.createElement('td');
-      netLabel.textContent = 'Net';
-      netLabel.className = 'banker-footer-label';
-      netRow.appendChild(netLabel);
       for (let p = 0; p < playerCount; p++) {
         const totalCell = document.createElement('td');
         totalCell.id = DOM_IDS.headerTotalCell(p);
@@ -1620,17 +1612,13 @@
       const titleRow = document.createElement('tr');
       titleRow.className = 'banker-header-title-row';
       const titleCell = document.createElement('th');
-      titleCell.colSpan = playerCount + 1;
+      titleCell.colSpan = playerCount;
       titleCell.textContent = 'Totals';
       titleRow.appendChild(titleCell);
       tbody.appendChild(titleRow);
 
       const playerRow = document.createElement('tr');
       playerRow.className = 'banker-header-data-row';
-      const playerLabel = document.createElement('td');
-      playerLabel.textContent = 'Player';
-      playerLabel.className = 'banker-footer-label';
-      playerRow.appendChild(playerLabel);
       for (let p = 0; p < playerCount; p++) {
         const nameCell = document.createElement('td');
         nameCell.id = DOM_IDS.footerName(p);
@@ -1642,10 +1630,6 @@
 
       const netRow = document.createElement('tr');
       netRow.className = 'banker-header-data-row';
-      const netLabel = document.createElement('td');
-      netLabel.textContent = 'Net';
-      netLabel.className = 'banker-footer-label';
-      netRow.appendChild(netLabel);
       for (let p = 0; p < playerCount; p++) {
         const totalCell = document.createElement('td');
         totalCell.id = DOM_IDS.totalCell(p);

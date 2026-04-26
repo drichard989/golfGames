@@ -69,12 +69,12 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
     minmax(90px, 1.2fr); /* result */
   gap: 2px 6px;
   align-items: start;
-  font-size: 12px;
+  font-size: calc(12px + var(--font-size-step));
   line-height: 1.25;
 }
 .bss-col { min-width: 0; }
 .bss-col-label {
-  font-size: 9px;
+  font-size: calc(9px + var(--font-size-step));
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -154,7 +154,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   background: var(--warn, #f0ad4e);
   color: #000;
   font-weight: 800;
-  font-size: 10px;
+  font-size: calc(10px + var(--font-size-step));
   line-height: 1.4;
 }
 .bss-bet-stroke {
@@ -164,7 +164,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   background: rgba(31, 142, 241, 0.18);
   color: #1f8ef1;
   font-weight: 700;
-  font-size: 10px;
+  font-size: calc(10px + var(--font-size-step));
   line-height: 1.4;
   white-space: nowrap;
 }
@@ -188,7 +188,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   background: var(--panel-alt);
   color: var(--muted);
   font-weight: 800;
-  font-size: 11px;
+  font-size: calc(11px + var(--font-size-step));
 }
 .bss-bdbl-val.is-on {
   background: var(--accent);
@@ -196,7 +196,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   color: #000;
 }
 .bss-result-block {
-  font-size: 11px;
+  font-size: calc(11px + var(--font-size-step));
   line-height: 1.3;
   max-width: 100%;
   /* Was: overflow: hidden — that clipped result text on narrow phones.
@@ -227,7 +227,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
   border: 1px solid var(--line);
   background: var(--panel-alt);
   color: var(--ink);
-  font-size: 10px;
+  font-size: calc(10px + var(--font-size-step));
   font-weight: 700;
   line-height: 1.25;
   white-space: nowrap;
@@ -240,7 +240,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
 }
 
 .bss-phone-compact-result {
-  font-size: 11px;
+  font-size: calc(11px + var(--font-size-step));
   color: var(--muted);
   line-height: 1.3;
   white-space: nowrap;
@@ -252,7 +252,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
    we have a dedicated Max column), revealed on tablet-width screens. */
 .bss-max-inline {
   display: none;
-  font-size: 10px;
+  font-size: calc(10px + var(--font-size-step));
   font-weight: 600;
   color: var(--muted);
   margin-top: 1px;
@@ -315,7 +315,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
     margin: 0;
     text-align: center;
     min-width: 44px;
-    font-size: 9px;
+    font-size: calc(9px + var(--font-size-step));
     font-weight: 700;
     line-height: 1.2;
     letter-spacing: 0.06em;
@@ -486,7 +486,7 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  font-size: 20px;
+  font-size: calc(20px + var(--font-size-step));
   cursor: pointer;
   line-height: 1;
 }
@@ -505,7 +505,7 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  font-size: 16px;
+  font-size: calc(16px + var(--font-size-step));
   cursor: pointer;
 }
 .banker-sheet-close:hover {
@@ -659,14 +659,14 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
   border-radius: 10px;
   width: 44px;
   height: 44px;
-  font-size: 22px;
+  font-size: calc(22px + var(--font-size-step));
   line-height: 1;
   font-weight: 700;
   cursor: pointer;
 }
 .banker-sheet-stepbtn:hover { border-color: var(--accent); }
 .banker-sheet-stepbtn:active { transform: scale(0.95); }
-.banker-sheet-stepbtn-sm { width: 51px; height: 51px; font-size: 24px; border-radius: 8px; }
+.banker-sheet-stepbtn-sm { width: 51px; height: 51px; font-size: calc(24px + var(--font-size-step)); border-radius: 8px; }
 
 .banker-sheet-amount {
   display: inline-flex;
@@ -1058,7 +1058,7 @@ body.banker-sheet-open { overflow: hidden; }
   }
   .banker-sheet-title { font-size: var(--text-lg); min-width: 110px; }
   .banker-sheet-navbtn,
-  .banker-sheet-close { width: 32px; height: 32px; font-size: 16px; }
+  .banker-sheet-close { width: 32px; height: 32px; font-size: calc(16px + var(--font-size-step)); }
 
   .banker-sheet-body {
     padding: 6px 12px 4px;
@@ -1068,7 +1068,7 @@ body.banker-sheet-open { overflow: hidden; }
   }
   .banker-sheet-block-title {
     margin-bottom: 4px;
-    font-size: 11px;
+    font-size: calc(11px + var(--font-size-step));
   }
   .banker-sheet-pills { gap: 8px; }
   .banker-sheet-pill { padding: 9px 18px; font-size: var(--text-md); min-height: 51px; }
@@ -1077,7 +1077,7 @@ body.banker-sheet-open { overflow: hidden; }
   .banker-sheet-suggestion-muted { padding: 8px 15px; font-size: var(--text-md); min-height: 45px; }
 
   .banker-sheet-stepper { gap: 10px; }
-  .banker-sheet-stepbtn { width: 57px; height: 57px; font-size: 24px; }
+  .banker-sheet-stepbtn { width: 57px; height: 57px; font-size: calc(24px + var(--font-size-step)); }
   .banker-sheet-amount { min-height: 57px; padding: 0 10px; }
   .banker-sheet-amount-input { font-size: var(--text-lg); padding: 6px 3px; }
 
@@ -1095,7 +1095,7 @@ body.banker-sheet-open { overflow: hidden; }
   .banker-sheet-stepbtn-sm {
     width: 51px;
     height: 51px;
-    font-size: 24px;
+    font-size: calc(24px + var(--font-size-step));
   }
   .banker-sheet-amount-sm {
     height: 51px;
@@ -1139,7 +1139,7 @@ body.banker-sheet-open { overflow: hidden; }
   min-width: 0;
   box-sizing: border-box;
   overflow: visible;
-  font-size: 12px;
+  font-size: calc(12px + var(--font-size-step));
   line-height: 1.35;
 }
 
@@ -1204,7 +1204,7 @@ body.banker-sheet-open { overflow: hidden; }
   padding: 4px 8px;
   margin-top: 4px;
   font-weight: 700;
-  font-size: 13px;
+  font-size: calc(13px + var(--font-size-step));
   border-top: 1px solid var(--line);
   white-space: nowrap;
   overflow: hidden;
@@ -1229,7 +1229,7 @@ html[data-font-size="large"] body.banker-sheet-active .bss-col-bets .bss-bet-p2x
 @media (max-width: 480px) {
   .bss-result-block,
   .banker-sheet-result-block .banker-sheet-result-text {
-    font-size: 11px;
+    font-size: calc(11px + var(--font-size-step));
   }
   .bsr-row {
     padding: 2px 6px;
@@ -1237,7 +1237,7 @@ html[data-font-size="large"] body.banker-sheet-active .bss-col-bets .bss-bet-p2x
     min-height: 20px;
   }
   .bsr-name { max-width: 45%; }
-  .bsr-summary { font-size: 12px; padding: 3px 6px; }
+  .bsr-summary { font-size: calc(12px + var(--font-size-step)); padding: 3px 6px; }
 }
 
 /* ============================================================================

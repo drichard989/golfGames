@@ -435,11 +435,11 @@
 
       const title = document.createElement('h3');
       title.textContent = 'Share QR Type';
-      title.style.cssText = 'margin:0 0 10px 0;color:var(--ink);font-size:18px;';
+      title.style.cssText = 'margin:0 0 10px 0;color:var(--ink);font-size:var(--text-2xl);';
 
       const msg = document.createElement('p');
       msg.textContent = 'Choose whether this QR opens view-only or edit access.';
-      msg.style.cssText = 'margin:0 0 14px 0;color:var(--muted);font-size:14px;line-height:1.4;';
+      msg.style.cssText = 'margin:0 0 14px 0;color:var(--muted);font-size:var(--text-md);line-height:1.4;';
 
       const row = document.createElement('div');
       row.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
@@ -1293,11 +1293,11 @@
 
       const title = document.createElement('h2');
       title.textContent = 'Join via QR';
-      title.style.cssText = 'margin: 0 0 8px 0; font-size: 20px;';
+      title.style.cssText = 'margin: 0 0 8px 0; font-size: calc(20px + var(--font-size-step));';
 
       const message = document.createElement('p');
       message.textContent = 'Point your camera at a live-share QR code.';
-      message.style.cssText = 'margin: 0 0 10px 0; color: #c8cdd3; font-size: 13px;';
+      message.style.cssText = 'margin: 0 0 10px 0; color: #c8cdd3; font-size: var(--text-base);';
 
       const video = document.createElement('video');
       video.setAttribute('playsinline', 'true');

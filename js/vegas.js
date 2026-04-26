@@ -335,6 +335,7 @@
 
     const html = `
       <table class="live-results-table vegas-results-table" aria-label="Live Vegas results">
+        <colgroup><col class="lr-col-label"><col><col></colgroup>
         <tbody>
           <tr class="live-results-title-row"><th colspan="3">Totals</th></tr>
           <tr class="live-results-data-row"><td class="live-results-label">Team</td><td>${teamAName}</td><td>${teamBName}</td></tr>

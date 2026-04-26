@@ -132,7 +132,7 @@ body.score-sheet-open {
   background: transparent;
   color: var(--ink);
   cursor: pointer;
-  font-size: 18px;
+  font-size: calc(18px + var(--font-size-step));
   font-weight: 700;
 }
 
@@ -202,7 +202,7 @@ body.score-sheet-open {
 
 .score-sheet-meta-label {
   display: block;
-  font-size: 12px;
+  font-size: calc(12px + var(--font-size-step));
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -266,7 +266,7 @@ body.score-sheet-open {
   padding: 2px 6px;
   border: 2px solid var(--line);
   border-radius: 999px;
-  font-size: 11px;
+  font-size: calc(11px + var(--font-size-step));
   font-weight: 700;
   color: var(--muted);
   background: rgba(255, 255, 255, 0.02);
@@ -302,7 +302,7 @@ body.score-sheet-open {
 .score-sheet-gross-label {
   min-height: 28px;
   padding-right: 0;
-  font-size: 10px;
+  font-size: calc(10px + var(--font-size-step));
   line-height: 1.15;
   font-weight: 700;
   color: var(--muted);
@@ -322,7 +322,7 @@ body.score-sheet-open {
   border-radius: 10px;
   background: var(--panel-alt);
   color: var(--ink);
-  font-size: 30px;
+  font-size: calc(30px + var(--font-size-step));
   font-weight: 700;
   cursor: pointer;
 }
@@ -336,7 +336,7 @@ body.score-sheet-open {
   width: 100%;
   min-height: var(--score-sheet-control-size);
   height: var(--score-sheet-control-size);
-  font-size: 24px;
+  font-size: calc(24px + var(--font-size-step));
 }
 
 .score-sheet .score-sheet-player-input {
@@ -351,7 +351,7 @@ body.score-sheet-open {
   color: var(--ink);
   padding: 0;
   text-align: center;
-  font-size: 24px;
+  font-size: calc(24px + var(--font-size-step));
   font-weight: 700;
   line-height: 1;
 }
@@ -405,14 +405,14 @@ body.score-sheet-open {
   }
 
   .score-sheet-title {
-    font-size: 35px;
+    font-size: calc(35px + var(--font-size-step));
   }
 
   .score-sheet-navbtn,
   .score-sheet-close {
     min-height: 69px;
     border-radius: 14px;
-    font-size: 31px;
+    font-size: calc(31px + var(--font-size-step));
   }
 
   .score-sheet-body {
@@ -431,12 +431,12 @@ body.score-sheet-open {
   }
 
   .score-sheet-meta-label {
-    font-size: 17px;
+    font-size: calc(17px + var(--font-size-step));
     margin-bottom: 7px;
   }
 
   .score-sheet-meta-value {
-    font-size: 31px;
+    font-size: calc(31px + var(--font-size-step));
   }
 
   .score-sheet-grid {
@@ -456,17 +456,17 @@ body.score-sheet-open {
   }
 
   .score-sheet-card-name {
-    font-size: 31px;
+    font-size: calc(31px + var(--font-size-step));
   }
 
   .score-sheet-card-stroke {
     min-height: 41px;
     padding: 4px 10px;
-    font-size: 20px;
+    font-size: calc(20px + var(--font-size-step));
   }
 
   .score-sheet-gross-label {
-    font-size: 20px;
+    font-size: calc(20px + var(--font-size-step));
     min-height: 56px;
     padding-right: 0;
     line-height: 1.15;
@@ -485,12 +485,12 @@ body.score-sheet-open {
   }
 
   .score-sheet-stepbtn-sm {
-    font-size: 48px;
+    font-size: calc(48px + var(--font-size-step));
   }
 
   .score-sheet .score-sheet-player-input {
     border-radius: 17px;
-    font-size: 52px;
+    font-size: calc(52px + var(--font-size-step));
   }
 
   .score-sheet-footer {
@@ -499,7 +499,7 @@ body.score-sheet-open {
 
   .score-sheet-footer .btn {
     min-height: 76px;
-    font-size: 31px;
+    font-size: calc(31px + var(--font-size-step));
   }
 }
 
