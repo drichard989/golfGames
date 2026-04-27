@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v3.3.141';
+const CACHE_VERSION = 'v3.3.143';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache - comprehensive list
@@ -105,6 +105,10 @@ self.addEventListener('activate', (event) => {
     }).then(() => {
       // Take control of all clients immediately
       return self.clients.claim();
+    }).then(async () => {
+      if (self.registration.navigationPreload) {
+        await self.registration.navigationPreload.enable();
+      }
     })
   );
 });
@@ -131,6 +135,10 @@ self.addEventListener('message', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Let browser handle non-GET requests and cross-origin traffic.
+  if (request.method !== 'GET') return;
+  if (url.origin !== self.location.origin) return;
   
   // Network-first for all app files (HTML, JS, CSS) — always fresh, offline fallback
   if (request.destination === 'document' || 
@@ -139,19 +147,31 @@ self.addEventListener('fetch', (event) => {
       url.pathname.endsWith('.css') ||
       url.pathname === '/') {
     event.respondWith(
-      fetch(request, {
-        cache: 'no-store', // Don't use HTTP cache
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-      })
-        .catch(() => {
-          // Offline fallback to cache only if network fails
+      (async () => {
+        try {
+          const preload = request.mode === 'navigate' ? await event.preloadResponse : null;
+          if (preload) return preload;
+
+          return await fetch(request, {
+            cache: 'no-store', // Don't use HTTP cache
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
+          });
+        } catch (_) {
+          // Offline fallback to cache only if network fails.
+          // ignoreSearch lets /index.html satisfy /index.html?cb=... offline.
           console.log('[SW] Network failed, using cached version');
-          return caches.match(request);
-        })
+          const cached = await caches.match(request, { ignoreSearch: true });
+          if (cached) return cached;
+          if (request.mode === 'navigate') {
+            return caches.match('/index.html');
+          }
+          throw _;
+        }
+      })()
     );
     return;
   }
