@@ -2067,7 +2067,9 @@
 
   function rememberPrimaryTabScroll(which = getPrimaryTab()) {
     if (which !== 'score' && which !== 'games') return;
-    PRIMARY_TAB_SCROLL_POSITIONS[which] = window.scrollY || window.pageYOffset || 0;
+    // Primary tabs use internal panel scrolling; preserving window scroll
+    // introduces layout drift on mobile/PWA when switching tabs.
+    PRIMARY_TAB_SCROLL_POSITIONS[which] = 0;
   }
 
   function rememberGameTabScroll(which = getActiveGameTab()) {
@@ -2077,13 +2079,16 @@
 
   function restorePrimaryTabScroll(which) {
     if (which !== 'score' && which !== 'games') return;
-    const top = Number(PRIMARY_TAB_SCROLL_POSITIONS[which]) || 0;
+    // Always pin the document viewport to top for primary tabs. Their content
+    // is scrolled inside dedicated panels, not at window level.
+    const top = 0;
     const applyScroll = () => {
       window.scrollTo({ top, left: 0, behavior: 'auto' });
     };
 
     requestAnimationFrame(applyScroll);
     setTimeout(applyScroll, 120);
+    setTimeout(applyScroll, 260);
   }
 
   function restoreGameTabScroll(which) {
@@ -2294,6 +2299,7 @@
     syncHeaderCollapseBtn();
 
     syncPrimaryTabUi(which);
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     debugFooterTrace('setPrimaryTab:after-ui', { which });
     if (which === 'games') {
       // Delay one frame so layout settles before measuring.
