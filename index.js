@@ -3272,12 +3272,25 @@
 
           // Keep sticky par/hcp offsets aligned to current live row heights.
           // Uses only the single score table in unified mode.
+          const scorePanel = document.getElementById('scoreEntryPanel');
+          const panelVisible = !!scorePanel && !scorePanel.hidden && scorePanel.getBoundingClientRect().height > 0;
           const headerRowScroll = scrollTable.querySelector('thead tr');
           const parRowScroll = document.getElementById('parRow');
           const measuredHeaderHeight = headerRowScroll?.getBoundingClientRect().height || 0;
           const measuredParHeight = parRowScroll?.getBoundingClientRect().height || 0;
-          const headerHeight = Math.ceil(measuredHeaderHeight || 44);
-          const parHeight = Math.ceil(measuredParHeight || 44);
+
+          // Guard: during tab flips / hidden states Android can transiently
+          // report 0-height rows. Do not overwrite sticky vars with fallback
+          // constants (which causes header row separation) until measurements
+          // are trustworthy.
+          const validMeasurements =
+            panelVisible && measuredHeaderHeight >= 20 && measuredParHeight >= 20;
+          if (!validMeasurements) {
+            return;
+          }
+
+          const headerHeight = Math.ceil(measuredHeaderHeight);
+          const parHeight = Math.ceil(measuredParHeight);
           const rootStyle = document.documentElement?.style;
           if (rootStyle) {
             rootStyle.setProperty('--score-sticky-par-top', `${headerHeight}px`);
