@@ -37,14 +37,30 @@
   }
 
   function hideLayoutDebugReadouts() {
+    let didMutate = false;
+
     const footerPanel = document.getElementById('footerDebugReadout');
-    if (footerPanel) footerPanel.remove();
+    if (footerPanel) {
+      footerPanel.remove();
+      didMutate = true;
+    }
 
     const scoreHeaderPanel = document.getElementById('scorecardHeaderDebugReadout');
-    if (scoreHeaderPanel) scoreHeaderPanel.remove();
+    if (scoreHeaderPanel) {
+      scoreHeaderPanel.remove();
+      didMutate = true;
+    }
 
     const overlayContainer = document.getElementById('scorecardDebugOverlayContainer');
-    if (overlayContainer) overlayContainer.remove();
+    if (overlayContainer) {
+      overlayContainer.remove();
+      didMutate = true;
+    }
+
+    // Debug panels change scorecard vertical geometry; force a re-measure.
+    if (didMutate) {
+      schedulePanelHeightSync();
+    }
   }
 
   /**
@@ -1720,6 +1736,11 @@
       '<span class="scorecard-header-debug-title">Score Header Debug</span>' +
       '<span id="scorecardHeaderDebugContent">Waiting for trace...</span>';
     scorePanel.insertBefore(panel, scorecard);
+
+    // Inserting this debug strip shifts #main-scorecard downward. Re-sync panel
+    // and scorecard heights so the scorecard bottom stays attached to footer top.
+    schedulePanelHeightSync();
+
     return panel;
   }
 
