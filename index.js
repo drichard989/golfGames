@@ -2341,26 +2341,17 @@
 
         const useVertical = Math.abs(e.deltaY) >= Math.abs(e.deltaX);
         if (useVertical && canScrollY) {
-          const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
-          const atTop = pane.scrollTop <= 0;
-          const atBottom = pane.scrollTop >= maxTop - 1;
           const before = pane.scrollTop;
           pane.scrollTop += e.deltaY;
-          // Prevent edge chaining into #gamesEntryPanel so the table viewport
-          // stays locked between game header and pinned totals/results.
-          if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
-            e.preventDefault();
-            return;
-          }
           if (pane.scrollTop !== before) {
             e.preventDefault();
           }
           return;
         }
 
-        // Most desktop mice only emit deltaY. When the table pane only has
-        // horizontal overflow, map wheel movement to horizontal scrolling.
-        if (useVertical && !canScrollY && canScrollX) {
+        // Keep standard wheel behavior by default. Only map vertical wheel
+        // to horizontal when the user explicitly requests it via Shift+wheel.
+        if (e.shiftKey && canScrollX && Math.abs(e.deltaY) > 0) {
           const before = pane.scrollLeft;
           pane.scrollLeft += e.deltaY;
           if (pane.scrollLeft !== before) {
@@ -2455,19 +2446,8 @@
 
         const canScrollY = wrap.scrollHeight - wrap.clientHeight > 1;
         if (!canScrollY) return;
-
-        const maxTop = Math.max(0, wrap.scrollHeight - wrap.clientHeight);
-        const atTop = wrap.scrollTop <= 0;
-        const atBottom = wrap.scrollTop >= maxTop - 1;
-
-        const deltaY = e.deltaY;
-        if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
-          e.preventDefault();
-          return;
-        }
-
         const before = wrap.scrollTop;
-        wrap.scrollTop += deltaY;
+        wrap.scrollTop += e.deltaY;
         if (wrap.scrollTop !== before) {
           e.preventDefault();
         }
