@@ -424,7 +424,7 @@
       }).join(' | ');
 
       const html = `
-        <table class="live-results-table vegas-results-table" aria-label="Vegas rotation results">
+        <table class="live-results-table vegas-results-table is-rotation" aria-label="Vegas rotation results">
           <colgroup><col class="lr-col-label"><col><col></colgroup>
           <tbody>
             <tr class="live-results-title-row"><th colspan="3">3-Player Ghost Settlement</th></tr>

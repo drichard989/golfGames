@@ -2335,6 +2335,13 @@ body.mode-games .gamesbar {
   table-layout: fixed;
 }
 
+/* Rotation settlement: let columns size naturally and scroll when narrow */
+.vegas-results-table.is-rotation {
+  table-layout: auto;
+  width: max-content;
+  min-width: 460px;
+}
+
 .vegas-results-table col.lr-col-label,
 .wolf-results-table col.lr-col-label {
   width: 60px;
