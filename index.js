@@ -1544,9 +1544,66 @@
     };
   }
 
+  function ensureScorecardHeaderDebugReadout() {
+    if (!DEBUG_LAYOUT_TRACE) return null;
+
+    let panel = document.getElementById('scorecardHeaderDebugReadout');
+    if (panel) return panel;
+
+    const scorePanel = document.getElementById('scoreEntryPanel');
+    const scorecard = document.getElementById('main-scorecard');
+    if (!scorePanel || !scorecard) return null;
+
+    panel = document.createElement('div');
+    panel.id = 'scorecardHeaderDebugReadout';
+    panel.className = 'scorecard-header-debug-readout';
+    panel.setAttribute('role', 'status');
+    panel.setAttribute('aria-live', 'polite');
+    panel.innerHTML =
+      '<span class="scorecard-header-debug-title">Score Header Debug</span>' +
+      '<span id="scorecardHeaderDebugContent">Waiting for trace...</span>';
+    scorePanel.insertBefore(panel, scorecard);
+    return panel;
+  }
+
+  function renderScorecardHeaderDebugReadout(payload) {
+    if (!DEBUG_LAYOUT_TRACE || !payload) return;
+
+    const panel = ensureScorecardHeaderDebugReadout();
+    const content = document.getElementById('scorecardHeaderDebugContent');
+    if (!panel || !content) return;
+
+    const scoreTabActive = getPrimaryTab() === 'score';
+    panel.hidden = !scoreTabActive;
+    if (!scoreTabActive) return;
+
+    const now = new Date();
+    const ts = now.toTimeString().slice(0, 8);
+    const gap = payload.topRows?.gapPx;
+    const overlap = payload.overlapWithFooterPx;
+    const headTop = payload.stickyNav?.bottom;
+    const hcpBottom = payload.topRows?.hcpBottom;
+    const firstTop = payload.topRows?.firstPlayerTop;
+    const panelTop = payload.panel?.top;
+    const panelScroll = payload.panel ? `${payload.panel.scrollTop}/${payload.panel.scrollHeight}` : 'na';
+
+    content.textContent = [
+      `${ts}`,
+      `reason=${payload.reason}`,
+      `gap=${gap == null ? 'na' : `${gap}px`}`,
+      `overlap=${overlap == null ? 'na' : `${overlap}px`}`,
+      `headBottom=${headTop == null ? 'na' : `${headTop}px`}`,
+      `hcpBottom=${hcpBottom == null ? 'na' : `${hcpBottom}px`}`,
+      `firstTop=${firstTop == null ? 'na' : `${firstTop}px`}`,
+      `panelTop=${panelTop == null ? 'na' : `${panelTop}px`}`,
+      `panelScroll=${panelScroll}`
+    ].join('  |  ');
+  }
+
   function debugScorecardTrace(reason, extra = {}) {
     if (!DEBUG_LAYOUT_TRACE) return null;
     const payload = collectScorecardClipMetrics(reason, extra);
+    renderScorecardHeaderDebugReadout(payload);
     console.log('[scorecard-debug]', payload);
     return payload;
   }
