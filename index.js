@@ -1642,22 +1642,11 @@
     const incoming = isScore ? scorePanel : gamesPanel;
     const outgoing  = isScore ? gamesPanel : scorePanel;
 
-    // Crossfade on touch devices only
-    const isTouch = window.matchMedia('(pointer: coarse)').matches;
-    if (isTouch && !incoming.hidden) {
-      // Already showing correct panel — nothing to do
-    } else if (isTouch && incoming.hidden) {
-      outgoing.hidden = true;
-      incoming.hidden = false;
-      incoming.classList.remove('panel-entering');
-      void incoming.offsetWidth; // force reflow
-      incoming.classList.add('panel-entering');
-      incoming.addEventListener('animationend', () => incoming.classList.remove('panel-entering'), { once: true });
-      setTimeout(() => incoming.classList.remove('panel-entering'), 250); // fallback
-    } else {
-      scorePanel.hidden = !isScore;
-      gamesPanel.hidden = isScore;
-    }
+    // Keep tab switches instant to avoid visible flashing on mobile.
+    incoming.classList.remove('panel-entering');
+    outgoing.classList.remove('panel-entering');
+    scorePanel.hidden = !isScore;
+    gamesPanel.hidden = isScore;
 
     if (gamesFooterShell) {
       gamesFooterShell.hidden = isScore;
