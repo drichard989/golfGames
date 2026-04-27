@@ -348,6 +348,63 @@
   // RENDERING
   // =============================================================================
 
+  function renderHiloResultsCard(data, teamALabelResponsive, teamBLabelResponsive) {
+    const card = document.getElementById('hiloResultsBottom');
+    if (!card) return;
+
+    if (!data || data.error) {
+      const placeholder = '<table class="live-results-table hilo-results-table" aria-label="Hi-Lo results"><tbody><tr class="live-results-data-row"><td colspan="4" style="text-align:center;padding:10px;">Requires 4 players</td></tr></tbody></table>';
+      if (card.dataset.renderCache !== placeholder) {
+        card.innerHTML = placeholder;
+        card.dataset.renderCache = placeholder;
+      }
+      return;
+    }
+
+    const { front9, back9, full18 } = data;
+    let rowsHtml = '';
+    let totalUnitsA = 0, totalUnitsB = 0;
+
+    front9.presses.forEach((press, idx) => {
+      const gameName = idx === 0 ? 'Front 9 (1 unit)' : `Press ${idx} (Holes ${press.start}-9)`;
+      let winner = '', tone = '';
+      if (press.teamA > press.teamB) { winner = teamALabelResponsive; totalUnitsA += 1; tone = 'banker-total-positive'; }
+      else if (press.teamB > press.teamA) { winner = teamBLabelResponsive; totalUnitsB += 1; tone = 'banker-total-negative'; }
+      else { winner = press.teamA === 0 && press.teamB === 0 ? '—' : 'Push'; }
+      rowsHtml += `<tr class="live-results-data-row"><td class="live-results-label">${gameName}</td><td>${press.teamA}</td><td>${press.teamB}</td><td class="${tone}">${winner}</td></tr>`;
+    });
+
+    back9.presses.forEach((press, idx) => {
+      const gameName = idx === 0 ? 'Back 9 (1 unit)' : `Press ${idx} (Holes ${press.start}-18)`;
+      let winner = '', tone = '';
+      if (press.teamA > press.teamB) { winner = teamALabelResponsive; totalUnitsA += 1; tone = 'banker-total-positive'; }
+      else if (press.teamB > press.teamA) { winner = teamBLabelResponsive; totalUnitsB += 1; tone = 'banker-total-negative'; }
+      else { winner = press.teamA === 0 && press.teamB === 0 ? '—' : 'Push'; }
+      rowsHtml += `<tr class="live-results-data-row"><td class="live-results-label">${gameName}</td><td>${press.teamA}</td><td>${press.teamB}</td><td class="${tone}">${winner}</td></tr>`;
+    });
+
+    let full18Winner = '', full18Tone = '';
+    if (full18.teamA > full18.teamB) { full18Winner = teamALabelResponsive; totalUnitsA += 2; full18Tone = 'banker-total-positive'; }
+    else if (full18.teamB > full18.teamA) { full18Winner = teamBLabelResponsive; totalUnitsB += 2; full18Tone = 'banker-total-negative'; }
+    else { full18Winner = full18.teamA === 0 ? '—' : 'Push'; }
+    rowsHtml += `<tr class="live-results-data-row"><td class="live-results-label">Full 18 (2 units)</td><td>${full18.teamA}</td><td>${full18.teamB}</td><td class="${full18Tone}">${full18Winner}</td></tr>`;
+
+    const netTone = totalUnitsA > totalUnitsB ? 'banker-total-positive' : totalUnitsB > totalUnitsA ? 'banker-total-negative' : '';
+    rowsHtml += `<tr class="live-results-data-row" style="font-weight:bold;"><td class="live-results-label">Net</td><td class="${netTone}">${totalUnitsA}</td><td class="${netTone === 'banker-total-positive' ? 'banker-total-negative' : netTone === 'banker-total-negative' ? 'banker-total-positive' : ''}">${totalUnitsB}</td><td>—</td></tr>`;
+
+    const html = `<table class="live-results-table hilo-results-table" aria-label="Hi-Lo results">
+      <colgroup><col class="lr-col-label"><col><col><col></colgroup>
+      <thead><tr class="live-results-title-row"><th colspan="4">Hi-Lo Results</th></tr>
+      <tr class="live-results-data-row"><th class="live-results-label">Game</th><th id="hiloColA">Team A</th><th id="hiloColB">Team B</th><th>Winner</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>`;
+
+    if (card.dataset.renderCache !== html) {
+      card.innerHTML = html;
+      card.dataset.renderCache = html;
+    }
+  }
+
   function render(data) {
     const names = getPlayerNames();
     const { teamA, teamB, strokePlayer, strokesGiven, holeResults, front9, back9, full18, error } = data;
@@ -355,15 +412,11 @@
     // Update team display
     const teamAEl = document.getElementById('hiloTeamA');
     const teamBEl = document.getElementById('hiloTeamB');
-    const colAEl = document.getElementById('hiloColA');
-    const colBEl = document.getElementById('hiloColB');
     
     if (error) {
       if (teamAEl) teamAEl.textContent = error;
       if (teamBEl) teamBEl.textContent = '';
-      if (colAEl) colAEl.textContent = 'Team A';
-      if (colBEl) colBEl.textContent = 'Team B';
-      document.getElementById('hiloResultsBody').innerHTML = '';
+      renderHiloResultsCard(data, 'Team A', 'Team B');
       return;
     }
     
@@ -381,105 +434,14 @@
     if (teamBEl) {
       teamBEl.textContent = `Team B: ${teamBLabel}${strokeInfo}`;
     }
+
+    renderHiloResultsCard(data, teamALabelResponsive, teamBLabelResponsive);
+
+    // Update column headers in the card after it rendered
+    const colAEl = document.getElementById('hiloColA');
+    const colBEl = document.getElementById('hiloColB');
     if (colAEl) colAEl.innerHTML = teamALabelResponsive;
     if (colBEl) colBEl.innerHTML = teamBLabelResponsive;
-    
-    // Build table with all games and presses
-    let tableHtml = '';
-    let totalUnitsA = 0, totalUnitsB = 0;
-    
-    // Front 9 games (main + presses) - all presses go to hole 9
-    front9.presses.forEach((press, idx) => {
-      const isMain = idx === 0;
-      
-      let gameName = isMain 
-        ? 'Front 9 (1 unit)' 
-        : `Press ${idx} (Holes ${press.start}-9)`;
-      
-      let winner = '';
-      
-      if (press.teamA > press.teamB) {
-        winner = teamALabelResponsive;
-        totalUnitsA += 1;
-      } else if (press.teamB > press.teamA) {
-        winner = teamBLabelResponsive;
-        totalUnitsB += 1;
-      } else {
-        winner = press.teamA === 0 && press.teamB === 0 ? '—' : 'Push';
-      }
-      
-      tableHtml += `
-        <tr>
-          <td>${gameName}</td>
-          <td>${press.teamA}</td>
-          <td>${press.teamB}</td>
-          <td>${winner}</td>
-        </tr>
-      `;
-    });
-    
-    // Back 9 games (main + presses) - all presses go to hole 18
-    back9.presses.forEach((press, idx) => {
-      const isMain = idx === 0;
-      
-      let gameName = isMain 
-        ? 'Back 9 (1 unit)' 
-        : `Press ${idx} (Holes ${press.start}-18)`;
-      
-      let winner = '';
-      
-      if (press.teamA > press.teamB) {
-        winner = teamALabelResponsive;
-        totalUnitsA += 1;
-      } else if (press.teamB > press.teamA) {
-        winner = teamBLabelResponsive;
-        totalUnitsB += 1;
-      } else {
-        winner = press.teamA === 0 && press.teamB === 0 ? '—' : 'Push';
-      }
-      
-      tableHtml += `
-        <tr>
-          <td>${gameName}</td>
-          <td>${press.teamA}</td>
-          <td>${press.teamB}</td>
-          <td>${winner}</td>
-        </tr>
-      `;
-    });
-    
-    // Full 18 (no presses, just main game worth 2 units)
-    let full18Winner = '';
-    if (full18.teamA > full18.teamB) {
-      full18Winner = teamALabelResponsive;
-      totalUnitsA += 2;
-    } else if (full18.teamB > full18.teamA) {
-      full18Winner = teamBLabelResponsive;
-      totalUnitsB += 2;
-    } else {
-      full18Winner = full18.teamA === 0 ? '—' : 'Push';
-    }
-    
-    tableHtml += `
-      <tr>
-        <td>Full 18 (2 units)</td>
-        <td>${full18.teamA}</td>
-        <td>${full18.teamB}</td>
-        <td>${full18Winner}</td>
-      </tr>
-    `;
-    
-    // Add total row
-    tableHtml += `
-      <tr style="border-top: 2px solid var(--line); font-weight: bold;">
-        <td>Net Result</td>
-        <td>${totalUnitsA}</td>
-        <td>${totalUnitsB}</td>
-        <td>—</td>
-      </tr>
-    `;
-    
-    document.getElementById('hiloResultsBody').innerHTML = tableHtml;
     
     // Render hole-by-hole results
     const holeBody = document.getElementById('hiloHoleBody');

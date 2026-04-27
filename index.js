@@ -1247,11 +1247,12 @@
   const PINNED_GAME_RESULTS_SELECTOR = {
     banker: '#bankerFooterTotals',
     vegas: '#vegasResultsBottom',
+    hilo: '#hiloResultsBottom',
     junk: '#junkResultsBottom',
     wolf: '#wolfResultsBottom'
   };
 
-  const PANEL_SCROLL_LOCK_GAMES = new Set(['banker', 'vegas', 'junk', 'wolf']);
+  const PANEL_SCROLL_LOCK_GAMES = new Set(['banker', 'vegas', 'hilo', 'junk', 'wolf']);
 
   function syncActiveGamePinnedResultsLayout() {
     const panel = getGamesScrollContainer();
@@ -5114,6 +5115,7 @@
     syncState();
     emitDebugModeChanged(false);
     removeDebugOutlines();
+    hideLayoutDebugReadouts();
     try {
       if (window.eruda && typeof window.eruda.destroy === 'function') {
         window.eruda.destroy();

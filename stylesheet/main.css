@@ -2184,7 +2184,7 @@ body.mode-games .gamesbar {
 }
 
 /* Game tables stretch edge-to-edge; inset only non-table children. */
-.game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls) {
+.game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls):not(.hilo-bottom-results) {
   padding-left: var(--space-md);
   padding-right: var(--space-md);
 }
@@ -2409,6 +2409,7 @@ body.mode-games .gamesbar {
 
 /* Persistent bottom results cards (Vegas, Junk) + Banker bottom totals */
 .vegas-bottom-results,
+.hilo-bottom-results,
 .junk-bottom-results,
 .wolf-bottom-results,
 #bankerFooterTotals {
@@ -2424,6 +2425,7 @@ body.mode-games .gamesbar {
    Table viewport/padding adjustments are handled in JS so rows can still scroll past hole 18. */
 body.mode-games #bankerSection[aria-hidden="false"],
 body.mode-games #vegasSection[aria-hidden="false"],
+body.mode-games #hiloSection[aria-hidden="false"],
 body.mode-games #junkSection[aria-hidden="false"],
 body.mode-games #wolfSection[aria-hidden="false"] {
   padding-bottom: 108px;
@@ -2431,6 +2433,7 @@ body.mode-games #wolfSection[aria-hidden="false"] {
 
 body.mode-games #bankerSection[aria-hidden="false"] #bankerFooterTotals,
 body.mode-games #vegasSection[aria-hidden="false"] #vegasResultsBottom,
+body.mode-games #hiloSection[aria-hidden="false"] #hiloResultsBottom,
 body.mode-games #junkSection[aria-hidden="false"] #junkResultsBottom,
 body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   position: fixed;
@@ -4456,7 +4459,7 @@ input[type="text"] {
     padding: 0 0 var(--text-md);
   }
 
-  .game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls) {
+  .game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls):not(.hilo-bottom-results) {
     padding-left: var(--text-md);
     padding-right: var(--text-md);
   }
