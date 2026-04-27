@@ -3164,6 +3164,40 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   border-bottom: none;
 }
 
+/* Restore bottom border on the last player row in skins tbody —
+   the global tr:last-child rule strips it. */
+#skinsBody tr:last-child td,
+#skinsBody tr:last-child th {
+  border-bottom: 2px solid var(--line);
+}
+
+/* Restore bottom border on the last Hi-Lo results row —
+   the global tr:last-child rule strips it. */
+#hiloResultsBody tr:last-child td,
+#hiloResultsBody tr:last-child th {
+  border-bottom: 2px solid var(--line);
+}
+
+/* Restore bottom border on the last Hi-Lo hole-by-hole row —
+   the global tr:last-child rule strips it. */
+#hiloHoleBody tr:last-child td,
+#hiloHoleBody tr:last-child th {
+  border-bottom: 2px solid var(--line);
+}
+
+/* Restore bottom border on last rows for game hole/result tables —
+   the global tr:last-child rule strips it. */
+#vegasBody tr:last-child td,
+#vegasBody tr:last-child th,
+#bankerBody tr:last-child td,
+#bankerBody tr:last-child th,
+#junkBody tr:last-child td,
+#junkBody tr:last-child th,
+#wolfBody tr:last-child td,
+#wolfBody tr:last-child th {
+  border-bottom: 2px solid var(--line);
+}
+
 .vegas-table tfoot td:first-child,
 .banker-table tfoot td:first-child,
 .skins-table tfoot td:first-child,
