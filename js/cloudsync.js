@@ -41,6 +41,8 @@
     '#courseOptionsList .course-option',
     '#addPlayerBtn',
     '#clearAllBtn',
+    '#clearEverythingBtn',
+    '#clearEverythingScoreOptionsBtn',
     '#resetBtn',
     '#saveBtn',
     '#refreshAllBtn',

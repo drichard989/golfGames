@@ -34,7 +34,7 @@
     STORAGE_KEY: 'golf_scorecard_v5',
     ADVANCE_DIRECTION: 'down',
     FONT_SIZE: 'medium',
-    STROKE_INDICATOR_MODE: 'highlight',
+    STROKE_INDICATOR_MODE: 'both',
 
     COURSES: {
       manito: {
@@ -2242,7 +2242,7 @@
       applyStrokeVisualState(input, sr) {
         if(!input) return;
 
-        const indicatorMode = Config.STROKE_INDICATOR_MODE || 'highlight';
+        const indicatorMode = Config.STROKE_INDICATOR_MODE || 'both';
         const showHighlight = indicatorMode === 'highlight' || indicatorMode === 'both';
         const showSymbols = indicatorMode === 'symbols' || indicatorMode === 'both';
         const cell = input.closest('td');
@@ -2725,7 +2725,7 @@
         scorecard: {
           course: ACTIVE_COURSE,
           handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'rawHandicap',
-          strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'highlight',
+          strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'both',
           players: players.map((p) => ({
             id: p.id,
             name: p.name,
@@ -2847,7 +2847,7 @@
         },
         fontSize: Config.FONT_SIZE || 'medium',
         advanceDirection: Config.ADVANCE_DIRECTION || 'down',
-        strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'highlight'
+        strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'both'
       };
     },
 
@@ -2887,7 +2887,7 @@
         ...rawState,
         course: scorecard.course || rawState.course,
         handicapMode: scorecard.handicapMode || rawState.handicapMode,
-        strokeIndicatorMode: scorecard.strokeIndicatorMode || localUi.strokeIndicatorMode || rawState.strokeIndicatorMode || 'highlight',
+        strokeIndicatorMode: scorecard.strokeIndicatorMode || localUi.strokeIndicatorMode || rawState.strokeIndicatorMode || 'both',
         players: normalizedPlayers,
         advanceDirection: localUi.advanceDirection || rawState.advanceDirection,
         fontSize: localUi.fontSize || rawState.fontSize,
@@ -3050,7 +3050,7 @@
         course: ACTIVE_COURSE,
         advanceDirection: Config.ADVANCE_DIRECTION,
         handicapMode: document.querySelector('#handicapModeGroup .hcp-mode-btn[data-active="true"]')?.dataset.value || 'rawHandicap',
-        strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'highlight',
+        strokeIndicatorMode: Config.STROKE_INDICATOR_MODE || 'both',
         players: players,
         vegas: { 
           teams: window.Vegas?.getTeamAssignments(), 
@@ -3444,7 +3444,7 @@
         {
           const mode = ['highlight', 'symbols', 'both'].includes(s.strokeIndicatorMode)
             ? s.strokeIndicatorMode
-            : 'highlight';
+            : 'both';
           const modeId = 'strokeIndicator' + mode.charAt(0).toUpperCase() + mode.slice(1);
           setStrokeIndicatorModeButtonState(modeId);
         }
@@ -3780,7 +3780,7 @@
 
       // Reset primary scorecard options
       setHandicapModeButtonState('handicapModeRawHandicap');
-      setStrokeIndicatorModeButtonState('strokeIndicatorHighlight');
+      setStrokeIndicatorModeButtonState('strokeIndicatorBoth');
 
       Config.ADVANCE_DIRECTION = 'down';
       const advanceLabel = document.getElementById('advanceLabel');
@@ -4036,7 +4036,7 @@
     });
 
     if (!matched) {
-      const fallback = document.getElementById('strokeIndicatorHighlight');
+      const fallback = document.getElementById('strokeIndicatorBoth');
       if (fallback) {
         fallback.dataset.active = 'true';
         fallback.setAttribute('aria-checked', 'true');
@@ -4047,7 +4047,7 @@
     const activeValue = activeBtn?.dataset?.value;
     Config.STROKE_INDICATOR_MODE = ['highlight', 'symbols', 'both'].includes(activeValue)
       ? activeValue
-      : 'highlight';
+      : 'both';
   }
   
   // Expose announce globally for external modules
@@ -5818,6 +5818,13 @@
     }
     Storage.clearEverything();
   });
+
+  const clearEverythingScoreOptionsBtn = document.getElementById('clearEverythingScoreOptionsBtn');
+  if (clearEverythingScoreOptionsBtn) {
+    clearEverythingScoreOptionsBtn.addEventListener('click', () => {
+      $(ids.clearEverythingBtn)?.click();
+    });
+  }
 
     const clearGamesDataBtn = document.getElementById('clearGamesDataBtn');
     if (clearGamesDataBtn) {
