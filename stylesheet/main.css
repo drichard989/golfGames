@@ -2347,6 +2347,32 @@ body.mode-games .gamesbar {
   width: 60px;
 }
 
+.hilo-results-table col.lr-col-label {
+  width: 160px;
+}
+
+.hilo-results-table {
+  table-layout: auto;
+}
+
+.hilo-results-table .live-results-label {
+  position: sticky;
+  left: 0;
+  background: var(--panel);
+  z-index: 1;
+  text-align: left;
+  font-weight: 600;
+  width: 160px;
+  min-width: 120px;
+  max-width: 200px;
+  box-shadow: 2px 0 0 0 var(--line);
+  white-space: normal;
+}
+
+.live-results-title-row .hilo-results-table .live-results-label {
+  background: var(--panel-alt);
+}
+
 .vegas-results-table .live-results-label {
   position: static;
   left: auto;
@@ -3635,23 +3661,27 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
 }
 
 #hiloTable .hilo-team-label-full,
-#hiloHoleTable .hilo-team-label-full {
+#hiloHoleTable .hilo-team-label-full,
+#hiloResultsBottom .hilo-team-label-full {
   display: inline;
 }
 
 #hiloTable .hilo-team-label-short,
-#hiloHoleTable .hilo-team-label-short {
+#hiloHoleTable .hilo-team-label-short,
+#hiloResultsBottom .hilo-team-label-short {
   display: none;
 }
 
 @media (max-width: 768px) {
   #hiloTable .hilo-team-label-full,
-  #hiloHoleTable .hilo-team-label-full {
+  #hiloHoleTable .hilo-team-label-full,
+  #hiloResultsBottom .hilo-team-label-full {
     display: none;
   }
 
   #hiloTable .hilo-team-label-short,
-  #hiloHoleTable .hilo-team-label-short {
+  #hiloHoleTable .hilo-team-label-short,
+  #hiloResultsBottom .hilo-team-label-short {
     display: inline;
   }
 }
