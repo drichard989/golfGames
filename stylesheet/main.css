@@ -130,7 +130,7 @@
   }
   .scorecard-controls-shell,
   .games-controls-shell {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+    padding-bottom: 0;
   }
 }
 
@@ -1193,11 +1193,11 @@ select:not(.select-plain) option {
   border-radius: 0;
   overflow: hidden;
   margin: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0;
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--footer-bottom-offset, 0px);
+  bottom: calc(var(--footer-bottom-offset, 0px) + env(safe-area-inset-bottom, 0px));
   z-index: 35;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
@@ -1968,11 +1968,11 @@ tfoot td {
   border-radius: 0;
   overflow: hidden;
   margin: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: 0;
   position: fixed;
   left: 0;
   right: 0;
-  bottom: var(--footer-bottom-offset, 0px);
+  bottom: calc(var(--footer-bottom-offset, 0px) + env(safe-area-inset-bottom, 0px));
   z-index: 34;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);

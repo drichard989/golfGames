@@ -1284,8 +1284,10 @@
       lastScorePanelHeightPx = available;
     }
     if (scorecard) {
-      const footerHeight = footerShell ? footerShell.offsetHeight : 0;
-      const footerTop = viewportHeight - footerHeight;
+      // Use getBoundingClientRect so the footer's CSS bottom (including
+      // env(safe-area-inset-bottom)) is already baked into the position.
+      const footerRect = footerShell ? footerShell.getBoundingClientRect() : null;
+      const footerTop = footerRect ? footerRect.top : (viewportHeight - (footerShell ? footerShell.offsetHeight : 0));
       // Use the scorecard's actual rendered top so any element inserted above
       // it (e.g. debug strip) is automatically accounted for.
       const scorecardActualTop = scorecard.getBoundingClientRect().top;
