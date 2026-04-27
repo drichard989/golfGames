@@ -30,6 +30,8 @@
 
   function isLayoutDebugTraceEnabled() {
     try {
+      if (window.__debugLayoutDisabled) return false;
+      if (localStorage.getItem('debug') === '0') return false; // user explicitly disabled
       return /[?&]debug=1\b/.test(window.location.search) || localStorage.getItem('debug') === '1';
     } catch {
       return false;
@@ -5073,7 +5075,9 @@
   }
   if(!btn) return;
 
-  const isEnabled = () => localStorage.getItem('debug') === '1';
+  const isEnabled = () => !window.__debugLayoutDisabled &&
+    localStorage.getItem('debug') !== '0' &&
+    (/[?&]debug=1\b/.test(window.location.search) || localStorage.getItem('debug') === '1');
 
   const emitDebugModeChanged = (enabled) => {
     document.dispatchEvent(new CustomEvent('golf:debug-mode-changed', {
@@ -5098,6 +5102,8 @@
   btn.addEventListener('click', async () => {
     const enable = !isEnabled();
     if (enable) {
+      window.__debugLayoutDisabled = false;
+      localStorage.removeItem('debug'); // clear explicit-off sentinel first
       localStorage.setItem('debug', '1');
       syncState();
       emitDebugModeChanged(true);
@@ -5111,7 +5117,8 @@
       return;
     }
 
-    localStorage.removeItem('debug');
+    window.__debugLayoutDisabled = true;
+    localStorage.setItem('debug', '0'); // explicit-off sentinel, survives URL param
     syncState();
     emitDebugModeChanged(false);
     removeDebugOutlines();
@@ -6569,6 +6576,11 @@
     setupGamesPanelScrollSync();
     setupScorecardLayoutAutoResync();
     setupScorecardDebugTrace();
+    // On load, hide debug panels immediately if debug is disabled so stale DOM
+    // from a previous session never stays visible.
+    if (!isLayoutDebugTraceEnabled()) {
+      hideLayoutDebugReadouts();
+    }
     bindHeaderCloudScrollIndicator();
     syncHeaderBadgeButtonLabels();
     window.addEventListener('resize', syncHeaderBadgeButtonLabels, { passive: true });
