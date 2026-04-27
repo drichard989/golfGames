@@ -1337,8 +1337,75 @@
       : document.querySelector('.scorecard-controls-shell');
   }
 
+  function ensureFooterDebugReadout() {
+    if (!DEBUG_LAYOUT_TRACE) return null;
+
+    let panel = document.getElementById('footerDebugReadout');
+    if (panel) return panel;
+
+    if (!document.getElementById('footerDebugReadoutStyle')) {
+      const style = document.createElement('style');
+      style.id = 'footerDebugReadoutStyle';
+      style.textContent =
+        '#footerDebugReadout{' +
+          'position:fixed;' +
+          'top:8px;' +
+          'right:8px;' +
+          'z-index:9999;' +
+          'max-width:min(92vw,420px);' +
+          'padding:8px 10px;' +
+          'border:2px solid #00e5ff;' +
+          'border-radius:8px;' +
+          'background:rgba(9,12,18,0.9);' +
+          'color:#d9f7ff;' +
+          'font:12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;' +
+          'white-space:pre-wrap;' +
+          'pointer-events:none;' +
+          'backdrop-filter:blur(2px);' +
+        '}';
+      document.head.appendChild(style);
+    }
+
+    panel = document.createElement('div');
+    panel.id = 'footerDebugReadout';
+    panel.textContent = 'footer debug pending...';
+    document.body.appendChild(panel);
+    return panel;
+  }
+
+  function renderFooterDebugReadout(reason, extra = {}) {
+    if (!DEBUG_LAYOUT_TRACE) return;
+    const panel = ensureFooterDebugReadout();
+    if (!panel) return;
+
+    const vv = window.visualViewport;
+    const activeTab = getPrimaryTab();
+    const scoreShell = document.querySelector('.scorecard-controls-shell');
+    const gamesShell = document.querySelector('.games-controls-shell');
+    const activeShell = activeTab === 'games' ? gamesShell : scoreShell;
+    const rect = activeShell?.getBoundingClientRect();
+    const appDvh = getComputedStyle(document.documentElement).getPropertyValue('--app-dvh').trim();
+    const bottomOffset = getComputedStyle(document.documentElement).getPropertyValue('--footer-bottom-offset').trim();
+    const activeName = activeShell === gamesShell ? 'games' : (activeShell === scoreShell ? 'score' : 'none');
+    const now = new Date();
+    const ts = now.toTimeString().slice(0, 8);
+
+    panel.textContent = [
+      `footer-debug ${ts}`,
+      `reason=${reason}`,
+      `tab=${activeTab} shell=${activeName}`,
+      `vv.h=${vv ? Math.round(vv.height) : 'na'} vv.top=${vv ? Math.round(vv.offsetTop) : 'na'}`,
+      `innerH=${window.innerHeight} clientH=${document.documentElement.clientHeight}`,
+      `appDvh=${appDvh} bottomOffset=${bottomOffset}`,
+      `shell.top=${rect ? Math.round(rect.top) : 'na'} shell.bottom=${rect ? Math.round(rect.bottom) : 'na'} shell.h=${rect ? Math.round(rect.height) : 'na'}`,
+      `extra=${JSON.stringify(extra)}`
+    ].join('\n');
+  }
+
   function debugFooterTrace(reason, extra = {}) {
     if (!DEBUG_LAYOUT_TRACE) return;
+
+    renderFooterDebugReadout(reason, extra);
 
     const viewport = window.visualViewport;
     const footerShell = document.querySelector('.games-controls-shell');
@@ -1527,12 +1594,35 @@
     const layoutViewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
     const visualBottom = vv ? (vv.offsetTop + vv.height) : layoutViewportHeight;
     const rawInset = Math.round(layoutViewportHeight - visualBottom);
-    const clampedInset = Math.max(0, Math.min(160, rawInset));
+
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
+      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
+      || window.navigator.standalone === true;
+    const activeEl = document.activeElement;
+    const isEditableFocused = !!activeEl && (
+      activeEl.tagName === 'INPUT' ||
+      activeEl.tagName === 'TEXTAREA' ||
+      activeEl.tagName === 'SELECT' ||
+      activeEl.isContentEditable
+    );
+
+    // In iOS standalone, visualViewport math can report a phantom inset even
+    // with no keyboard, which makes fixed footers float above the bottom.
+    // Only honor a positive inset when an editable control is focused.
+    let clampedInset = Math.max(0, Math.min(160, rawInset));
+    if (standalone && !isEditableFocused) {
+      clampedInset = 0;
+    }
 
     if (clampedInset !== lastFooterBottomOffsetPx) {
       root.style.setProperty('--footer-bottom-offset', `${clampedInset}px`);
       lastFooterBottomOffsetPx = clampedInset;
-      debugFooterTrace('syncFixedFooterBottomOffset', { clampedInset, rawInset });
+      debugFooterTrace('syncFixedFooterBottomOffset', {
+        clampedInset,
+        rawInset,
+        standalone,
+        isEditableFocused
+      });
     }
   }
 
