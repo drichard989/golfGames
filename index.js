@@ -4795,7 +4795,19 @@
 
 // Debug tools toggle (eruda) from Utilities menu
 (function(){
-  const btn = document.getElementById('toggleDebugToolsBtn');
+  let btn = document.getElementById('toggleDebugToolsBtn');
+  if(!btn) {
+    const actionsRow = document.querySelector('#utilitiesSection .utilities-row-actions');
+    if (actionsRow) {
+      btn = document.createElement('button');
+      btn.id = 'toggleDebugToolsBtn';
+      btn.className = 'btn';
+      btn.type = 'button';
+      btn.setAttribute('aria-pressed', 'false');
+      btn.textContent = '🧪 Debug Tools: Off';
+      actionsRow.appendChild(btn);
+    }
+  }
   if(!btn) return;
 
   const isEnabled = () => localStorage.getItem('debug') === '1';
