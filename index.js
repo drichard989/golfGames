@@ -1171,6 +1171,23 @@
     }
   }
 
+  function syncDynamicViewportHeight() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    const rawViewportHeight = (window.visualViewport?.height)
+      || window.innerHeight
+      || document.documentElement.clientHeight
+      || 0;
+    const viewportHeight = Math.max(0, Math.round(rawViewportHeight));
+    if (!viewportHeight) return;
+
+    const nextValue = `${viewportHeight}px`;
+    if (root.style.getPropertyValue('--app-dvh') !== nextValue) {
+      root.style.setProperty('--app-dvh', nextValue);
+    }
+  }
+
   function syncSafeTopInset() {
     const root = document.documentElement;
     if (!root) return;
@@ -1638,6 +1655,7 @@
     if (!panel) return;
 
     const syncLayout = () => {
+      syncDynamicViewportHeight();
       syncSafeTopInset();
       syncGamesPanelHeight();
       syncScorePanelHeight();
@@ -1671,12 +1689,25 @@
     window.addEventListener('resize', syncLayoutDebounced, { passive: true });
     window.addEventListener('orientationchange', syncLayout, { passive: true });
     window.addEventListener('scroll', syncOnScroll, { passive: true });
+    window.addEventListener('focus', syncLayoutDebounced, { passive: true });
     window.visualViewport?.addEventListener('resize', syncLayoutDebounced, { passive: true });
     window.visualViewport?.addEventListener('scroll', syncOnScroll, { passive: true });
-    // Re-measure once all resources are loaded (env() is reliably resolved by then)
-    // and again on pageshow so PWA home-screen launches always get the correct value.
-    window.addEventListener('load', () => syncSafeTopInset(), { once: true });
-    window.addEventListener('pageshow', () => syncSafeTopInset(), { passive: true });
+
+    const syncLayoutWithFollowUps = () => {
+      syncLayout();
+      setTimeout(syncLayout, 120);
+      setTimeout(syncLayout, 320);
+    };
+
+    // Re-measure once all resources are loaded and again on lifecycle resumes.
+    // iOS standalone can settle viewport/safe-area metrics after first paint.
+    window.addEventListener('load', syncLayoutWithFollowUps, { once: true });
+    window.addEventListener('pageshow', syncLayoutWithFollowUps, { passive: true });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        syncLayoutWithFollowUps();
+      }
+    });
   }
 
   function setGameTab(which, { save = true, activatePrimary = true } = {}) {

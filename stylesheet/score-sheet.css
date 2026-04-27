@@ -15,7 +15,7 @@ body.score-sheet-open {
 @media (pointer: coarse) {
   body.score-sheet-active #scorecard .score-input {
     border-color: rgba(255, 255, 255, 0.08) !important;
-    background: rgba(255, 255, 255, 0.06) !important;
+    background: #000000 !important;
     border-radius: 8px;
     cursor: pointer;
     user-select: none;
@@ -32,7 +32,7 @@ body.score-sheet-open {
 
   :root[data-theme="light"] body.score-sheet-active #scorecard .score-input {
     border-color: rgba(0, 0, 0, 0.08) !important;
-    background: rgba(0, 0, 0, 0.04) !important;
+    background: #ffffff !important;
   }
 }
 

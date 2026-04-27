@@ -94,6 +94,7 @@
   --game-sticky-head-top: 0px;
   --score-sticky-par-top: 39px;
   --score-sticky-hcp-top: 100px;
+  --app-dvh: 100dvh;
   --safe-top-dynamic: 0px;
   --safe-top-inset: max(env(safe-area-inset-top, 0px), var(--safe-top-dynamic));
 }
@@ -120,8 +121,8 @@
 @media (display-mode: standalone), (display-mode: fullscreen) {
   html,
   body {
-    height: 100dvh;
-    min-height: 100dvh;
+    height: var(--app-dvh, 100dvh);
+    min-height: var(--app-dvh, 100dvh);
   }
   .scorecard-controls-shell,
   .games-controls-shell {
@@ -1100,7 +1101,7 @@ select:not(.select-plain) option {
   flex-wrap: nowrap;
   align-items: center;
   gap: 6px;
-  min-height: 52px;
+  min-height: 63px;
   justify-content: flex-start;
 }
 
@@ -1116,15 +1117,15 @@ select:not(.select-plain) option {
 .scorecard-footer-controls > .btn,
 .scorecard-footer-controls > .scorecard-theme-toggle,
 .scorecard-footer-controls > .scorecard-main-options-icon {
-  min-height: 44px !important;
-  height: 44px !important;
+  min-height: 53px !important;
+  height: 53px !important;
   font-size: 14px !important;
 }
 
 .scorecard-footer-controls > .scorecard-theme-toggle,
 .scorecard-footer-controls > .scorecard-main-options-icon {
-  min-width: 44px !important;
-  width: 44px !important;
+  min-width: 53px !important;
+  width: 53px !important;
   font-size: 18px !important;
 }
 
@@ -1327,7 +1328,7 @@ body.mode-games .entry-switcher {
   color: var(--muted);
   border-radius: var(--radius-3xl);
   padding: 10px 14px;
-  min-height: 40px;
+  min-height: 53px;
   font-size: var(--text-md);
   font-weight: 600;
 }
@@ -1681,7 +1682,7 @@ tr:last-child td {
   text-align: center;
   border-radius: var(--radius-md);
   border: 2px solid var(--line);
-  background: #0c1218;
+  background: #000000;
   color: var(--ink);
   padding: 10px var(--space-xs);
   -moz-appearance: textfield;
@@ -1919,7 +1920,7 @@ tfoot td {
 }
 
 .games-card-footer {
-  min-height: 44px;
+  min-height: 53px;
   padding: 3px 8px 0;
   border-top: none;
 }
@@ -2038,7 +2039,7 @@ body.mode-games .gamesbar {
   background: var(--panel-alt);
   border-radius: var(--radius-3xl);
   padding: 10px 2px;
-  min-height: 40px;
+  min-height: 53px;
   font-size: var(--text-md);
   font-weight: 600;
   color: var(--muted);
@@ -3752,7 +3753,7 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
 
 /* Touch target sizing */
 .gamesbar .game-toggle {
-  min-height: 36px;
+  min-height: 53px;
 }
 
 input[type="number"],
@@ -4025,7 +4026,7 @@ input[type="text"] {
 
   .entry-switcher-btn {
     padding: 8px 14px;
-    min-height: 36px;
+    min-height: 53px;
   }
 }
 
@@ -4249,31 +4250,37 @@ input[type="text"] {
   #scorecard .score-input {
     width: 44px;
     min-width: 44px;
-    height: 44px;
-    min-height: 44px;
+    height: var(--touch-min);
+    min-height: var(--touch-min);
     padding: 8px 2px;
+    background: #000000;
   }
 
   #scorecard .ch-input {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
+    width: 44px;
+    min-width: 44px;
+    height: 48px;
+    min-height: 48px;
+    aspect-ratio: auto;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input {
+    background: #ffffff;
   }
 
   .scorecard-card-footer {
     padding: 6px 8px;
-    min-height: 44px;
+    min-height: 53px;
   }
 
   .scorecard-card-footer.games-card-footer {
     padding: 3px 8px 0;
-    min-height: 40px;
+    min-height: 48px;
   }
 
   .scorecard-card-footer .btn,
   .scorecard-card-footer .game-options-toggle {
-    min-height: 40px;
+    min-height: 48px;
     padding: 6px 12px;
   }
 
@@ -4296,7 +4303,12 @@ input[type="text"] {
 
   .entry-switcher-btn {
     padding: 10px 12px;
+    min-height: 48px;
     font-size: var(--text-sm);
+  }
+
+  .game-toggle {
+    min-height: 48px;
   }
 
   .gamesbar .game-toggle-item {
@@ -4418,16 +4430,31 @@ input[type="text"] {
   }
 
   .par-row input,
-  .hcp-row input,
-  .score-input {
+  .hcp-row input {
     width: 44px;
     padding: 11px 3px;
     min-height: var(--touch-comfortable);
   }
 
-  .ch-input {
-    width: 56px;
-    min-height: var(--touch-comfortable);
+  #scorecard .score-input,
+  #scorecard .ch-input {
+    width: 44px;
+    min-width: 44px;
+    height: 48px;
+    min-height: 48px;
+  }
+
+  #scorecard .ch-input {
+    aspect-ratio: auto;
+  }
+
+  #scorecard .score-input {
+    padding: 11px 3px;
+    background: #000000;
+  }
+
+  :root[data-theme="light"] #scorecard .score-input {
+    background: #ffffff;
   }
 
   table {
@@ -4482,16 +4509,21 @@ input[type="text"] {
     padding-bottom: 4px;
   }
 
+  #scorecard .score-input,
   #scorecard .ch-input {
-    width: 40px;
-    min-width: 40px;
-    height: 40px;
-    min-height: 40px;
+    width: 44px;
+    min-width: 44px;
+    height: 48px;
+    min-height: 48px;
+  }
+
+  #scorecard .ch-input {
+    aspect-ratio: auto;
   }
 
   .game-toggle {
     padding: 7px 2px;
-    min-height: 36px;
+    min-height: 48px;
     font-size: var(--text-md);
   }
 
