@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v3.3.134';
+const CACHE_VERSION = 'v3.3.139';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache - comprehensive list
@@ -107,6 +107,24 @@ self.addEventListener('activate', (event) => {
       return self.clients.claim();
     })
   );
+});
+
+self.addEventListener('message', (event) => {
+  const type = event?.data?.type;
+  if (type === 'SKIP_WAITING') {
+    self.skipWaiting();
+    return;
+  }
+
+  if (type === 'CLEAR_CACHE') {
+    event.waitUntil((async () => {
+      const cacheNames = await caches.keys();
+      await Promise.all(cacheNames.map((name) => caches.delete(name)));
+      const cache = await caches.open(CACHE_NAME);
+      await precacheFiles(cache);
+      await pruneCacheEntries(cache);
+    })());
+  }
 });
 
 // Fetch - network-only for HTML/JS (no caching), cache-first for assets

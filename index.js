@@ -1093,6 +1093,19 @@
   let lastScorePanelHeightPx = -1;
   let lastScorecardHeightPx = -1;
   let lastFooterBottomOffsetPx = -1;
+  const pinnedResultResizeObservers = new WeakMap();
+
+  function ensurePinnedResultResizeSync(resultCard) {
+    if (!(resultCard instanceof HTMLElement)) return;
+    if (typeof ResizeObserver === 'undefined') return;
+    if (pinnedResultResizeObservers.has(resultCard)) return;
+
+    const ro = new ResizeObserver(() => {
+      schedulePanelHeightSync();
+    });
+    ro.observe(resultCard);
+    pinnedResultResizeObservers.set(resultCard, ro);
+  }
 
   function schedulePanelHeightSync() {
     if (panelSyncRaf) return;
@@ -1103,8 +1116,13 @@
       syncFixedFooterBottomOffset();
       syncGamesPanelHeight();
       syncScorePanelHeight();
+      if (window.Scorecard?.build?.syncRowHeights) {
+        window.Scorecard.build.syncRowHeights(true);
+      }
+      normalizeScorecardTopRowsLayout();
       syncGamesFooterHeightVar();
       syncActiveGamePinnedResultsLayout();
+      window._iosStickyRefresh?.();
       window._iosGamesStickyRefresh?.();
     });
   }
@@ -1168,6 +1186,8 @@
     const resultCard = section.querySelector(resultSelector);
     if (!resultCard) return;
 
+    ensurePinnedResultResizeSync(resultCard);
+
     if (getComputedStyle(resultCard).position !== 'fixed') return;
 
     const wrapRect = wrap.getBoundingClientRect();
@@ -1181,11 +1201,7 @@
 
     const resultHeight = Math.ceil(resultRect.height || resultCard.offsetHeight || 0);
     if (resultHeight > 0) {
-      if (activeGame === 'junk') {
-        wrap.style.paddingBottom = '14px';
-      } else {
-        wrap.style.paddingBottom = `${Math.max(14, resultHeight + 10)}px`;
-      }
+      wrap.style.paddingBottom = `${Math.max(14, resultHeight + 12)}px`;
     }
   }
 
@@ -1261,6 +1277,38 @@
         lastScorecardHeightPx = scorecardHeight;
       }
     }
+  }
+
+  /**
+   * Keep the first player row visually anchored directly under the HCP row.
+   * On some mobile viewport transitions, scorecard scrollTop can drift slightly,
+   * which creates an artificial gap and can clip the first player row.
+   */
+  function normalizeScorecardTopRowsLayout() {
+    if (getPrimaryTab() !== 'score') return;
+
+    const pane = document.getElementById('main-scorecard');
+    const hcpRow = document.getElementById('hcpRow');
+    const firstPlayerRow = document.querySelector('#scorecard .player-row');
+    if (!pane || !hcpRow || !firstPlayerRow) return;
+
+    const currentTop = Math.max(0, Number(pane.scrollTop) || 0);
+    // Only normalize near the top; don't interfere with intentional scrolling.
+    if (currentTop > 140) return;
+
+    const hcpBottom = hcpRow.getBoundingClientRect().bottom;
+    const firstTop = firstPlayerRow.getBoundingClientRect().top;
+    const gapPx = Math.round(firstTop - hcpBottom);
+
+    if (Math.abs(gapPx) <= 2) return;
+
+    const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
+    const nextTop = Math.max(0, Math.min(maxTop, currentTop + gapPx));
+
+    // Guard against large jumps; only correct small/medium drift.
+    if (Math.abs(nextTop - currentTop) > 120) return;
+
+    pane.scrollTop = nextTop;
   }
 
   function syncDynamicViewportHeight() {
@@ -1344,17 +1392,23 @@
     const scoreFooter = document.querySelector('.scorecard-controls-shell');
     const stickyNav = document.querySelector('.sticky-nav-bar');
     const totalsRow = document.getElementById('totalsRow');
+    const hcpRow = document.getElementById('hcpRow');
+    const firstPlayerRow = document.querySelector('#scorecard .player-row');
 
     const panelRect = scorePanel?.getBoundingClientRect();
     const scorecardRect = scorecard?.getBoundingClientRect();
     const footerRect = scoreFooter?.getBoundingClientRect();
     const navRect = stickyNav?.getBoundingClientRect();
     const totalsRect = totalsRow?.getBoundingClientRect();
+    const hcpRect = hcpRow?.getBoundingClientRect();
+    const firstPlayerRect = firstPlayerRow?.getBoundingClientRect();
 
     const footerTop = footerRect ? Math.round(footerRect.top) : null;
     const scorecardBottom = scorecardRect ? Math.round(scorecardRect.bottom) : null;
     const overlapWithFooterPx =
       footerTop != null && scorecardBottom != null ? Math.max(0, scorecardBottom - footerTop) : null;
+    const topRowGapPx =
+      hcpRect && firstPlayerRect ? Math.round(firstPlayerRect.top - hcpRect.bottom) : null;
 
     return {
       reason,
@@ -1410,6 +1464,11 @@
         bottom: Math.round(totalsRect.bottom),
         height: Math.round(totalsRect.height)
       } : null,
+      topRows: {
+        hcpBottom: hcpRect ? Math.round(hcpRect.bottom) : null,
+        firstPlayerTop: firstPlayerRect ? Math.round(firstPlayerRect.top) : null,
+        gapPx: topRowGapPx
+      },
       overlapWithFooterPx,
       extra
     };
