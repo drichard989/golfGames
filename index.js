@@ -1257,6 +1257,8 @@
   let lastScorePanelHeightPx = -1;
   let lastScorecardHeightPx = -1;
   let lastFooterBottomOffsetPx = -1;
+  let scorecardLayoutObserverBound = false;
+  let scorecardLayoutResyncRaf = 0;
   const pinnedResultResizeObservers = new WeakMap();
 
   function ensurePinnedResultResizeSync(resultCard) {
@@ -1269,6 +1271,55 @@
     });
     ro.observe(resultCard);
     pinnedResultResizeObservers.set(resultCard, ro);
+  }
+
+  function setupScorecardLayoutAutoResync() {
+    if (scorecardLayoutObserverBound) return;
+    scorecardLayoutObserverBound = true;
+
+    const runResync = () => {
+      if (scorecardLayoutResyncRaf) return;
+      scorecardLayoutResyncRaf = requestAnimationFrame(() => {
+        scorecardLayoutResyncRaf = 0;
+        schedulePanelHeightSync();
+        if (getPrimaryTab() === 'score') {
+          if (window.Scorecard?.build?.syncRowHeights) {
+            window.Scorecard.build.syncRowHeights(true);
+          }
+          normalizeScorecardTopRowsLayout();
+        }
+      });
+    };
+
+    const settleResync = () => {
+      runResync();
+      setTimeout(runResync, 80);
+      setTimeout(runResync, 220);
+    };
+
+    const scorePanel = document.getElementById('scoreEntryPanel');
+    const scorecardPane = document.getElementById('main-scorecard');
+    const scoreTable = document.getElementById('scorecard');
+    const footerShell = document.querySelector('.scorecard-controls-shell');
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(() => settleResync());
+      if (scorePanel) ro.observe(scorePanel);
+      if (scorecardPane) ro.observe(scorecardPane);
+      if (scoreTable) ro.observe(scoreTable);
+      if (footerShell) ro.observe(footerShell);
+    }
+
+    if (typeof MutationObserver !== 'undefined' && scorePanel) {
+      const mo = new MutationObserver(() => settleResync());
+      mo.observe(scorePanel, { childList: true });
+    }
+
+    document.fonts?.ready?.then(() => settleResync()).catch(() => {});
+
+    window.addEventListener('load', settleResync, { once: true });
+    window.addEventListener('pageshow', settleResync, { passive: true });
+    window.addEventListener('orientationchange', settleResync, { passive: true });
   }
 
   function schedulePanelHeightSync() {
@@ -6741,6 +6792,7 @@
     setupIOSGamesTableOverscrollGuard();
     setupDesktopGamesTablePointerScroll();
     setupGamesPanelScrollSync();
+    setupScorecardLayoutAutoResync();
     setupScorecardDebugTrace();
     bindHeaderCloudScrollIndicator();
     syncHeaderBadgeButtonLabels();
