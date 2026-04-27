@@ -11,19 +11,19 @@
     <meta http-equiv="Expires" content="0" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.124" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.124" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.124" />
-    <link rel="manifest" href="/manifest.json?v=v3.3.124" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.129" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.129" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.129" />
+    <link rel="manifest" href="/manifest.json?v=v3.3.129" />
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .githooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.124" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.129" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.124" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.124" />
-    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.124" />
-    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.124" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.129" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.129" />
+    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.129" />
+    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.129" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -331,7 +331,6 @@
           </div>
         </div>
       </div>
-      <p class="small">Vegas number puts the lower individual score first by default (e.g., 4 &amp; 5 → <strong>45</strong>). If a team makes a birdie+, the other team’s digits flip (hi–lo) for that hole. Points = (higher − lower) × multiplier; winner gets the points. </p>
       </div>
       <div class="vegas-wrap">
         <table class="vegas-table" id="vegasTable">
@@ -394,7 +393,6 @@
           <button id="clearBankerDataBtn" class="btn">Clear Banker Data</button>
         </div>
       </div>
-      <p class="small">Select a banker per hole, set max bet, then enter player bets. Check 2× to double. Lower net score wins (with handicap strokes).</p>
       </div>
       <div class="banker-wrap">
         <table class="banker-table" id="bankerTable">
@@ -629,18 +627,18 @@
         <button id="gamesFooterGamesBtn" class="entry-switcher-btn" type="button" role="tab" aria-selected="false" aria-controls="gamesEntryPanel">🎮 Games</button>
       </div>
     </div>
-    <script src="index.js?v=v3.3.124" defer></script>
-    <script src="js/export.js?v=v3.3.124" defer></script>
-    <script src="js/vegas.js?v=v3.3.124" defer></script>
-    <script src="js/banker.js?v=v3.3.124" defer></script>
-    <script src="js/banker-sheet.js?v=v3.3.124" defer></script>
-    <script src="js/hilo.js?v=v3.3.124" defer></script>
-    <script src="js/skins.js?v=v3.3.124" defer></script>
-    <script src="js/junk.js?v=v3.3.124" defer></script>
-    <script src="js/junk-sheet.js?v=v3.3.124" defer></script>
-    <script src="js/wolf.js?v=v3.3.124" defer></script>
-    <script src="js/wolf-sheet.js?v=v3.3.124" defer></script>
-    <script src="js/score-sheet.js?v=v3.3.124" defer></script>
+    <script src="index.js?v=v3.3.129" defer></script>
+    <script src="js/export.js?v=v3.3.129" defer></script>
+    <script src="js/vegas.js?v=v3.3.129" defer></script>
+    <script src="js/banker.js?v=v3.3.129" defer></script>
+    <script src="js/banker-sheet.js?v=v3.3.129" defer></script>
+    <script src="js/hilo.js?v=v3.3.129" defer></script>
+    <script src="js/skins.js?v=v3.3.129" defer></script>
+    <script src="js/junk.js?v=v3.3.129" defer></script>
+    <script src="js/junk-sheet.js?v=v3.3.129" defer></script>
+    <script src="js/wolf.js?v=v3.3.129" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.3.129" defer></script>
+    <script src="js/score-sheet.js?v=v3.3.129" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
@@ -651,8 +649,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
     <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-    <script src="js/firebase-config.js?v=v3.3.124" defer></script>
-    <script src="js/cloudsync.js?v=v3.3.124" defer></script>
+    <script src="js/firebase-config.js?v=v3.3.129" defer></script>
+    <script src="js/cloudsync.js?v=v3.3.129" defer></script>
     <!-- Cloud QR libraries must load before js/cloudsync.js -->
 
     <!-- =====================================================================

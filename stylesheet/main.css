@@ -1291,6 +1291,10 @@ body.mode-games #gamesEntryPanel {
   padding-top: 0;
 }
 
+body.mode-games #gamesEntryPanel > p.note {
+  display: none;
+}
+
 .entry-switcher {
   position: relative;
   z-index: auto;

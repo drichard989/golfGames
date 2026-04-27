@@ -1127,9 +1127,16 @@
     wolf: '#wolfResultsBottom'
   };
 
+  const PANEL_SCROLL_LOCK_GAMES = new Set(['banker', 'vegas', 'junk', 'wolf']);
+
   function syncActiveGamePinnedResultsLayout() {
     const panel = getGamesScrollContainer();
     if (!panel) return;
+
+    // Default behavior: panel can scroll unless an active game explicitly locks it.
+    if (panel.style.overflowY !== 'auto') {
+      panel.style.overflowY = 'auto';
+    }
 
     if (getPrimaryTab() !== 'games') return;
     if (!window.matchMedia('(max-width: 1023px)').matches) return;
@@ -1137,12 +1144,23 @@
     const activeGame = getActiveGameTab();
     if (!activeGame) return;
 
+    if (PANEL_SCROLL_LOCK_GAMES.has(activeGame)) {
+      if (panel.scrollTop !== 0) {
+        panel.scrollTop = 0;
+      }
+      if (panel.style.overflowY !== 'hidden') {
+        panel.style.overflowY = 'hidden';
+      }
+    }
+
     const sectionId = GAME_SECTION_BY_KEY[activeGame];
     const section = sectionId ? document.getElementById(sectionId) : null;
     if (!section || section.getAttribute('aria-hidden') === 'true') return;
 
     const wrap = section.querySelector('.vegas-wrap, .banker-wrap');
     if (!wrap) return;
+
+    const sectionHeader = section.querySelector('.game-section-header');
 
     const resultSelector = PINNED_GAME_RESULTS_SELECTOR[activeGame];
     if (!resultSelector) return;
@@ -1153,8 +1171,10 @@
     if (getComputedStyle(resultCard).position !== 'fixed') return;
 
     const wrapRect = wrap.getBoundingClientRect();
+    const headerRect = sectionHeader?.getBoundingClientRect();
     const resultRect = resultCard.getBoundingClientRect();
-    const available = Math.floor(resultRect.top - wrapRect.top - 8);
+    const topAnchor = headerRect ? Math.max(wrapRect.top, headerRect.bottom + 4) : wrapRect.top;
+    const available = Math.floor(resultRect.top - topAnchor - 8);
     if (Number.isFinite(available) && available > 160) {
       wrap.style.maxHeight = `${available}px`;
     }
@@ -1791,6 +1811,7 @@
 
   function setupDesktopGamesTablePointerScroll() {
     const isTouchPrimary = navigator.maxTouchPoints > 0;
+    const gamesPanel = document.getElementById('gamesEntryPanel');
 
     const installScroller = (pane) => {
       if (!(pane instanceof HTMLElement) || pane.dataset.desktopPointerScroll === 'true') return;
@@ -1805,8 +1826,17 @@
 
         const useVertical = Math.abs(e.deltaY) >= Math.abs(e.deltaX);
         if (useVertical && canScrollY) {
+          const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
+          const atTop = pane.scrollTop <= 0;
+          const atBottom = pane.scrollTop >= maxTop - 1;
           const before = pane.scrollTop;
           pane.scrollTop += e.deltaY;
+          // Prevent edge chaining into #gamesEntryPanel so the table viewport
+          // stays locked between game header and pinned totals/results.
+          if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+            e.preventDefault();
+            return;
+          }
           if (pane.scrollTop !== before) {
             e.preventDefault();
           }
@@ -1886,6 +1916,37 @@
     };
 
     document.querySelectorAll('.vegas-wrap, .banker-wrap').forEach(installScroller);
+
+    if (gamesPanel instanceof HTMLElement && gamesPanel.dataset.desktopPanelWheelGuard !== 'true') {
+      gamesPanel.dataset.desktopPanelWheelGuard = 'true';
+
+      gamesPanel.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) return;
+
+        const target = e.target instanceof Element ? e.target : null;
+        const wrap = target?.closest('.vegas-wrap, .banker-wrap');
+        if (!(wrap instanceof HTMLElement)) return;
+
+        const canScrollY = wrap.scrollHeight - wrap.clientHeight > 1;
+        if (!canScrollY) return;
+
+        const maxTop = Math.max(0, wrap.scrollHeight - wrap.clientHeight);
+        const atTop = wrap.scrollTop <= 0;
+        const atBottom = wrap.scrollTop >= maxTop - 1;
+
+        const deltaY = e.deltaY;
+        if ((atTop && deltaY < 0) || (atBottom && deltaY > 0)) {
+          e.preventDefault();
+          return;
+        }
+
+        const before = wrap.scrollTop;
+        wrap.scrollTop += deltaY;
+        if (wrap.scrollTop !== before) {
+          e.preventDefault();
+        }
+      }, { passive: false, capture: true });
+    }
   }
 
   /**
