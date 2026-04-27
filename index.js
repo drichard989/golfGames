@@ -2332,43 +2332,6 @@
       if (!(pane instanceof HTMLElement) || pane.dataset.desktopPointerScroll === 'true') return;
       pane.dataset.desktopPointerScroll = 'true';
 
-      pane.addEventListener('wheel', (e) => {
-        if (e.ctrlKey) return;
-
-        const canScrollY = pane.scrollHeight - pane.clientHeight > 1;
-        const canScrollX = pane.scrollWidth - pane.clientWidth > 1;
-        if (!canScrollY && !canScrollX) return;
-
-        const useVertical = Math.abs(e.deltaY) >= Math.abs(e.deltaX);
-        if (useVertical && canScrollY) {
-          const before = pane.scrollTop;
-          pane.scrollTop += e.deltaY;
-          if (pane.scrollTop !== before) {
-            e.preventDefault();
-          }
-          return;
-        }
-
-        // Keep standard wheel behavior by default. Only map vertical wheel
-        // to horizontal when the user explicitly requests it via Shift+wheel.
-        if (e.shiftKey && canScrollX && Math.abs(e.deltaY) > 0) {
-          const before = pane.scrollLeft;
-          pane.scrollLeft += e.deltaY;
-          if (pane.scrollLeft !== before) {
-            e.preventDefault();
-          }
-          return;
-        }
-
-        if (!useVertical && canScrollX) {
-          const before = pane.scrollLeft;
-          pane.scrollLeft += e.deltaX;
-          if (pane.scrollLeft !== before) {
-            e.preventDefault();
-          }
-        }
-      }, { passive: false });
-
       if (isTouchPrimary) return;
 
       let activePointerId = null;
@@ -2434,25 +2397,8 @@
 
     document.querySelectorAll('.vegas-wrap, .banker-wrap').forEach(installScroller);
 
-    if (gamesPanel instanceof HTMLElement && gamesPanel.dataset.desktopPanelWheelGuard !== 'true') {
-      gamesPanel.dataset.desktopPanelWheelGuard = 'true';
-
-      gamesPanel.addEventListener('wheel', (e) => {
-        if (e.ctrlKey) return;
-
-        const target = e.target instanceof Element ? e.target : null;
-        const wrap = target?.closest('.vegas-wrap, .banker-wrap');
-        if (!(wrap instanceof HTMLElement)) return;
-
-        const canScrollY = wrap.scrollHeight - wrap.clientHeight > 1;
-        if (!canScrollY) return;
-        const before = wrap.scrollTop;
-        wrap.scrollTop += e.deltaY;
-        if (wrap.scrollTop !== before) {
-          e.preventDefault();
-        }
-      }, { passive: false, capture: true });
-    }
+    // Let native wheel behavior handle desktop table scrolling. This avoids
+    // edge cases where custom interception blocks wheel input over table cells.
   }
 
   /**
