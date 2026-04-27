@@ -1284,12 +1284,13 @@
       lastScorePanelHeightPx = available;
     }
     if (scorecard) {
-      // Footer is position:fixed — compute top from offsetHeight to avoid
-      // read-after-write layout thrash (getBoundingClientRect forces reflow).
       const footerHeight = footerShell ? footerShell.offsetHeight : 0;
       const footerTop = viewportHeight - footerHeight;
-      const scorecardTop = topBoundary;
-      const scorecardHeight = Math.max(180, footerTop - scorecardTop - 8);
+      // Use the scorecard's actual rendered top so any element inserted above
+      // it (e.g. debug strip) is automatically accounted for.
+      const scorecardActualTop = scorecard.getBoundingClientRect().top;
+      const scorecardTop = Math.max(topBoundary, scorecardActualTop);
+      const scorecardHeight = Math.max(180, footerTop - scorecardTop - 4);
       if (scorecardHeight !== lastScorecardHeightPx) {
         scorecard.style.height = `${scorecardHeight}px`;
         scorecard.style.maxHeight = `${scorecardHeight}px`;
@@ -1628,13 +1629,21 @@
       .getPropertyValue('--footer-bottom-offset').trim() || '0px';
     // Gap between the bottom of the footer and the screen bottom (should be 0)
     const footerScreenGap = footerRect ? Math.round(innerH - footerRect.bottom) : 'na';
+    // Actual scorecard top in viewport
+    const scorecardEl = document.getElementById('main-scorecard');
+    const scorecardActualTop = scorecardEl ? Math.round(scorecardEl.getBoundingClientRect().top) : 'na';
+    const scorecardActualH = scorecardEl ? Math.round(scorecardEl.getBoundingClientRect().height) : 'na';
+    const scorecardBottom = scorecardEl ? Math.round(scorecardEl.getBoundingClientRect().bottom) : 'na';
+    const footerScorecardGap = (typeof footerTop === 'number' && typeof scorecardBottom === 'number')
+      ? footerTop - scorecardBottom : 'na';
 
     content.textContent = [
       `${ts}  reason=${payload.reason}`,
       `── Header ──  headBottom=${headTop == null ? 'na' : `${headTop}px`}  hcpBottom=${hcpBottom == null ? 'na' : `${hcpBottom}px`}  firstTop=${firstTop == null ? 'na' : `${firstTop}px`}  gap=${gap == null ? 'na' : `${gap}px`}`,
       `── Panel ──   panelTop=${panelTop == null ? 'na' : `${panelTop}px`}  panelScroll=${panelScroll}  overlap=${overlap == null ? 'na' : `${overlap}px`}`,
-      `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  top=${footerTop}px  bottom=${footerBottom}px  h=${footerH}px`,
-      `── Viewport ──  innerH=${innerH}px  vvH=${vvH}px  footerScreenGap=${footerScreenGap}px  ← should be 0`
+      `── Scorecard ──  actualTop=${scorecardActualTop}px  h=${scorecardActualH}px  bottom=${scorecardBottom}px`,
+      `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  top=${footerTop}px  h=${footerH}px`,
+      `── Viewport ──  innerH=${innerH}px  vvH=${vvH}px  footerScreenGap=${footerScreenGap}px ← 0=ok  footerScorecardGap=${footerScorecardGap}px ← 0=ok`
     ].join('\n');
   }
 
