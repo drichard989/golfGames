@@ -1292,7 +1292,7 @@
       // it (e.g. debug strip) is automatically accounted for.
       const scorecardActualTop = scorecard.getBoundingClientRect().top;
       const scorecardTop = Math.max(topBoundary, scorecardActualTop);
-      const scorecardHeight = Math.max(180, footerTop - scorecardTop - 4);
+      const scorecardHeight = Math.max(180, footerTop - scorecardTop);
       if (scorecardHeight !== lastScorecardHeightPx) {
         scorecard.style.height = `${scorecardHeight}px`;
         scorecard.style.maxHeight = `${scorecardHeight}px`;
@@ -1639,9 +1639,29 @@
     const footerScorecardGap = (typeof footerTop === 'number' && typeof scorecardBottom === 'number')
       ? footerTop - scorecardBottom : 'na';
 
+    // Sticky row positions and their CSS top variables
+    const rootStyle = getComputedStyle(document.documentElement);
+    const stickyHeadTop  = rootStyle.getPropertyValue('--score-sticky-head-top').trim()  || '?';
+    const stickyParTop   = rootStyle.getPropertyValue('--score-sticky-par-top').trim()   || '?';
+    const stickyHcpTop   = rootStyle.getPropertyValue('--score-sticky-hcp-top').trim()   || '?';
+    const scorecardEl2   = document.getElementById('main-scorecard');
+    const theadEl        = scorecardEl2?.querySelector('thead tr');
+    const parRowEl       = document.getElementById('parRow');
+    const hcpRowEl       = document.getElementById('hcpRow');
+    const firstPlayerEl  = document.querySelector('#scorecard .player-row');
+    const px = (el) => el ? Math.round(el.getBoundingClientRect().top) : 'na';
+    const ph = (el) => el ? Math.round(el.getBoundingClientRect().height) : 'na';
+    const theadTop  = px(theadEl);  const theadH  = ph(theadEl);
+    const parTop    = px(parRowEl); const parH    = ph(parRowEl);
+    const hcpTop2   = px(hcpRowEl); const hcpH    = ph(hcpRowEl);
+    const fp        = px(firstPlayerEl);
+    const hcpBot    = hcpRowEl ? Math.round(hcpRowEl.getBoundingClientRect().bottom) : 'na';
+    const rowGap    = (typeof hcpBot === 'number' && typeof fp === 'number') ? fp - hcpBot : 'na';
+
     content.textContent = [
       `${ts}  reason=${payload.reason}`,
-      `── Header ──  headBottom=${headTop == null ? 'na' : `${headTop}px`}  hcpBottom=${hcpBottom == null ? 'na' : `${hcpBottom}px`}  firstTop=${firstTop == null ? 'na' : `${firstTop}px`}  gap=${gap == null ? 'na' : `${gap}px`}`,
+      `── Sticky vars ──  --head-top=${stickyHeadTop}  --par-top=${stickyParTop}  --hcp-top=${stickyHcpTop}`,
+      `── Row tops ──  thead=${theadTop}(h${theadH})  par=${parTop}(h${parH})  hcp=${hcpTop2}(h${hcpH})  firstPlayer=${fp}  gap=${rowGap}px`,
       `── Panel ──   panelTop=${panelTop == null ? 'na' : `${panelTop}px`}  panelScroll=${panelScroll}  overlap=${overlap == null ? 'na' : `${overlap}px`}`,
       `── Scorecard ──  actualTop=${scorecardActualTop}px  h=${scorecardActualH}px  bottom=${scorecardBottom}px`,
       `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  top=${footerTop}px  h=${footerH}px`,
