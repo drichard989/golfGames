@@ -2325,80 +2325,9 @@
   }
 
   function setupDesktopGamesTablePointerScroll() {
-    const isTouchPrimary = navigator.maxTouchPoints > 0;
-    const gamesPanel = document.getElementById('gamesEntryPanel');
-
-    const installScroller = (pane) => {
-      if (!(pane instanceof HTMLElement) || pane.dataset.desktopPointerScroll === 'true') return;
-      pane.dataset.desktopPointerScroll = 'true';
-
-      if (isTouchPrimary) return;
-
-      let activePointerId = null;
-      let startX = 0;
-      let startY = 0;
-      let startLeft = 0;
-      let startTop = 0;
-      let dragged = false;
-
-      const isInteractiveTarget = (target) => {
-        if (!(target instanceof Element)) return false;
-        return !!target.closest('button, input, select, textarea, option, label, a, summary, details');
-      };
-
-      pane.addEventListener('pointerdown', (e) => {
-        if (e.pointerType !== 'mouse' || e.button !== 0) return;
-        if (isInteractiveTarget(e.target)) return;
-
-        activePointerId = e.pointerId;
-        startX = e.clientX;
-        startY = e.clientY;
-        startLeft = pane.scrollLeft;
-        startTop = pane.scrollTop;
-        dragged = false;
-        pane.classList.add('is-pointer-scrolling');
-        pane.setPointerCapture?.(e.pointerId);
-      });
-
-      pane.addEventListener('pointermove', (e) => {
-        if (activePointerId !== e.pointerId) return;
-
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (!dragged && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
-
-        dragged = true;
-        pane.scrollLeft = startLeft - dx;
-        pane.scrollTop = startTop - dy;
-        e.preventDefault();
-      });
-
-      const endDrag = (e) => {
-        if (activePointerId !== e.pointerId) return;
-        pane.classList.remove('is-pointer-scrolling');
-        pane.releasePointerCapture?.(e.pointerId);
-        activePointerId = null;
-      };
-
-      pane.addEventListener('pointerup', endDrag);
-      pane.addEventListener('pointercancel', endDrag);
-      pane.addEventListener('lostpointercapture', () => {
-        pane.classList.remove('is-pointer-scrolling');
-        activePointerId = null;
-      });
-
-      pane.addEventListener('click', (e) => {
-        if (!dragged) return;
-        e.preventDefault();
-        e.stopPropagation();
-        dragged = false;
-      }, true);
-    };
-
-    document.querySelectorAll('.vegas-wrap, .banker-wrap').forEach(installScroller);
-
-    // Let native wheel behavior handle desktop table scrolling. This avoids
-    // edge cases where custom interception blocks wheel input over table cells.
+    // Native browser scrolling is the most reliable behavior on desktop.
+    // Keep this hook as a no-op so existing init wiring remains stable.
+    return;
   }
 
   /**
