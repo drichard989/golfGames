@@ -2358,6 +2358,17 @@
           return;
         }
 
+        // Most desktop mice only emit deltaY. When the table pane only has
+        // horizontal overflow, map wheel movement to horizontal scrolling.
+        if (useVertical && !canScrollY && canScrollX) {
+          const before = pane.scrollLeft;
+          pane.scrollLeft += e.deltaY;
+          if (pane.scrollLeft !== before) {
+            e.preventDefault();
+          }
+          return;
+        }
+
         if (!useVertical && canScrollX) {
           const before = pane.scrollLeft;
           pane.scrollLeft += e.deltaX;
