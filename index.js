@@ -7327,6 +7327,10 @@
   $(ids.optDoubleBirdie).addEventListener("change", ()=>{ window.Vegas?.recalc?.(); saveDebounced(); });
   $(ids.optTripleEagle).addEventListener("change", ()=>{ window.Vegas?.recalc?.(); saveDebounced(); });
   $(ids.vegasPointValue)?.addEventListener("input", ()=>{ window.Vegas?.recalc?.(); saveDebounced(); });
+  document.getElementById('vegasGhostRotationOrder')?.addEventListener('change', () => {
+    window.Vegas?.recalc?.();
+    saveDebounced();
+  });
 
     // Banker: no UI wiring (stub only)
 

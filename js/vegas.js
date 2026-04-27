@@ -219,10 +219,66 @@
     vegasDollarB: '#vegasDollarB',
     optUseNet: '#optUseNet',
     vegasNetHcpMode: '#vegasHcpModeGroup',
+    vegasGhostRotationWrap: '#vegasGhostRotationWrap',
+    vegasGhostRotationOrder: '#vegasGhostRotationOrder',
     optDoubleBirdie: '#optDoubleBirdie',
     optTripleEagle: '#optTripleEagle',
     vegasPointValue: '#vegasPointValue'
   };
+
+  const GHOST_ROTATION_PERMUTATIONS = [
+    [0, 1, 2],
+    [0, 2, 1],
+    [1, 0, 2],
+    [1, 2, 0],
+    [2, 0, 1],
+    [2, 1, 0]
+  ];
+
+  function parseGhostRotationOrder(raw) {
+    const parts = String(raw || '')
+      .split(',')
+      .map((v) => Number(v.trim()))
+      .filter((v) => Number.isInteger(v));
+
+    if (parts.length !== 3) return [0, 1, 2];
+    const key = parts.join(',');
+    const valid = GHOST_ROTATION_PERMUTATIONS.some((perm) => perm.join(',') === key);
+    return valid ? parts : [0, 1, 2];
+  }
+
+  function getGhostRotationOrder(opts = null) {
+    const fromOpts = opts?.ghostRotationOrder;
+    if (fromOpts != null) return parseGhostRotationOrder(fromOpts);
+    const sel = document.querySelector(ids.vegasGhostRotationOrder);
+    return parseGhostRotationOrder(sel?.value || '0,1,2');
+  }
+
+  function updateGhostRotationUi() {
+    const wrap = document.querySelector(ids.vegasGhostRotationWrap);
+    const sel = document.querySelector(ids.vegasGhostRotationOrder);
+    if (!wrap || !sel) return;
+
+    const playerCount = getPlayers();
+    const show = playerCount === 3;
+    wrap.hidden = !show;
+    if (!show) return;
+
+    const names = getVegasPlayerNames();
+    const previous = parseGhostRotationOrder(sel.value || '0,1,2').join(',');
+    sel.innerHTML = '';
+
+    GHOST_ROTATION_PERMUTATIONS.forEach((perm) => {
+      const label = perm.map((idx) => names[idx] || `P${idx + 1}`).join(' -> ');
+      const option = document.createElement('option');
+      option.value = perm.join(',');
+      option.textContent = label;
+      sel.appendChild(option);
+    });
+
+    const hasPrev = Array.from(sel.options).some((o) => o.value === previous);
+    sel.value = hasPrev ? previous : '0,1,2';
+  }
 
   function applyVegasTone(el, value) {
     if (!el) return;
@@ -427,9 +483,11 @@ const Vegas = {
       };
     }
     
+    const isThreePlayerGhostRotation = realPlayers === 3;
+
     // Standard mode: fixed teams
     // Each team needs exactly 2 positions (players or ghosts)
-    if(!(teams.A.length===2 && teams.B.length===2)){
+    if(!isThreePlayerGhostRotation && !(teams.A.length===2 && teams.B.length===2)){
       return {
         perHole: [],
         ptsA: 0,
@@ -446,14 +504,38 @@ const Vegas = {
 
     const perHole=[];
     let ptsA=0;
+    let totalA=0;
+    let totalB=0;
+    const rotationOrder = getGhostRotationOrder(opts);
+    const ghostIdx = 3;
+
+    const getTeamsForHole = (holeIdx) => {
+      if (!isThreePlayerGhostRotation) return teams;
+      const blockIdx = Math.min(2, Math.floor(holeIdx / 6));
+      const ghostPlayer = rotationOrder[blockIdx];
+      const opponents = [0, 1, 2].filter((p) => p !== ghostPlayer);
+      return {
+        A: [ghostPlayer, ghostIdx],
+        B: opponents
+      };
+    };
+
+    const sumPairScores = (pair) => {
+      if (!Array.isArray(pair) || pair.length < 2) return 0;
+      return Number(pair[0] || 0) + Number(pair[1] || 0);
+    };
 
     for(let h=0;h<getHoles();h++){
-      const pairA = this._teamPair(teams.A,h,opts.useNet,opts.netHcpMode, computeCtx);
-      const pairB = this._teamPair(teams.B,h,opts.useNet,opts.netHcpMode, computeCtx);
+      const holeTeams = getTeamsForHole(h);
+      const pairA = this._teamPair(holeTeams.A,h,opts.useNet,opts.netHcpMode, computeCtx);
+      const pairB = this._teamPair(holeTeams.B,h,opts.useNet,opts.netHcpMode, computeCtx);
       if(!pairA || !pairB){
         perHole.push({vaStr:'—', vbStr:'—', mult:'—', holePtsA:0});
         continue;
       }
+
+      totalA += sumPairScores(pairA);
+      totalB += sumPairScores(pairB);
 
       // Convert pairs to numbers (initially sorted low-high)
       let va = Number(this._pairToString(pairA));
@@ -464,7 +546,7 @@ const Vegas = {
       let loser = winner === 'A' ? 'B' : 'A';
 
       // Check if LOSER made birdie/eagle
-      const loserTeam = teams[loser];
+      const loserTeam = holeTeams[loser];
       const loserBE = this._teamHasBirdieOrEagle(loserTeam, h, opts.useNet, opts.netHcpMode, computeCtx);
 
       // If loser made birdie+, flip WINNER's digits
@@ -480,7 +562,7 @@ const Vegas = {
 
       // Calculate points with correct winner
       const diff = Math.abs(va - vb);
-      const mult = this._multiplierForWinner(teams[winner], h, opts.useNet, opts, computeCtx);
+      const mult = this._multiplierForWinner(holeTeams[winner], h, opts.useNet, opts, computeCtx);
       const holePtsA = winner==='A' ? diff*mult : -diff*mult;
 
       // Store display strings
@@ -491,26 +573,40 @@ const Vegas = {
       ptsA += holePtsA;
     }
 
-    const teamSum = team => { 
-      let s=0; 
-      for(let h=0;h<getHoles();h++){ 
-        team.forEach(p=>{ 
-          // Only count real players, not ghosts
-          if(p < getPlayers()) {
-            s+=getGross(p,h, computeCtx)||0; 
-          }
-        }); 
-      } 
-      return s; 
-    };
-    const totalA=teamSum(teams.A), totalB=teamSum(teams.B);
+    if (!isThreePlayerGhostRotation) {
+      const teamSum = team => { 
+        let s=0; 
+        for(let h=0;h<getHoles();h++){ 
+          team.forEach(p=>{ 
+            // Only count real players, not ghosts
+            if(p < getPlayers()) {
+              s+=getGross(p,h, computeCtx)||0; 
+            }
+          }); 
+        } 
+        return s; 
+      };
+      totalA = teamSum(teams.A);
+      totalB = teamSum(teams.B);
+    }
 
     const per = Math.max(0, opts.pointValue || 0);
     const dollarsA = ptsA * per;
     const dollarsB = -dollarsA;
     const ptsB = -ptsA;
 
-    return {perHole, ptsA, ptsB, totalA, totalB, dollarsA, dollarsB, valid:true, rotation:false};
+    return {
+      perHole,
+      ptsA,
+      ptsB,
+      totalA,
+      totalB,
+      dollarsA,
+      dollarsB,
+      valid: true,
+      rotation: isThreePlayerGhostRotation,
+      rotationOrder: isThreePlayerGhostRotation ? rotationOrder : null
+    };
   },
   /**
    * Render Vegas results into the DOM.
@@ -617,6 +713,10 @@ const Vegas = {
     const vals = players.map(p => {
       // Check if this is a ghost (position >= real player count)
       if(p >= getPlayers()) {
+        // In 3-player rotation mode, ghost slot is always active.
+        if (getPlayers() === 3) {
+          return getPar(holeIdx);
+        }
         const ghostCheck = document.getElementById(`vegasGhost_${p}`);
         if(ghostCheck && ghostCheck.checked) {
           return getPar(holeIdx); // Ghost shoots par
@@ -634,6 +734,10 @@ const Vegas = {
     const best=Math.min(...players.map(p=>{
       // Check if this is a ghost
       if(p >= getPlayers()) {
+        // In 3-player rotation mode, ghost slot is always active.
+        if (getPlayers() === 3) {
+          return getPar(h);
+        }
         const ghostCheck = document.getElementById(`vegasGhost_${p}`);
         if(ghostCheck && ghostCheck.checked) {
           return getPar(h); // Ghost shoots par (never birdie/eagle)
@@ -679,6 +783,7 @@ function vegas_refreshTeamNames(){
   const data = Vegas.compute(teams, opts, createVegasComputeContext(opts));
   renderTeamColumnLabels(data);
   vegas_syncColumnLabelsHard();
+  updateGhostRotationUi();
 }
 
 let vegasControlRecalcTimer = null;
@@ -724,6 +829,7 @@ function vegas_renderTeamControls(){
   const maxPositions = 4;
   const realPlayers = Math.min(playerCount, maxPositions);
   const needsGhosts = playerCount < maxPositions;
+  updateGhostRotationUi();
   
   for(let i=0; i<realPlayers; i++){
     const row=document.createElement("div"); row.className="vegas-team-row";
@@ -791,7 +897,10 @@ function vegas_renderTeamControls(){
   // still be assigned as 2v2 including one ghost.
   if (playerCount === 3) {
     const ghostCheck = document.getElementById('vegasGhost_3');
-    if (ghostCheck) ghostCheck.checked = true;
+    if (ghostCheck) {
+      ghostCheck.checked = true;
+      ghostCheck.disabled = true;
+    }
     const teams = vegas_getTeamAssignments();
     if (teams.A.length < 2) {
       const r = $(`input[name="vegasTeam_3"][value="A"]`);
@@ -849,7 +958,8 @@ function vegas_getOptions() {
     netHcpMode: mode === 'rawHandicap' ? 'rawHandicap' : 'playOffLow',
     doubleBirdie: $(ids.optDoubleBirdie)?.checked || false,
     tripleEagle: $(ids.optTripleEagle)?.checked || false,
-    pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value) || 0)
+    pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value) || 0),
+    ghostRotationOrder: document.querySelector(ids.vegasGhostRotationOrder)?.value || '0,1,2'
   };
 }
 function vegas_setOptions(o) {
@@ -873,6 +983,18 @@ function vegas_setOptions(o) {
   if ('doubleBirdie' in o) $(ids.optDoubleBirdie).checked = !!o.doubleBirdie;
   if ('tripleEagle' in o) $(ids.optTripleEagle).checked = !!o.tripleEagle;
   if ('pointValue' in o && $(ids.vegasPointValue)) $(ids.vegasPointValue).value = o.pointValue;
+  if ('ghostRotationOrder' in o) {
+    const sel = document.querySelector(ids.vegasGhostRotationOrder);
+    if (sel) {
+      const next = parseGhostRotationOrder(o.ghostRotationOrder).join(',');
+      if (Array.from(sel.options).some((opt) => opt.value === next)) {
+        sel.value = next;
+      } else {
+        sel.value = '0,1,2';
+      }
+    }
+  }
+  updateGhostRotationUi();
 }
 
 function vegas_syncColumnLabelsHard() {
