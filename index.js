@@ -1420,6 +1420,7 @@
     const gamesBtn = document.getElementById('entrySwitcherGamesBtn');
     const scorePanel = document.getElementById('scoreEntryPanel');
     const gamesPanel = document.getElementById('gamesEntryPanel');
+    const gamesFooterShell = document.querySelector('.games-controls-shell');
     if (!scoreBtn || !gamesBtn || !scorePanel || !gamesPanel) return;
 
     const isScore = activeTab === 'score';
@@ -1459,6 +1460,10 @@
     } else {
       scorePanel.hidden = !isScore;
       gamesPanel.hidden = isScore;
+    }
+
+    if (gamesFooterShell) {
+      gamesFooterShell.hidden = isScore;
     }
   }
 
