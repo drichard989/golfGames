@@ -1613,17 +1613,29 @@
     const panelTop = payload.panel?.top;
     const panelScroll = payload.panel ? `${payload.panel.scrollTop}/${payload.panel.scrollHeight}` : 'na';
 
+    // Live-sample footer shell so we see its actual rendered position, not just
+    // the cached payload value (which may be from a prior frame).
+    const footerShell = document.querySelector('.scorecard-controls-shell');
+    const footerRect = footerShell?.getBoundingClientRect();
+    const footerCssBottom = footerShell ? getComputedStyle(footerShell).bottom : 'na';
+    const footerCssPosition = footerShell ? getComputedStyle(footerShell).position : 'na';
+    const footerTop = footerRect ? Math.round(footerRect.top) : 'na';
+    const footerBottom = footerRect ? Math.round(footerRect.bottom) : 'na';
+    const footerH = footerRect ? Math.round(footerRect.height) : 'na';
+    const innerH = window.innerHeight;
+    const vvH = window.visualViewport ? Math.round(window.visualViewport.height) : 'na';
+    const footerBottomOffset = getComputedStyle(document.documentElement)
+      .getPropertyValue('--footer-bottom-offset').trim() || '0px';
+    // Gap between the bottom of the footer and the screen bottom (should be 0)
+    const footerScreenGap = footerRect ? Math.round(innerH - footerRect.bottom) : 'na';
+
     content.textContent = [
-      `${ts}`,
-      `reason=${payload.reason}`,
-      `gap=${gap == null ? 'na' : `${gap}px`}`,
-      `overlap=${overlap == null ? 'na' : `${overlap}px`}`,
-      `headBottom=${headTop == null ? 'na' : `${headTop}px`}`,
-      `hcpBottom=${hcpBottom == null ? 'na' : `${hcpBottom}px`}`,
-      `firstTop=${firstTop == null ? 'na' : `${firstTop}px`}`,
-      `panelTop=${panelTop == null ? 'na' : `${panelTop}px`}`,
-      `panelScroll=${panelScroll}`
-    ].join('  |  ');
+      `${ts}  reason=${payload.reason}`,
+      `── Header ──  headBottom=${headTop == null ? 'na' : `${headTop}px`}  hcpBottom=${hcpBottom == null ? 'na' : `${hcpBottom}px`}  firstTop=${firstTop == null ? 'na' : `${firstTop}px`}  gap=${gap == null ? 'na' : `${gap}px`}`,
+      `── Panel ──   panelTop=${panelTop == null ? 'na' : `${panelTop}px`}  panelScroll=${panelScroll}  overlap=${overlap == null ? 'na' : `${overlap}px`}`,
+      `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  top=${footerTop}px  bottom=${footerBottom}px  h=${footerH}px`,
+      `── Viewport ──  innerH=${innerH}px  vvH=${vvH}px  footerScreenGap=${footerScreenGap}px  ← should be 0`
+    ].join('\n');
   }
 
   function debugScorecardTrace(reason, extra = {}) {
