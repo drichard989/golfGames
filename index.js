@@ -42,6 +42,138 @@
 
     const scoreHeaderPanel = document.getElementById('scorecardHeaderDebugReadout');
     if (scoreHeaderPanel) scoreHeaderPanel.remove();
+
+    const overlayContainer = document.getElementById('scorecardDebugOverlayContainer');
+    if (overlayContainer) overlayContainer.remove();
+  }
+
+  /**
+   * Creates/updates fixed-position overlay bands on every key scorecard element
+   * so clipping, overlap, and gap issues are immediately visible on-device.
+   * Only runs when debug mode is enabled. Safe to call on every layout frame.
+   */
+  function syncScorecardDebugOverlays() {
+    if (!isLayoutDebugTraceEnabled()) return;
+    if (getPrimaryTab() !== 'score') {
+      const c = document.getElementById('scorecardDebugOverlayContainer');
+      if (c) c.hidden = true;
+      return;
+    }
+
+    let container = document.getElementById('scorecardDebugOverlayContainer');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'scorecardDebugOverlayContainer';
+      document.body.appendChild(container);
+    }
+    container.hidden = false;
+
+    // Helper: create or reuse a marker element by id
+    const ensureEl = (id, cls) => {
+      let el = container.querySelector(`#${id}`);
+      if (!el) {
+        el = document.createElement('div');
+        el.id = id;
+        el.className = cls;
+        container.appendChild(el);
+      }
+      return el;
+    };
+
+    // Helper: position a top-edge marker at viewport y
+    const placeMarker = (id, top, label, color) => {
+      if (top == null || isNaN(top)) return;
+      const el = ensureEl(id, 'sco-marker');
+      el.style.cssText = `top:${top}px;--sco-color:${color}`;
+      el.setAttribute('data-label', label);
+    };
+
+    // Helper: position a bottom-edge marker
+    const placeBottom = (id, bottom, label, color) => {
+      if (bottom == null || isNaN(bottom)) return;
+      const el = ensureEl(id, 'sco-marker-bottom');
+      el.style.cssText = `top:${bottom}px;--sco-color:${color}`;
+      el.setAttribute('data-label', label);
+    };
+
+    // Helper: span band (left strip showing full height of a container)
+    const placeSpan = (id, top, height, color) => {
+      if (top == null || height == null || isNaN(top) || isNaN(height)) return;
+      const el = ensureEl(id, 'sco-span');
+      el.style.cssText = `top:${top}px;height:${height}px;--sco-color:${color}`;
+    };
+
+    const r = (el) => el?.getBoundingClientRect();
+
+    const navRect        = r(document.querySelector('.sticky-nav-bar'));
+    const debugRect      = r(document.getElementById('scorecardHeaderDebugReadout'));
+    const panelRect      = r(document.getElementById('scoreEntryPanel'));
+    const scorecardRect  = r(document.getElementById('main-scorecard'));
+    const theadRect      = r(document.querySelector('#main-scorecard thead tr'));
+    const parRect        = r(document.getElementById('parRow'));
+    const hcpRect        = r(document.getElementById('hcpRow'));
+    const footerRect     = r(document.querySelector('.scorecard-controls-shell'));
+    const playerRows     = document.querySelectorAll('#scorecard .player-row');
+    const firstRow       = playerRows.length ? r(playerRows[0]) : null;
+    const lastRow        = playerRows.length ? r(playerRows[playerRows.length - 1]) : null;
+
+    const fmt = (rect, name) => {
+      if (!rect) return `${name}=?`;
+      return `${name} t${Math.round(rect.top)} h${Math.round(rect.height)}`;
+    };
+
+    // Nav bar bottom
+    if (navRect) placeMarker('sco-nav-bottom', navRect.bottom,
+      `navBar⊥ ${Math.round(navRect.bottom)}`, 'rgba(180,100,255,0.9)');
+
+    // Debug strip (top + bottom)
+    if (debugRect) {
+      placeMarker('sco-debug-top',    debugRect.top,    `debugStrip▲ ${Math.round(debugRect.top)}`,    'rgba(0,229,255,0.9)');
+      placeBottom('sco-debug-bottom', debugRect.bottom, `debugStrip▼ ${Math.round(debugRect.bottom)}`, 'rgba(0,229,255,0.9)');
+    }
+
+    // scoreEntryPanel (top + bottom + span)
+    if (panelRect) {
+      placeMarker('sco-panel-top',    panelRect.top,    `panel▲ ${Math.round(panelRect.top)}`,    'rgba(100,200,100,0.85)');
+      placeBottom('sco-panel-bottom', panelRect.bottom, `panel▼ ${Math.round(panelRect.bottom)}`, 'rgba(100,200,100,0.85)');
+      placeSpan('sco-panel-span',     panelRect.top, panelRect.height, 'rgba(100,200,100,0.4)');
+    }
+
+    // #main-scorecard container (top + bottom + span)
+    if (scorecardRect) {
+      placeMarker('sco-card-top',    scorecardRect.top,    `scorecard▲ ${Math.round(scorecardRect.top)}`,    'rgba(255,200,0,0.9)');
+      placeBottom('sco-card-bottom', scorecardRect.bottom, `scorecard▼ ${Math.round(scorecardRect.bottom)}`, 'rgba(255,200,0,0.9)');
+      placeSpan('sco-card-span',     scorecardRect.top, scorecardRect.height, 'rgba(255,200,0,0.35)');
+    }
+
+    // Sticky header rows
+    if (theadRect) placeMarker('sco-thead', theadRect.top,
+      `thead t${Math.round(theadRect.top)} h${Math.round(theadRect.height)}`, 'rgba(80,180,255,0.9)');
+    if (parRect)  placeMarker('sco-par',   parRect.top,
+      `parRow t${Math.round(parRect.top)} h${Math.round(parRect.height)}`,   'rgba(80,180,255,0.9)');
+    if (hcpRect)  placeMarker('sco-hcp',   hcpRect.top,
+      `hcpRow t${Math.round(hcpRect.top)} h${Math.round(hcpRect.height)}`,   'rgba(80,180,255,0.9)');
+    if (hcpRect)  placeBottom('sco-hcp-bottom', hcpRect.bottom,
+      `hcp⊥ ${Math.round(hcpRect.bottom)}`, 'rgba(80,180,255,0.7)');
+
+    // Player rows
+    if (firstRow) placeMarker('sco-first-player', firstRow.top,
+      `player[0] t${Math.round(firstRow.top)} h${Math.round(firstRow.height)}`, 'rgba(255,160,50,0.9)');
+    if (lastRow && lastRow !== firstRow) {
+      placeMarker('sco-last-player', lastRow.top,
+        `player[${playerRows.length - 1}] t${Math.round(lastRow.top)} h${Math.round(lastRow.height)}`, 'rgba(255,120,50,0.85)');
+      placeBottom('sco-last-player-bottom', lastRow.bottom,
+        `lastPlayer⊥ ${Math.round(lastRow.bottom)}`, 'rgba(255,120,50,0.7)');
+    }
+
+    // Footer shell (top + bottom)
+    if (footerRect) {
+      const gap = scorecardRect ? Math.round(footerRect.top - scorecardRect.bottom) : '?';
+      const gapLabel = typeof gap === 'number' ? ` gap=${gap}px` : '';
+      placeMarker('sco-footer-top',    footerRect.top,    `footer▲ t${Math.round(footerRect.top)}${gapLabel}`, 'rgba(255,80,80,0.9)');
+      placeBottom('sco-footer-bottom', footerRect.bottom, `footer▼ b${Math.round(footerRect.bottom)} h${Math.round(footerRect.height)}`, 'rgba(255,80,80,0.9)');
+      placeSpan('sco-footer-span',     footerRect.top, footerRect.height, 'rgba(255,80,80,0.3)');
+    }
   }
 
   // =============================================================================
@@ -1667,6 +1799,9 @@
       `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  top=${footerTop}px  h=${footerH}px`,
       `── Viewport ──  innerH=${innerH}px  vvH=${vvH}px  footerScreenGap=${footerScreenGap}px ← 0=ok  footerScorecardGap=${footerScorecardGap}px ← 0=ok`
     ].join('\n');
+
+    // Sync the visual overlay bands after the text is updated
+    syncScorecardDebugOverlays();
   }
 
   function debugScorecardTrace(reason, extra = {}) {
@@ -1726,11 +1861,6 @@
     const root = document.documentElement;
     if (!root) return;
 
-    const vv = window.visualViewport;
-    const layoutViewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
-    const visualBottom = vv ? (vv.offsetTop + vv.height) : layoutViewportHeight;
-    const rawInset = Math.round(layoutViewportHeight - visualBottom);
-
     const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
       || window.matchMedia?.('(display-mode: fullscreen)')?.matches
       || window.navigator.standalone === true;
@@ -1742,13 +1872,30 @@
       activeEl.isContentEditable
     );
 
-    // In iOS standalone, visualViewport math can report a phantom inset even
-    // with no keyboard, which makes fixed footers float above the bottom.
-    // Only honor a positive inset when an editable control is focused.
-    let clampedInset = Math.max(0, Math.min(160, rawInset));
+    // In standalone/PWA mode with no keyboard active, skip all viewport math
+    // entirely. The visualViewport/layout-viewport mismatch during iOS
+    // transitions can produce a phantom positive inset that floats the footer.
+    // Just pin to 0 immediately and return — no calculation needed.
     if (standalone && !isEditableFocused) {
-      clampedInset = 0;
+      if (lastFooterBottomOffsetPx !== 0) {
+        root.style.setProperty('--footer-bottom-offset', '0px');
+        lastFooterBottomOffsetPx = 0;
+        debugFooterTrace('syncFixedFooterBottomOffset:standalone-pinned', {
+          clampedInset: 0,
+          standalone,
+          isEditableFocused
+        });
+      }
+      return;
     }
+
+    const vv = window.visualViewport;
+    const layoutViewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const visualBottom = vv ? (vv.offsetTop + vv.height) : layoutViewportHeight;
+    const rawInset = Math.round(layoutViewportHeight - visualBottom);
+
+    // Not standalone or keyboard is active — compute and apply the real inset.
+    const clampedInset = Math.max(0, Math.min(160, rawInset));
 
     if (clampedInset !== lastFooterBottomOffsetPx) {
       root.style.setProperty('--footer-bottom-offset', `${clampedInset}px`);
