@@ -28,6 +28,22 @@
     }
   })();
 
+  function isLayoutDebugTraceEnabled() {
+    try {
+      return /[?&]debug=1\b/.test(window.location.search) || localStorage.getItem('debug') === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function hideLayoutDebugReadouts() {
+    const footerPanel = document.getElementById('footerDebugReadout');
+    if (footerPanel) footerPanel.remove();
+
+    const scoreHeaderPanel = document.getElementById('scorecardHeaderDebugReadout');
+    if (scoreHeaderPanel) scoreHeaderPanel.remove();
+  }
+
   // =============================================================================
   // CONFIG MODULE - Course Database & Constants
   // =============================================================================
@@ -1338,7 +1354,7 @@
   }
 
   function ensureFooterDebugReadout() {
-    if (!DEBUG_LAYOUT_TRACE) return null;
+    if (!isLayoutDebugTraceEnabled()) return null;
 
     let panel = document.getElementById('footerDebugReadout');
     if (panel) return panel;
@@ -1374,7 +1390,10 @@
   }
 
   function renderFooterDebugReadout(reason, extra = {}) {
-    if (!DEBUG_LAYOUT_TRACE) return;
+    if (!isLayoutDebugTraceEnabled()) {
+      hideLayoutDebugReadouts();
+      return;
+    }
     const panel = ensureFooterDebugReadout();
     if (!panel) return;
 
@@ -1403,7 +1422,10 @@
   }
 
   function debugFooterTrace(reason, extra = {}) {
-    if (!DEBUG_LAYOUT_TRACE) return;
+    if (!isLayoutDebugTraceEnabled()) {
+      hideLayoutDebugReadouts();
+      return;
+    }
 
     renderFooterDebugReadout(reason, extra);
 
@@ -1545,7 +1567,7 @@
   }
 
   function ensureScorecardHeaderDebugReadout() {
-    if (!DEBUG_LAYOUT_TRACE) return null;
+    if (!isLayoutDebugTraceEnabled()) return null;
 
     let panel = document.getElementById('scorecardHeaderDebugReadout');
     if (panel) return panel;
@@ -1567,7 +1589,11 @@
   }
 
   function renderScorecardHeaderDebugReadout(payload) {
-    if (!DEBUG_LAYOUT_TRACE || !payload) return;
+    if (!payload) return;
+    if (!isLayoutDebugTraceEnabled()) {
+      hideLayoutDebugReadouts();
+      return;
+    }
 
     const panel = ensureScorecardHeaderDebugReadout();
     const content = document.getElementById('scorecardHeaderDebugContent');
@@ -1601,7 +1627,10 @@
   }
 
   function debugScorecardTrace(reason, extra = {}) {
-    if (!DEBUG_LAYOUT_TRACE) return null;
+    if (!isLayoutDebugTraceEnabled()) {
+      hideLayoutDebugReadouts();
+      return null;
+    }
     const payload = collectScorecardClipMetrics(reason, extra);
     renderScorecardHeaderDebugReadout(payload);
     console.log('[scorecard-debug]', payload);
@@ -1609,7 +1638,6 @@
   }
 
   function setupScorecardDebugTrace() {
-    if (!DEBUG_LAYOUT_TRACE) return;
     if (window.__scorecardDebugTraceBound) return;
     window.__scorecardDebugTraceBound = true;
 
@@ -1624,6 +1652,14 @@
     scorePanel?.addEventListener('scroll', () => trace('scorePanel:scroll'), { passive: true });
     scorecard?.addEventListener('scroll', () => trace('scorecard:scroll'), { passive: true });
     document.addEventListener('golf:game-tab-changed', (e) => trace('golf:game-tab-changed', { detail: e.detail || null }));
+    document.addEventListener('golf:debug-mode-changed', (e) => {
+      const enabled = !!e.detail?.enabled;
+      if (!enabled) {
+        hideLayoutDebugReadouts();
+        return;
+      }
+      trace('debug:enabled');
+    });
 
     setTimeout(() => trace('scorecard-debug:init+120ms'), 120);
     setTimeout(() => trace('scorecard-debug:init+500ms'), 500);
@@ -4959,6 +4995,12 @@
 
   const isEnabled = () => localStorage.getItem('debug') === '1';
 
+  const emitDebugModeChanged = (enabled) => {
+    document.dispatchEvent(new CustomEvent('golf:debug-mode-changed', {
+      detail: { enabled: !!enabled }
+    }));
+  };
+
   const syncState = () => {
     const enabled = isEnabled();
     btn.textContent = enabled ? '🧪 Debug Tools: On' : '🧪 Debug Tools: Off';
@@ -4978,6 +5020,7 @@
     if (enable) {
       localStorage.setItem('debug', '1');
       syncState();
+      emitDebugModeChanged(true);
       try {
         if (typeof window.loadGolfDebugTools === 'function') {
           await window.loadGolfDebugTools();
@@ -4990,6 +5033,7 @@
 
     localStorage.removeItem('debug');
     syncState();
+    emitDebugModeChanged(false);
     removeDebugOutlines();
     try {
       if (window.eruda && typeof window.eruda.destroy === 'function') {
@@ -7236,7 +7280,7 @@
         }
       }
 
-      if (DEBUG_LAYOUT_TRACE && getPrimaryTab() === 'score') {
+      if (isLayoutDebugTraceEnabled() && getPrimaryTab() === 'score') {
         debugScorecardTrace('syncScorePanelHeight');
       }
     }
