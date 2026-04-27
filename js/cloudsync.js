@@ -294,6 +294,45 @@
     }, 1100);
   }
 
+  function failJoinProgressOverlay(message = 'Unable to connect. Please try again.') {
+    const overlay = state.joinProgressOverlayEl;
+    if (!overlay) return;
+
+    const spinner = overlay.querySelector('.cloud-join-progress-spinner');
+    const textEl = overlay.querySelector('.cloud-join-progress-text');
+
+    if (spinner) {
+      spinner.style.animation = 'none';
+      spinner.style.border = '3px solid rgba(220, 53, 69, 0.55)';
+      spinner.style.borderTopColor = 'rgba(220, 53, 69, 0.55)';
+      spinner.textContent = '!';
+      spinner.style.display = 'flex';
+      spinner.style.alignItems = 'center';
+      spinner.style.justifyContent = 'center';
+      spinner.style.fontWeight = '700';
+      spinner.style.fontSize = '16px';
+      spinner.style.color = '#ffb4bc';
+    }
+
+    if (textEl) {
+      textEl.textContent = String(message || 'Unable to connect. Please try again.');
+      textEl.style.color = '#ffb4bc';
+      textEl.style.fontWeight = '600';
+    }
+
+    if (typeof window.announce === 'function') {
+      window.announce(textEl?.textContent || 'Unable to connect. Please try again.');
+    }
+
+    state.joinProgressHideTimer = setTimeout(() => {
+      if (!state.joinProgressOverlayEl) return;
+      state.joinProgressOverlayEl.style.opacity = '0';
+      state.joinProgressHideTimer = setTimeout(() => {
+        clearJoinProgressOverlay();
+      }, 220);
+    }, 1300);
+  }
+
   function setStatus(msg) {
     const statusEl = EL.status();
     if (!statusEl) return;
@@ -993,8 +1032,10 @@
       showJoinProgressOverlay('Setting up your live game\u2026', 'Creating Live Session');
       try {
         await createSession();
-      } finally {
         clearJoinProgressOverlay();
+      } catch (err) {
+        failJoinProgressOverlay(err?.message || 'Unable to create live session.');
+        throw err;
       }
     }
 
@@ -1411,13 +1452,8 @@
     if (joinInput) joinInput.value = code;
 
     showJoinProgressOverlay('Checking access code...');
-    try {
-      await joinSessionWithCode(code, { showSuccessToast: false });
-      completeJoinProgressOverlay(state.session?.role);
-    } catch (err) {
-      clearJoinProgressOverlay();
-      throw err;
-    }
+    await joinSessionWithCode(code, { showSuccessToast: false });
+    completeJoinProgressOverlay(state.session?.role);
   }
 
   async function generateLiveViewQrCode() {
@@ -2020,6 +2056,9 @@
         await fn();
       } catch (err) {
         console.error(`[CloudSync] ${tag}:`, err);
+        if (state.joinProgressOverlayEl) {
+          failJoinProgressOverlay(err?.message || 'Unable to connect. Please try again.');
+        }
         setStatus(`Cloud: ${err.message}`);
       }
     };
@@ -2054,19 +2093,18 @@
     });
 
     EL.createBtn()?.addEventListener('click',
-      withCloudOp('create session', 'Cloud: creating session...', createSession));
+      withCloudOp('create session', 'Cloud: creating session...', async () => {
+        showJoinProgressOverlay('Setting up your live game\u2026', 'Creating Live Session');
+        await createSession();
+        clearJoinProgressOverlay();
+      }));
 
     EL.joinBtn()?.addEventListener('click',
       withCloudOp('join session', null, async () => {
         const code = EL.joinCode()?.value || '';
         showJoinProgressOverlay('Checking access code...');
-        try {
-          await joinSessionWithCode(code, { showSuccessToast: false });
-          completeJoinProgressOverlay(state.session?.role);
-        } catch (err) {
-          clearJoinProgressOverlay();
-          throw err;
-        }
+        await joinSessionWithCode(code, { showSuccessToast: false });
+        completeJoinProgressOverlay(state.session?.role);
       }));
 
     EL.leaveBtn()?.addEventListener('click', () => leaveSession());
@@ -2079,7 +2117,9 @@
           return;
         }
         setStatus('Cloud: creating session...');
+        showJoinProgressOverlay('Setting up your live game\u2026', 'Creating Live Session');
         await createSession();
+        clearJoinProgressOverlay();
       }));
 
     EL.qrBadgeBtn()?.addEventListener('click',
@@ -2330,7 +2370,7 @@
       const joinInput = EL.joinCode();
       if (joinInput) joinInput.value = code;
       setStatus(`Cloud: couldn't auto-join (${err.message}). Tap Join to retry.`);
-      clearJoinProgressOverlay();
+      failJoinProgressOverlay(err?.message || 'Unable to connect to the live game.');
       return false;
     }
   }
@@ -2350,7 +2390,11 @@
     const ok = await initFirebase();
     if (!ok) {
       resetToDisconnectedState();
-      clearJoinProgressOverlay();
+      if (urlJoinCode) {
+        failJoinProgressOverlay('Unable to connect to cloud services. Check connection and try again.');
+      } else {
+        clearJoinProgressOverlay();
+      }
       // Still pre-fill join code from URL so user can retry once cloud is ready
       const code = getCodeFromUrl();
       const joinInput = EL.joinCode();
@@ -2360,7 +2404,9 @@
 
     const joinedFromUrl = await joinSessionFromUrlIfPresent();
     if (!joinedFromUrl) {
-      clearJoinProgressOverlay();
+      if (!urlJoinCode) {
+        clearJoinProgressOverlay();
+      }
       await restoreSession();
     }
   }

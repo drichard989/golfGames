@@ -1079,11 +1079,15 @@
   let lastGamesPanelHeightPx = -1;
   let lastScorePanelHeightPx = -1;
   let lastScorecardHeightPx = -1;
+  let lastFooterBottomOffsetPx = -1;
 
   function schedulePanelHeightSync() {
     if (panelSyncRaf) return;
     panelSyncRaf = requestAnimationFrame(() => {
       panelSyncRaf = 0;
+      syncDynamicViewportHeight();
+      syncSafeTopInset();
+      syncFixedFooterBottomOffset();
       syncGamesPanelHeight();
       syncScorePanelHeight();
       syncGamesFooterHeightVar();
@@ -1185,6 +1189,48 @@
     const nextValue = `${viewportHeight}px`;
     if (root.style.getPropertyValue('--app-dvh') !== nextValue) {
       root.style.setProperty('--app-dvh', nextValue);
+    }
+  }
+
+  function syncFixedFooterBottomOffset() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
+      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
+      || window.navigator.standalone === true;
+
+    if (!standalone) {
+      if (lastFooterBottomOffsetPx !== 0) {
+        root.style.setProperty('--footer-bottom-offset', '0px');
+        lastFooterBottomOffsetPx = 0;
+      }
+      return;
+    }
+
+    const viewportHeight = (window.visualViewport?.height)
+      || window.innerHeight
+      || document.documentElement.clientHeight
+      || 0;
+    if (!viewportHeight) return;
+
+    const shells = Array.from(document.querySelectorAll('.scorecard-controls-shell, .games-controls-shell'));
+    let maxGap = 0;
+
+    shells.forEach((shell) => {
+      const cs = getComputedStyle(shell);
+      if (cs.display === 'none' || cs.visibility === 'hidden') return;
+      if ((shell.offsetHeight || 0) < 8) return;
+
+      const rect = shell.getBoundingClientRect();
+      const gap = Math.round(viewportHeight - rect.bottom);
+      if (gap > maxGap) maxGap = gap;
+    });
+
+    const clampedGap = Math.max(0, Math.min(64, maxGap));
+    if (clampedGap !== lastFooterBottomOffsetPx) {
+      root.style.setProperty('--footer-bottom-offset', `${clampedGap}px`);
+      lastFooterBottomOffsetPx = clampedGap;
     }
   }
 
@@ -1472,6 +1518,8 @@
         schedulePanelHeightSync();
         // Run again after transitions finish (header/options panels).
         setTimeout(schedulePanelHeightSync, 300);
+        setTimeout(schedulePanelHeightSync, 700);
+        setTimeout(schedulePanelHeightSync, 1200);
         const activeGame = getActiveGameTab();
         if (activeGame) {
           AppManager.flushGame(activeGame, false);
@@ -1484,6 +1532,8 @@
       requestAnimationFrame(() => {
         schedulePanelHeightSync();
         setTimeout(schedulePanelHeightSync, 300);
+        setTimeout(schedulePanelHeightSync, 700);
+        setTimeout(schedulePanelHeightSync, 1200);
       });
       restorePrimaryTabScroll(which);
     }
@@ -1659,6 +1709,7 @@
       syncSafeTopInset();
       syncGamesPanelHeight();
       syncScorePanelHeight();
+      syncFixedFooterBottomOffset();
     };
 
     // Debounced resize: collapse rapid-fire visualViewport/window resize events
@@ -1682,6 +1733,7 @@
         // Safe-area inset is layout/device driven and handled by resize/pageshow.
         syncGamesPanelHeight();
         syncScorePanelHeight();
+        syncFixedFooterBottomOffset();
       });
     };
 

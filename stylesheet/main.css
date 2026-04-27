@@ -94,7 +94,11 @@
   --game-sticky-head-top: 0px;
   --score-sticky-par-top: 39px;
   --score-sticky-hcp-top: 100px;
+  --footer-action-h-desktop: 53px;
+  --footer-action-h-mobile: 48px;
+  --footer-action-h: var(--footer-action-h-desktop);
   --app-dvh: 100dvh;
+  --footer-bottom-offset: 0px;
   --safe-top-dynamic: 0px;
   --safe-top-inset: max(env(safe-area-inset-top, 0px), var(--safe-top-dynamic));
 }
@@ -126,7 +130,7 @@
   }
   .scorecard-controls-shell,
   .games-controls-shell {
-    bottom: 0 !important;
+    bottom: calc(0px - var(--footer-bottom-offset, 0px)) !important;
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
   }
 }
@@ -1117,15 +1121,15 @@ select:not(.select-plain) option {
 .scorecard-footer-controls > .btn,
 .scorecard-footer-controls > .scorecard-theme-toggle,
 .scorecard-footer-controls > .scorecard-main-options-icon {
-  min-height: 53px !important;
-  height: 53px !important;
+  min-height: var(--footer-action-h) !important;
+  height: var(--footer-action-h) !important;
   font-size: 14px !important;
 }
 
 .scorecard-footer-controls > .scorecard-theme-toggle,
 .scorecard-footer-controls > .scorecard-main-options-icon {
-  min-width: 53px !important;
-  width: 53px !important;
+  min-width: var(--footer-action-h) !important;
+  width: var(--footer-action-h) !important;
   font-size: 18px !important;
 }
 
@@ -1328,7 +1332,7 @@ body.mode-games .entry-switcher {
   color: var(--muted);
   border-radius: var(--radius-3xl);
   padding: 10px 14px;
-  min-height: 53px;
+  min-height: var(--footer-action-h);
   font-size: var(--text-md);
   font-weight: 600;
 }
@@ -2039,7 +2043,7 @@ body.mode-games .gamesbar {
   background: var(--panel-alt);
   border-radius: var(--radius-3xl);
   padding: 10px 2px;
-  min-height: 53px;
+  min-height: var(--footer-action-h);
   font-size: var(--text-md);
   font-weight: 600;
   color: var(--muted);
@@ -3753,7 +3757,7 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
 
 /* Touch target sizing */
 .gamesbar .game-toggle {
-  min-height: 53px;
+  min-height: var(--footer-action-h);
 }
 
 input[type="number"],
@@ -4202,6 +4206,10 @@ input[type="text"] {
 
 /* Mobile landscape / Small tablet (768px and below) */
 @media (max-width: 768px) {
+  :root {
+    --footer-action-h: var(--footer-action-h-mobile);
+  }
+
   .banker-table th,
   .banker-table td,
   .skins-table th,
@@ -4280,7 +4288,7 @@ input[type="text"] {
 
   .scorecard-card-footer .btn,
   .scorecard-card-footer .game-options-toggle {
-    min-height: 48px;
+    min-height: var(--footer-action-h);
     padding: 6px 12px;
   }
 
@@ -4303,12 +4311,12 @@ input[type="text"] {
 
   .entry-switcher-btn {
     padding: 10px 12px;
-    min-height: 48px;
+    min-height: var(--footer-action-h);
     font-size: var(--text-sm);
   }
 
   .game-toggle {
-    min-height: 48px;
+    min-height: var(--footer-action-h);
   }
 
   .gamesbar .game-toggle-item {
@@ -4523,7 +4531,7 @@ input[type="text"] {
 
   .game-toggle {
     padding: 7px 2px;
-    min-height: 48px;
+    min-height: var(--footer-action-h);
     font-size: var(--text-md);
   }
 
