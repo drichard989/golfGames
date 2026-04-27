@@ -1259,7 +1259,34 @@
   let lastFooterBottomOffsetPx = -1;
   let scorecardLayoutObserverBound = false;
   let scorecardLayoutResyncRaf = 0;
+  let scorecardSettleBurstToken = 0;
   const pinnedResultResizeObservers = new WeakMap();
+
+  function triggerScorecardSettleBurst(reason = 'unknown') {
+    const token = ++scorecardSettleBurstToken;
+
+    const runPass = () => {
+      if (token !== scorecardSettleBurstToken) return;
+      schedulePanelHeightSync();
+      if (getPrimaryTab() === 'score') {
+        if (window.Scorecard?.build?.syncRowHeights) {
+          window.Scorecard.build.syncRowHeights(true);
+        }
+        normalizeScorecardTopRowsLayout();
+      }
+    };
+
+    // Immediate + staggered follow-ups catch late Android/iOS viewport and
+    // sticky-header settling that can happen after initial layout.
+    runPass();
+    [60, 160, 320, 620, 980, 1400, 2100].forEach((ms) => {
+      setTimeout(runPass, ms);
+    });
+
+    if (isLayoutDebugTraceEnabled()) {
+      debugScorecardTrace(`settle-burst:${reason}`);
+    }
+  }
 
   function ensurePinnedResultResizeSync(resultCard) {
     if (!(resultCard instanceof HTMLElement)) return;
@@ -1281,13 +1308,7 @@
       if (scorecardLayoutResyncRaf) return;
       scorecardLayoutResyncRaf = requestAnimationFrame(() => {
         scorecardLayoutResyncRaf = 0;
-        schedulePanelHeightSync();
-        if (getPrimaryTab() === 'score') {
-          if (window.Scorecard?.build?.syncRowHeights) {
-            window.Scorecard.build.syncRowHeights(true);
-          }
-          normalizeScorecardTopRowsLayout();
-        }
+        triggerScorecardSettleBurst('layout-observer');
       });
     };
 
@@ -1313,6 +1334,11 @@
     if (typeof MutationObserver !== 'undefined' && scorePanel) {
       const mo = new MutationObserver(() => settleResync());
       mo.observe(scorePanel, { childList: true });
+    }
+
+    if (scoreTable) {
+      scoreTable.addEventListener('input', () => triggerScorecardSettleBurst('score-input'), { passive: true });
+      scoreTable.addEventListener('change', () => triggerScorecardSettleBurst('score-change'), { passive: true });
     }
 
     document.fonts?.ready?.then(() => settleResync()).catch(() => {});
@@ -2294,6 +2320,7 @@
       requestAnimationFrame(() => {
         refreshActiveFooterShellPresentation();
         schedulePanelHeightSync();
+        triggerScorecardSettleBurst('setPrimaryTab:score');
         debugFooterTrace('setPrimaryTab:score-raf', { which });
         setTimeout(refreshActiveFooterShellPresentation, 60);
         setTimeout(schedulePanelHeightSync, 60);
@@ -6806,6 +6833,7 @@
     // sticky header/par/hcp offsets are always locked to actual row heights.
     setTimeout(() => Scorecard.build.syncRowHeights(true), 120);
     setTimeout(() => Scorecard.build.syncRowHeights(true), 320);
+    triggerScorecardSettleBurst('init');
 
   $(ids.resetBtn).addEventListener("click", async () => {
     const cloudSession = window.CloudSync?.getSession?.();
