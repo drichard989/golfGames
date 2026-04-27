@@ -1091,6 +1091,8 @@
       syncGamesPanelHeight();
       syncScorePanelHeight();
       syncGamesFooterHeightVar();
+      syncActiveGamePinnedResultsLayout();
+      window._iosGamesStickyRefresh?.();
     });
   }
 
@@ -1102,6 +1104,51 @@
     if (h !== lastGamesFooterHeightPx) {
       document.documentElement.style.setProperty('--games-footer-h', `${h}px`);
       lastGamesFooterHeightPx = h;
+    }
+  }
+
+  const PINNED_GAME_RESULTS_SELECTOR = {
+    banker: '#bankerFooterTotals',
+    vegas: '#vegasResultsBottom',
+    junk: '#junkResultsBottom',
+    wolf: '#wolfResultsBottom'
+  };
+
+  function syncActiveGamePinnedResultsLayout() {
+    const panel = getGamesScrollContainer();
+    if (!panel) return;
+
+    if (getPrimaryTab() !== 'games') return;
+    if (!window.matchMedia('(max-width: 1023px)').matches) return;
+
+    const activeGame = getActiveGameTab();
+    if (!activeGame) return;
+
+    const sectionId = GAME_SECTION_BY_KEY[activeGame];
+    const section = sectionId ? document.getElementById(sectionId) : null;
+    if (!section || section.getAttribute('aria-hidden') === 'true') return;
+
+    const wrap = section.querySelector('.vegas-wrap, .banker-wrap');
+    if (!wrap) return;
+
+    const resultSelector = PINNED_GAME_RESULTS_SELECTOR[activeGame];
+    if (!resultSelector) return;
+
+    const resultCard = section.querySelector(resultSelector);
+    if (!resultCard) return;
+
+    if (getComputedStyle(resultCard).position !== 'fixed') return;
+
+    const wrapRect = wrap.getBoundingClientRect();
+    const resultRect = resultCard.getBoundingClientRect();
+    const available = Math.floor(resultRect.top - wrapRect.top - 8);
+    if (Number.isFinite(available) && available > 160) {
+      wrap.style.maxHeight = `${available}px`;
+    }
+
+    const resultHeight = Math.ceil(resultRect.height || resultCard.offsetHeight || 0);
+    if (resultHeight > 0) {
+      wrap.style.paddingBottom = `${Math.max(14, resultHeight + 10)}px`;
     }
   }
 
@@ -1129,12 +1176,16 @@
 
     const viewportHeight = (window.visualViewport?.height) || window.innerHeight || document.documentElement.clientHeight || 0;
     const navBar = document.querySelector('.sticky-nav-bar');
+    const footerShell = document.querySelector('.games-controls-shell');
     const navBarRect = navBar?.getBoundingClientRect();
+    const footerHeight = footerShell ? footerShell.offsetHeight : 0;
 
     // Measure from the bottom of the sticky nav bar to the bottom of the viewport.
     // This is reliable regardless of what's above (header shown/hidden, transitions).
     const topBoundary = navBarRect ? navBarRect.bottom + 4 : 120;
-    const available = Math.max(220, Math.floor(viewportHeight - topBoundary));
+    // Reserve space for the fixed games footer so the last hole row is never
+    // hidden behind it when scrolling within game tables.
+    const available = Math.max(220, Math.floor(viewportHeight - topBoundary - footerHeight - 8));
     if (available !== lastGamesPanelHeightPx) {
       panel.style.height = `${available}px`;
       panel.style.maxHeight = `${available}px`;
@@ -1608,6 +1659,62 @@
     installGuard(scrollPane);
   }
 
+  function setupIOSGamesTableOverscrollGuard() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+
+    const installGuard = (pane) => {
+      if (!(pane instanceof HTMLElement) || pane.dataset.iosOverscrollGuard === 'true') return;
+      pane.dataset.iosOverscrollGuard = 'true';
+
+      let startX = 0;
+      let startY = 0;
+      let lastY = 0;
+
+      pane.addEventListener('touchstart', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+        startX = t.clientX;
+        startY = t.clientY;
+        lastY = t.clientY;
+      }, { passive: true });
+
+      pane.addEventListener('touchmove', (e) => {
+        const t = e.touches && e.touches[0];
+        if (!t) return;
+
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        const dyStep = t.clientY - lastY;
+        const mostlyVertical = Math.abs(dy) > Math.abs(dx);
+        if (!mostlyVertical) {
+          lastY = t.clientY;
+          return;
+        }
+
+        const maxTop = Math.max(0, pane.scrollHeight - pane.clientHeight);
+        if (maxTop < 2) {
+          lastY = t.clientY;
+          return;
+        }
+
+        const atTop = pane.scrollTop <= 0;
+        const atBottom = pane.scrollTop >= maxTop - 1;
+        const draggingPastTop = atTop && dyStep > 0;
+        const draggingPastBottom = atBottom && dyStep < 0;
+
+        if (draggingPastTop || draggingPastBottom) {
+          e.preventDefault();
+        }
+
+        lastY = t.clientY;
+      }, { passive: false });
+    };
+
+    document.querySelectorAll('.vegas-wrap, .banker-wrap').forEach(installGuard);
+  }
+
   /**
    * iOS Safari ignores position:sticky on th/td inside overflow:scroll containers.
    * Work around with translateY(scrollTop) applied via rAF on each scroll event.
@@ -1700,6 +1807,99 @@
     };
   }
 
+  function setupIOSGamesStickyHeaders() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (!isIOS) return;
+
+    const paneState = new WeakMap();
+
+    const ensurePane = (scrollPane) => {
+      if (!(scrollPane instanceof HTMLElement)) return null;
+      if (paneState.has(scrollPane)) return paneState.get(scrollPane);
+
+      let stickyEls = [];
+      let fallbackEnabled = false;
+      let listenersBound = false;
+      let rafId = null;
+
+      function refreshCells() {
+        stickyEls = [...scrollPane.querySelectorAll('thead th')];
+        stickyEls.forEach((el) => {
+          el.style.willChange = fallbackEnabled ? 'transform' : 'auto';
+          if (!fallbackEnabled) {
+            el.style.transform = '';
+          }
+        });
+      }
+
+      function applyTranslate() {
+        rafId = null;
+        if (!fallbackEnabled) return;
+        const st = scrollPane.scrollTop;
+        stickyEls.forEach((el) => {
+          el.style.transform = `translateY(${st}px)`;
+        });
+      }
+
+      function onScroll() {
+        if (!fallbackEnabled) return;
+        if (rafId) return;
+        rafId = requestAnimationFrame(applyTranslate);
+      }
+
+      function detectNativeStickyWorks() {
+        const probe = scrollPane.querySelector('thead th');
+        if (!probe) return true;
+
+        const maxScroll = Math.max(0, scrollPane.scrollHeight - scrollPane.clientHeight);
+        if (maxScroll < 12) return true;
+
+        const startTop = scrollPane.scrollTop;
+        const targetTop = Math.min(maxScroll, startTop + 16);
+        const beforeTop = probe.getBoundingClientRect().top;
+
+        scrollPane.scrollTop = targetTop;
+        const afterTop = probe.getBoundingClientRect().top;
+        scrollPane.scrollTop = startTop;
+
+        return Math.abs(afterTop - beforeTop) <= 1.5;
+      }
+
+      function ensureFallbackMode() {
+        const nativeStickyWorks = detectNativeStickyWorks();
+        fallbackEnabled = !nativeStickyWorks;
+        refreshCells();
+
+        if (fallbackEnabled && !listenersBound) {
+          listenersBound = true;
+          scrollPane.addEventListener('scroll', onScroll, { passive: true });
+        }
+
+        if (fallbackEnabled) {
+          applyTranslate();
+        }
+      }
+
+      const state = { refresh: ensureFallbackMode };
+      paneState.set(scrollPane, state);
+      refreshCells();
+      ensureFallbackMode();
+      setTimeout(ensureFallbackMode, 200);
+      setTimeout(ensureFallbackMode, 700);
+      return state;
+    };
+
+    window._iosGamesStickyRefresh = () => {
+      document.querySelectorAll('.vegas-wrap, .banker-wrap').forEach((pane) => {
+        const state = ensurePane(pane);
+        state?.refresh?.();
+      });
+    };
+
+    window._iosGamesStickyRefresh();
+  }
+
   function setupGamesPanelScrollSync() {
     const panel = getGamesScrollContainer();
     if (!panel) return;
@@ -1710,6 +1910,8 @@
       syncGamesPanelHeight();
       syncScorePanelHeight();
       syncFixedFooterBottomOffset();
+      syncGamesFooterHeightVar();
+      syncActiveGamePinnedResultsLayout();
     };
 
     // Debounced resize: collapse rapid-fire visualViewport/window resize events
@@ -1734,6 +1936,8 @@
         syncGamesPanelHeight();
         syncScorePanelHeight();
         syncFixedFooterBottomOffset();
+        syncGamesFooterHeightVar();
+        syncActiveGamePinnedResultsLayout();
       });
     };
 
@@ -1797,6 +2001,7 @@
     scheduleGameTabFlush(which);
 
     syncGameTabUi(which);
+    schedulePanelHeightSync();
 
     if (activatePrimary) {
       syncPrimaryTabUi('games');
@@ -5619,6 +5824,8 @@
     Scorecard.player.syncOverlay();
     // Unified table mode no longer requires dual-pane scroll synchronization.
     setupIOSStickyHeaders();
+    setupIOSGamesStickyHeaders();
+    setupIOSGamesTableOverscrollGuard();
     setupGamesPanelScrollSync();
     bindHeaderCloudScrollIndicator();
     syncHeaderBadgeButtonLabels();

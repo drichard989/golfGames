@@ -2354,7 +2354,8 @@ body.mode-games .gamesbar {
   z-index: auto;
 }
 
-/* Keep game results card pinned above the fixed games footer while a game tab is visible. */
+/* Keep game results cards pinned above the fixed games footer while a game tab is visible.
+   Table viewport/padding adjustments are handled in JS so rows can still scroll past hole 18. */
 body.mode-games #bankerSection[aria-hidden="false"],
 body.mode-games #vegasSection[aria-hidden="false"],
 body.mode-games #junkSection[aria-hidden="false"],
@@ -2906,11 +2907,12 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x pan-y;
-  overscroll-behavior: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 14px;
   border: 2px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--panel);
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
 }
 
 .vegas-table,
@@ -2954,6 +2956,17 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   z-index: var(--z-sticky-header);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+}
+
+/* Let touch drags started on locked game headers continue scrolling the table pane. */
+.vegas-table thead th,
+.banker-table thead th,
+.skins-table thead th,
+.junk-table thead th,
+#wolfTable thead th,
+#hiloTable thead th,
+#hiloHoleTable thead th {
+  touch-action: pan-x pan-y;
 }
 
 #vegasTable thead th,
