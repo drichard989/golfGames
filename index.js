@@ -4793,6 +4793,55 @@
   });
 })();
 
+// Debug tools toggle (eruda) from Utilities menu
+(function(){
+  const btn = document.getElementById('toggleDebugToolsBtn');
+  if(!btn) return;
+
+  const isEnabled = () => localStorage.getItem('debug') === '1';
+
+  const syncState = () => {
+    const enabled = isEnabled();
+    btn.textContent = enabled ? '🧪 Debug Tools: On' : '🧪 Debug Tools: Off';
+    btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+    btn.title = enabled ? 'Disable debug tools' : 'Enable debug tools';
+  };
+
+  const removeDebugOutlines = () => {
+    const st = document.getElementById('golfDebugOutlines');
+    if (st) st.remove();
+  };
+
+  syncState();
+
+  btn.addEventListener('click', async () => {
+    const enable = !isEnabled();
+    if (enable) {
+      localStorage.setItem('debug', '1');
+      syncState();
+      try {
+        if (typeof window.loadGolfDebugTools === 'function') {
+          await window.loadGolfDebugTools();
+        }
+      } catch (e) {
+        console.error('[debug] Failed to load debug tools:', e);
+      }
+      return;
+    }
+
+    localStorage.removeItem('debug');
+    syncState();
+    removeDebugOutlines();
+    try {
+      if (window.eruda && typeof window.eruda.destroy === 'function') {
+        window.eruda.destroy();
+      }
+    } catch (_) {}
+    window.eruda = undefined;
+    window.__golfDebugToolsPromise = undefined;
+  });
+})();
+
 // Utilities section toggle
 (function(){
   const section = document.getElementById('utilitiesSection');
