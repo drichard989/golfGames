@@ -2675,9 +2675,9 @@
     const syncLayout = () => {
       syncDynamicViewportHeight();
       syncSafeTopInset();
+      syncFixedFooterBottomOffset();
       syncGamesPanelHeight();
       syncScorePanelHeight();
-      syncFixedFooterBottomOffset();
       syncGamesFooterHeightVar();
       syncActiveGamePinnedResultsLayout();
     };
@@ -2701,9 +2701,9 @@
       requestAnimationFrame(() => {
         scrollSyncScheduled = false;
         // Safe-area inset is layout/device driven and handled by resize/pageshow.
+        syncFixedFooterBottomOffset();
         syncGamesPanelHeight();
         syncScorePanelHeight();
-        syncFixedFooterBottomOffset();
         syncGamesFooterHeightVar();
         syncActiveGamePinnedResultsLayout();
       });
@@ -2723,13 +2723,42 @@
       setTimeout(syncLayout, 320);
     };
 
+    // iOS standalone can report transient viewport values after initial paint
+    // and after app resume. Run a late settle pass and force another sync if
+    // footer is not physically attached to the bottom edge.
+    const runFooterAttachmentSettlePass = () => {
+      const shell = getActiveFooterShell();
+      if (!(shell instanceof HTMLElement)) {
+        syncLayout();
+        return;
+      }
+
+      const rect = shell.getBoundingClientRect();
+      const innerH = window.innerHeight || document.documentElement.clientHeight || 0;
+      const gap = Math.round(innerH - rect.bottom);
+
+      if (gap > 0) {
+        // If a stale positive offset slipped through, clear it and re-sync.
+        document.documentElement.style.setProperty('--footer-bottom-offset', '0px');
+        lastFooterBottomOffsetPx = 0;
+      }
+
+      syncLayout();
+    };
+
+    const runFinalLayoutSettleChecks = () => {
+      syncLayoutWithFollowUps();
+      setTimeout(runFooterAttachmentSettlePass, 650);
+      setTimeout(runFooterAttachmentSettlePass, 1100);
+    };
+
     // Re-measure once all resources are loaded and again on lifecycle resumes.
     // iOS standalone can settle viewport/safe-area metrics after first paint.
-    window.addEventListener('load', syncLayoutWithFollowUps, { once: true });
-    window.addEventListener('pageshow', syncLayoutWithFollowUps, { passive: true });
+    window.addEventListener('load', runFinalLayoutSettleChecks, { once: true });
+    window.addEventListener('pageshow', runFinalLayoutSettleChecks, { passive: true });
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') {
-        syncLayoutWithFollowUps();
+        runFinalLayoutSettleChecks();
       }
     });
   }
