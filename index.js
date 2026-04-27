@@ -2127,6 +2127,15 @@
     scheduleGameTabFlush(which);
 
     syncGameTabUi(which);
+    requestAnimationFrame(() => {
+      refreshActiveFooterShellPresentation();
+      schedulePanelHeightSync();
+      setTimeout(refreshActiveFooterShellPresentation, 60);
+      setTimeout(schedulePanelHeightSync, 60);
+      setTimeout(refreshActiveFooterShellPresentation, 300);
+      setTimeout(schedulePanelHeightSync, 300);
+      setTimeout(schedulePanelHeightSync, 700);
+    });
     schedulePanelHeightSync();
 
     if (activatePrimary) {
