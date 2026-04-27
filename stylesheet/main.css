@@ -2376,7 +2376,7 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   left: 0;
   right: 0;
   /* Sit flush above the fixed games footer. JS sets --games-footer-h. */
-  bottom: calc(var(--games-footer-h, 126px) + var(--footer-bottom-offset, 0px));
+  bottom: calc(var(--games-footer-h, 126px) + var(--footer-bottom-offset, 0px) + 4px);
   z-index: 33;
   margin: 0;
   pointer-events: none;
