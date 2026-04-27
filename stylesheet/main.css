@@ -2981,6 +2981,15 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   scroll-behavior: auto;
 }
 
+/* Desktop wheel should continue scrolling naturally when hovering table cells. */
+@media (hover: hover) and (pointer: fine) {
+  .vegas-wrap,
+  .banker-wrap {
+    overscroll-behavior: auto;
+    overscroll-behavior-y: auto;
+  }
+}
+
 .vegas-wrap.is-pointer-scrolling,
 .banker-wrap.is-pointer-scrolling {
   cursor: grabbing;
