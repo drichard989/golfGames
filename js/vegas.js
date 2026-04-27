@@ -325,8 +325,14 @@
       if (ptsColB) ptsColB.textContent = `Pts (${b.replace(/^Team\s+/, '')})`;
     };
 
+    // Rotation mode uses dynamic teams each 6-hole block.
+    if (data?.rotation) {
+      setLabels('Ghost Team', 'Opponents');
+      return;
+    }
+
     // Only swap labels to names in standard 4-player mode
-    if (data?.rotation || getPlayers() !== 4) {
+    if (getPlayers() !== 4) {
       setLabels('Team A', 'Team B');
       return;
     }
@@ -396,6 +402,43 @@
         if (c.dataset.renderCache === placeholderHtml) return;
         c.innerHTML = placeholderHtml;
         c.dataset.renderCache = placeholderHtml;
+      });
+      return;
+    }
+
+    if (data?.rotation) {
+      const names = getVegasPlayerNames();
+      const gameRows = (data.rotationGames || []).map((g, idx) => {
+        const ghostName = names[g.ghostPlayer] || `P${g.ghostPlayer + 1}`;
+        const oppNames = (g.opponents || []).map((p) => names[p] || `P${p + 1}`).join(' + ');
+        const money = fmtMoney(g.dollars || 0);
+        const pts = fmtPts(g.ptsA || 0);
+        const tone = (Number(g.dollars) || 0) > 0 ? 'banker-total-positive'
+          : (Number(g.dollars) || 0) < 0 ? 'banker-total-negative' : '';
+        return `<tr class="live-results-data-row"><td class="live-results-label">G${idx + 1} (${g.start}-${g.end})</td><td>${ghostName} + Ghost vs ${oppNames}</td><td class="${tone}">${pts} / ${money}</td></tr>`;
+      }).join('');
+
+      const settlement = (data.playerSettlements || []).map((v, i) => {
+        const nm = names[i] || `P${i + 1}`;
+        return `${nm}: ${fmtMoney(v || 0)}`;
+      }).join(' | ');
+
+      const html = `
+        <table class="live-results-table vegas-results-table" aria-label="Vegas rotation results">
+          <colgroup><col class="lr-col-label"><col><col></colgroup>
+          <tbody>
+            <tr class="live-results-title-row"><th colspan="3">3-Player Ghost Settlement</th></tr>
+            ${gameRows || '<tr class="live-results-data-row"><td colspan="3">No completed holes yet</td></tr>'}
+            <tr class="live-results-data-row"><td class="live-results-label">Net</td><td colspan="2">${settlement || '—'}</td></tr>
+          </tbody>
+        </table>
+      `;
+
+      containers.forEach(c => {
+        c.classList.remove('is-disabled');
+        if (c.dataset.renderCache === html) return;
+        c.innerHTML = html;
+        c.dataset.renderCache = html;
       });
       return;
     }
@@ -508,6 +551,7 @@ const Vegas = {
     let totalB=0;
     const rotationOrder = getGhostRotationOrder(opts);
     const ghostIdx = 3;
+    const per = Math.max(0, opts.pointValue || 0);
 
     const getTeamsForHole = (holeIdx) => {
       if (!isThreePlayerGhostRotation) return teams;
@@ -525,8 +569,21 @@ const Vegas = {
       return Number(pair[0] || 0) + Number(pair[1] || 0);
     };
 
+    const rotationGames = isThreePlayerGhostRotation
+      ? rotationOrder.map((ghostPlayer, blockIdx) => ({
+          blockIdx,
+          start: blockIdx * 6 + 1,
+          end: blockIdx * 6 + 6,
+          ghostPlayer,
+          opponents: [0, 1, 2].filter((p) => p !== ghostPlayer),
+          ptsA: 0,
+          dollars: 0
+        }))
+      : [];
+
     for(let h=0;h<getHoles();h++){
       const holeTeams = getTeamsForHole(h);
+      const blockIdx = Math.min(2, Math.floor(h / 6));
       const pairA = this._teamPair(holeTeams.A,h,opts.useNet,opts.netHcpMode, computeCtx);
       const pairB = this._teamPair(holeTeams.B,h,opts.useNet,opts.netHcpMode, computeCtx);
       if(!pairA || !pairB){
@@ -571,6 +628,9 @@ const Vegas = {
 
       perHole.push({vaStr, vbStr, mult, holePtsA});
       ptsA += holePtsA;
+      if (isThreePlayerGhostRotation && rotationGames[blockIdx]) {
+        rotationGames[blockIdx].ptsA += holePtsA;
+      }
     }
 
     if (!isThreePlayerGhostRotation) {
@@ -590,7 +650,17 @@ const Vegas = {
       totalB = teamSum(teams.B);
     }
 
-    const per = Math.max(0, opts.pointValue || 0);
+    const playerSettlements = Array.from({ length: realPlayers }, () => 0);
+
+    if (isThreePlayerGhostRotation) {
+      rotationGames.forEach((g) => {
+        g.dollars = (Number(g.ptsA) || 0) * per;
+        if (Number.isFinite(g.ghostPlayer) && g.ghostPlayer >= 0 && g.ghostPlayer < playerSettlements.length) {
+          playerSettlements[g.ghostPlayer] += g.dollars;
+        }
+      });
+    }
+
     const dollarsA = ptsA * per;
     const dollarsB = -dollarsA;
     const ptsB = -ptsA;
@@ -605,7 +675,9 @@ const Vegas = {
       dollarsB,
       valid: true,
       rotation: isThreePlayerGhostRotation,
-      rotationOrder: isThreePlayerGhostRotation ? rotationOrder : null
+      rotationOrder: isThreePlayerGhostRotation ? rotationOrder : null,
+      rotationGames,
+      playerSettlements
     };
   },
   /**
@@ -697,9 +769,33 @@ const Vegas = {
     applyVegasTone(da, Number(data.dollarsA) || 0);
     applyVegasTone(db, Number(data.dollarsB) || 0);
 
-    // Rotation mode removed: always hide old breakdown row.
     const breakdownRow = document.getElementById('vegasGameBreakdown');
-    if(breakdownRow) { breakdownRow.hidden = true; breakdownRow.style.display = 'none'; }
+    const breakdownData = document.getElementById('vegasGameBreakdownData');
+    if (breakdownRow) {
+      if (data.rotation) {
+        const gameText = (data.rotationGames || []).map((g, idx) => {
+          const ghostName = names[g.ghostPlayer] || `P${g.ghostPlayer + 1}`;
+          const opp = (g.opponents || []).map((p) => names[p] || `P${p + 1}`).join(' + ');
+          const money = Number(g.dollars || 0);
+          const moneyLabel = money > 0 ? `+$${money.toFixed(2)}` : money < 0 ? `-$${Math.abs(money).toFixed(2)}` : '$0.00';
+          return `G${idx + 1} (${g.start}-${g.end}): ${ghostName}+Ghost vs ${opp} = ${moneyLabel}`;
+        }).join(' | ');
+
+        if (breakdownData) {
+          const settlements = (data.playerSettlements || []).map((v, i) => {
+            const n = Number(v) || 0;
+            const s = n > 0 ? `+$${n.toFixed(2)}` : n < 0 ? `-$${Math.abs(n).toFixed(2)}` : '$0.00';
+            return `${names[i] || `P${i + 1}`}: ${s}`;
+          }).join(' | ');
+          breakdownData.textContent = `${gameText}${settlements ? ` || Net: ${settlements}` : ''}`;
+        }
+        breakdownRow.hidden = false;
+        breakdownRow.style.display = '';
+      } else {
+        breakdownRow.hidden = true;
+        breakdownRow.style.display = 'none';
+      }
+    }
 
     const ta = $(ids.vegasTotalA);
     const tb = $(ids.vegasTotalB);
@@ -795,6 +891,7 @@ function scheduleVegasControlRecalc() {
 function vegas_renderTeamControls(){
   const box=$(ids.vegasTeams); if(!box) return;
   const playerCount = getPlayers();
+  const warning = $(ids.vegasTeamWarning);
 
   if (playerCount > 4) {
     box.innerHTML = '';
@@ -809,6 +906,18 @@ function vegas_renderTeamControls(){
   }
 
   setVegasDisabledState(false);
+  updateGhostRotationUi();
+
+  if (playerCount === 3) {
+    box.innerHTML = '';
+    const info = document.createElement('div');
+    info.className = 'small subtle';
+    info.style.gridColumn = '1 / -1';
+    info.textContent = '3-player Ghost mode: team assignments are automatic. Choose only the Ghost rotation order above.';
+    box.appendChild(info);
+    if (warning) warning.hidden = true;
+    return;
+  }
 
   // Preserve existing selections so a re-render (triggered by name edits,
   // cascades, or cloud sync) does NOT reset the user's team picks.
@@ -829,7 +938,6 @@ function vegas_renderTeamControls(){
   const maxPositions = 4;
   const realPlayers = Math.min(playerCount, maxPositions);
   const needsGhosts = playerCount < maxPositions;
-  updateGhostRotationUi();
   
   for(let i=0; i<realPlayers; i++){
     const row=document.createElement("div"); row.className="vegas-team-row";
@@ -959,7 +1067,7 @@ function vegas_getOptions() {
     doubleBirdie: $(ids.optDoubleBirdie)?.checked || false,
     tripleEagle: $(ids.optTripleEagle)?.checked || false,
     pointValue: Math.max(0, Number($(ids.vegasPointValue)?.value) || 0),
-    ghostRotationOrder: document.querySelector(ids.vegasGhostRotationOrder)?.value || '0,1,2'
+    ghostRotationOrder: parseGhostRotationOrder(document.querySelector(ids.vegasGhostRotationOrder)?.value || '0,1,2').join(',')
   };
 }
 function vegas_setOptions(o) {
