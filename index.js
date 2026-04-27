@@ -20,6 +20,14 @@
 (() => {
   'use strict';
 
+  const DEBUG_LAYOUT_TRACE = (() => {
+    try {
+      return /[?&]debug=1\b/.test(window.location.search) || localStorage.getItem('debug') === '1';
+    } catch {
+      return false;
+    }
+  })();
+
   // =============================================================================
   // CONFIG MODULE - Course Database & Constants
   // =============================================================================
@@ -1249,6 +1257,57 @@
       : document.querySelector('.scorecard-controls-shell');
   }
 
+  function debugFooterTrace(reason, extra = {}) {
+    if (!DEBUG_LAYOUT_TRACE) return;
+
+    const viewport = window.visualViewport;
+    const footerShell = document.querySelector('.games-controls-shell');
+    const footerRect = footerShell?.getBoundingClientRect();
+    const activeGame = getActiveGameTab();
+    const pinnedSelector = activeGame ? PINNED_GAME_RESULTS_SELECTOR[activeGame] : null;
+    const pinnedEl = pinnedSelector ? document.querySelector(pinnedSelector) : null;
+    const pinnedRect = pinnedEl?.getBoundingClientRect();
+
+    console.log('[footer-debug]', {
+      reason,
+      primaryTab: getPrimaryTab(),
+      activeGame,
+      innerHeight: window.innerHeight,
+      clientHeight: document.documentElement.clientHeight,
+      visualViewport: viewport ? {
+        width: Math.round(viewport.width),
+        height: Math.round(viewport.height),
+        offsetTop: Math.round(viewport.offsetTop),
+        offsetLeft: Math.round(viewport.offsetLeft),
+        pageTop: Math.round(viewport.pageTop)
+      } : null,
+      vars: {
+        footerBottomOffset: getComputedStyle(document.documentElement).getPropertyValue('--footer-bottom-offset').trim(),
+        gamesFooterHeight: getComputedStyle(document.documentElement).getPropertyValue('--games-footer-h').trim(),
+        appDvh: getComputedStyle(document.documentElement).getPropertyValue('--app-dvh').trim()
+      },
+      footer: footerShell ? {
+        display: getComputedStyle(footerShell).display,
+        visibility: getComputedStyle(footerShell).visibility,
+        bottom: getComputedStyle(footerShell).bottom,
+        zIndex: getComputedStyle(footerShell).zIndex,
+        top: Math.round(footerRect.top),
+        bottomPx: Math.round(footerRect.bottom),
+        height: Math.round(footerRect.height)
+      } : null,
+      pinned: pinnedEl ? {
+        selector: pinnedSelector,
+        position: getComputedStyle(pinnedEl).position,
+        bottom: getComputedStyle(pinnedEl).bottom,
+        zIndex: getComputedStyle(pinnedEl).zIndex,
+        top: Math.round(pinnedRect.top),
+        bottomPx: Math.round(pinnedRect.bottom),
+        height: Math.round(pinnedRect.height)
+      } : null,
+      extra
+    });
+  }
+
   function refreshActiveFooterShellPresentation() {
     const shell = getActiveFooterShell();
     if (!(shell instanceof HTMLElement)) return;
@@ -1267,41 +1326,16 @@
     const root = document.documentElement;
     if (!root) return;
 
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
-      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
-      || window.navigator.standalone === true;
+    const vv = window.visualViewport;
+    const layoutViewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const visualBottom = vv ? (vv.offsetTop + vv.height) : layoutViewportHeight;
+    const rawInset = Math.round(layoutViewportHeight - visualBottom);
+    const clampedInset = Math.max(0, Math.min(160, rawInset));
 
-    if (!standalone) {
-      if (lastFooterBottomOffsetPx !== 0) {
-        root.style.setProperty('--footer-bottom-offset', '0px');
-        lastFooterBottomOffsetPx = 0;
-      }
-      return;
-    }
-
-    const viewportHeight = (window.visualViewport?.height)
-      || window.innerHeight
-      || document.documentElement.clientHeight
-      || 0;
-    if (!viewportHeight) return;
-
-    const shells = [getActiveFooterShell()].filter(Boolean);
-    let maxGap = 0;
-
-    shells.forEach((shell) => {
-      const cs = getComputedStyle(shell);
-      if (cs.display === 'none' || cs.visibility === 'hidden') return;
-      if ((shell.offsetHeight || 0) < 8) return;
-
-      const rect = shell.getBoundingClientRect();
-      const gap = Math.round(viewportHeight - rect.bottom);
-      if (gap > maxGap) maxGap = gap;
-    });
-
-    const clampedGap = Math.max(0, Math.min(64, maxGap));
-    if (clampedGap !== lastFooterBottomOffsetPx) {
-      root.style.setProperty('--footer-bottom-offset', `${clampedGap}px`);
-      lastFooterBottomOffsetPx = clampedGap;
+    if (clampedInset !== lastFooterBottomOffsetPx) {
+      root.style.setProperty('--footer-bottom-offset', `${clampedInset}px`);
+      lastFooterBottomOffsetPx = clampedInset;
+      debugFooterTrace('syncFixedFooterBottomOffset', { clampedInset, rawInset });
     }
   }
 
@@ -1583,11 +1617,13 @@
     syncHeaderCollapseBtn();
 
     syncPrimaryTabUi(which);
+    debugFooterTrace('setPrimaryTab:after-ui', { which });
     if (which === 'games') {
       // Delay one frame so layout settles before measuring.
       requestAnimationFrame(() => {
         refreshActiveFooterShellPresentation();
         schedulePanelHeightSync();
+        debugFooterTrace('setPrimaryTab:games-raf', { which });
         setTimeout(refreshActiveFooterShellPresentation, 60);
         setTimeout(schedulePanelHeightSync, 60);
         // Run again after transitions finish (header/options panels).
@@ -1607,6 +1643,7 @@
       requestAnimationFrame(() => {
         refreshActiveFooterShellPresentation();
         schedulePanelHeightSync();
+        debugFooterTrace('setPrimaryTab:score-raf', { which });
         setTimeout(refreshActiveFooterShellPresentation, 60);
         setTimeout(schedulePanelHeightSync, 60);
         setTimeout(schedulePanelHeightSync, 300);
@@ -2127,9 +2164,11 @@
     scheduleGameTabFlush(which);
 
     syncGameTabUi(which);
+    debugFooterTrace('setGameTab:after-ui', { which, activatePrimary });
     requestAnimationFrame(() => {
       refreshActiveFooterShellPresentation();
       schedulePanelHeightSync();
+      debugFooterTrace('setGameTab:raf', { which, activatePrimary });
       setTimeout(refreshActiveFooterShellPresentation, 60);
       setTimeout(schedulePanelHeightSync, 60);
       setTimeout(refreshActiveFooterShellPresentation, 300);

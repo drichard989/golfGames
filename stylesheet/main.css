@@ -130,7 +130,6 @@
   }
   .scorecard-controls-shell,
   .games-controls-shell {
-    bottom: calc(0px - var(--footer-bottom-offset, 0px)) !important;
     padding-bottom: max(env(safe-area-inset-bottom, 0px), 8px);
   }
 }
@@ -1198,7 +1197,7 @@ select:not(.select-plain) option {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--footer-bottom-offset, 0px);
   z-index: 35;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
@@ -1922,7 +1921,7 @@ tfoot td {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: var(--footer-bottom-offset, 0px);
   z-index: 34;
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
@@ -2377,7 +2376,7 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   left: 0;
   right: 0;
   /* Sit flush above the fixed games footer. JS sets --games-footer-h. */
-  bottom: var(--games-footer-h, 126px);
+  bottom: calc(var(--games-footer-h, 126px) + var(--footer-bottom-offset, 0px));
   z-index: 33;
   margin: 0;
   pointer-events: none;
