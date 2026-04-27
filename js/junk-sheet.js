@@ -35,6 +35,8 @@
     { id: 'hogan',   label: 'Hogan',   pts: 1,   emoji: '🎩' },
     { id: 'woodie',  label: 'Woodie',  pts: 1,   emoji: '🌲' },
     { id: 'chippy',  label: 'Chippy',  pts: 1,   emoji: '🐿️' },
+    { id: 'moochy',  label: 'Moochy',  pts: 1,   emoji: '🐄' },
+    { id: 'goochy',  label: 'Goochy',  pts: 1,   emoji: '🌀' },
     { id: 'holein1', label: 'Hole-in-1', pts: 100, emoji: '🕳️' },
   ];
 

@@ -2257,7 +2257,7 @@
   }
 
   function scheduleScorecardAlignmentAfterJoin() {
-    let hasDispatchedResize = false;
+    let hasDispatchedLayoutNudge = false;
 
     const runSync = () => {
       const sync = window.GolfApp?.scorecard?.build?.syncRowHeights;
@@ -2270,47 +2270,46 @@
       }
     };
 
-    const checkAlignment = () => {
-      const scoreTable = document.getElementById('scorecard');
-      if (!scoreTable) {
-        return { aligned: true, checked: false, maxDelta: 0, pairs: 0 };
-      }
-
-      return {
-        aligned: true,
-        checked: true,
-        maxDelta: 0,
-        pairs: scoreTable.rows?.length || 0
-      };
+    const nudgeLayout = () => {
+      // Joining can change sticky-nav height and footer metrics without a native
+      // viewport resize event. Trigger one synthetic resize so the app's
+      // layout-sync listeners recompute score/games panel heights.
+      if (hasDispatchedLayoutNudge) return;
+      hasDispatchedLayoutNudge = true;
+      try {
+        window.dispatchEvent(new Event('resize'));
+      } catch (_) {}
     };
 
     const runPass = (label) => {
       runSync();
-      const result = checkAlignment();
-      if (!result.checked || result.aligned) {
-        return;
-      }
 
-      // If any rows are still out of sync, force one more pass after layout settles.
+      // Run another micro-pass after layout settles.
       requestAnimationFrame(runSync);
       setTimeout(runSync, 24);
 
       // Nudge listeners that depend on viewport/layout changes once per join.
-      if (!hasDispatchedResize) {
-        hasDispatchedResize = true;
-        window.dispatchEvent(new Event('resize'));
-      }
+      nudgeLayout();
 
-      console.warn(
-        `[CloudSync] post-join alignment retry (${label}): max row delta=${result.maxDelta}px across ${result.pairs} rows`
-      );
+      if (label !== 'raf') {
+        console.info(`[CloudSync] post-join alignment pass: ${label}`);
+      }
     };
 
+    // Immediate nudge + delayed nudge cover both same-frame and post-overlay
+    // layout changes during join transitions.
+    nudgeLayout();
     requestAnimationFrame(() => runPass('raf'));
     setTimeout(() => runPass('80ms'), 80);
     setTimeout(() => runPass('220ms'), 220);
     setTimeout(() => runPass('520ms'), 520);
     setTimeout(() => runPass('900ms'), 900);
+    setTimeout(() => {
+      try {
+        window.dispatchEvent(new Event('resize'));
+      } catch (_) {}
+      runSync();
+    }, 1300);
   }
 
   async function joinSessionFromUrlIfPresent() {

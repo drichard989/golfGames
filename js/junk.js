@@ -60,7 +60,7 @@
     // Fallback constants if not loaded
     return {
       POINTS: { EAGLE: 4, BIRDIE: 2, PAR: 1, BOGEY: 0 },
-      ACHIEVEMENTS: { HOGAN: 5, SANDY: 3, SADAAM: 2, PULLEY: 1, TRIPLE: 10 }
+      ACHIEVEMENTS: { HOGAN: 5, SANDY: 3, SADAAM: 2, PULLEY: 1, MOOCHY: 1, GOOCHY: 1, TRIPLE: 10 }
     };
   };
   
@@ -618,6 +618,8 @@
     { id: "hogan",  label: "Hogan",  pts: 1,   emoji: "🎩" },
     { id: "woodie", label: "Woodie", pts: 1,   emoji: "🌲" },
     { id: "chippy", label: "Chippy", pts: 1,   emoji: "🐿️" },
+    { id: "moochy", label: "Moochy", pts: 1,   emoji: "🐄" },
+    { id: "goochy", label: "Goochy", pts: 1,   emoji: "🌀" },
     { id: "holein1", label: "Hole in 1", pts: 100, emoji: "🕳️" },
   ];
 

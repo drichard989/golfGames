@@ -190,6 +190,8 @@
         SANDY: 3,
         SADAAM: 2,
         PULLEY: 1,
+        MOOCHY: 1,
+        GOOCHY: 1,
         TRIPLE: 10
       }
     },
