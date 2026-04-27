@@ -1440,11 +1440,26 @@
       // it (e.g. debug strip) is automatically accounted for.
       const scorecardActualTop = scorecard.getBoundingClientRect().top;
       const scorecardTop = Math.max(topBoundary, scorecardActualTop);
-      const scorecardHeight = Math.max(180, footerTop - scorecardTop);
+      let scorecardHeight = Math.max(180, footerTop - scorecardTop);
+
       if (scorecardHeight !== lastScorecardHeightPx) {
         scorecard.style.height = `${scorecardHeight}px`;
         scorecard.style.maxHeight = `${scorecardHeight}px`;
         lastScorecardHeightPx = scorecardHeight;
+      }
+
+      // Race-condition guard: if a late DOM shift (e.g. debug strip insert,
+      // sticky recompute, viewport settle) still leaves the scorecard under
+      // the fixed footer, clamp immediately using live geometry.
+      const liveScoreRect = scorecard.getBoundingClientRect();
+      const overlapPx = Math.ceil(liveScoreRect.bottom - footerTop);
+      if (overlapPx > 0) {
+        scorecardHeight = Math.max(180, scorecardHeight - overlapPx);
+        if (scorecardHeight !== lastScorecardHeightPx) {
+          scorecard.style.height = `${scorecardHeight}px`;
+          scorecard.style.maxHeight = `${scorecardHeight}px`;
+          lastScorecardHeightPx = scorecardHeight;
+        }
       }
     }
   }
