@@ -607,11 +607,13 @@
   // =============================================================================
   
   const ACH = [
+    { id: "parskin", label: "Par Skin", pts: 2, emoji: "🧤" },
     { id: "sandy",  label: "Sandy",  pts: 1,   emoji: "🏖️" },
     { id: "sadaam", label: "Sadaam", pts: 2,   emoji: "💥" },
     { id: "kp",     label: "KP",     pts: 1,   emoji: "🎯" },
     { id: "hoover", label: "Hoover", pts: 10,  emoji: "🧹" },
     { id: "skin",   label: "Skin",   pts: 1,   emoji: "👑" },
+    { id: "poley",  label: "Poley",  pts: 1,   emoji: "⛳" },
     { id: "pulley", label: "Pully",  pts: 1,   emoji: "🪢" },
     { id: "gcbc",   label: "GCBBC",  pts: 3,   emoji: "🍆" },
     { id: "dod",    label: "DOD",    pts: 1,   emoji: "💀", imageUrl: "images/DOD.png" },
@@ -619,6 +621,8 @@
     { id: "woodie", label: "Woodie", pts: 1,   emoji: "🌲" },
     { id: "chippy", label: "Chippy", pts: 1,   emoji: "🐿️" },
     { id: "moochy", label: "Moochy", pts: 1,   emoji: "🐄" },
+    { id: "grande", label: "Grande", pts: 2,   emoji: "🧤" },
+    { id: "albatross", label: "Albatross", pts: 3, emoji: "🦅" },
     { id: "goochy", label: "Goochy", pts: 1,   emoji: "🌀" },
     { id: "holein1", label: "Hole in 1", pts: 100, emoji: "🕳️" },
   ];
