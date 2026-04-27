@@ -1200,6 +1200,9 @@ select:not(.select-plain) option {
   right: 0;
   bottom: 0;
   z-index: 35;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .scorecard-controls-shell.has-main-options-open {
@@ -1921,6 +1924,9 @@ tfoot td {
   right: 0;
   bottom: 0;
   z-index: 34;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .games-card-footer {
@@ -2913,6 +2919,12 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsBottom {
   border-radius: var(--radius-lg);
   background: var(--panel);
   scroll-behavior: auto;
+}
+
+.vegas-wrap.is-pointer-scrolling,
+.banker-wrap.is-pointer-scrolling {
+  cursor: grabbing;
+  user-select: none;
 }
 
 .vegas-table,

@@ -1243,6 +1243,26 @@
     }
   }
 
+  function getActiveFooterShell() {
+    return getPrimaryTab() === 'games'
+      ? document.querySelector('.games-controls-shell')
+      : document.querySelector('.scorecard-controls-shell');
+  }
+
+  function refreshActiveFooterShellPresentation() {
+    const shell = getActiveFooterShell();
+    if (!(shell instanceof HTMLElement)) return;
+
+    shell.style.willChange = 'transform';
+    shell.style.transform = 'translateZ(0)';
+    void shell.offsetHeight;
+
+    requestAnimationFrame(() => {
+      shell.style.transform = '';
+      shell.style.willChange = '';
+    });
+  }
+
   function syncFixedFooterBottomOffset() {
     const root = document.documentElement;
     if (!root) return;
@@ -1265,7 +1285,7 @@
       || 0;
     if (!viewportHeight) return;
 
-    const shells = Array.from(document.querySelectorAll('.scorecard-controls-shell, .games-controls-shell'));
+    const shells = [getActiveFooterShell()].filter(Boolean);
     let maxGap = 0;
 
     shells.forEach((shell) => {
@@ -1566,8 +1586,12 @@
     if (which === 'games') {
       // Delay one frame so layout settles before measuring.
       requestAnimationFrame(() => {
+        refreshActiveFooterShellPresentation();
         schedulePanelHeightSync();
+        setTimeout(refreshActiveFooterShellPresentation, 60);
+        setTimeout(schedulePanelHeightSync, 60);
         // Run again after transitions finish (header/options panels).
+        setTimeout(refreshActiveFooterShellPresentation, 300);
         setTimeout(schedulePanelHeightSync, 300);
         setTimeout(schedulePanelHeightSync, 700);
         setTimeout(schedulePanelHeightSync, 1200);
@@ -1581,7 +1605,10 @@
       });
     } else {
       requestAnimationFrame(() => {
+        refreshActiveFooterShellPresentation();
         schedulePanelHeightSync();
+        setTimeout(refreshActiveFooterShellPresentation, 60);
+        setTimeout(schedulePanelHeightSync, 60);
         setTimeout(schedulePanelHeightSync, 300);
         setTimeout(schedulePanelHeightSync, 700);
         setTimeout(schedulePanelHeightSync, 1200);
@@ -1713,6 +1740,105 @@
     };
 
     document.querySelectorAll('.vegas-wrap, .banker-wrap').forEach(installGuard);
+  }
+
+  function setupDesktopGamesTablePointerScroll() {
+    const isTouchPrimary = navigator.maxTouchPoints > 0;
+
+    const installScroller = (pane) => {
+      if (!(pane instanceof HTMLElement) || pane.dataset.desktopPointerScroll === 'true') return;
+      pane.dataset.desktopPointerScroll = 'true';
+
+      pane.addEventListener('wheel', (e) => {
+        if (e.ctrlKey) return;
+
+        const canScrollY = pane.scrollHeight - pane.clientHeight > 1;
+        const canScrollX = pane.scrollWidth - pane.clientWidth > 1;
+        if (!canScrollY && !canScrollX) return;
+
+        const useVertical = Math.abs(e.deltaY) >= Math.abs(e.deltaX);
+        if (useVertical && canScrollY) {
+          const before = pane.scrollTop;
+          pane.scrollTop += e.deltaY;
+          if (pane.scrollTop !== before) {
+            e.preventDefault();
+          }
+          return;
+        }
+
+        if (!useVertical && canScrollX) {
+          const before = pane.scrollLeft;
+          pane.scrollLeft += e.deltaX;
+          if (pane.scrollLeft !== before) {
+            e.preventDefault();
+          }
+        }
+      }, { passive: false });
+
+      if (isTouchPrimary) return;
+
+      let activePointerId = null;
+      let startX = 0;
+      let startY = 0;
+      let startLeft = 0;
+      let startTop = 0;
+      let dragged = false;
+
+      const isInteractiveTarget = (target) => {
+        if (!(target instanceof Element)) return false;
+        return !!target.closest('button, input, select, textarea, option, label, a, summary, details');
+      };
+
+      pane.addEventListener('pointerdown', (e) => {
+        if (e.pointerType !== 'mouse' || e.button !== 0) return;
+        if (isInteractiveTarget(e.target)) return;
+
+        activePointerId = e.pointerId;
+        startX = e.clientX;
+        startY = e.clientY;
+        startLeft = pane.scrollLeft;
+        startTop = pane.scrollTop;
+        dragged = false;
+        pane.classList.add('is-pointer-scrolling');
+        pane.setPointerCapture?.(e.pointerId);
+      });
+
+      pane.addEventListener('pointermove', (e) => {
+        if (activePointerId !== e.pointerId) return;
+
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        if (!dragged && Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+
+        dragged = true;
+        pane.scrollLeft = startLeft - dx;
+        pane.scrollTop = startTop - dy;
+        e.preventDefault();
+      });
+
+      const endDrag = (e) => {
+        if (activePointerId !== e.pointerId) return;
+        pane.classList.remove('is-pointer-scrolling');
+        pane.releasePointerCapture?.(e.pointerId);
+        activePointerId = null;
+      };
+
+      pane.addEventListener('pointerup', endDrag);
+      pane.addEventListener('pointercancel', endDrag);
+      pane.addEventListener('lostpointercapture', () => {
+        pane.classList.remove('is-pointer-scrolling');
+        activePointerId = null;
+      });
+
+      pane.addEventListener('click', (e) => {
+        if (!dragged) return;
+        e.preventDefault();
+        e.stopPropagation();
+        dragged = false;
+      }, true);
+    };
+
+    document.querySelectorAll('.vegas-wrap, .banker-wrap').forEach(installScroller);
   }
 
   /**
@@ -5826,6 +5952,7 @@
     setupIOSStickyHeaders();
     setupIOSGamesStickyHeaders();
     setupIOSGamesTableOverscrollGuard();
+    setupDesktopGamesTablePointerScroll();
     setupGamesPanelScrollSync();
     bindHeaderCloudScrollIndicator();
     syncHeaderBadgeButtonLabels();
