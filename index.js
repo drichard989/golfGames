@@ -1195,13 +1195,16 @@
     const resultRect = resultCard.getBoundingClientRect();
     const topAnchor = headerRect ? Math.max(wrapRect.top, headerRect.bottom + 4) : wrapRect.top;
     const available = Math.floor(resultRect.top - topAnchor - 8);
-    if (Number.isFinite(available) && available > 160) {
+    if (Number.isFinite(available) && available > 24) {
+      // Always cap table viewport to stay above pinned results, even on
+      // shorter devices where previous 160px threshold could leave overlap.
       wrap.style.maxHeight = `${available}px`;
     }
 
     const resultHeight = Math.ceil(resultRect.height || resultCard.offsetHeight || 0);
     if (resultHeight > 0) {
-      wrap.style.paddingBottom = `${Math.max(14, resultHeight + 12)}px`;
+      const pinnedSafetyPad = activeGame === 'junk' ? 56 : 18;
+      wrap.style.paddingBottom = `${Math.max(14, resultHeight + pinnedSafetyPad)}px`;
     }
   }
 
