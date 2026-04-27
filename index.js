@@ -1181,7 +1181,11 @@
 
     const resultHeight = Math.ceil(resultRect.height || resultCard.offsetHeight || 0);
     if (resultHeight > 0) {
-      wrap.style.paddingBottom = `${Math.max(14, resultHeight + 10)}px`;
+      if (activeGame === 'junk') {
+        wrap.style.paddingBottom = '14px';
+      } else {
+        wrap.style.paddingBottom = `${Math.max(14, resultHeight + 10)}px`;
+      }
     }
   }
 
@@ -1331,6 +1335,112 @@
       } : null,
       extra
     });
+  }
+
+  function collectScorecardClipMetrics(reason, extra = {}) {
+    const viewport = window.visualViewport;
+    const scorePanel = document.getElementById('scoreEntryPanel');
+    const scorecard = document.getElementById('main-scorecard');
+    const scoreFooter = document.querySelector('.scorecard-controls-shell');
+    const stickyNav = document.querySelector('.sticky-nav-bar');
+    const totalsRow = document.getElementById('totalsRow');
+
+    const panelRect = scorePanel?.getBoundingClientRect();
+    const scorecardRect = scorecard?.getBoundingClientRect();
+    const footerRect = scoreFooter?.getBoundingClientRect();
+    const navRect = stickyNav?.getBoundingClientRect();
+    const totalsRect = totalsRow?.getBoundingClientRect();
+
+    const footerTop = footerRect ? Math.round(footerRect.top) : null;
+    const scorecardBottom = scorecardRect ? Math.round(scorecardRect.bottom) : null;
+    const overlapWithFooterPx =
+      footerTop != null && scorecardBottom != null ? Math.max(0, scorecardBottom - footerTop) : null;
+
+    return {
+      reason,
+      primaryTab: getPrimaryTab(),
+      innerHeight: window.innerHeight,
+      clientHeight: document.documentElement.clientHeight,
+      visualViewport: viewport ? {
+        width: Math.round(viewport.width),
+        height: Math.round(viewport.height),
+        offsetTop: Math.round(viewport.offsetTop),
+        offsetLeft: Math.round(viewport.offsetLeft),
+        pageTop: Math.round(viewport.pageTop)
+      } : null,
+      vars: {
+        appDvh: getComputedStyle(document.documentElement).getPropertyValue('--app-dvh').trim(),
+        footerBottomOffset: getComputedStyle(document.documentElement).getPropertyValue('--footer-bottom-offset').trim(),
+        safeTopInset: getComputedStyle(document.documentElement).getPropertyValue('--safe-top-inset').trim()
+      },
+      panel: scorePanel ? {
+        hidden: !!scorePanel.hidden,
+        heightStyle: scorePanel.style.height || null,
+        maxHeightStyle: scorePanel.style.maxHeight || null,
+        top: Math.round(panelRect.top),
+        bottom: Math.round(panelRect.bottom),
+        height: Math.round(panelRect.height),
+        scrollTop: Math.round(scorePanel.scrollTop || 0),
+        scrollHeight: Math.round(scorePanel.scrollHeight || 0),
+        clientHeight: Math.round(scorePanel.clientHeight || 0)
+      } : null,
+      scorecard: scorecard ? {
+        heightStyle: scorecard.style.height || null,
+        maxHeightStyle: scorecard.style.maxHeight || null,
+        top: Math.round(scorecardRect.top),
+        bottom: Math.round(scorecardRect.bottom),
+        height: Math.round(scorecardRect.height),
+        scrollTop: Math.round(scorecard.scrollTop || 0),
+        scrollHeight: Math.round(scorecard.scrollHeight || 0),
+        clientHeight: Math.round(scorecard.clientHeight || 0)
+      } : null,
+      footer: scoreFooter ? {
+        bottomCss: getComputedStyle(scoreFooter).bottom,
+        top: Math.round(footerRect.top),
+        bottom: Math.round(footerRect.bottom),
+        height: Math.round(footerRect.height)
+      } : null,
+      stickyNav: stickyNav ? {
+        top: Math.round(navRect.top),
+        bottom: Math.round(navRect.bottom),
+        height: Math.round(navRect.height)
+      } : null,
+      totalsRow: totalsRow ? {
+        top: Math.round(totalsRect.top),
+        bottom: Math.round(totalsRect.bottom),
+        height: Math.round(totalsRect.height)
+      } : null,
+      overlapWithFooterPx,
+      extra
+    };
+  }
+
+  function debugScorecardTrace(reason, extra = {}) {
+    if (!DEBUG_LAYOUT_TRACE) return null;
+    const payload = collectScorecardClipMetrics(reason, extra);
+    console.log('[scorecard-debug]', payload);
+    return payload;
+  }
+
+  function setupScorecardDebugTrace() {
+    if (!DEBUG_LAYOUT_TRACE) return;
+    if (window.__scorecardDebugTraceBound) return;
+    window.__scorecardDebugTraceBound = true;
+
+    const scorePanel = document.getElementById('scoreEntryPanel');
+    const scorecard = document.getElementById('main-scorecard');
+    const trace = (reason, extra = {}) => debugScorecardTrace(reason, extra);
+
+    window.addEventListener('resize', () => trace('window:resize'), { passive: true });
+    window.addEventListener('scroll', () => trace('window:scroll'), { passive: true });
+    window.visualViewport?.addEventListener('resize', () => trace('visualViewport:resize'), { passive: true });
+    window.visualViewport?.addEventListener('scroll', () => trace('visualViewport:scroll'), { passive: true });
+    scorePanel?.addEventListener('scroll', () => trace('scorePanel:scroll'), { passive: true });
+    scorecard?.addEventListener('scroll', () => trace('scorecard:scroll'), { passive: true });
+    document.addEventListener('golf:game-tab-changed', (e) => trace('golf:game-tab-changed', { detail: e.detail || null }));
+
+    setTimeout(() => trace('scorecard-debug:init+120ms'), 120);
+    setTimeout(() => trace('scorecard-debug:init+500ms'), 500);
   }
 
   function refreshActiveFooterShellPresentation() {
@@ -6073,6 +6183,7 @@
     setupIOSGamesTableOverscrollGuard();
     setupDesktopGamesTablePointerScroll();
     setupGamesPanelScrollSync();
+    setupScorecardDebugTrace();
     bindHeaderCloudScrollIndicator();
     syncHeaderBadgeButtonLabels();
     window.addEventListener('resize', syncHeaderBadgeButtonLabels, { passive: true });
@@ -6865,6 +6976,10 @@
           utilitiesControls.prepend(control);
         }
       }
+
+      if (DEBUG_LAYOUT_TRACE && getPrimaryTab() === 'score') {
+        debugScorecardTrace('syncScorePanelHeight');
+      }
     }
 
     document.getElementById('fontSizeSmall')?.addEventListener('click', () => {
@@ -6988,6 +7103,7 @@
         pars: PARS,
         hcpMen: HCPMEN
       }),
+      scorecardClip: (reason = 'manual') => debugScorecardTrace(reason, { manual: true }),
       clearStorage: () => {
         localStorage.removeItem(Storage.KEY);
         console.log('[Debug] Storage cleared');
