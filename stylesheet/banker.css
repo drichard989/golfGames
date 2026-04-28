@@ -96,9 +96,14 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
 
 .bss-banker-name-text {
   min-width: 0;
-  white-space: nowrap;
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1;
 }
 
 .bss-banker-stroke-slot {
@@ -292,7 +297,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
 @media (min-width: 481px) {
   body.banker-sheet-active .bss-grid {
     grid-template-columns:
-      clamp(76px, 14vw, 108px)  /* banker (with max stacked) */
+      clamp(96px, 18vw, 132px)  /* banker (with max stacked) */
       minmax(0, 1fr)            /* bets */
       44px;                     /* BX (fixed for row-to-row alignment) */
   }
@@ -313,7 +318,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
      and instead tint the name + amount cells (green = receiving stroke,
      red = giving stroke via plus handicap). */
   body.banker-sheet-active .bss-bet-list {
-    grid-template-columns: 24px minmax(0, 1fr) 74px 44px;
+    grid-template-columns: 24px minmax(0, 1fr) 64px 44px;
     column-gap: 0;
     align-items: stretch;
   }
@@ -353,7 +358,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
     grid-area: list;
   }
   body.banker-sheet-active .bss-bet-line > .bss-bet-amt {
-    min-width: 74px;
+    min-width: 64px;
     padding-right: 8px;
   }
   body.banker-sheet-active .bss-bet-line > .bss-bet-mult-slot {
