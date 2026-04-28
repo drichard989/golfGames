@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Golf Scorecard",
   "short_name": "Golf",
   "description": "Golf scorecard with Vegas, Skins, and Junk game scoring",
@@ -19,6 +20,26 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/images/screenshot-scorecard.png",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Score entry with live handicap tracking"
+    },
+    {
+      "src": "/images/screenshot-hilo.png",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Hi-Lo game with automatic team assignment and results"
+    },
+    {
+      "src": "/images/screenshot-banker.png",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Banker game with per-hole results and running totals"
     }
   ]
 }

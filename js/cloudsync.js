@@ -1661,6 +1661,12 @@
           return;
         }
         setStatus('Cloud: push failed (see console)');
+        // Register a background sync so the SW retries when connectivity restores
+        if (typeof navigator !== 'undefined' && navigator.serviceWorker) {
+          navigator.serviceWorker.ready.then((reg) => {
+            if (reg.sync) reg.sync.register('golf-cloud-sync').catch(() => {});
+          }).catch(() => {});
+        }
       });
     }, delay);
   }
@@ -1677,6 +1683,15 @@
       }
       return ok;
     };
+  }
+
+  function setupBackgroundSyncListener() {
+    if (typeof navigator === 'undefined' || !navigator.serviceWorker) return;
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (event.data?.type === 'BACKGROUND_SYNC_RETRY') {
+        queuePush('background-sync-retry');
+      }
+    });
   }
 
   function isBankerInputFocused() {
@@ -2383,6 +2398,7 @@
 
     bindUi();
     patchStorageSaveHook();
+    setupBackgroundSyncListener();
 
     const urlJoinCode = getCodeFromUrl();
     if (urlJoinCode) {

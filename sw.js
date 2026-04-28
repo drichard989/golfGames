@@ -1,6 +1,6 @@
 // Service Worker for Golf Scorecard PWA
 // Update CACHE_VERSION every time you deploy changes
-const CACHE_VERSION = 'v3.3.278';
+const CACHE_VERSION = 'v3.3.280';
 const CACHE_NAME = `golf-${CACHE_VERSION}`;
 
 // Files to cache - comprehensive list
@@ -128,6 +128,17 @@ self.addEventListener('message', (event) => {
       await precacheFiles(cache);
       await pruneCacheEntries(cache);
     })());
+  }
+});
+
+// Background Sync - retry deferred cloud push when connectivity restores
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'golf-cloud-sync') {
+    event.waitUntil(
+      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+        clients.forEach((client) => client.postMessage({ type: 'BACKGROUND_SYNC_RETRY' }));
+      })
+    );
   }
 });
 
