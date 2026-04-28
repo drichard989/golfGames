@@ -1659,6 +1659,10 @@
     const scorePanel = document.getElementById('scoreEntryPanel');
     const scorecard = document.getElementById('main-scorecard');
     const scoreFooter = document.querySelector('.scorecard-controls-shell');
+    const scoreFooterCard = document.querySelector('.scorecard-card-footer');
+    const scoreFooterControls = document.getElementById('scorecardFooterControls');
+    const scoreFooterSwitcher = document.querySelector('.scorecard-controls-shell .footer-entry-switcher');
+    const scoreOptionsPanel = document.getElementById('scorecardOptionsPanel');
     const stickyNav = document.querySelector('.sticky-nav-bar');
     const totalsRow = document.getElementById('totalsRow');
     const hcpRow = document.getElementById('hcpRow');
@@ -1667,6 +1671,9 @@
     const panelRect = scorePanel?.getBoundingClientRect();
     const scorecardRect = scorecard?.getBoundingClientRect();
     const footerRect = scoreFooter?.getBoundingClientRect();
+    const footerCardRect = scoreFooterCard?.getBoundingClientRect();
+    const footerControlsRect = scoreFooterControls?.getBoundingClientRect();
+    const footerSwitcherRect = scoreFooterSwitcher?.getBoundingClientRect();
     const navRect = stickyNav?.getBoundingClientRect();
     const totalsRect = totalsRow?.getBoundingClientRect();
     const hcpRect = hcpRow?.getBoundingClientRect();
@@ -1723,6 +1730,24 @@
         bottom: Math.round(footerRect.bottom),
         height: Math.round(footerRect.height)
       } : null,
+      footerInternals: {
+        card: scoreFooterCard ? {
+          top: Math.round(footerCardRect.top),
+          bottom: Math.round(footerCardRect.bottom),
+          height: Math.round(footerCardRect.height)
+        } : null,
+        controls: scoreFooterControls ? {
+          top: Math.round(footerControlsRect.top),
+          bottom: Math.round(footerControlsRect.bottom),
+          height: Math.round(footerControlsRect.height)
+        } : null,
+        switcher: scoreFooterSwitcher ? {
+          top: Math.round(footerSwitcherRect.top),
+          bottom: Math.round(footerSwitcherRect.bottom),
+          height: Math.round(footerSwitcherRect.height)
+        } : null,
+        optionsOpen: !!scoreOptionsPanel && !scoreOptionsPanel.hidden
+      },
       stickyNav: stickyNav ? {
         top: Math.round(navRect.top),
         bottom: Math.round(navRect.bottom),
@@ -1808,6 +1833,8 @@
     const vvH = window.visualViewport ? Math.round(window.visualViewport.height) : 'na';
     const footerBottomOffset = getComputedStyle(document.documentElement)
       .getPropertyValue('--footer-bottom-offset').trim() || '0px';
+    const safeBottomInset = rootStyle.getPropertyValue('--safe-bottom-inset').trim() || '0px';
+    const footerRowBottomClearance = rootStyle.getPropertyValue('--footer-row-bottom-clearance').trim() || '0px';
     // Gap between the bottom of the footer and the screen bottom (should be 0)
     const footerScreenGap = footerRect ? Math.round(innerH - footerRect.bottom) : 'na';
     // Actual scorecard top in viewport
@@ -1836,14 +1863,26 @@
     const fp        = px(firstPlayerEl);
     const hcpBot    = hcpRowEl ? Math.round(hcpRowEl.getBoundingClientRect().bottom) : 'na';
     const rowGap    = (typeof hcpBot === 'number' && typeof fp === 'number') ? fp - hcpBot : 'na';
+    const footerCardTop = payload.footerInternals?.card?.top ?? 'na';
+    const footerCardH = payload.footerInternals?.card?.height ?? 'na';
+    const footerControlsTop = payload.footerInternals?.controls?.top ?? 'na';
+    const footerControlsH = payload.footerInternals?.controls?.height ?? 'na';
+    const footerSwitcherTop = payload.footerInternals?.switcher?.top ?? 'na';
+    const footerSwitcherBottom = payload.footerInternals?.switcher?.bottom ?? 'na';
+    const footerSwitcherH = payload.footerInternals?.switcher?.height ?? 'na';
+    const switcherScreenGap = footerRect && typeof footerSwitcherBottom === 'number'
+      ? Math.round(innerH - footerSwitcherBottom) : 'na';
+    const displayMode = getDisplayModeState();
 
     content.textContent = [
       `${ts}  reason=${payload.reason}`,
+      `── Mode ──  iosPwa=${isIosPwaMode()}  mode=${displayMode.mode}  standaloneApp=${displayMode.isStandaloneApp}`,
       `── Sticky vars ──  --head-top=${stickyHeadTop}  --par-top=${stickyParTop}  --hcp-top=${stickyHcpTop}`,
       `── Row tops ──  thead=${theadTop}(h${theadH})  par=${parTop}(h${parH})  hcp=${hcpTop2}(h${hcpH})  firstPlayer=${fp}  gap=${rowGap}px`,
       `── Panel ──   panelTop=${panelTop == null ? 'na' : `${panelTop}px`}  panelScroll=${panelScroll}  overlap=${overlap == null ? 'na' : `${overlap}px`}`,
       `── Scorecard ──  actualTop=${scorecardActualTop}px  h=${scorecardActualH}px  bottom=${scorecardBottom}px`,
-      `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  top=${footerTop}px  h=${footerH}px`,
+      `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  --safeBottom=${safeBottomInset}  --rowClear=${footerRowBottomClearance}  top=${footerTop}px  h=${footerH}px`,
+      `── Footer Rows ──  cardTop=${footerCardTop}(h${footerCardH})  controlsTop=${footerControlsTop}(h${footerControlsH})  switcherTop=${footerSwitcherTop}(h${footerSwitcherH})  switcherGap=${switcherScreenGap}px  optionsOpen=${payload.footerInternals?.optionsOpen}`,
       `── Viewport ──  innerH=${innerH}px  vvH=${vvH}px  footerScreenGap=${footerScreenGap}px ← 0=ok  footerScorecardGap=${footerScorecardGap}px ← 0=ok`
     ].join('\n');
   }
