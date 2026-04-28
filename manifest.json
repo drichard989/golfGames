@@ -24,20 +24,20 @@
   ],
   "screenshots": [
     {
-      "src": "/images/screenshot-scorecard.png",
-      "type": "image/png",
+      "src": "/images/screenshot-scorecard.jpeg",
+      "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Score entry with live handicap tracking"
     },
     {
-      "src": "/images/screenshot-hilo.png",
-      "type": "image/png",
+      "src": "/images/screenshot-hilo.jpeg",
+      "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Hi-Lo game with automatic team assignment and results"
     },
     {
-      "src": "/images/screenshot-banker.png",
-      "type": "image/png",
+      "src": "/images/screenshot-banker.jpeg",
+      "type": "image/jpeg",
       "form_factor": "narrow",
       "label": "Banker game with per-hole results and running totals"
     }
