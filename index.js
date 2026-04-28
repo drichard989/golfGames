@@ -1339,7 +1339,7 @@
     const panel = getGamesScrollContainer();
     if (!panel) return;
 
-    const viewportHeight = (window.visualViewport?.height) || window.innerHeight || document.documentElement.clientHeight || 0;
+    const viewportHeight = getStableViewportHeight();
     const navBar = document.querySelector('.sticky-nav-bar');
     const footerShell = document.querySelector('.games-controls-shell');
     const navBarRect = navBar?.getBoundingClientRect();
@@ -1364,7 +1364,7 @@
     const footerShell = document.querySelector('.scorecard-controls-shell');
     if (!panel) return;
 
-    const viewportHeight = (window.visualViewport?.height) || window.innerHeight || document.documentElement.clientHeight || 0;
+    const viewportHeight = getStableViewportHeight();
     const navBar = document.querySelector('.sticky-nav-bar');
     const navBarRect = navBar?.getBoundingClientRect();
 
@@ -1445,10 +1445,7 @@
     const root = document.documentElement;
     if (!root) return;
 
-    const rawViewportHeight = (window.visualViewport?.height)
-      || window.innerHeight
-      || document.documentElement.clientHeight
-      || 0;
+    const rawViewportHeight = getStableViewportHeight();
     const viewportHeight = Math.max(0, Math.round(rawViewportHeight));
     if (!viewportHeight) return;
 
@@ -1462,6 +1459,29 @@
     return getPrimaryTab() === 'games'
       ? document.querySelector('.games-controls-shell')
       : document.querySelector('.scorecard-controls-shell');
+  }
+
+  function getStableViewportHeight() {
+    const vv = window.visualViewport;
+    const layoutViewportHeight = window.innerHeight || 0;
+    const clientHeight = document.documentElement?.clientHeight || 0;
+    const visualHeight = vv ? (vv.height + vv.offsetTop) : 0;
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
+      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
+      || window.navigator.standalone === true;
+    const activeEl = document.activeElement;
+    const isEditableFocused = !!activeEl && (
+      activeEl.tagName === 'INPUT' ||
+      activeEl.tagName === 'TEXTAREA' ||
+      activeEl.tagName === 'SELECT' ||
+      activeEl.isContentEditable
+    );
+
+    if (standalone && !isEditableFocused) {
+      return Math.max(layoutViewportHeight, clientHeight, visualHeight, 0);
+    }
+
+    return vv?.height || layoutViewportHeight || clientHeight || 0;
   }
 
   function ensureFooterDebugReadout() {
