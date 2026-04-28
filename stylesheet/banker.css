@@ -273,7 +273,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
 @media (min-width: 481px) {
   body.banker-sheet-active .bss-grid {
     grid-template-columns:
-      clamp(92px, 18vw, 132px)  /* banker (with max stacked) */
+      clamp(76px, 14vw, 108px)  /* banker (with max stacked) */
       minmax(0, 1fr)            /* bets */
       44px;                     /* BX (fixed for row-to-row alignment) */
   }
@@ -294,7 +294,7 @@ html[data-font-size="large"] .bss-bet-p2x-label {
      and instead tint the name + amount cells (green = receiving stroke,
      red = giving stroke via plus handicap). */
   body.banker-sheet-active .bss-bet-list {
-    grid-template-columns: minmax(0, 1fr) 88px 44px;
+    grid-template-columns: 24px minmax(0, 1fr) 74px 44px;
     column-gap: 0;
     align-items: stretch;
   }
@@ -334,8 +334,8 @@ html[data-font-size="large"] .bss-bet-p2x-label {
     grid-area: list;
   }
   body.banker-sheet-active .bss-bet-line > .bss-bet-amt {
-    min-width: 88px;
-    padding-right: 10px;
+    min-width: 74px;
+    padding-right: 8px;
   }
   body.banker-sheet-active .bss-bet-line > .bss-bet-mult-slot {
     min-width: 44px;
@@ -359,8 +359,21 @@ html[data-font-size="large"] .bss-bet-p2x-label {
     width: 44px;
     box-sizing: border-box;
   }
-  body.banker-sheet-active .bss-bet-stroke-slot { display: none; }
-  body.banker-sheet-active .bss-bet-line > .bss-bet-name { padding-left: 6px; }
+  body.banker-sheet-active .bss-bet-stroke-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    width: 24px;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  body.banker-sheet-active .bss-bet-line > .bss-bet-name {
+    padding-left: 4px;
+  }
+  body.banker-sheet-active .bss-bet-line > .bss-bet-name .bss-bet-stroke-inline {
+    display: none;
+  }
 
   /* Stroke-tint name+amount rules now live outside this @media block so
      they apply on narrow phones (≤480px) as well — see below. */
