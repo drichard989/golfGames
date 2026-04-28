@@ -4463,8 +4463,12 @@ input[type="text"] {
 
   .entry-switcher.footer-entry-switcher {
     margin: 6px 0 0;
-    padding: 6px 8px 9px;
+    padding: 6px 8px 4px;
     gap: 6px;
+  }
+
+  html.ios-pwa-mode .entry-switcher.footer-entry-switcher {
+    padding: 6px 8px 29px;
   }
 
   .entry-switcher-btn {
