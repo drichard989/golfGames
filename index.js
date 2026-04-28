@@ -1221,6 +1221,7 @@
       panelSyncRaf = 0;
       syncDynamicViewportHeight();
       syncSafeTopInset();
+      syncSafeBottomInset();
       syncFixedFooterBottomOffset();
       syncGamesPanelHeight();
       syncScorePanelHeight();
@@ -1981,6 +1982,44 @@
     root.style.setProperty('--safe-top-dynamic', `${safeTop}px`);
   }
 
+  function syncSafeBottomInset() {
+    const root = document.documentElement;
+    if (!root) return;
+
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
+      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
+      || window.navigator.standalone === true;
+    const activeEl = document.activeElement;
+    const isEditableFocused = !!activeEl && (
+      activeEl.tagName === 'INPUT' ||
+      activeEl.tagName === 'TEXTAREA' ||
+      activeEl.tagName === 'SELECT' ||
+      activeEl.isContentEditable
+    );
+
+    let envBottom = 0;
+    try {
+      const probe = document.createElement('div');
+      probe.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none';
+      document.documentElement.appendChild(probe);
+      envBottom = Math.round(parseFloat(getComputedStyle(probe).bottom) || 0);
+      probe.remove();
+    } catch (_) {}
+
+    let safeBottom = envBottom;
+    if (standalone && !isEditableFocused && isIOS) {
+      // iOS cold-open can transiently over-report bottom inset in standalone.
+      // Clamp to the normal home-indicator range so footer content does not
+      // render artificially high before the viewport settles.
+      safeBottom = Math.max(0, Math.min(34, envBottom));
+    }
+
+    root.style.setProperty('--safe-bottom-inset', `${safeBottom}px`);
+  }
+
   function rememberPrimaryTabScroll(which = getPrimaryTab()) {
     if (which !== 'score' && which !== 'games') return;
     // Primary tabs use internal panel scrolling; preserving window scroll
@@ -2577,6 +2616,7 @@
     const syncLayout = () => {
       syncDynamicViewportHeight();
       syncSafeTopInset();
+      syncSafeBottomInset();
       syncFixedFooterBottomOffset();
       syncGamesPanelHeight();
       syncScorePanelHeight();

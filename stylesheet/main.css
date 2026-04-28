@@ -99,6 +99,7 @@
   --footer-action-h: var(--footer-action-h-desktop);
   --app-dvh: 100dvh;
   --footer-bottom-offset: 0px;
+  --safe-bottom-inset: min(env(safe-area-inset-bottom, 0px), 34px);
   --safe-top-dynamic: 0px;
   --safe-top-inset: max(env(safe-area-inset-top, 0px), var(--safe-top-dynamic));
 }
@@ -133,7 +134,7 @@
     /* Hard-pin to the physical bottom in PWA mode so JS viewport-math
        errors during transitions never cause the shell to float. */
     bottom: 0 !important;
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -1196,7 +1197,7 @@ select:not(.select-plain) option {
   border-radius: 0;
   overflow: hidden;
   margin: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px));
   position: fixed;
   left: 0;
   right: 0;
@@ -1284,7 +1285,7 @@ select:not(.select-plain) option {
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding-top: 0;
-  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 130px);
+  padding-bottom: calc(var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px)) + 130px);
   background: var(--bg);
 }
 
@@ -1971,7 +1972,7 @@ tfoot td {
   border-radius: 0;
   overflow: hidden;
   margin: 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px));
   position: fixed;
   left: 0;
   right: 0;
