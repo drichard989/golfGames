@@ -1273,17 +1273,21 @@
     const activeGame = getActiveGameTab();
     if (!activeGame) return;
 
-    if (PANEL_SCROLL_LOCK_GAMES.has(activeGame)) {
+    const sectionId = GAME_SECTION_BY_KEY[activeGame];
+    const section = sectionId ? document.getElementById(sectionId) : null;
+    const optionsOpen = !!section?.querySelector('.game-options-panel:not([hidden])');
+
+    if (PANEL_SCROLL_LOCK_GAMES.has(activeGame) && !optionsOpen) {
       if (panel.scrollTop !== 0) {
         panel.scrollTop = 0;
       }
       if (panel.style.overflowY !== 'hidden') {
         panel.style.overflowY = 'hidden';
       }
+    } else if (panel.style.overflowY !== 'auto') {
+      panel.style.overflowY = 'auto';
     }
 
-    const sectionId = GAME_SECTION_BY_KEY[activeGame];
-    const section = sectionId ? document.getElementById(sectionId) : null;
     if (!section || section.getAttribute('aria-hidden') === 'true') return;
 
     const wrap = section.querySelector('.vegas-wrap, .banker-wrap');

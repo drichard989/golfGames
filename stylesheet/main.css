@@ -2168,6 +2168,7 @@ body.mode-games .gamesbar {
 
 .game-section {
   display: none;
+  position: relative;
   margin: 0 0 24px;
   padding: 0 0 var(--space-md);
   border: none;
@@ -2182,9 +2183,23 @@ body.mode-games .gamesbar {
 }
 
 /* Game tables stretch edge-to-edge; inset only non-table children. */
-.game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls):not(.hilo-bottom-results) {
+.game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls):not(.hilo-bottom-results):not(.game-options-panel) {
   padding-left: var(--space-md);
   padding-right: var(--space-md);
+}
+
+/* Game options open as a popover over the game content (do not reflow table). */
+.game-section > .game-options-panel {
+  position: absolute;
+  left: var(--space-md);
+  right: var(--space-md);
+  top: calc(var(--game-sticky-head-top, 0px) + 44px);
+  z-index: 33;
+  margin: 0;
+  max-height: min(62vh, 560px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .game-section h2 {
@@ -4497,9 +4512,14 @@ input[type="text"] {
     padding: 0 0 var(--text-md);
   }
 
-  .game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls):not(.hilo-bottom-results) {
+  .game-section > *:not(.vegas-wrap):not(.banker-wrap):not(.live-results-panel):not(.live-results-card):not(#bankerFooterTotals):not(.vegas-controls):not(.hilo-bottom-results):not(.game-options-panel) {
     padding-left: var(--text-md);
     padding-right: var(--text-md);
+  }
+
+  .game-section > .game-options-panel {
+    left: var(--text-md);
+    right: var(--text-md);
   }
 
   h2 {
