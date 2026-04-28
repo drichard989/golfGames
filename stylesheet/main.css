@@ -1417,6 +1417,7 @@ body.mode-score #main-scorecard {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  pointer-events: none;
 }
 
 .scorecard-header-debug-title {

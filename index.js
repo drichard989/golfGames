@@ -1831,6 +1831,7 @@
     const footerH = footerRect ? Math.round(footerRect.height) : 'na';
     const innerH = window.innerHeight;
     const vvH = window.visualViewport ? Math.round(window.visualViewport.height) : 'na';
+    const rootStyle = getComputedStyle(document.documentElement);
     const footerBottomOffset = getComputedStyle(document.documentElement)
       .getPropertyValue('--footer-bottom-offset').trim() || '0px';
     const safeBottomInset = rootStyle.getPropertyValue('--safe-bottom-inset').trim() || '0px';
@@ -1846,7 +1847,6 @@
       ? footerTop - scorecardBottom : 'na';
 
     // Sticky row positions and their CSS top variables
-    const rootStyle = getComputedStyle(document.documentElement);
     const stickyHeadTop  = rootStyle.getPropertyValue('--score-sticky-head-top').trim()  || '?';
     const stickyParTop   = rootStyle.getPropertyValue('--score-sticky-par-top').trim()   || '?';
     const stickyHcpTop   = rootStyle.getPropertyValue('--score-sticky-hcp-top').trim()   || '?';
