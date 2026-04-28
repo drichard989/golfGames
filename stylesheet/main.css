@@ -124,24 +124,13 @@ html.ios-pwa-mode body {
   min-height: var(--app-dvh, 100dvh);
 }
 
-html.ios-pwa-mode body::after {
-  content: "";
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: calc(var(--footer-row-bottom-clearance) + 12px);
-  background: var(--panel-alt);
-  pointer-events: none;
-  z-index: 33;
-}
-
 html.ios-pwa-mode .scorecard-controls-shell,
 html.ios-pwa-mode .games-controls-shell {
   /* Hard-pin to the physical bottom in iOS PWA mode so JS viewport-math
      errors during transitions never cause the shell to float. */
   bottom: 0 !important;
   padding-bottom: 0;
+  box-shadow: 0 20px 0 0 var(--panel-alt);
 }
 
 :root[data-font-size="small"] {
