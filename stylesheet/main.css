@@ -2194,7 +2194,7 @@ body.mode-games .gamesbar {
   left: var(--space-md);
   right: var(--space-md);
   top: calc(var(--game-sticky-head-top, 0px) + 44px);
-  z-index: 33;
+  z-index: 60;
   margin: 0;
   max-height: min(62vh, 560px);
   overflow-y: auto;
