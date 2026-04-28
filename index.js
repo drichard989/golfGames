@@ -1461,6 +1461,30 @@
       : document.querySelector('.scorecard-controls-shell');
   }
 
+  function getDisplayModeState() {
+    const standaloneMq = window.matchMedia?.('(display-mode: standalone)')?.matches;
+    const fullscreenMq = window.matchMedia?.('(display-mode: fullscreen)')?.matches;
+    const minimalUiMq = window.matchMedia?.('(display-mode: minimal-ui)')?.matches;
+    const browserMq = window.matchMedia?.('(display-mode: browser)')?.matches;
+    const iosStandalone = window.navigator.standalone === true;
+
+    let mode = 'unknown';
+    if (standaloneMq) mode = 'standalone';
+    else if (fullscreenMq) mode = 'fullscreen';
+    else if (minimalUiMq) mode = 'minimal-ui';
+    else if (browserMq) mode = 'browser';
+
+    return {
+      mode,
+      standaloneMq: !!standaloneMq,
+      fullscreenMq: !!fullscreenMq,
+      minimalUiMq: !!minimalUiMq,
+      browserMq: !!browserMq,
+      iosStandalone,
+      isStandaloneApp: !!(standaloneMq || fullscreenMq || iosStandalone)
+    };
+  }
+
   function getStableViewportHeight() {
     const vv = window.visualViewport;
     const layoutViewportHeight = window.innerHeight || 0;
@@ -1537,6 +1561,7 @@
     const appDvh = getComputedStyle(document.documentElement).getPropertyValue('--app-dvh').trim();
     const bottomOffset = getComputedStyle(document.documentElement).getPropertyValue('--footer-bottom-offset').trim();
     const activeName = activeShell === gamesShell ? 'games' : (activeShell === scoreShell ? 'score' : 'none');
+    const displayMode = getDisplayModeState();
     const now = new Date();
     const ts = now.toTimeString().slice(0, 8);
 
@@ -1544,6 +1569,8 @@
       `footer-debug ${ts}`,
       `reason=${reason}`,
       `tab=${activeTab} shell=${activeName}`,
+      `mode=${displayMode.mode} standaloneApp=${displayMode.isStandaloneApp} iosStandalone=${displayMode.iosStandalone}`,
+      `mq standalone=${displayMode.standaloneMq} fullscreen=${displayMode.fullscreenMq} minimal-ui=${displayMode.minimalUiMq} browser=${displayMode.browserMq}`,
       `vv.h=${vv ? Math.round(vv.height) : 'na'} vv.top=${vv ? Math.round(vv.offsetTop) : 'na'}`,
       `innerH=${window.innerHeight} clientH=${document.documentElement.clientHeight}`,
       `appDvh=${appDvh} bottomOffset=${bottomOffset}`,
@@ -1567,11 +1594,13 @@
     const pinnedSelector = activeGame ? PINNED_GAME_RESULTS_SELECTOR[activeGame] : null;
     const pinnedEl = pinnedSelector ? document.querySelector(pinnedSelector) : null;
     const pinnedRect = pinnedEl?.getBoundingClientRect();
+    const displayMode = getDisplayModeState();
 
     console.log('[footer-debug]', {
       reason,
       primaryTab: getPrimaryTab(),
       activeGame,
+      displayMode,
       innerHeight: window.innerHeight,
       clientHeight: document.documentElement.clientHeight,
       visualViewport: viewport ? {
