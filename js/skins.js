@@ -246,6 +246,7 @@
       const totals = Array(playerCount).fill(0);
       const holesWon = Array(playerCount).fill(null).map(() => []);
       const carryoverHoles = Array(playerCount).fill(null).map(() => new Map());
+      const winnings = Array(playerCount).fill(0);
       let pot = 1;
       let carryoverFromHoles = []; // Track which holes contribute to current pot
 
@@ -296,6 +297,15 @@
         const w = winners[0];
         totals[w] += pot;
         holesWon[w].push(String(h + 1));
+        const awardAmount = pot * buyIn;
+        winnings[w] += awardAmount;
+        if (playerCount > 1 && awardAmount !== 0) {
+          const sharePerLoser = awardAmount / (playerCount - 1);
+          for (let p = 0; p < playerCount; p++) {
+            if (p === w) continue;
+            winnings[p] -= sharePerLoser;
+          }
+        }
         // Track which holes were carried over to this winning hole
         if (carryoverFromHoles.length > 0) {
           carryoverHoles[w].set(String(h + 1), [...carryoverFromHoles]);
@@ -304,18 +314,9 @@
         carryoverFromHoles = []; // Reset carryover list
       }
 
-      // Calculate gross winnings (skins × value per skin)
       const totalSkins = totals.reduce((sum, t) => sum + t, 0);
-      const grossWinnings = totals.map(skinCount => skinCount * buyIn);
-      
-      // Calculate buy-in per player (total pot divided by number of players)
-      const totalPot = totalSkins * buyIn;
-      const buyInPerPlayer = totalPot / playerCount;
-      
-      // Calculate net winnings (what each player won/lost after paying buy-in)
-      const netWinnings = grossWinnings.map(gross => gross - buyInPerPlayer);
 
-      return { totals, holesWon, carryoverHoles, winnings: netWinnings, totalSkins };
+      return { totals, holesWon, carryoverHoles, winnings, totalSkins };
     },
 
     /**

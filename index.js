@@ -1820,8 +1820,7 @@
     setTimeout(() => trace('scorecard-debug:init+500ms'), 500);
   }
 
-  function refreshActiveFooterShellPresentation() {
-    const shell = getActiveFooterShell();
+  function refreshFooterShellPresentation(shell = getActiveFooterShell()) {
     if (!(shell instanceof HTMLElement)) return;
 
     shell.style.willChange = 'transform';
@@ -1832,6 +1831,10 @@
       shell.style.transform = '';
       shell.style.willChange = '';
     });
+  }
+
+  function refreshActiveFooterShellPresentation() {
+    refreshFooterShellPresentation(getActiveFooterShell());
   }
 
   function syncFixedFooterBottomOffset() {
@@ -2577,6 +2580,12 @@
     // and after app resume. Run a late settle pass and force another sync if
     // footer is not physically attached to the bottom edge.
     const runFooterAttachmentSettlePass = () => {
+      const shells = [
+        document.querySelector('.scorecard-controls-shell'),
+        document.querySelector('.games-controls-shell')
+      ].filter((shell) => shell instanceof HTMLElement);
+      shells.forEach((shell) => refreshFooterShellPresentation(shell));
+
       const shell = getActiveFooterShell();
       if (!(shell instanceof HTMLElement)) {
         syncLayout();
@@ -2594,6 +2603,10 @@
       }
 
       syncLayout();
+      shells.forEach((shell) => {
+        setTimeout(() => refreshFooterShellPresentation(shell), 0);
+        setTimeout(() => refreshFooterShellPresentation(shell), 90);
+      });
     };
 
     const runFinalLayoutSettleChecks = () => {
