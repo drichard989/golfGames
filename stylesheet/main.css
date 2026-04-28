@@ -100,6 +100,7 @@
   --app-dvh: 100dvh;
   --footer-bottom-offset: 0px;
   --safe-bottom-inset: min(env(safe-area-inset-bottom, 0px), 34px);
+  --footer-row-bottom-clearance: clamp(8px, var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px)), 26px);
   --safe-top-dynamic: 0px;
   --safe-top-inset: max(env(safe-area-inset-top, 0px), var(--safe-top-dynamic));
 }
@@ -111,6 +112,7 @@
   :root {
     --safe-top-dynamic: 20px;
     --safe-bottom-inset: 24px;
+    --footer-row-bottom-clearance: 30px;
   }
 }
 
@@ -118,6 +120,7 @@
   :root {
     --safe-top-dynamic: 20px;
     --safe-bottom-inset: 24px;
+    --footer-row-bottom-clearance: 30px;
   }
 }
 
@@ -1327,7 +1330,7 @@ body.mode-games .entry-switcher {
 .footer-entry-switcher {
   margin: 6px 0 0;
   border-top: 2px solid var(--line);
-  padding: 6px 8px clamp(8px, var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px)), 26px);
+  padding: 6px 8px var(--footer-row-bottom-clearance);
   box-shadow: none;
   background: var(--panel-alt);
   border-left: none;
