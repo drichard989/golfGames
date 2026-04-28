@@ -1524,14 +1524,10 @@
       return 0;
     }
 
-    const hasHomeIndicatorPhone = longestEdge >= 812;
-    const safeTopGuess = hasHomeIndicatorPhone ? 44 : 20;
-    const safeBottomGuess = hasHomeIndicatorPhone ? 34 : 0;
-    const usableFromRaw = Math.max(0, longestEdge - safeTopGuess - safeBottomGuess);
     const availLongest = Math.max(availWidth, availHeight);
-    const usableFromAvail = availLongest > 0 && availLongest < longestEdge ? availLongest : 0;
+    const usableFromAvail = availLongest > 0 && availLongest >= longestEdge ? availLongest : 0;
 
-    return usableFromAvail || usableFromRaw;
+    return Math.max(longestEdge, usableFromAvail);
   }
 
   function getStableViewportHeight() {
