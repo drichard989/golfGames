@@ -2199,7 +2199,10 @@ body.mode-games .gamesbar {
   max-height: min(62vh, 560px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  background: var(--panel-alt, #1a2a38);
+  border: 1.5px solid var(--line, #2b3a47);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55);
 }
 
 .game-section h2 {
