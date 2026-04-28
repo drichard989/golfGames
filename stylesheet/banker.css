@@ -86,11 +86,30 @@ body.banker-sheet-active #bankerBody tr:hover td { background: rgba(255,255,255,
   margin-bottom: 1px;
 }
 .bss-banker-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
   font-weight: 700;
   color: var(--accent);
+}
+
+.bss-banker-name-text {
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.bss-banker-stroke-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.bss-banker-stroke-slot:empty {
+  display: none;
 }
 .bss-max-val {
   font-weight: 700;

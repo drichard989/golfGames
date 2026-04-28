@@ -1026,7 +1026,7 @@
           bankerStrokeChipCls = ' is-stroke-up';
         }
         if (showTabletStrokeIndicator) {
-          bankerStrokeInlineHtml = ` <span class="bss-bet-stroke bss-bet-stroke-inline${bankerStrokeChipCls}" title="${escapeHtml(bankerStroke.title)}">${escapeHtml(bankerStroke.text)}</span>`;
+          bankerStrokeInlineHtml = `<span class="bss-bet-stroke bss-bet-stroke-inline${bankerStrokeChipCls}" title="${escapeHtml(bankerStroke.title)}">${escapeHtml(bankerStroke.text)}</span>`;
         }
       }
 
@@ -1138,7 +1138,10 @@
         <div class="bss-grid">
           <div class="bss-col bss-col-banker${bankerStrokeCls}">
             <div class="bss-col-label">Banker</div>
-            <div class="bss-banker-name">🏦 ${bankerName}${bankerStrokeInlineHtml}</div>
+            <div class="bss-banker-name">
+              <span class="bss-banker-name-text">🏦 ${bankerName}</span>
+              <span class="bss-banker-stroke-slot">${bankerStrokeInlineHtml}</span>
+            </div>
             <div class="bss-max-inline">Max $${maxBet || 0}</div>
           </div>
           <div class="bss-col bss-col-max">
