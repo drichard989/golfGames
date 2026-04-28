@@ -2021,14 +2021,19 @@
     let safeBottom = envBottom;
     if (standalone && !isEditableFocused && isIOS) {
       const longestEdge = Math.max(window.screen?.height || 0, window.screen?.width || 0);
-      const fallbackBottom = longestEdge >= 812 ? 16 : 0;
-      // iOS cold-open can transiently report 0 for safe-area-inset-bottom.
-      // Prefer the max inset signal when available and ensure a small fallback
-      // on home-indicator devices so the footer never clips into curved edges.
-      safeBottom = Math.max(envBottom, envBottomMax, fallbackBottom);
-      // Guard against transiently oversized values while keeping enough room
-      // for the home indicator zone.
-      safeBottom = Math.max(0, Math.min(34, safeBottom));
+      const shortestEdge = Math.min(window.screen?.height || 0, window.screen?.width || 0);
+      const isPhoneLikeViewport = shortestEdge > 0 && shortestEdge <= 430;
+      const hasHomeIndicatorPhone = isPhoneLikeViewport && longestEdge >= 812;
+
+      // Cold-open iOS PWA bottom inset reporting is still inconsistent. Use a
+      // deterministic conservative inset for home-indicator phones so the
+      // footer lands in one place every time instead of oscillating high/low.
+      if (hasHomeIndicatorPhone) {
+        safeBottom = 20;
+      } else {
+        safeBottom = Math.max(envBottom, envBottomMax, 0);
+        safeBottom = Math.max(0, Math.min(20, safeBottom));
+      }
     }
 
     root.style.setProperty('--safe-bottom-inset', `${safeBottom}px`);
