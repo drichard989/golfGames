@@ -1863,10 +1863,17 @@
     const innerH = window.innerHeight;
     const vvH = window.visualViewport ? Math.round(window.visualViewport.height) : 'na';
     const rootStyle = getComputedStyle(document.documentElement);
+    const appDvh = rootStyle.getPropertyValue('--app-dvh').trim() || 'na';
     const footerBottomOffset = getComputedStyle(document.documentElement)
       .getPropertyValue('--footer-bottom-offset').trim() || '0px';
     const safeBottomInset = rootStyle.getPropertyValue('--safe-bottom-inset').trim() || '0px';
     const footerRowBottomClearance = rootStyle.getPropertyValue('--footer-row-bottom-clearance').trim() || '0px';
+    const screenObj = window.screen;
+    const screenW = screenObj ? Math.round(screenObj.width || 0) : 'na';
+    const screenH = screenObj ? Math.round(screenObj.height || 0) : 'na';
+    const screenAvailW = screenObj ? Math.round(screenObj.availWidth || 0) : 'na';
+    const screenAvailH = screenObj ? Math.round(screenObj.availHeight || 0) : 'na';
+    const iosViewportFloor = Math.round(getIosStandaloneViewportFloor() || 0);
     // Gap between the bottom of the footer and the screen bottom (should be 0)
     const footerScreenGap = footerRect ? Math.round(innerH - footerRect.bottom) : 'na';
     // Actual scorecard top in viewport
@@ -1914,7 +1921,9 @@
       `── Scorecard ──  actualTop=${scorecardActualTop}px  h=${scorecardActualH}px  bottom=${scorecardBottom}px`,
       `── Footer ──  pos=${footerCssPosition}  cssBottom=${footerCssBottom}  --offset=${footerBottomOffset}  --safeBottom=${safeBottomInset}  --rowClear=${footerRowBottomClearance}  top=${footerTop}px  h=${footerH}px`,
       `── Footer Rows ──  cardTop=${footerCardTop}(h${footerCardH})  controlsTop=${footerControlsTop}(h${footerControlsH})  switcherTop=${footerSwitcherTop}(h${footerSwitcherH})  switcherGap=${switcherScreenGap}px  optionsOpen=${payload.footerInternals?.optionsOpen}`,
-      `── Viewport ──  innerH=${innerH}px  vvH=${vvH}px  footerScreenGap=${footerScreenGap}px ← 0=ok  footerScorecardGap=${footerScorecardGap}px ← 0=ok`
+      `── Viewport ──  innerH=${innerH}px  vvH=${vvH}px  appDvh=${appDvh}  floor=${iosViewportFloor}px`,
+      `── Screen ──  screen=${screenW}x${screenH}  avail=${screenAvailW}x${screenAvailH}`,
+      `── Gaps ──  footerScreenGap=${footerScreenGap}px ← 0=ok  footerScorecardGap=${footerScorecardGap}px ← 0=ok`
     ].join('\n');
   }
 
@@ -6743,7 +6752,21 @@
       if (heading) heading.textContent = titleText;
     };
     try {
-      const response = await fetch('sw.js', { cache: 'no-store' });
+      const assetVersion = (() => {
+        try {
+          const indexScript = document.querySelector('script[src^="index.js"]');
+          if (!indexScript) return '';
+          const src = indexScript.getAttribute('src') || '';
+          const parsed = new URL(src, window.location.href);
+          return parsed.searchParams.get('v') || '';
+        } catch (_) {
+          return '';
+        }
+      })();
+      const swUrl = assetVersion
+        ? `sw.js?v=${encodeURIComponent(assetVersion)}`
+        : 'sw.js';
+      const response = await fetch(swUrl, { cache: 'no-store' });
       if (!response.ok) return;
 
       const swSource = await response.text();
