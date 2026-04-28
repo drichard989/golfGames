@@ -99,10 +99,10 @@
   --footer-action-h: var(--footer-action-h-desktop);
   --app-dvh: 100dvh;
   --footer-bottom-offset: 0px;
-  --safe-bottom-inset: min(env(safe-area-inset-bottom, 0px), 34px);
-  --footer-row-bottom-clearance: clamp(8px, var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px)), 26px);
+  --safe-bottom-inset: 0px;
+  --footer-row-bottom-clearance: 8px;
   --safe-top-dynamic: 0px;
-  --safe-top-inset: max(env(safe-area-inset-top, 0px), var(--safe-top-dynamic));
+  --safe-top-inset: var(--safe-top-dynamic);
 }
 
 /* In standalone/PWA mode, bootstrap a conservative safe-area default so the
