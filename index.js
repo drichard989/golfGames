@@ -1219,6 +1219,7 @@
     if (panelSyncRaf) return;
     panelSyncRaf = requestAnimationFrame(() => {
       panelSyncRaf = 0;
+      syncRuntimeModeClasses();
       syncDynamicViewportHeight();
       syncSafeTopInset();
       syncSafeBottomInset();
@@ -1486,14 +1487,29 @@
     };
   }
 
+  function isIOSPlatform() {
+    const ua = navigator.userAgent;
+    return /iPad|iPhone|iPod/.test(ua)
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  function isIosPwaMode() {
+    const displayMode = getDisplayModeState();
+    return isIOSPlatform() && displayMode.isStandaloneApp;
+  }
+
+  function syncRuntimeModeClasses() {
+    const root = document.documentElement;
+    if (!root) return;
+    root.classList.toggle('ios-pwa-mode', isIosPwaMode());
+  }
+
   function getStableViewportHeight() {
     const vv = window.visualViewport;
     const layoutViewportHeight = window.innerHeight || 0;
     const clientHeight = document.documentElement?.clientHeight || 0;
     const visualHeight = vv ? (vv.height + vv.offsetTop) : 0;
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
-      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
-      || window.navigator.standalone === true;
+    const standalone = isIosPwaMode();
     const activeEl = document.activeElement;
     const isEditableFocused = !!activeEl && (
       activeEl.tagName === 'INPUT' ||
@@ -1891,9 +1907,7 @@
     const root = document.documentElement;
     if (!root) return;
 
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
-      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
-      || window.navigator.standalone === true;
+    const standalone = isIosPwaMode();
     const activeEl = document.activeElement;
     const isEditableFocused = !!activeEl && (
       activeEl.tagName === 'INPUT' ||
@@ -1949,9 +1963,7 @@
     const isIOS = /iPad|iPhone|iPod/.test(ua)
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isAndroid = /Android/.test(ua);
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
-      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
-      || window.navigator.standalone === true;
+    const standalone = isIosPwaMode();
     const portrait = (window.innerHeight || 0) >= (window.innerWidth || 0);
 
     // Read what CSS env() resolved to; non-zero means the platform already handled it.
@@ -1989,9 +2001,7 @@
     const ua = navigator.userAgent;
     const isIOS = /iPad|iPhone|iPod/.test(ua)
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const standalone = window.matchMedia?.('(display-mode: standalone)')?.matches
-      || window.matchMedia?.('(display-mode: fullscreen)')?.matches
-      || window.navigator.standalone === true;
+    const standalone = isIosPwaMode();
     const activeEl = document.activeElement;
     const isEditableFocused = !!activeEl && (
       activeEl.tagName === 'INPUT' ||
