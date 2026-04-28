@@ -1325,7 +1325,7 @@ body.mode-games .entry-switcher {
 .footer-entry-switcher {
   margin: 6px 0 0;
   border-top: 2px solid var(--line);
-  padding: 6px 8px calc(4px + var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px)));
+  padding: 6px 8px clamp(8px, var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px)), 26px);
   box-shadow: none;
   background: var(--panel-alt);
   border-left: none;

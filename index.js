@@ -2001,6 +2001,7 @@
     );
 
     let envBottom = 0;
+    let envBottomMax = 0;
     try {
       const probe = document.createElement('div');
       probe.style.cssText = 'position:fixed;bottom:env(safe-area-inset-bottom,0px);visibility:hidden;pointer-events:none';
@@ -2009,12 +2010,25 @@
       probe.remove();
     } catch (_) {}
 
+    try {
+      const probeMax = document.createElement('div');
+      probeMax.style.cssText = 'position:fixed;bottom:env(safe-area-max-inset-bottom,0px);visibility:hidden;pointer-events:none';
+      document.documentElement.appendChild(probeMax);
+      envBottomMax = Math.round(parseFloat(getComputedStyle(probeMax).bottom) || 0);
+      probeMax.remove();
+    } catch (_) {}
+
     let safeBottom = envBottom;
     if (standalone && !isEditableFocused && isIOS) {
-      // iOS cold-open can transiently over-report bottom inset in standalone.
-      // Clamp to the normal home-indicator range so footer content does not
-      // render artificially high before the viewport settles.
-      safeBottom = Math.max(0, Math.min(34, envBottom));
+      const longestEdge = Math.max(window.screen?.height || 0, window.screen?.width || 0);
+      const fallbackBottom = longestEdge >= 812 ? 16 : 0;
+      // iOS cold-open can transiently report 0 for safe-area-inset-bottom.
+      // Prefer the max inset signal when available and ensure a small fallback
+      // on home-indicator devices so the footer never clips into curved edges.
+      safeBottom = Math.max(envBottom, envBottomMax, fallbackBottom);
+      // Guard against transiently oversized values while keeping enough room
+      // for the home indicator zone.
+      safeBottom = Math.max(0, Math.min(34, safeBottom));
     }
 
     root.style.setProperty('--safe-bottom-inset', `${safeBottom}px`);
