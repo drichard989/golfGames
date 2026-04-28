@@ -110,12 +110,14 @@
 @media (display-mode: standalone) {
   :root {
     --safe-top-dynamic: 20px;
+    --safe-bottom-inset: 24px;
   }
 }
 
 @media (display-mode: fullscreen) {
   :root {
     --safe-top-dynamic: 20px;
+    --safe-bottom-inset: 24px;
   }
 }
 

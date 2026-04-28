@@ -2029,7 +2029,7 @@
       // deterministic conservative inset for home-indicator phones so the
       // footer lands in one place every time instead of oscillating high/low.
       if (hasHomeIndicatorPhone) {
-        safeBottom = 20;
+        safeBottom = 24;
       } else {
         safeBottom = Math.max(envBottom, envBottomMax, 0);
         safeBottom = Math.max(0, Math.min(20, safeBottom));
