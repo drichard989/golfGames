@@ -134,7 +134,7 @@
     /* Hard-pin to the physical bottom in PWA mode so JS viewport-math
        errors during transitions never cause the shell to float. */
     bottom: 0 !important;
-    padding-bottom: var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px));
+    padding-bottom: 0;
   }
 }
 
@@ -1197,7 +1197,7 @@ select:not(.select-plain) option {
   border-radius: 0;
   overflow: hidden;
   margin: 0;
-  padding-bottom: var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0;
   position: fixed;
   left: 0;
   right: 0;
@@ -1325,7 +1325,7 @@ body.mode-games .entry-switcher {
 .footer-entry-switcher {
   margin: 6px 0 0;
   border-top: 2px solid var(--line);
-  padding: 6px 8px 4px;
+  padding: 6px 8px calc(4px + var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px)));
   box-shadow: none;
   background: var(--panel-alt);
   border-left: none;
@@ -1972,7 +1972,7 @@ tfoot td {
   border-radius: 0;
   overflow: hidden;
   margin: 0;
-  padding-bottom: var(--safe-bottom-inset, env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0;
   position: fixed;
   left: 0;
   right: 0;
