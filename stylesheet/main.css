@@ -112,7 +112,7 @@
   :root {
     --safe-top-dynamic: 20px;
     --safe-bottom-inset: 24px;
-    --footer-row-bottom-clearance: 30px;
+    --footer-row-bottom-clearance: 20px;
   }
 }
 
@@ -120,7 +120,7 @@
   :root {
     --safe-top-dynamic: 20px;
     --safe-bottom-inset: 24px;
-    --footer-row-bottom-clearance: 30px;
+    --footer-row-bottom-clearance: 20px;
   }
 }
 
@@ -133,6 +133,17 @@
   body {
     height: var(--app-dvh, 100dvh);
     min-height: var(--app-dvh, 100dvh);
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(var(--footer-row-bottom-clearance) + 12px);
+    background: var(--panel-alt);
+    pointer-events: none;
+    z-index: 33;
   }
   .scorecard-controls-shell,
   .games-controls-shell {
