@@ -269,7 +269,7 @@
     sel.innerHTML = '';
 
     GHOST_ROTATION_PERMUTATIONS.forEach((perm) => {
-      const label = perm.map((idx) => names[idx] || `P${idx + 1}`).join(' -> ');
+      const label = perm.map((idx) => names[idx] || `Player ${idx + 1}`).join(' -> ');
       const option = document.createElement('option');
       option.value = perm.join(',');
       option.textContent = label;

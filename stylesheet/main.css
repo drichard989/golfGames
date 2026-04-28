@@ -1121,7 +1121,8 @@ select:not(.select-plain) option {
 .scorecard-footer-controls > .scorecard-main-options-icon {
   min-height: var(--footer-action-h) !important;
   height: var(--footer-action-h) !important;
-  font-size: 14px !important;
+  font-size: var(--text-md) !important;
+  font-weight: 600 !important;
 }
 
 .scorecard-footer-controls > .scorecard-theme-toggle,
@@ -4475,6 +4476,12 @@ input[type="text"] {
     padding: 10px 12px;
     min-height: var(--footer-action-h);
     font-size: var(--text-sm);
+  }
+
+  .scorecard-footer-controls > .btn,
+  .scorecard-footer-controls > .scorecard-theme-toggle,
+  .scorecard-footer-controls > .scorecard-main-options-icon {
+    font-size: var(--text-sm) !important;
   }
 
   .game-toggle {
