@@ -1504,12 +1504,43 @@
     root.classList.toggle('ios-pwa-mode', isIosPwaMode());
   }
 
+  function getIosStandaloneViewportFloor() {
+    if (!isIosPwaMode()) return 0;
+
+    const screenObj = window.screen;
+    if (!screenObj) return 0;
+
+    const rawWidth = Math.round(screenObj.width || 0);
+    const rawHeight = Math.round(screenObj.height || 0);
+    const availWidth = Math.round(screenObj.availWidth || 0);
+    const availHeight = Math.round(screenObj.availHeight || 0);
+    const longestEdge = Math.max(rawWidth, rawHeight);
+    const shortestEdge = Math.min(rawWidth || Infinity, rawHeight || Infinity);
+    const viewportWidth = window.innerWidth || document.documentElement?.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement?.clientHeight || 0;
+    const portrait = viewportHeight >= viewportWidth;
+
+    if (!portrait || !Number.isFinite(shortestEdge) || shortestEdge > 430 || longestEdge <= 0) {
+      return 0;
+    }
+
+    const hasHomeIndicatorPhone = longestEdge >= 812;
+    const safeTopGuess = hasHomeIndicatorPhone ? 44 : 20;
+    const safeBottomGuess = hasHomeIndicatorPhone ? 34 : 0;
+    const usableFromRaw = Math.max(0, longestEdge - safeTopGuess - safeBottomGuess);
+    const availLongest = Math.max(availWidth, availHeight);
+    const usableFromAvail = availLongest > 0 && availLongest < longestEdge ? availLongest : 0;
+
+    return usableFromAvail || usableFromRaw;
+  }
+
   function getStableViewportHeight() {
     const vv = window.visualViewport;
     const layoutViewportHeight = window.innerHeight || 0;
     const clientHeight = document.documentElement?.clientHeight || 0;
     const visualHeight = vv ? (vv.height + vv.offsetTop) : 0;
     const standalone = isIosPwaMode();
+    const iosStandaloneFloor = getIosStandaloneViewportFloor();
     const activeEl = document.activeElement;
     const isEditableFocused = !!activeEl && (
       activeEl.tagName === 'INPUT' ||
@@ -1519,7 +1550,7 @@
     );
 
     if (standalone && !isEditableFocused) {
-      return Math.max(layoutViewportHeight, clientHeight, visualHeight, 0);
+      return Math.max(layoutViewportHeight, clientHeight, visualHeight, iosStandaloneFloor, 0);
     }
 
     return vv?.height || layoutViewportHeight || clientHeight || 0;
