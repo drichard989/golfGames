@@ -387,14 +387,29 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
   border-top: 2px solid var(--line);
   background: var(--panel-alt);
   display: flex;
-  justify-content: flex-end;
+  justify-content: stretch;
 }
 
 :root[data-theme="light"] .junk-sheet-footer {
   background: rgba(248, 250, 252, 0.94);
 }
 .junk-sheet-done {
-  min-width: 120px;
+  width: 100%;
+  min-width: 0;
+  background: rgba(220, 53, 69, 0.85);
+  border-color: rgba(220, 53, 69, 0.9);
+  color: #fff;
+  font-weight: 800;
+}
+.junk-sheet-done:hover {
+  background: rgba(220, 53, 69, 1);
+  border-color: rgba(220, 53, 69, 1);
+  filter: brightness(1.04);
+}
+:root[data-theme="light"] .junk-sheet-done {
+  background: rgba(200, 40, 56, 0.9);
+  border-color: rgba(190, 35, 50, 0.9);
+  color: #fff;
 }
 
 /* Prevent background scroll while sheet is open */

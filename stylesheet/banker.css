@@ -1071,11 +1071,15 @@ body.banker-sheet-active .bss-col-banker.bss-bet-stroke-up .bss-banker-name {
 }
 .banker-sheet-footer-actions { display: flex; gap: 8px; }
 .banker-sheet-done {
-  min-width: 120px;
+  width: 100%;
+  min-width: 0;
   background: rgba(220, 53, 69, 0.85);
   border-color: rgba(220, 53, 69, 0.9);
   color: #fff;
   font-weight: 800;
+}
+.banker-sheet-footer-actions {
+  width: 100%;
 }
 .banker-sheet-done:hover {
   background: rgba(220, 53, 69, 1);
