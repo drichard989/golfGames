@@ -44,19 +44,19 @@
         } catch (_) {}
       })();
     </script>
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.284" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.284" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.284" />
-    <link rel="manifest" href="/manifest.json?v=v3.3.284" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.285" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.285" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.285" />
+    <link rel="manifest" href="/manifest.json?v=v3.3.285" />
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .githooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.284" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.285" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.284" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.284" />
-    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.284" />
-    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.284" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.285" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.285" />
+    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.285" />
+    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.285" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -393,7 +393,13 @@
           <tbody id="vegasBody"></tbody>
         </table>
       </div>
-      <div id="vegasResultsBottom" class="live-results-card vegas-bottom-results" aria-live="polite"></div>
+      <div id="vegasResultsWrap" class="results-card-wrap" data-game="vegas">
+        <div id="vegasResultsBottom" class="live-results-card vegas-bottom-results" aria-live="polite"></div>
+        <button type="button" class="results-collapse-bar" data-game="vegas" aria-expanded="true" aria-label="Toggle Vegas results">
+          <span class="results-collapse-label">Vegas Results</span>
+          <span class="results-collapse-chevron" aria-hidden="true"></span>
+        </button>
+      </div>
       <div id="vegasGameBreakdown" class="small vegas-rotation-breakdown" hidden>
         <strong>Games:</strong> <span id="vegasGameBreakdownData">—</span>
       </div>
@@ -461,7 +467,13 @@
           <tbody id="bankerBody"></tbody>
         </table>
       </div>
-      <div id="bankerFooterTotals" class="banker-header-totals" aria-live="polite"></div>
+      <div id="bankerResultsWrap" class="results-card-wrap" data-game="banker">
+        <div id="bankerFooterTotals" class="banker-header-totals" aria-live="polite"></div>
+        <button type="button" class="results-collapse-bar" data-game="banker" aria-expanded="true" aria-label="Toggle Banker totals">
+          <span class="results-collapse-label">Banker Totals</span>
+          <span class="results-collapse-chevron" aria-hidden="true"></span>
+        </button>
+      </div>
     </section>
     <!-- HI-LO GAME -->
     <section class="game-section" id="hiloSection" role="tabpanel" aria-labelledby="toggleHilo" aria-hidden="true">
@@ -502,7 +514,13 @@
           </tbody>
         </table>
       </div>
-      <div id="hiloResultsBottom" class="live-results-card hilo-bottom-results" aria-live="polite"></div>
+      <div id="hiloResultsWrap" class="results-card-wrap" data-game="hilo">
+        <div id="hiloResultsBottom" class="live-results-card hilo-bottom-results" aria-live="polite"></div>
+        <button type="button" class="results-collapse-bar" data-game="hilo" aria-expanded="true" aria-label="Toggle Hi-Lo results">
+          <span class="results-collapse-label">Hi-Lo Results</span>
+          <span class="results-collapse-chevron" aria-hidden="true"></span>
+        </button>
+      </div>
     </section>
     <!-- JUNK GAME -->
     <section class="game-section" id="junkSection" role="tabpanel" aria-labelledby="toggleJunk" aria-hidden="true">
@@ -562,7 +580,13 @@
           <tbody id="junkBody"></tbody>
         </table>
       </div>
-      <div id="junkResultsBottom" class="live-results-card junk-bottom-results" aria-live="polite"></div>
+      <div id="junkResultsWrap" class="results-card-wrap" data-game="junk">
+        <div id="junkResultsBottom" class="live-results-card junk-bottom-results" aria-live="polite"></div>
+        <button type="button" class="results-collapse-bar" data-game="junk" aria-expanded="true" aria-label="Toggle Junk results">
+          <span class="results-collapse-label">Junk Results</span>
+          <span class="results-collapse-chevron" aria-hidden="true"></span>
+        </button>
+      </div>
     </section>
     <!-- WOLF GAME -->
     <section class="game-section" id="wolfSection" role="tabpanel" aria-labelledby="toggleWolf" aria-hidden="true">
@@ -620,7 +644,13 @@
           <tfoot></tfoot>
         </table>
       </div>
-      <div id="wolfResultsBottom" class="live-results-card wolf-bottom-results" aria-live="polite"></div>
+      <div id="wolfResultsWrap" class="results-card-wrap" data-game="wolf">
+        <div id="wolfResultsBottom" class="live-results-card wolf-bottom-results" aria-live="polite"></div>
+        <button type="button" class="results-collapse-bar" data-game="wolf" aria-expanded="true" aria-label="Toggle Wolf results">
+          <span class="results-collapse-label">Wolf Results</span>
+          <span class="results-collapse-chevron" aria-hidden="true"></span>
+        </button>
+      </div>
     </section>
     <p class="note"> Net Double Bogey per hole: cap = Par + 2 + strokes received on that hole. Players "play off" the lowest CH (e.g., +2 / 2 / 4 → adjusted 0 / 4 / 6). </p>
 
@@ -657,18 +687,18 @@
         <button id="gamesFooterGamesBtn" class="entry-switcher-btn" type="button" role="tab" aria-selected="false" aria-controls="gamesEntryPanel">🎮 Games</button>
       </div>
     </div>
-    <script src="index.js?v=v3.3.284" defer></script>
-    <script src="js/export.js?v=v3.3.284" defer></script>
-    <script src="js/vegas.js?v=v3.3.284" defer></script>
-    <script src="js/banker.js?v=v3.3.284" defer></script>
-    <script src="js/banker-sheet.js?v=v3.3.284" defer></script>
-    <script src="js/hilo.js?v=v3.3.284" defer></script>
-    <script src="js/skins.js?v=v3.3.284" defer></script>
-    <script src="js/junk.js?v=v3.3.284" defer></script>
-    <script src="js/junk-sheet.js?v=v3.3.284" defer></script>
-    <script src="js/wolf.js?v=v3.3.284" defer></script>
-    <script src="js/wolf-sheet.js?v=v3.3.284" defer></script>
-    <script src="js/score-sheet.js?v=v3.3.284" defer></script>
+    <script src="index.js?v=v3.3.285" defer></script>
+    <script src="js/export.js?v=v3.3.285" defer></script>
+    <script src="js/vegas.js?v=v3.3.285" defer></script>
+    <script src="js/banker.js?v=v3.3.285" defer></script>
+    <script src="js/banker-sheet.js?v=v3.3.285" defer></script>
+    <script src="js/hilo.js?v=v3.3.285" defer></script>
+    <script src="js/skins.js?v=v3.3.285" defer></script>
+    <script src="js/junk.js?v=v3.3.285" defer></script>
+    <script src="js/junk-sheet.js?v=v3.3.285" defer></script>
+    <script src="js/wolf.js?v=v3.3.285" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.3.285" defer></script>
+    <script src="js/score-sheet.js?v=v3.3.285" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
@@ -679,8 +709,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
     <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-    <script src="js/firebase-config.js?v=v3.3.284" defer></script>
-    <script src="js/cloudsync.js?v=v3.3.284" defer></script>
+    <script src="js/firebase-config.js?v=v3.3.285" defer></script>
+    <script src="js/cloudsync.js?v=v3.3.285" defer></script>
     <!-- Cloud QR libraries must load before js/cloudsync.js -->
 
     <!-- =====================================================================

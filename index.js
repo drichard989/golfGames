@@ -1249,11 +1249,11 @@
   }
 
   const PINNED_GAME_RESULTS_SELECTOR = {
-    banker: '#bankerFooterTotals',
-    vegas: '#vegasResultsBottom',
-    hilo: '#hiloResultsBottom',
-    junk: '#junkResultsBottom',
-    wolf: '#wolfResultsBottom'
+    banker: '#bankerResultsWrap',
+    vegas: '#vegasResultsWrap',
+    hilo: '#hiloResultsWrap',
+    junk: '#junkResultsWrap',
+    wolf: '#wolfResultsWrap'
   };
 
   const PANEL_SCROLL_LOCK_GAMES = new Set(['banker', 'vegas', 'hilo', 'junk', 'wolf']);
@@ -6788,6 +6788,51 @@
    * - Wire up all event listeners
    * - Load saved state from localStorage
    */
+  // =============================================================================
+  // RESULTS CARD COLLAPSE
+  // =============================================================================
+  const RESULTS_COLLAPSE_STORAGE_KEY = 'golf_results_collapsed_v1';
+
+  function getResultsCollapseState() {
+    try { return JSON.parse(localStorage.getItem(RESULTS_COLLAPSE_STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  }
+
+  function saveResultsCollapseState(state) {
+    try { localStorage.setItem(RESULTS_COLLAPSE_STORAGE_KEY, JSON.stringify(state)); } catch (_) {}
+  }
+
+  function applyResultsCollapseState() {
+    const state = getResultsCollapseState();
+    ['banker', 'vegas', 'hilo', 'junk', 'wolf'].forEach(game => {
+      const wrap = document.getElementById(`${game}ResultsWrap`);
+      if (!wrap) return;
+      const collapsed = !!state[game];
+      wrap.classList.toggle('is-collapsed', collapsed);
+      const btn = wrap.querySelector('.results-collapse-bar');
+      if (btn) btn.setAttribute('aria-expanded', String(!collapsed));
+    });
+  }
+
+  function initResultsCollapseToggles() {
+    applyResultsCollapseState();
+    document.addEventListener('click', e => {
+      const bar = e.target.closest('.results-collapse-bar');
+      if (!bar) return;
+      const game = bar.dataset.game;
+      if (!game) return;
+      const wrap = document.getElementById(`${game}ResultsWrap`);
+      if (!wrap) return;
+      const nowCollapsed = !wrap.classList.contains('is-collapsed');
+      wrap.classList.toggle('is-collapsed', nowCollapsed);
+      bar.setAttribute('aria-expanded', String(!nowCollapsed));
+      const state = getResultsCollapseState();
+      state[game] = nowCollapsed;
+      saveResultsCollapseState(state);
+      syncActiveGamePinnedResultsLayout();
+    });
+  }
+
   function init(){
     syncDisplayedAppVersion();
     Scorecard.build.header(); Scorecard.build.parAndHcpRows(); Scorecard.build.playerRows(); Scorecard.build.totalsRow(); Scorecard.course.updateParBadge();
@@ -6818,6 +6863,7 @@
     setTimeout(() => Scorecard.build.syncRowHeights(true), 120);
     setTimeout(() => Scorecard.build.syncRowHeights(true), 320);
     triggerScorecardSettleBurst('init');
+    initResultsCollapseToggles();
 
   $(ids.resetBtn).addEventListener("click", async () => {
     const cloudSession = window.CloudSync?.getSession?.();
