@@ -1029,6 +1029,64 @@
     return result?.data;
   }
 
+  async function ensureCloudAuthReady(timeoutMs = 8000) {
+    if (state.user) return state.user;
+
+    const deadline = Date.now() + Math.max(500, Number(timeoutMs) || 8000);
+
+    // Handlers can fire before initFirebase finishes wiring auth.
+    while (!state.auth && Date.now() < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
+
+    if (state.user) return state.user;
+    if (!state.auth) {
+      throw new Error('Cloud services are still starting. Please try again.');
+    }
+
+    if (state.auth.currentUser) {
+      state.user = state.auth.currentUser;
+      return state.user;
+    }
+
+    await new Promise((resolve, reject) => {
+      let finished = false;
+      let unsub = null;
+      const remaining = Math.max(1, deadline - Date.now());
+
+      const timeoutId = setTimeout(() => {
+        if (finished) return;
+        finished = true;
+        try { if (typeof unsub === 'function') unsub(); } catch (_) {}
+        reject(new Error('Cloud authentication timed out. Please try again.'));
+      }, remaining);
+
+      unsub = state.auth.onAuthStateChanged(
+        (user) => {
+          if (finished || !user) return;
+          finished = true;
+          clearTimeout(timeoutId);
+          try { if (typeof unsub === 'function') unsub(); } catch (_) {}
+          state.user = user;
+          resolve();
+        },
+        (err) => {
+          if (finished) return;
+          finished = true;
+          clearTimeout(timeoutId);
+          try { if (typeof unsub === 'function') unsub(); } catch (_) {}
+          reject(new Error(err?.message || 'Cloud authentication failed.'));
+        }
+      );
+    });
+
+    if (!state.user) {
+      throw new Error('Not signed in. Please refresh and try again.');
+    }
+
+    return state.user;
+  }
+
   async function ensureShareSessionCodes() {
     if (!state.session) {
       showJoinProgressOverlay('Setting up your live game\u2026', 'Creating Live Session');
@@ -1102,7 +1160,7 @@
   }
 
   async function shareLiveViewLink() {
-    if (!state.user) throw new Error('Cloud auth is not ready yet.');
+    await ensureCloudAuthReady();
 
     setStatus('Cloud: preparing live share link...');
     const viewCode = await ensureShareSessionWithViewCode();
@@ -1459,7 +1517,7 @@
   }
 
   async function generateLiveViewQrCode() {
-    if (!state.user) throw new Error('Cloud auth is not ready yet.');
+    await ensureCloudAuthReady();
 
     setStatus('Cloud: preparing live QR...');
     const viewCode = await ensureShareSessionWithViewCode();
@@ -1469,7 +1527,7 @@
   }
 
   async function generateLiveEditQrCode() {
-    if (!state.user) throw new Error('Cloud auth is not ready yet.');
+    await ensureCloudAuthReady();
 
     const hasEditCode = !!normalizeCode(state.session?.editCode || '');
     if (state.session?.role === 'viewer' && !hasEditCode) {
@@ -1956,7 +2014,7 @@
   }
 
   async function createSession() {
-    if (!state.user) throw new Error('Not authenticated');
+    await ensureCloudAuthReady();
 
     const payload = buildCreatePayload();
     let result;
@@ -1990,7 +2048,7 @@
 
   async function joinSessionWithCode(rawCode, options = {}) {
     const { showSuccessToast = true } = options;
-    if (!state.user) throw new Error('Not authenticated');
+    await ensureCloudAuthReady();
 
     const code = normalizeCode(rawCode);
     if (!code) throw new Error('Enter a valid code');

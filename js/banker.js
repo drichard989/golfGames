@@ -466,7 +466,8 @@
 
   function sanitizeHoleState(hole, playerCount) {
     const banker = Number(hole?.banker);
-    const maxBet = Math.max(0, Number(hole?.maxBet) || 10);
+    const rawMaxBet = Number(hole?.maxBet);
+    const maxBet = Number.isFinite(rawMaxBet) ? Math.max(1, Math.round(rawMaxBet)) : 10;
     const bankerDouble = !!hole?.bankerDouble;
     const sourceBets = Array.isArray(hole?.bets) ? hole.bets : [];
     const bets = sourceBets
@@ -592,8 +593,10 @@
 
       sourceBets.forEach((bet) => {
         const player = Number(bet?.player);
-        const betAmount = Number(bet?.amount) || 0;
+        const betAmountRaw = Number(bet?.amount) || 0;
         const playerDouble = !!bet?.doubled;
+        const maxBetForHole = Math.max(1, Number(holeState.maxBet) || 1);
+        const betAmount = Math.min(Math.max(0, Math.round(betAmountRaw)), maxBetForHole);
 
         if (player === bankerIdx) return;
         if (player < 0 || player >= playerCount) return;
@@ -734,7 +737,10 @@
         // Get max bet
         const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
         if (maxBetInput) {
-          holeState.maxBet = Number(maxBetInput.value) || 10;
+          const parsedMaxBet = Number(maxBetInput.value);
+          holeState.maxBet = Number.isFinite(parsedMaxBet)
+            ? Math.max(1, Math.round(parsedMaxBet))
+            : 10;
         }
         
         // Get banker double
@@ -1177,24 +1183,28 @@
         maxBetInput.id = DOM_IDS.maxBet(h);
         maxBetInput.type = 'number';
         maxBetInput.inputMode = 'numeric';
-        maxBetInput.min = '0';
+        maxBetInput.min = '1';
         maxBetInput.step = '1';
         maxBetInput.value = '10';
         maxBetInput.className = 'banker-number-input banker-maxbet-input';
         maxBetInput.addEventListener('input', () => {
           consumeBankerHole(h);
+          const normalizedMax = Math.max(1, Math.round(Number(maxBetInput.value) || 1));
+          if (Number(maxBetInput.value) !== normalizedMax) {
+            maxBetInput.value = String(normalizedMax);
+          }
           // Re-validate all player bets for this hole when max bet changes
-          const maxBet = Number(maxBetInput.value) || 0;
+          const maxBet = normalizedMax;
           const betsTd = document.getElementById(DOM_IDS.betsCell(h));
           if (betsTd) {
             const betInputs = betsTd.querySelectorAll('input[type="number"]');
             betInputs.forEach(betInput => {
-              const playerBet = Number(betInput.value) || 0;
-              if (playerBet > maxBet && maxBet > 0) {
-                setBetInputValidity(betInput, true, maxBet);
-              } else {
-                setBetInputValidity(betInput, false, maxBet);
+              const playerBet = Math.max(0, Math.round(Number(betInput.value) || 0));
+              const cappedBet = Math.min(playerBet, maxBet);
+              if (cappedBet !== playerBet) {
+                betInput.value = String(cappedBet);
               }
+              setBetInputValidity(betInput, false, maxBet);
             });
           }
           
@@ -1353,7 +1363,7 @@
           strokeContainer.dataset.player = String(p);
           strokeContainer.dataset.hole = String(h);
           
-          const useNet = document.getElementById('bankerModeNet')?.checked ?? true;
+          const useNet = getActiveBankerHcpMode() !== 'gross';
           
           if (useNet) {
             // Get player's raw CH from DOM
@@ -1403,16 +1413,16 @@
           betInput.className = 'banker-number-input banker-bet-input';
           betInput.addEventListener('input', () => {
             consumeBankerHole(h);
-            // Validate bet against max bet
+            // Hard-cap bet against max bet.
             const maxBetInput = document.getElementById(DOM_IDS.maxBet(h));
-            const maxBet = maxBetInput ? Number(maxBetInput.value) : 0;
-            const playerBet = Number(betInput.value) || 0;
-            
-            if (playerBet > maxBet && maxBet > 0) {
-              setBetInputValidity(betInput, true, maxBet);
-            } else {
-              setBetInputValidity(betInput, false, maxBet);
+            const maxBet = Math.max(1, Number(maxBetInput?.value) || 1);
+            const playerBet = Math.max(0, Math.round(Number(betInput.value) || 0));
+            const cappedBet = Math.min(playerBet, maxBet);
+
+            if (cappedBet !== playerBet) {
+              betInput.value = String(cappedBet);
             }
+            setBetInputValidity(betInput, false, maxBet);
             
             this.update();
             queueSave();

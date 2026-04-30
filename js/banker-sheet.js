@@ -163,12 +163,12 @@
   function getMaxBet(h){
     const el = document.getElementById(DOM_IDS.maxBet(h));
     const v = el ? Number(el.value) : NaN;
-    return Number.isFinite(v) ? v : 0;
+    return Number.isFinite(v) ? Math.max(1, Math.round(v)) : 1;
   }
   function setMaxBet(h, value){
     const el = document.getElementById(DOM_IDS.maxBet(h));
     if (!el) return;
-    el.value = String(Math.max(0, Math.round(Number(value) || 0)));
+    el.value = String(Math.max(1, Math.round(Number(value) || 1)));
     fireInput(el);
   }
   function getBet(p, h){
@@ -591,7 +591,7 @@
     plus.textContent = '+';
     const amount = document.createElement('div');
     amount.className = 'banker-sheet-amount';
-    amount.innerHTML = `<span class="banker-sheet-dollar">$</span><input type="number" inputmode="numeric" min="0" step="1" class="banker-sheet-amount-input" />`;
+    amount.innerHTML = `<span class="banker-sheet-dollar">$</span><input type="number" inputmode="numeric" min="1" step="1" class="banker-sheet-amount-input" />`;
     const amountInput = amount.querySelector('input');
     amountInput.value = String(maxBet || 0);
     const stepBy = (d) => {
@@ -601,7 +601,7 @@
       const step = 5;
       // Snap down to nearest multiple of 5 before stepping, so +5 from $7 goes to $10 (not $12)
       const base = d > 0 ? Math.floor(cur / step) * step : Math.ceil(cur / step) * step;
-      const next = Math.max(0, base + d * step);
+      const next = Math.max(1, base + d * step);
       amountInput.value = String(next);
       setMaxBet(hole, next);
       prefs.lastMaxBet = next;
@@ -612,7 +612,8 @@
     plus.addEventListener('click', () => stepBy(1));
     amountInput.addEventListener('input', () => {
       consumeBankerHole(hole);
-      const v = Math.max(0, Math.round(Number(amountInput.value) || 0));
+      const v = Math.max(1, Math.round(Number(amountInput.value) || 1));
+      amountInput.value = String(v);
       setMaxBet(hole, v);
       prefs.lastMaxBet = v;
       savePrefs();
@@ -744,8 +745,13 @@
       betInput.value = bet > 0 ? String(bet) : '';
       betInput.addEventListener('input', () => {
         consumeBankerHole(hole);
+        const m = getMaxBet(hole);
         const v = Math.max(0, Math.round(Number(betInput.value) || 0));
-        setBet(p, hole, v);
+        const capped = Math.min(v, m);
+        if (capped !== v) {
+          betInput.value = String(capped);
+        }
+        setBet(p, hole, capped);
         updateCardCap(card, p, hole);
         updateLiveResult();
       });
@@ -1309,7 +1315,6 @@
     if (!_listenersBound) {
       _listenersBound = true;
       // Bind row click delegation (guarded by banker-sheet-active in handler)
-      document.addEventListener('click', onTableClick);
       document.addEventListener('pointerup', onTableClick, true);
 
       // Also update on any save event the app fires
