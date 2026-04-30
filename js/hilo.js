@@ -426,13 +426,17 @@
     const teamBLabel = teamBLabelObj.full;
     const teamALabelResponsive = renderResponsiveTeamLabel(teamALabelObj);
     const teamBLabelResponsive = renderResponsiveTeamLabel(teamBLabelObj);
-    const strokeInfo = strokePlayer >= 0 ? ` (${names[strokePlayer]} gets ${strokesGiven} strokes)` : '';
+    const strokeWords = ['zero','one','two','three','four','five','six','seven','eight','nine'];
+    const strokeCountStr = strokesGiven >= 0 && strokesGiven < strokeWords.length ? strokeWords[strokesGiven] : String(strokesGiven);
+    const strokeNoun = strokesGiven === 1 ? 'stroke' : 'strokes';
+    const strokeInfo = strokePlayer >= 0 ? ` (${names[strokePlayer]} gets ${strokeCountStr} ${strokeNoun})` : '';
     
+    const strokeOnTeamA = strokePlayer >= 0 && teamA.includes(strokePlayer);
     if (teamAEl) {
-      teamAEl.textContent = `Team A: ${teamALabel}`;
+      teamAEl.textContent = `Team A: ${teamALabel}${strokeOnTeamA ? strokeInfo : ''}`;
     }
     if (teamBEl) {
-      teamBEl.textContent = `Team B: ${teamBLabel}${strokeInfo}`;
+      teamBEl.textContent = `Team B: ${teamBLabel}${!strokeOnTeamA ? strokeInfo : ''}`;
     }
 
     renderHiloResultsCard(data, teamALabelResponsive, teamBLabelResponsive);
