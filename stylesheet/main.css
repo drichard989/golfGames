@@ -1301,6 +1301,10 @@ select:not(.select-plain) option {
   background: rgba(74, 158, 255, 0.12);
   border-color: rgba(74, 158, 255, 0.35);
   color: #a8d4ff;
+  min-width: calc(var(--footer-action-h) * 1.378125) !important;
+  width: calc(var(--footer-action-h) * 1.378125) !important;
+  white-space: nowrap;
+  padding: 0 !important;
 }
 
 .scorecard-add-player-btn:hover {
@@ -1423,7 +1427,7 @@ body.mode-games .entry-switcher {
   border-radius: var(--radius-3xl);
   padding: 10px 14px;
   min-height: var(--footer-action-h);
-  font-size: var(--text-md);
+  font-size: 18px;
   font-weight: 600;
 }
 
@@ -2198,6 +2202,7 @@ body.mode-games .gamesbar {
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, color 0.15s ease;
   position: relative;
   z-index: 1;
+  font-size: 19px;
 }
 
 .game-pin-btn {
@@ -2817,7 +2822,7 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsWrap.is-collapsed 
   height: 40px !important;
   padding: 0 !important;
   justify-content: center;
-  font-size: calc(16px + var(--font-size-step)) !important;
+  font-size: 28px !important;
   line-height: 1 !important;
 }
 
@@ -4729,11 +4734,11 @@ input[type="text"] {
   .entry-switcher-btn {
     padding: 10px 12px;
     min-height: var(--footer-action-h);
-    font-size: var(--text-sm);
+    font-size: 15px;
   }
 
   .scorecard-footer-controls > .btn {
-    font-size: var(--text-sm) !important;
+    font-size: 15px !important;
   }
 
   .scorecard-footer-controls > .scorecard-theme-toggle,
@@ -4964,7 +4969,7 @@ input[type="text"] {
   .game-toggle {
     padding: 7px 2px;
     min-height: var(--footer-action-h);
-    font-size: var(--text-md);
+    font-size: 15px;
   }
 
   .btn,
