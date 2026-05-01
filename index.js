@@ -6906,7 +6906,7 @@
     }
     Storage.clearScoresOnly();
   });
-  $(ids.clearAllBtn).addEventListener("click", async () => {
+  $(ids.clearAllBtn)?.addEventListener("click", async () => {
     // Block cloud pushes immediately so the cloud keeps its last good state.
     window.CloudSync?.suspendPushes?.();
     // Create confirmation dialog

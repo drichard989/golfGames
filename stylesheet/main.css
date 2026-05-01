@@ -4732,10 +4732,14 @@ input[type="text"] {
     font-size: var(--text-sm);
   }
 
-  .scorecard-footer-controls > .btn,
-  .scorecard-footer-controls > .scorecard-theme-toggle,
-  .scorecard-footer-controls > .scorecard-main-options-icon {
+  .scorecard-footer-controls > .btn {
     font-size: var(--text-sm) !important;
+  }
+
+  .scorecard-footer-controls > .scorecard-theme-toggle,
+  .scorecard-footer-controls > .scorecard-main-options-icon,
+  .scorecard-footer-controls > .scorecard-clear-actions-toggle {
+    font-size: 28px !important;
   }
 
   .game-toggle {
