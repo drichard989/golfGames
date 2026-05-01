@@ -7058,6 +7058,20 @@
     });
   }
 
+    // New clear buttons beneath scorecard
+    const clearCardBtn = document.getElementById('clearCardBtn');
+    if (clearCardBtn) {
+      clearCardBtn.addEventListener('click', () => {
+        $(ids.clearAllBtn)?.click();
+      });
+    }
+
+    const clearCardAndGamesBtn = document.getElementById('clearCardAndGamesBtn');
+    if (clearCardAndGamesBtn) {
+      clearCardAndGamesBtn.addEventListener('click', () => {
+        $(ids.clearEverythingBtn)?.click();
+      });
+    }
     const clearGamesDataBtn = document.getElementById('clearGamesDataBtn');
     if (clearGamesDataBtn) {
       clearGamesDataBtn.addEventListener('click', async () => {
