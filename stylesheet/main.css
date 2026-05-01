@@ -2851,7 +2851,8 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsWrap.is-collapsed 
   content: none !important;
 }
 
-.scorecard-main-options-icon.is-open {
+.scorecard-main-options-icon.is-open,
+.scorecard-clear-actions-toggle.is-open {
   border-color: var(--accent);
   background: rgba(104, 211, 145, 0.22);
   color: var(--ink);
