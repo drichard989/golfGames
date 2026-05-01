@@ -1135,7 +1135,7 @@ select:not(.select-plain) option {
 .scorecard-footer-controls > .scorecard-clear-actions-toggle {
   min-width: var(--footer-action-h) !important;
   width: var(--footer-action-h) !important;
-  font-size: 22.5px !important;
+  font-size: 28px !important;
 }
 
 #scorecardOptionsToggle {
@@ -1190,8 +1190,8 @@ select:not(.select-plain) option {
   justify-content: center;
 }
 .scorecard-clear-icon {
-  width: 27.5px;
-  height: 27.5px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   display: block;
   pointer-events: none;
