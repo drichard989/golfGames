@@ -1203,11 +1203,14 @@ select:not(.select-plain) option {
   background: var(--danger);
   border-color: var(--danger);
   color: #fff;
+  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
 }
 
 .scorecard-clear-buttons .btn:hover {
-  background: color-mix(in srgb, var(--danger) 85%, black 15%);
-  border-color: color-mix(in srgb, var(--danger) 85%, black 15%);
+  background: color-mix(in srgb, var(--danger) 78%, black 22%);
+  border-color: color-mix(in srgb, var(--danger) 78%, black 22%);
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.25), 0 6px 16px rgba(0, 0, 0, 0.22);
+  transform: translateY(-1px);
 }
 
 .scorecard-controls-shell {
@@ -5403,6 +5406,21 @@ input[type="text"] {
 :root[data-theme="light"] .theme-toggle:hover,
 :root[data-theme="light"] button:hover {
   background: #c8d4e1;
+}
+
+:root[data-theme="light"] .scorecard-clear-buttons .btn,
+:root[data-theme="light"] .scorecard-clear-buttons button {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+
+:root[data-theme="light"] .scorecard-clear-buttons .btn:hover,
+:root[data-theme="light"] .scorecard-clear-buttons button:hover {
+  background: color-mix(in srgb, var(--danger) 78%, black 22%);
+  border-color: color-mix(in srgb, var(--danger) 78%, black 22%);
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.22), 0 6px 16px rgba(0, 0, 0, 0.16);
+  transform: translateY(-1px);
 }
 
 :root[data-theme="light"] .btn.accent {
