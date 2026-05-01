@@ -2577,6 +2577,7 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsWrap.is-collapsed 
 
 /* Hide the card's own title row — button header replaces it */
 .results-card-wrap:not(.is-collapsed) .live-results-title-row,
+.results-card-wrap:not(.is-collapsed) .banker-header-title-row,
 .results-card-wrap:not(.is-collapsed) .banker-header-totals-table .live-results-title-row {
   display: none;
 }
