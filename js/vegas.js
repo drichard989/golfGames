@@ -1134,6 +1134,7 @@ function vegas_syncColumnLabelsHard() {
 }
 
 function vegas_recalc(){
+  updateGhostRotationUi();
   const teams=vegas_getTeamAssignments(), opts=vegas_getOptions();
   const data = Vegas.compute(teams, opts, createVegasComputeContext(opts));
   setVegasDisabledState(getPlayers() > 4, data.invalidReason || 'Vegas is disabled for more than 4 players. Reduce player count to 4 or fewer.');

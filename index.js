@@ -7076,7 +7076,7 @@
     const clearCardBtn = document.getElementById('clearCardBtn');
     if (clearCardBtn) {
       clearCardBtn.addEventListener('click', () => {
-        $(ids.clearAllBtn)?.click();
+        $(ids.clearEverythingBtn)?.click();
       });
     }
 

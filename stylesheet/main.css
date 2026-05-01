@@ -476,6 +476,10 @@ h1 {
   letter-spacing: .08em;
 }
 
+#vegasGhostRotationWrap[hidden] {
+  display: none !important;
+}
+
 .control input[type="text"] {
   background: #0c1218;
   border: 2px solid var(--line);
