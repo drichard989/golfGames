@@ -6941,8 +6941,8 @@
     
     const message = document.createElement('p');
     message.textContent = cloudSession
-      ? 'This will clear all player names, handicaps, and scores, and disconnect you from the live cloud session. Anyone watching the live link will no longer see updates. You will need to create and share a new code to go live again.'
-      : 'This will clear all player names, handicaps, and scores. This action cannot be undone.';
+      ? 'This will clear all player names, handicaps, and scores. Your current cloud session will end and a new one will be created automatically — share the new code with your group.'
+      : 'This will clear all player names, handicaps, and scores. A new cloud session will be created automatically.';
     message.style.cssText = 'margin: 0 0 20px 0; color: var(--muted);';
     
     const btnContainer = document.createElement('div');
@@ -6974,6 +6974,7 @@
         await window.CloudSync.leaveSession?.();
       }
       Storage.clearAll();
+      window.CloudSync?.createSession?.().catch(() => {});
     } else {
       window.CloudSync?.resumePushes?.();
     }
@@ -7058,6 +7059,19 @@
     });
   }
 
+    // Erase button: toggle the clear panel
+    const scorecardClearToggle = document.getElementById('scorecardClearToggle');
+    const scorecardClearPanel = document.getElementById('scorecardClearPanel');
+    if (scorecardClearToggle && scorecardClearPanel) {
+      scorecardClearToggle.addEventListener('click', () => {
+        const willOpen = scorecardClearPanel.hidden;
+        scorecardClearPanel.hidden = !willOpen;
+        scorecardClearToggle.classList.toggle('is-open', willOpen);
+        scorecardClearToggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+        schedulePanelHeightSync();
+      });
+    }
+
     // New clear buttons beneath scorecard
     const clearCardBtn = document.getElementById('clearCardBtn');
     if (clearCardBtn) {
@@ -7069,25 +7083,80 @@
     const clearCardAndGamesBtn = document.getElementById('clearCardAndGamesBtn');
     if (clearCardAndGamesBtn) {
       clearCardAndGamesBtn.addEventListener('click', () => {
-        $(ids.clearEverythingBtn)?.click();
+        document.getElementById('clearGamesDataBtn')?.click();
       });
     }
     const clearGamesDataBtn = document.getElementById('clearGamesDataBtn');
     if (clearGamesDataBtn) {
       clearGamesDataBtn.addEventListener('click', async () => {
-        const cloudSession = window.CloudSync?.getSession?.();
-        const confirmed = window.confirm(
-          cloudSession
-            ? 'Clear all games data and leave the live cloud session? You will need a new code to go live again.'
-            : 'Clear all games data and reset game options to defaults?'
-        );
-        if (!confirmed) return;
-
         window.CloudSync?.suspendPushes?.();
-        if (cloudSession) {
-          await window.CloudSync.leaveSession?.();
+        const cloudSession = window.CloudSync?.getSession?.();
+
+        const dialog = document.createElement('div');
+        dialog.style.cssText = `
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0, 0, 0, 0.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 10000;
+        `;
+
+        const dialogBox = document.createElement('div');
+        dialogBox.style.cssText = `
+          background: var(--panel);
+          border: 1px solid var(--line);
+          border-radius: 12px;
+          padding: 24px;
+          max-width: 400px;
+          box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        `;
+
+        const title = document.createElement('h3');
+        title.textContent = cloudSession ? 'Clear Games & Leave Cloud Session?' : 'Clear All Games Data?';
+        title.style.cssText = 'margin: 0 0 12px 0; color: var(--ink);';
+
+        const message = document.createElement('p');
+        message.textContent = cloudSession
+          ? 'This will reset all game data and options. Your current cloud session will end and a new one will be created automatically — share the new code with your group.'
+          : 'This will reset all game data and options to defaults.';
+        message.style.cssText = 'margin: 0 0 20px 0; color: var(--muted);';
+
+        const btnContainer = document.createElement('div');
+        btnContainer.style.cssText = 'display: flex; gap: 12px;';
+
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'Clear Games';
+        clearBtn.className = 'btn';
+        clearBtn.style.cssText = 'flex: 1; background: var(--danger); color: white;';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancel';
+        cancelBtn.className = 'btn';
+        cancelBtn.style.cssText = 'flex: 1;';
+
+        btnContainer.append(clearBtn, cancelBtn);
+        dialogBox.append(title, message, btnContainer);
+        dialog.appendChild(dialogBox);
+        document.body.appendChild(dialog);
+
+        const confirmed = await new Promise((resolve) => {
+          clearBtn.onclick = () => { dialog.remove(); resolve(true); };
+          cancelBtn.onclick = () => { dialog.remove(); resolve(false); };
+        });
+
+        if (confirmed) {
+          if (window.CloudSync?.getSession?.()) {
+            await window.CloudSync.leaveSession?.();
+          }
+          Storage.clearGamesData();
+        } else {
+          window.CloudSync?.resumePushes?.();
         }
-        Storage.clearGamesData();
       });
     }
 

@@ -1109,7 +1109,7 @@ select:not(.select-plain) option {
 
 .scorecard-footer-controls {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
   align-items: stretch;
   gap: 6px;
   width: 100%;
@@ -1118,7 +1118,8 @@ select:not(.select-plain) option {
 /* Pin footer button heights so font-size changes don't grow them. */
 .scorecard-footer-controls > .btn,
 .scorecard-footer-controls > .scorecard-theme-toggle,
-.scorecard-footer-controls > .scorecard-main-options-icon {
+.scorecard-footer-controls > .scorecard-main-options-icon,
+.scorecard-footer-controls > .scorecard-clear-actions-toggle {
   min-height: var(--footer-action-h) !important;
   height: var(--footer-action-h) !important;
   font-size: var(--text-md) !important;
@@ -1126,7 +1127,8 @@ select:not(.select-plain) option {
 }
 
 .scorecard-footer-controls > .scorecard-theme-toggle,
-.scorecard-footer-controls > .scorecard-main-options-icon {
+.scorecard-footer-controls > .scorecard-main-options-icon,
+.scorecard-footer-controls > .scorecard-clear-actions-toggle {
   min-width: var(--footer-action-h) !important;
   width: var(--footer-action-h) !important;
   font-size: 18px !important;
@@ -1169,6 +1171,28 @@ select:not(.select-plain) option {
   border-radius: var(--radius-md);
 }
 
+.scorecard-clear-actions-toggle {
+  margin-left: 0;
+  min-width: 40px;
+  width: 40px;
+  height: auto;
+  min-height: 0;
+  align-self: stretch;
+  padding: 0;
+  gap: 0;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scorecard-clear-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+}
+
 .scorecard-footer-controls[hidden] {
   display: none !important;
 }
@@ -1185,25 +1209,53 @@ select:not(.select-plain) option {
   gap: 0;
 }
 
+.scorecard-clear-panel {
+  margin: 0;
+  padding: 8px 10px;
+  border: none;
+  border-top: 2px solid rgba(168, 179, 191, 0.2);
+  border-radius: 0;
+  background: var(--panel-alt);
+  min-height: 63px;
+  display: flex;
+  align-items: center;
+}
+
+.scorecard-clear-panel[hidden] {
+  display: none !important;
+}
+
 .scorecard-clear-buttons {
   display: flex;
-  gap: 10px;
-  padding: 12px;
-  background: var(--panel);
-  border-top: 2px solid var(--line);
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border-top: none;
   margin: 0;
   justify-content: flex-start;
-  min-width: 1040px;
+  min-width: 0;
   box-sizing: border-box;
+  flex-wrap: nowrap;
+  width: 100%;
+  align-items: stretch;
 }
 
 .scorecard-clear-buttons .btn {
-  flex: 0 1 auto;
-  min-width: 140px;
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: var(--footer-action-h) !important;
+  height: var(--footer-action-h) !important;
+  font-size: var(--text-md) !important;
+  font-weight: 600 !important;
   background: var(--danger);
   border-color: var(--danger);
   color: #fff;
   transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+
+.scorecard-footer-controls .scorecard-clear-actions-toggle::after,
+.scorecard-footer-controls .scorecard-main-options-icon::after {
+  content: none !important;
 }
 
 .scorecard-clear-buttons .btn:hover {
