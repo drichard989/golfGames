@@ -2512,12 +2512,17 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsWrap.is-collapsed 
 .results-card-wrap {
   display: flex;
   flex-direction: column;
+  margin: 0;
+}
+
+/* When collapsed: add margin back */
+.results-card-wrap.is-collapsed {
   margin: 10px 0 0;
 }
 
 .results-card-wrap .live-results-card,
 .results-card-wrap .banker-header-totals {
-  margin: 0;
+  margin: 0 !important;
 }
 
 /* Collapse button as a real header bar above the card content */
@@ -2581,13 +2586,11 @@ body.mode-games #wolfSection[aria-hidden="false"] #wolfResultsWrap.is-collapsed 
 .results-card-wrap:not(.is-collapsed) .banker-header-totals {
   border-top-left-radius: 0;
   border-top-right-radius: 0;
+  border-top: none;
+  margin-top: 0;
 }
 
 /* When collapsed: full rounded bar with ▼ Show */
-.results-card-wrap.is-collapsed {
-  margin: 10px 0 0;
-}
-
 .results-card-wrap.is-collapsed .results-collapse-bar {
   border: 2px solid var(--line);
   border-radius: var(--radius-lg);
