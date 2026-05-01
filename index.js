@@ -6829,7 +6829,7 @@
       const state = getResultsCollapseState();
       state[game] = nowCollapsed;
       saveResultsCollapseState(state);
-      syncActiveGamePinnedResultsLayout();
+      triggerScorecardSettleBurst('results-collapse');
     });
   }
 
