@@ -1990,15 +1990,15 @@ input[type="number"] {
 }
 
 .to-par[data-sign="+"] {
-  color: var(--danger);
+  color: #000;
 }
 
 .to-par[data-sign="-"] {
-  color: var(--accent);
+  color: var(--danger);
 }
 
 .to-par[data-sign="0"] {
-  color: var(--warn);
+  color: #000;
 }
 
 tfoot td {
