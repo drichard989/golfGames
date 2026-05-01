@@ -5347,14 +5347,16 @@ input[type="text"] {
   color: #ffffff;
 }
 
-:root[data-theme="light"] .scorecard-main-options-icon.is-open {
+:root[data-theme="light"] .scorecard-main-options-icon.is-open,
+:root[data-theme="light"] .scorecard-clear-actions-toggle.is-open {
   background: #0b74d1;
   border-color: #095ba3;
   color: #ffffff;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
 }
 
-:root[data-theme="light"] .scorecard-main-options-icon.is-open:hover {
+:root[data-theme="light"] .scorecard-main-options-icon.is-open:hover,
+:root[data-theme="light"] .scorecard-clear-actions-toggle.is-open:hover {
   background: #0b74d1;
   border-color: #095ba3;
   color: #ffffff;
