@@ -917,11 +917,18 @@
   function syncHeaderBadgeButtonLabels() {
     const compact = window.matchMedia?.('(max-width: 600px)')?.matches;
     const labels = [
-      { id: 'cloudCreateBadgeBtn', full: 'Go live', compact: 'Live' },
       { id: 'cloudQrBadgeBtn', full: 'Share QR', compact: 'QR' },
       { id: 'cloudEditCodeBadgeBtn', full: 'Scorekeeping QR', compact: 'Score QR' },
       { id: 'cloudViewCodeBadgeBtn', full: 'View code', compact: 'View' }
     ];
+
+    const createBtn = document.getElementById('cloudCreateBadgeBtn');
+    if (createBtn) {
+      const isLive = createBtn.getAttribute('data-live') === 'true';
+      const full = isLive ? 'Go offline' : 'Go live';
+      const short = isLive ? 'Offline' : 'Live';
+      createBtn.textContent = compact ? short : full;
+    }
 
     labels.forEach(({ id, full, compact: short }) => {
       const btn = document.getElementById(id);
