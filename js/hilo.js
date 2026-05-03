@@ -206,6 +206,17 @@
   }
 
   // =============================================================================
+  // OPTIONS
+  // =============================================================================
+
+  function getHiloOptions() {
+    return {
+      pressOnSweep: document.getElementById('hiloPressOnSweep')?.checked ?? true,
+      pressOnDown2: document.getElementById('hiloPressOnDown2')?.checked ?? true
+    };
+  }
+
+  // =============================================================================
   // SCORING LOGIC
   // =============================================================================
 
@@ -229,6 +240,7 @@
     }
     
     const { teamA, teamB, strokePlayer, strokesGiven } = formTeams();
+    const opts = getHiloOptions();
     
     // Track games
     const front9 = { teamA: 0, teamB: 0, presses: [{ start: 1, teamA: 0, teamB: 0 }] };
@@ -312,9 +324,27 @@
         front9.teamA += holePointsA;
         front9.teamB += holePointsB;
         
-        // Check for auto press (2-0 hole win) - press runs to hole 9
-        if ((holePointsA === 2 || holePointsB === 2) && holeNum < 9) {
-          front9.presses.push({ start: holeNum + 1, teamA: 0, teamB: 0 });
+        if (holeNum < 9) {
+          // Sweep press: one team won both points on this hole
+          const sweepPress = opts.pressOnSweep && (holePointsA === 2 || holePointsB === 2);
+
+          // Down-2 press: latest game just hit a deficit of -2, -4, -6, ...
+          // "latest game" = the most recently started press (last element)
+          let down2Press = false;
+          if (opts.pressOnDown2) {
+            const latest = front9.presses[front9.presses.length - 1];
+            const prevDiff = (latest.teamA - holePointsA) - (latest.teamB - holePointsB);
+            const currDiff = latest.teamA - latest.teamB;
+            // Trigger when the deficit just crossed a new even multiple of -2
+            // i.e. curr <= -2 and floor(curr/2) < floor(prev/2)  (for either team)
+            const prevMag = Math.floor(Math.abs(prevDiff) / 2);
+            const currMag = Math.floor(Math.abs(currDiff) / 2);
+            if (currMag > prevMag && Math.abs(currDiff) >= 2) down2Press = true;
+          }
+
+          if (sweepPress || down2Press) {
+            front9.presses.push({ start: holeNum + 1, teamA: 0, teamB: 0 });
+          }
         }
       } else {
         // Back 9 - add to all active presses for back 9
@@ -325,9 +355,22 @@
         back9.teamA += holePointsA;
         back9.teamB += holePointsB;
         
-        // Check for auto press (2-0 hole win) - press runs to hole 18
-        if ((holePointsA === 2 || holePointsB === 2) && holeNum < 18) {
-          back9.presses.push({ start: holeNum + 1, teamA: 0, teamB: 0 });
+        if (holeNum < 18) {
+          const sweepPress = opts.pressOnSweep && (holePointsA === 2 || holePointsB === 2);
+
+          let down2Press = false;
+          if (opts.pressOnDown2) {
+            const latest = back9.presses[back9.presses.length - 1];
+            const prevDiff = (latest.teamA - holePointsA) - (latest.teamB - holePointsB);
+            const currDiff = latest.teamA - latest.teamB;
+            const prevMag = Math.floor(Math.abs(prevDiff) / 2);
+            const currMag = Math.floor(Math.abs(currDiff) / 2);
+            if (currMag > prevMag && Math.abs(currDiff) >= 2) down2Press = true;
+          }
+
+          if (sweepPress || down2Press) {
+            back9.presses.push({ start: holeNum + 1, teamA: 0, teamB: 0 });
+          }
         }
       }
       
@@ -471,6 +514,9 @@
 
   const HiLo = {
     init() {
+      ['hiloPressOnSweep', 'hiloPressOnDown2'].forEach(id => {
+        document.getElementById(id)?.addEventListener('change', () => this.update());
+      });
       this.update();
     },
     

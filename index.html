@@ -44,19 +44,19 @@
         } catch (_) {}
       })();
     </script>
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.321" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.321" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.321" />
-    <link rel="manifest" href="/manifest.json?v=v3.3.321" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png?v=v3.3.322" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16.png?v=v3.3.322" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png?v=v3.3.322" />
+    <link rel="manifest" href="/manifest.json?v=v3.3.322" />
     <meta name="theme-color" content="#4a9eff" />
     <!-- ?v= query strings are auto-bumped by .githooks/pre-commit so
          deployed CSS changes always defeat the browser HTTP cache. -->
-    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.321" />
+    <link rel="stylesheet" href="stylesheet/main.css?v=v3.3.322" />
     <!-- Per-game stylesheets (load order matters: must follow main.css) -->
-    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.321" />
-    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.321" />
-    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.321" />
-    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.321" />
+    <link rel="stylesheet" href="stylesheet/junk.css?v=v3.3.322" />
+    <link rel="stylesheet" href="stylesheet/banker.css?v=v3.3.322" />
+    <link rel="stylesheet" href="stylesheet/score-sheet.css?v=v3.3.322" />
+    <link rel="stylesheet" href="stylesheet/wolf.css?v=v3.3.322" />
   </head>
   <body>
     <!-- Accessibility announcer for screen readers -->
@@ -498,7 +498,15 @@
       <p class="note"><strong>How It Works:</strong> Requires exactly 4 players. Teams are auto-assigned: <strong>Team A</strong> = Lowest + Highest handicap, <strong>Team B</strong> = Middle two handicaps. The team with the higher combined handicap receives the difference in strokes, given to their highest handicap player.</p>
       <p class="note"><strong>Scoring:</strong> Each hole awards 2 points (1 for low ball, 1 for high ball). Compare each team's lowest score for 1 point, then compare each team's highest score for 1 point. Ties = no points awarded.</p>
       <p class="note"><strong>Games:</strong> Three main games run simultaneously: <strong>Front 9</strong> (holes 1-9, worth 1 unit), <strong>Back 9</strong> (holes 10-18, worth 1 unit), <strong>Full 18</strong> (all holes, worth 2 units) = 4 total units at stake.</p>
-      <p class="note"><strong>Auto-Press:</strong> When a team wins a hole 2-0 (both low and high), an automatic press starts on the next hole. Front 9 presses run through hole 9, Back 9 presses run through hole 18. Each press is worth 1 unit (Full 18 has no presses). The leading team does NOT need to approve - presses trigger automatically!</p>
+      <div class="pill" style="margin: 10px 0 6px;">Auto-Press Settings</div>
+      <label class="skins-toggle-btn" for="hiloPressOnSweep" style="margin-bottom: 6px;">
+        <input type="checkbox" id="hiloPressOnSweep" checked />
+        <span>Press on hole sweep (win both points on a hole)</span>
+      </label>
+      <label class="skins-toggle-btn" for="hiloPressOnDown2">
+        <input type="checkbox" id="hiloPressOnDown2" checked />
+        <span>Press every -2 points in the current game</span>
+      </label>
       <button id="clearHiloDataBtn" class="btn" style="margin: 8px 12px 0;">Clear Hi-Lo Data</button>
       </div>
 
@@ -710,18 +718,18 @@
         <button id="gamesFooterGamesBtn" class="entry-switcher-btn" type="button" role="tab" aria-selected="false" aria-controls="gamesEntryPanel">🎮 Games</button>
       </div>
     </div>
-    <script src="index.js?v=v3.3.321" defer></script>
-    <script src="js/export.js?v=v3.3.321" defer></script>
-    <script src="js/vegas.js?v=v3.3.321" defer></script>
-    <script src="js/banker.js?v=v3.3.321" defer></script>
-    <script src="js/banker-sheet.js?v=v3.3.321" defer></script>
-    <script src="js/hilo.js?v=v3.3.321" defer></script>
-    <script src="js/skins.js?v=v3.3.321" defer></script>
-    <script src="js/junk.js?v=v3.3.321" defer></script>
-    <script src="js/junk-sheet.js?v=v3.3.321" defer></script>
-    <script src="js/wolf.js?v=v3.3.321" defer></script>
-    <script src="js/wolf-sheet.js?v=v3.3.321" defer></script>
-    <script src="js/score-sheet.js?v=v3.3.321" defer></script>
+    <script src="index.js?v=v3.3.322" defer></script>
+    <script src="js/export.js?v=v3.3.322" defer></script>
+    <script src="js/vegas.js?v=v3.3.322" defer></script>
+    <script src="js/banker.js?v=v3.3.322" defer></script>
+    <script src="js/banker-sheet.js?v=v3.3.322" defer></script>
+    <script src="js/hilo.js?v=v3.3.322" defer></script>
+    <script src="js/skins.js?v=v3.3.322" defer></script>
+    <script src="js/junk.js?v=v3.3.322" defer></script>
+    <script src="js/junk-sheet.js?v=v3.3.322" defer></script>
+    <script src="js/wolf.js?v=v3.3.322" defer></script>
+    <script src="js/wolf-sheet.js?v=v3.3.322" defer></script>
+    <script src="js/score-sheet.js?v=v3.3.322" defer></script>
     <!-- Firebase (compat SDK for no-build setup) -->
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js" defer></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js" defer></script>
@@ -732,8 +740,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
     <script src="https://unpkg.com/qr-code-styling@1.9.2/lib/qr-code-styling.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js" defer></script>
-    <script src="js/firebase-config.js?v=v3.3.321" defer></script>
-    <script src="js/cloudsync.js?v=v3.3.321" defer></script>
+    <script src="js/firebase-config.js?v=v3.3.322" defer></script>
+    <script src="js/cloudsync.js?v=v3.3.322" defer></script>
     <!-- Cloud QR libraries must load before js/cloudsync.js -->
 
     <!-- =====================================================================
