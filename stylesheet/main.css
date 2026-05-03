@@ -1819,6 +1819,20 @@ td {
   z-index: 71;
 }
 
+:root[data-theme="light"] #scorecard th:first-child,
+:root[data-theme="light"] #scorecard td:first-child,
+:root[data-theme="light"] #scorecard th:nth-child(2),
+:root[data-theme="light"] #scorecard td:nth-child(2) {
+  background-color: #f1f5f9;
+}
+
+:root:not([data-theme="light"]) #scorecard th:first-child,
+:root:not([data-theme="light"]) #scorecard td:first-child,
+:root:not([data-theme="light"]) #scorecard th:nth-child(2),
+:root:not([data-theme="light"]) #scorecard td:nth-child(2) {
+  background-color: color-mix(in srgb, var(--panel) 74%, black 26%);
+}
+
 tr:last-child td {
   border-bottom: none;
 }
