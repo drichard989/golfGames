@@ -1967,9 +1967,9 @@ tr:last-child td {
 
 #scorecard th:nth-child(24),
 #scorecard td:nth-child(24) {
-  width: 70px;
-  min-width: 70px;
-  max-width: 70px;
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
 }
 
 /* Remove spinner buttons globally from all numeric fields */
