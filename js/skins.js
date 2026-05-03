@@ -297,14 +297,15 @@
         const w = winners[0];
         totals[w] += pot;
         holesWon[w].push(String(h + 1));
-        const awardAmount = pot * buyIn;
-        winnings[w] += awardAmount;
-        if (playerCount > 1 && awardAmount !== 0) {
-          const sharePerLoser = awardAmount / (playerCount - 1);
+        // buyIn is the amount EACH player risks per hole.
+        // Carryover keeps pot as hole-count units, so stake per player is pot * buyIn.
+        const stakePerPlayer = pot * buyIn;
+        if (playerCount > 1 && stakePerPlayer !== 0) {
           for (let p = 0; p < playerCount; p++) {
             if (p === w) continue;
-            winnings[p] -= sharePerLoser;
+            winnings[p] -= stakePerPlayer;
           }
+          winnings[w] += stakePerPlayer * (playerCount - 1);
         }
         // Track which holes were carried over to this winning hole
         if (carryoverFromHoles.length > 0) {
