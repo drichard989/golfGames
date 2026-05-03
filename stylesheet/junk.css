@@ -256,11 +256,46 @@ body.junk-mobile-summary-active #junkTable tfoot { display: none; }
 :root[data-theme="light"] .junk-sheet-header {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.92));
 }
+
+.junk-sheet-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .junk-sheet-title {
   margin: 0;
   font-size: var(--text-xl);
   font-weight: 700;
 }
+
+.junk-sheet-navbtn {
+  background: transparent;
+  border: 2px solid var(--line);
+  color: var(--ink);
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: calc(16px + var(--font-size-step));
+  line-height: 1;
+  cursor: pointer;
+}
+
+.junk-sheet-navbtn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+:root[data-theme="light"] .junk-sheet-navbtn {
+  background: #ffffff;
+  border-color: rgba(21, 32, 43, 0.2);
+  color: #0f172a;
+}
+
+.junk-sheet-navbtn:hover:not(:disabled) { background: rgba(255,255,255,0.05); }
+:root[data-theme="light"] .junk-sheet-navbtn:hover:not(:disabled) { background: rgba(0,0,0,0.05); }
+
 .junk-sheet-close {
   background: transparent;
   border: 2px solid var(--line);

@@ -23,6 +23,8 @@
 
   if (window.JUNK_BOTTOM_SHEET === false) return;
 
+  const HOLES = 18;
+
   const ACH = [
     { id: 'sandy',   label: 'Sandy',   pts: 1,   emoji: '🏖️' },
     { id: 'sadaam',  label: 'Sadaam',  pts: 2,   emoji: '💥' },
@@ -109,7 +111,11 @@
     sheetEl.setAttribute('aria-labelledby', 'junkSheetTitle');
     sheetEl.innerHTML = `
       <div class="junk-sheet-header">
-        <h3 id="junkSheetTitle" class="junk-sheet-title">Hole —</h3>
+        <div class="junk-sheet-nav">
+          <button type="button" class="junk-sheet-navbtn" data-nav="prev" aria-label="Previous hole">&lt;</button>
+          <h3 id="junkSheetTitle" class="junk-sheet-title">Hole —</h3>
+          <button type="button" class="junk-sheet-navbtn" data-nav="next" aria-label="Next hole">&gt;</button>
+        </div>
         <button type="button" class="junk-sheet-close" aria-label="Close">✕</button>
       </div>
       <div class="junk-sheet-body"></div>
@@ -119,13 +125,25 @@
     `;
     sheetEl.querySelector('.junk-sheet-close').addEventListener('click', closeSheet);
     sheetEl.querySelector('.junk-sheet-done').addEventListener('click', closeSheet);
+    sheetEl.querySelector('[data-nav="prev"]')?.addEventListener('click', () => navigateHole(-1));
+    sheetEl.querySelector('[data-nav="next"]')?.addEventListener('click', () => navigateHole(1));
 
     document.body.appendChild(backdropEl);
     document.body.appendChild(sheetEl);
 
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && sheetEl.classList.contains('is-open')) closeSheet();
+      if (!sheetEl.classList.contains('is-open')) return;
+      if (e.key === 'Escape') closeSheet();
+      else if (e.key === 'ArrowLeft') navigateHole(-1);
+      else if (e.key === 'ArrowRight') navigateHole(1);
     });
+  }
+
+  function navigateHole(delta){
+    if (!Number.isFinite(currentHole)) return;
+    const next = currentHole + delta;
+    if (next < 1 || next > HOLES) return;
+    renderSheet(next);
   }
 
   function renderSheet(hole){
@@ -137,6 +155,11 @@
 
     sheetEl.querySelector('.junk-sheet-title').textContent =
       `Hole ${hole}${par != null ? ` · Par ${par}` : ''}`;
+
+    const prevBtn = sheetEl.querySelector('[data-nav="prev"]');
+    const nextBtn = sheetEl.querySelector('[data-nav="next"]');
+    if (prevBtn) prevBtn.disabled = hole <= 1;
+    if (nextBtn) nextBtn.disabled = hole >= HOLES;
 
     const body = sheetEl.querySelector('.junk-sheet-body');
     body.innerHTML = '';
