@@ -170,6 +170,46 @@
     });
   }
 
+  /**
+   * In team mode, compute how many strokes each player receives from team
+   * handicap differential.
+   *
+   * Rules:
+   *  - Team handicap = sum of raw CHs for players on that team.
+   *  - Net strokes = |teamA total − teamB total|. The higher-handicap team
+   *    gets those strokes.
+   *  - Within that team, the higher-handicap player receives the strokes on
+   *    holes ranked by hcp index (strokeIndex ≤ netStrokes gets +1 stroke).
+   *
+   * Returns an array [playerCount] of adjusted CHs to use for scoring.
+   * Players on the lower-handicap team get their raw CH as-is (play off low
+   * within that team is still handled by adjustedCHs in net mode).
+   * The stroke-receiving player's effective CH is increased by netStrokes.
+   */
+  function buildTeamHandicapCHs(teamAssignments) {
+    const rawCHs = getRawCHs();
+    const { team1, team2 } = teamAssignments;
+
+    const sumCH = (members) => members.reduce((s, idx) => s + (rawCHs[idx] || 0), 0);
+    const t1Total = sumCH(team1);
+    const t2Total = sumCH(team2);
+
+    if (t1Total === t2Total) return rawCHs.slice(); // no adjustment needed
+
+    const higherTeam = t1Total > t2Total ? team1 : team2;
+    const netStrokes = Math.abs(t1Total - t2Total);
+
+    // Find the highest-handicap player on the higher team
+    let strokeReceiver = higherTeam[0];
+    higherTeam.forEach((idx) => {
+      if ((rawCHs[idx] || 0) > (rawCHs[strokeReceiver] || 0)) strokeReceiver = idx;
+    });
+
+    const adjusted = rawCHs.slice();
+    adjusted[strokeReceiver] = (rawCHs[strokeReceiver] || 0) + netStrokes;
+    return adjusted;
+  }
+
   function getJunkScoringConfig() {
     const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
     const mode = activeBtn?.dataset.value || 'gross';
@@ -208,12 +248,31 @@
   }
 
   function buildDefaultJunkTeamAssignments(playerCount = getPlayerCount()) {
+    // Pair lowest + highest handicap together, then next pair, etc.
+    const rawCHs = getRawCHs().slice(0, playerCount);
+    const sorted = rawCHs
+      .map((ch, i) => ({ i, ch }))
+      .sort((a, b) => a.ch - b.ch); // ascending: index 0 = lowest
     const team1 = [];
     const team2 = [];
-    const splitIndex = Math.max(1, Math.ceil(playerCount / 2));
-    for (let i = 0; i < playerCount; i++) {
-      if (i < splitIndex) team1.push(i);
-      else team2.push(i);
+    let lo = 0, hi = sorted.length - 1;
+    let teamToggle = true;
+    while (lo <= hi) {
+      if (lo === hi) {
+        // Odd player out goes to whichever team is smaller
+        (team1.length <= team2.length ? team1 : team2).push(sorted[lo].i);
+        break;
+      }
+      if (teamToggle) {
+        team1.push(sorted[lo].i);
+        team1.push(sorted[hi].i);
+      } else {
+        team2.push(sorted[lo].i);
+        team2.push(sorted[hi].i);
+      }
+      teamToggle = !teamToggle;
+      lo++;
+      hi--;
     }
     return { team1, team2 };
   }
@@ -398,10 +457,23 @@
       teamAssignments.team2.forEach((idx) => teamByPlayer.set(idx, 2));
     }
 
+    // In team mode use team-differential-adjusted CHs for skins scoring
+    let effectiveSkinsCHs = null;
+    if (teamMode && teamAssignments) {
+      effectiveSkinsCHs = buildTeamHandicapCHs(teamAssignments);
+    }
+
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
-      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : [],
+      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap'
+        ? (effectiveSkinsCHs ? (() => {
+            const minCH = Math.min(...effectiveSkinsCHs);
+            return effectiveSkinsCHs.map(ch => ch - minCH);
+          })() : getAdjustedCHs())
+        : [],
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap'
+        ? (effectiveSkinsCHs || getRawCHs())
+        : [],
       scores: getScoreMatrix(playerCount, HOLES)
     };
 
@@ -498,10 +570,25 @@
       const totals = Array(playerCount).fill(0);
       const config = getJunkScoringConfig();
       const scoreMatrix = getScoreMatrix(playerCount, HOLES);
+
+      // In team mode, replace per-player handicaps with team-differential-adjusted CHs
+      let effectiveCHs = null;
+      if (isJunkTeamsMode()) {
+        const teamAssignments = getJunkTeamAssignments();
+        effectiveCHs = buildTeamHandicapCHs(teamAssignments);
+      }
+
       const cache = {
         HCPMEN: window.HCPMEN || Array(18).fill(1),
-        adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
-        rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : [],
+        adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap'
+          ? (effectiveCHs ? (() => {
+              const minCH = Math.min(...effectiveCHs);
+              return effectiveCHs.map(ch => ch - minCH);
+            })() : getAdjustedCHs())
+          : [],
+        rawCHs: config.useNet && config.netHcpMode === 'rawHandicap'
+          ? (effectiveCHs || getRawCHs())
+          : [],
         scores: scoreMatrix
       };
 
