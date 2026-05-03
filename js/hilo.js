@@ -302,19 +302,9 @@
         highWinner = 'Tie';
       }
       
-      holeResults.push({
-        hole: holeNum,
-        teamALow: teamAScores[0],
-        teamAHigh: teamAScores[1],
-        teamBLow: teamBScores[0],
-        teamBHigh: teamBScores[1],
-        lowWinner,
-        highWinner,
-        teamAPoints: holePointsA,
-        teamBPoints: holePointsB
-      });
-      
-      // Add to appropriate games
+      // Add to appropriate games and detect presses BEFORE pushing to holeResults
+      let pressTriggered = false;
+
       if (holeNum <= 9) {
         // Front 9 - add to all active presses for front 9
         front9.presses.forEach(press => {
@@ -325,18 +315,13 @@
         front9.teamB += holePointsB;
         
         if (holeNum < 9) {
-          // Sweep press: one team won both points on this hole
           const sweepPress = opts.pressOnSweep && (holePointsA === 2 || holePointsB === 2);
 
-          // Down-2 press: latest game just hit a deficit of -2, -4, -6, ...
-          // "latest game" = the most recently started press (last element)
           let down2Press = false;
           if (opts.pressOnDown2) {
             const latest = front9.presses[front9.presses.length - 1];
             const prevDiff = (latest.teamA - holePointsA) - (latest.teamB - holePointsB);
             const currDiff = latest.teamA - latest.teamB;
-            // Trigger when the deficit just crossed a new even multiple of -2
-            // i.e. curr <= -2 and floor(curr/2) < floor(prev/2)  (for either team)
             const prevMag = Math.floor(Math.abs(prevDiff) / 2);
             const currMag = Math.floor(Math.abs(currDiff) / 2);
             if (currMag > prevMag && Math.abs(currDiff) >= 2) down2Press = true;
@@ -344,6 +329,7 @@
 
           if (sweepPress || down2Press) {
             front9.presses.push({ start: holeNum + 1, teamA: 0, teamB: 0 });
+            pressTriggered = true;
           }
         }
       } else {
@@ -370,9 +356,23 @@
 
           if (sweepPress || down2Press) {
             back9.presses.push({ start: holeNum + 1, teamA: 0, teamB: 0 });
+            pressTriggered = true;
           }
         }
       }
+
+      holeResults.push({
+        hole: holeNum,
+        teamALow: teamAScores[0],
+        teamAHigh: teamAScores[1],
+        teamBLow: teamBScores[0],
+        teamBHigh: teamBScores[1],
+        lowWinner,
+        highWinner,
+        teamAPoints: holePointsA,
+        teamBPoints: holePointsB,
+        pressTriggered
+      });
       
       // Full 18 (no presses, just cumulative)
       full18.teamA += holePointsA;
@@ -495,12 +495,13 @@
         const lowWinnerText = hole.lowWinner === 'A' ? teamALabelResponsive : hole.lowWinner === 'B' ? teamBLabelResponsive : 'Tie';
         const highWinnerText = hole.highWinner === 'A' ? teamALabelResponsive : hole.highWinner === 'B' ? teamBLabelResponsive : 'Tie';
         
+        const pressNote = hole.pressTriggered ? ' <strong>Press Triggered</strong>' : '';
         holeHtml += `
           <tr>
             <td>${hole.hole}</td>
             <td>${hole.teamALow} vs ${hole.teamBLow} → ${lowWinnerText}</td>
             <td>${hole.teamAHigh} vs ${hole.teamBHigh} → ${highWinnerText}</td>
-            <td>${teamALabelResponsive}: ${hole.teamAPoints}, ${teamBLabelResponsive}: ${hole.teamBPoints}</td>
+            <td>${teamALabelResponsive}: ${hole.teamAPoints}, ${teamBLabelResponsive}: ${hole.teamBPoints}${pressNote}</td>
           </tr>
         `;
       });
