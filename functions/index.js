@@ -148,7 +148,17 @@ async function enforceRateLimit(path, { windowMs, maxAttempts, lockoutMs }, labe
 
 function sanitizeIncomingGame(game) {
   if (!game || typeof game !== 'object') return null;
-  return game;
+  try {
+    const cloned = JSON.parse(JSON.stringify(game));
+    const size = JSON.stringify(cloned).length;
+    if (size > 1_000_000) {
+      throw new HttpsError('invalid-argument', 'Game payload too large.');
+    }
+    return cloned;
+  } catch (err) {
+    if (err instanceof HttpsError) throw err;
+    throw new HttpsError('invalid-argument', 'Invalid game payload.');
+  }
 }
 
 exports.createGameSession = onCall(CALLABLE_OPTS, async (request) => {
@@ -287,11 +297,11 @@ exports.redeemGameCode = onCall(CALLABLE_OPTS, async (request) => {
 
   let editCode = '';
   let viewCode = '';
+  const codesSnap = await db.ref(`games/${gameId}/codes`).get();
+  const codes = codesSnap.val() || {};
+  viewCode = normalizeCode(codes.viewCode);
   if (targetRole === 'editor') {
-    const codesSnap = await db.ref(`games/${gameId}/codes`).get();
-    const codes = codesSnap.val() || {};
     editCode = normalizeCode(codes.editCode);
-    viewCode = normalizeCode(codes.viewCode);
   }
 
   logger.info('Redeemed code', { gameId, uid, role: targetRole });

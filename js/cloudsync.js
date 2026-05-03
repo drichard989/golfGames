@@ -1777,23 +1777,18 @@
       ? state.currentLiveState
       : null;
 
-    const metaRef = state.db.ref(`${gameRoot}/meta`);
-    const liveStateRef = state.db.ref(`${gameRoot}/state`);
+    const rootUpdates = {
+      [`${gameRoot}/meta/updatedAt`]: now,
+      [`${gameRoot}/meta/updatedBy`]: state.user?.uid || 'local-client'
+    };
 
     if (!prevSyncState) {
-      await liveStateRef.set(syncGame);
+      rootUpdates[`${gameRoot}/state`] = syncGame;
     } else {
-      const stateUpdates = {};
-      buildDiffUpdates(prevSyncState, syncGame, '', stateUpdates);
-      if (Object.keys(stateUpdates).length > 0) {
-        await liveStateRef.update(stateUpdates);
-      }
+      buildDiffUpdates(prevSyncState, syncGame, `${gameRoot}/state`, rootUpdates);
     }
 
-    await metaRef.update({
-      updatedAt: now,
-      updatedBy: state.user?.uid || 'local-client'
-    });
+    await state.db.ref().update(rootUpdates);
 
     state.lastSeenRevision = nextRevision;
     state.currentLiveState = syncGame;
@@ -2106,6 +2101,11 @@
         await pushNow();
       }
     } catch (err) {
+      const code = String(err?.code || '').toLowerCase();
+      const msg = String(err?.message || '').toLowerCase();
+      if (code.includes('permission_denied') || msg.includes('permission denied')) {
+        throw new Error('Session access was denied.');
+      }
       console.warn('[CloudSync] initial state fetch failed:', err);
     }
 
@@ -2115,6 +2115,13 @@
       applyRemoteState(data);
     }, (err) => {
       console.error('[CloudSync] realtime subscription error:', err);
+      const code = String(err?.code || '').toLowerCase();
+      const msg = String(err?.message || '').toLowerCase();
+      if (code.includes('permission_denied') || msg.includes('permission denied')) {
+        resetToDisconnectedState();
+        setStatus('Cloud: access revoked for this session');
+        return;
+      }
       setStatus('Cloud: realtime error');
     });
   }
@@ -2127,7 +2134,8 @@
     try {
       result = await callFunction('createGameSession', payload);
     } catch (err) {
-      throw new Error('createGameSession function failed. Deploy Cloud Functions first.');
+      const msg = String(err?.message || err || '').trim();
+      throw new Error(msg || 'createGameSession failed.');
     }
 
     if (!result?.gameId || !result?.editCode || !result?.viewCode) {
@@ -2448,7 +2456,13 @@
 
     updateUiForSession();
     state.needsPostJoinAlignment = true;
-    await subscribeRealtime(state.session.gameId);
+    try {
+      await subscribeRealtime(state.session.gameId);
+    } catch (err) {
+      console.error('[CloudSync] restore session failed:', err);
+      resetToDisconnectedState();
+      setStatus('Cloud: saved session is no longer accessible');
+    }
   }
 
   function focusScorecardAfterUrlJoin() {

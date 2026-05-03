@@ -4,14 +4,16 @@
     ".write": false,
     "games": {
       "$gameId": {
-        ".read": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() != null",
         "state": {
+          ".read": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() != null",
           ".write": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() === 'editor'"
         },
         "meta": {
+          ".read": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() != null",
           ".write": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() === 'editor'"
         },
         "snapshots": {
+          ".read": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() != null",
           "$snapshotId": {
             ".write": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() === 'editor'"
           }
@@ -23,7 +25,7 @@
           }
         },
         "codes": {
-          ".read": false,
+          ".read": "auth != null && root.child('games/' + $gameId + '/members/' + auth.uid + '/role').val() === 'editor'",
           ".write": false
         }
       }
