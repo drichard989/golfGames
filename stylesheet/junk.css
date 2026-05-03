@@ -454,3 +454,46 @@ body.junk-sheet-open { overflow: hidden; }
    END JUNK BOTTOM SHEET
    ============================================================================ */
 
+/* ============================================================================
+   JUNK TEAM AUTO-ASSIGN SUMMARY
+   ============================================================================ */
+
+.junk-team-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.junk-team-row-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: calc(var(--text-sm) + var(--font-descriptive-adjust));
+  flex-wrap: wrap;
+}
+
+.junk-team-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.junk-team-hcp {
+  color: var(--muted);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
+.junk-team-stroke-info {
+  font-size: calc(var(--text-sm) + var(--font-descriptive-adjust));
+  color: var(--accent);
+  font-weight: 600;
+  margin-top: 2px;
+}
+

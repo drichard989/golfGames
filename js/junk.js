@@ -849,62 +849,54 @@
 
   function toggleJunkTeamControls() {
     const teamsWrap = document.getElementById('junkTeamsWrap');
-    if (!teamsWrap) return;
-    teamsWrap.hidden = !isJunkTeamsMode();
+    if (teamsWrap) teamsWrap.hidden = !isJunkTeamsMode();
+
+    // Hide the info button (and close the panel) when not in teams mode
+    if (!isJunkTeamsMode()) {
+      const infoBtn = document.getElementById('junkTeamInfoBtn');
+      const infoPanel = document.getElementById('junkTeamInfoPanel');
+      if (infoBtn) { infoBtn.hidden = true; infoBtn.setAttribute('aria-expanded', 'false'); }
+      if (infoPanel) infoPanel.hidden = true;
+    }
   }
 
   function renderJunkTeamControls() {
-    const box = document.getElementById('junkTeams');
-    if (!box) return;
+    const infoContent = document.getElementById('junkTeamInfoContent');
+    const infoBtn = document.getElementById('junkTeamInfoBtn');
+    if (!infoContent) return;
 
     const names = getPlayerNames();
     const playerCount = getPlayerCount();
-    const previousAssignments = getJunkTeamAssignments();
-    box.innerHTML = '';
 
-    for (let i = 0; i < playerCount; i++) {
-      const row = document.createElement('div');
-      row.className = 'vegas-team-row';
+    // Auto-assign teams by handicap and persist
+    const assignments = buildDefaultJunkTeamAssignments(playerCount);
+    persistedTeamAssignments = { team1: assignments.team1.slice(), team2: assignments.team2.slice() };
 
-      const label = document.createElement('div');
-      label.className = 'vegas-team-name';
-      label.textContent = names[i] || `Player ${i + 1}`;
+    const rawCHs = getRawCHs().slice(0, playerCount);
+    const effectiveCHs = buildTeamHandicapCHs(assignments);
+    const strokeReceiver = effectiveCHs.findIndex(ch => ch > 0);
+    const strokesGiven = strokeReceiver >= 0 ? effectiveCHs[strokeReceiver] : 0;
 
-      const choices = document.createElement('div');
-      choices.className = 'vegas-team-choice-group';
+    const teamNames = (members) => members.map(i => names[i] || `Player ${i + 1}`).join(' + ');
+    const t1Sum = assignments.team1.reduce((s, i) => s + (rawCHs[i] || 0), 0);
+    const t2Sum = assignments.team2.reduce((s, i) => s + (rawCHs[i] || 0), 0);
 
-      const t1Wrap = document.createElement('label');
-      t1Wrap.className = 'vegas-choice-btn vegas-choice-radio';
-      const t1 = document.createElement('input');
-      t1.type = 'radio';
-      t1.name = `junkTeam_${i}`;
-      t1.value = '1';
-      t1.addEventListener('change', () => {
-        updateJunk();
-        if (typeof window.saveDebounced === 'function') window.saveDebounced();
-      });
-      t1Wrap.appendChild(t1);
-      t1Wrap.appendChild(document.createTextNode('Team 1'));
-
-      const t2Wrap = document.createElement('label');
-      t2Wrap.className = 'vegas-choice-btn vegas-choice-radio';
-      const t2 = document.createElement('input');
-      t2.type = 'radio';
-      t2.name = `junkTeam_${i}`;
-      t2.value = '2';
-      t2.addEventListener('change', () => {
-        updateJunk();
-        if (typeof window.saveDebounced === 'function') window.saveDebounced();
-      });
-      t2Wrap.appendChild(t2);
-      t2Wrap.appendChild(document.createTextNode('Team 2'));
-
-      choices.append(t1Wrap, t2Wrap);
-      row.append(label, choices);
-      box.appendChild(row);
+    let strokeLine = '';
+    if (strokeReceiver >= 0 && strokesGiven > 0) {
+      const receiverName = names[strokeReceiver] || `Player ${strokeReceiver + 1}`;
+      strokeLine = `<div class="junk-team-stroke-info">&#127953; ${receiverName} receives ${strokesGiven} stroke${strokesGiven !== 1 ? 's' : ''}</div>`;
     }
 
-    setJunkTeamAssignments(previousAssignments);
+    infoContent.innerHTML = `
+      <div class="junk-team-summary">
+        <div class="junk-team-row-display"><span class="junk-team-badge">Team 1</span> ${teamNames(assignments.team1)} <span class="junk-team-hcp">(CH: ${t1Sum})</span></div>
+        <div class="junk-team-row-display"><span class="junk-team-badge">Team 2</span> ${teamNames(assignments.team2)} <span class="junk-team-hcp">(CH: ${t2Sum})</span></div>
+        ${strokeLine}
+      </div>`;
+
+    // Show the info button only in teams mode
+    if (infoBtn) infoBtn.hidden = false;
+
     toggleJunkTeamControls();
   }
 
