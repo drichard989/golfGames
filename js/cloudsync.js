@@ -494,11 +494,11 @@
       const editBtn = document.createElement('button');
       editBtn.type = 'button';
       editBtn.className = 'btn';
-      editBtn.textContent = 'Scorekeeping QR';
+      editBtn.textContent = 'Scorekeeping code';
       editBtn.style.cssText = 'flex:1 1 120px;';
       editBtn.disabled = !canShareScorekeepingQr;
       if (!canShareScorekeepingQr) {
-        editBtn.title = 'Scorekeeping QR is only available for editor sessions';
+        editBtn.title = 'Scorekeeping code is only available for editor sessions';
       }
 
       const cancelBtn = document.createElement('button');
@@ -1648,8 +1648,8 @@
     setStatus('Cloud: preparing edit QR...');
     const editCode = await ensureShareSessionWithEditCode();
     const url = buildEditShareUrl(editCode);
-    openQrModalFromText(url, 'Real-Time Scorekeeping QR', 'Scan to open the real-time scorecard with edit access.', 'edit');
-    setStatus(`Cloud: real-time scorekeeping QR ready • Game ${state.session?.gameId || ''}`)
+    openQrModalFromText(url, 'Real-Time Scorekeeping code', 'Scan to open the real-time scorecard with edit access.', 'edit');
+    setStatus(`Cloud: real-time scorekeeping code ready • Game ${state.session?.gameId || ''}`)
   }
 
   function updateUiForSession() {

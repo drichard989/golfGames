@@ -409,7 +409,7 @@
       const scores = Array.from({ length: playerCount }, (_, p) =>
         getJunkSkinsScoreForHole(p, h, config, cache)
       );
-      const filled = scores.map((n, p) => ({ n, p })).filter((x) => Number.isFinite(x.n) && x.n > 0);
+      const filled = scores.map((n, p) => ({ n, p })).filter((x) => Number.isFinite(x.n));
 
       if (filled.length < 2) {
         if (config.carry) pot += 1;
@@ -422,8 +422,10 @@
       if (teamMode) {
         const winningTeams = new Set(winners.map((p) => teamByPlayer.get(p) || 1));
         if (winningTeams.size === 1) {
-          const representative = winners.slice().sort((a, b) => a - b)[0];
-          awards[h - 1][representative] = pot;
+          const splitPot = pot / winners.length;
+          winners.forEach((winnerIdx) => {
+            awards[h - 1][winnerIdx] = splitPot;
+          });
           pot = 1;
           continue;
         }
@@ -1016,7 +1018,7 @@
     });
     const par = getPar(h);
     
-    if(score > 0 && par > 0) {
+    if(Number.isFinite(score) && Number.isFinite(par)) {
       const diff = score - par;
       
       // Only show results that earn junk points
@@ -1035,7 +1037,12 @@
         let label = ach.label;
         if (achId === 'skin') {
           const skinCount = Number(cb.dataset.count || 0);
-          label = skinCount > 1 ? `${ach.label} x${skinCount}` : ach.label;
+          if (skinCount !== 1) {
+            const displayCount = Number.isInteger(skinCount)
+              ? String(skinCount)
+              : String(Math.round(skinCount * 100) / 100);
+            label = `${ach.label} x${displayCount}`;
+          }
         }
         const iconHtml = ach.imageUrl 
           ? `<img src="${ach.imageUrl}" alt="${ach.label}" style="height:1em;width:1em;object-fit:contain;"/>` 
@@ -1273,32 +1280,45 @@
     }
 
     tbody.querySelectorAll('input.junk-ach').forEach((checkbox) => {
-      if (checkbox.checked) {
-        checkbox.checked = false;
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+      checkbox.checked = false;
+      if (checkbox.dataset.key === 'skin') {
+        checkbox.dataset.count = '0';
       }
     });
-    
+
+    tbody.querySelectorAll('.junk-cell').forEach((td) => {
+      ACH.forEach((achievement) => {
+        td.dataset[achievement.id] = '';
+      });
+      td.dataset.skinCount = '';
+    });
+
     persistedAchievementState.forEach(({player, hole, key, count}) => {
       const checkbox = document.querySelector(
         `#junkTable input.junk-ach[data-player="${player}"][data-hole="${hole}"][data-key="${key}"]`
       );
-      if(checkbox) {
-        if (key === 'skin') {
-          checkbox.dataset.count = String(Number(count) || 1);
-          const td = document.getElementById(`junk_h${Number(hole)}_p${Number(player)+1}`);
-          if (td) {
-            td.dataset.skin = '1';
-            td.dataset.skinCount = checkbox.dataset.count;
-          }
-          checkbox.checked = true;
-        } else if (!checkbox.checked) {
-          checkbox.checked = true;
-          // Trigger change event to update labels and totals
-          checkbox.dispatchEvent(new Event('change', { bubbles: true }));
-        }
+      if (!checkbox) return;
+
+      checkbox.checked = true;
+      const td = document.getElementById(`junk_h${Number(hole)}_p${Number(player)+1}`);
+      if (!td) return;
+
+      if (key === 'skin') {
+        const skinCount = String(Number(count) || 1);
+        checkbox.dataset.count = skinCount;
+        td.dataset.skin = '1';
+        td.dataset.skinCount = skinCount;
+        return;
       }
+
+      td.dataset[key] = '1';
     });
+
+    for (let hole = 1; hole <= HOLES; hole++) {
+      for (let player = 0; player < players; player++) {
+        updateAchievementLabels(player, hole);
+      }
+    }
 
     updateJunkTotalsWeighted();
   }
@@ -1311,13 +1331,26 @@
 
     // Find all achievement checkboxes in the Junk table
     const checkboxes = document.querySelectorAll('#junkTable input[type="checkbox"]');
-    checkboxes.forEach(checkbox => {
-      if(checkbox.checked) {
-        checkbox.checked = false;
-        // Trigger change event to update the cell
-        checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+    checkboxes.forEach((checkbox) => {
+      checkbox.checked = false;
+      if (checkbox.dataset.key === 'skin') {
+        checkbox.dataset.count = '0';
       }
     });
+
+    const cells = document.querySelectorAll('#junkBody .junk-cell');
+    cells.forEach((td) => {
+      ACH.forEach((achievement) => {
+        td.dataset[achievement.id] = '';
+      });
+      td.dataset.skinCount = '';
+    });
+
+    for (let hole = 1; hole <= HOLES; hole++) {
+      for (let player = 0; player < getPlayerCount(); player++) {
+        updateAchievementLabels(player, hole);
+      }
+    }
     
     // Update the table to recalculate totals
     if (document.getElementById('junkBody')) {

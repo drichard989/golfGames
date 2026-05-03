@@ -918,7 +918,7 @@
     const compact = window.matchMedia?.('(max-width: 600px)')?.matches;
     const labels = [
       { id: 'cloudQrBadgeBtn', full: 'Share QR', compact: 'QR' },
-      { id: 'cloudEditCodeBadgeBtn', full: 'Scorekeeping QR', compact: 'Score QR' },
+      { id: 'cloudEditCodeBadgeBtn', full: 'Scorekeeping code', compact: 'Score code' },
       { id: 'cloudViewCodeBadgeBtn', full: 'View code', compact: 'View' }
     ];
 
@@ -7713,7 +7713,7 @@
 
         const editBtn = document.createElement('button');
         editBtn.className = 'btn';
-        editBtn.textContent = 'Scorekeeping QR';
+        editBtn.textContent = 'Scorekeeping code';
         editBtn.style.cssText = 'flex: 1 1 120px; background: var(--warn); color: #111;';
 
         const cancelBtn = document.createElement('button');
