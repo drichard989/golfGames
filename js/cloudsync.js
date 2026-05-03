@@ -843,11 +843,61 @@
     return String(code || '').trim().replace(/\s+/g, '').toUpperCase();
   }
 
+  function parseCodeFromUrlLikeText(rawText) {
+    const text = String(rawText || '').trim();
+    if (!text) return '';
+
+    try {
+      const url = new URL(text, window.location.origin);
+
+      const direct = normalizeCode(
+        url.searchParams.get('view')
+        || url.searchParams.get('code')
+        || url.searchParams.get('join')
+        || ''
+      );
+      if (direct) return direct;
+
+      const hash = String(url.hash || '').replace(/^#/, '');
+      if (hash) {
+        const hashQuery = hash.includes('?') ? hash.slice(hash.indexOf('?')) : (hash.startsWith('&') ? `?${hash.slice(1)}` : `?${hash}`);
+        const hashParams = new URLSearchParams(hashQuery);
+        const fromHash = normalizeCode(
+          hashParams.get('view')
+          || hashParams.get('code')
+          || hashParams.get('join')
+          || ''
+        );
+        if (fromHash) return fromHash;
+      }
+    } catch {
+      // Fall through to regex parsing for partial URL/query strings.
+    }
+
+    const match = text.match(/[?#&](?:view|code|join)=([^&#\s]+)/i);
+    if (match?.[1]) {
+      try {
+        return normalizeCode(decodeURIComponent(match[1]));
+      } catch {
+        return normalizeCode(match[1]);
+      }
+    }
+
+    return '';
+  }
+
   function getCodeFromUrl() {
     try {
-      const url = new URL(window.location.href);
-      const direct = url.searchParams.get('view') || url.searchParams.get('code') || '';
-      return normalizeCode(direct);
+      const fromHref = parseCodeFromUrlLikeText(window.location.href);
+      if (fromHref) return fromHref;
+
+      const fromSearch = parseCodeFromUrlLikeText(window.location.search || '');
+      if (fromSearch) return fromSearch;
+
+      const fromHash = parseCodeFromUrlLikeText(window.location.hash || '');
+      if (fromHash) return fromHash;
+
+      return '';
     } catch {
       return '';
     }
@@ -856,12 +906,68 @@
   function clearCodeFromUrl() {
     try {
       const url = new URL(window.location.href);
-      if (!url.searchParams.has('view') && !url.searchParams.has('code')) return;
+      const hash = String(url.hash || '').replace(/^#/, '');
+      const hashQuery = hash ? (hash.includes('?') ? hash.slice(hash.indexOf('?')) : `?${hash}`) : '';
+      const hashParams = new URLSearchParams(hashQuery || '');
+
+      const hasQueryCode = url.searchParams.has('view') || url.searchParams.has('code') || url.searchParams.has('join');
+      const hasHashCode = hashParams.has('view') || hashParams.has('code') || hashParams.has('join');
+
+      if (!hasQueryCode && !hasHashCode) return;
+
       url.searchParams.delete('view');
       url.searchParams.delete('code');
+      url.searchParams.delete('join');
+
+      if (hasHashCode) {
+        hashParams.delete('view');
+        hashParams.delete('code');
+        hashParams.delete('join');
+        const keptHash = Array.from(hashParams.entries())
+          .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+          .join('&');
+        url.hash = keptHash ? `#${keptHash}` : '';
+      }
+
       const next = `${url.pathname}${url.search}${url.hash}`;
       window.history.replaceState({}, '', next);
     } catch {}
+  }
+
+  function isRetryableAutoJoinError(err) {
+    const msg = String(err?.message || err || '').toLowerCase();
+    if (!msg) return true;
+
+    const definitelyFinal = [
+      'code not found',
+      'expired',
+      'enter a valid code',
+      'invalid redeemgamecode response',
+      'scanned qr does not contain a valid join code'
+    ];
+    if (definitelyFinal.some((token) => msg.includes(token))) {
+      return false;
+    }
+
+    const retryable = [
+      'starting',
+      'timed out',
+      'not signed in',
+      'token unavailable',
+      'network',
+      'temporarily',
+      'unavailable',
+      'internal',
+      'deadline',
+      'app check',
+      'join failed'
+    ];
+    return retryable.some((token) => msg.includes(token));
+  }
+
+  function sleep(ms) {
+    const delayMs = Math.max(0, Number(ms) || 0);
+    return new Promise((resolve) => setTimeout(resolve, delayMs));
   }
 
   function buildViewShareUrl(viewCode) {
@@ -2427,27 +2533,45 @@
     }, 1300);
   }
 
-  async function joinSessionFromUrlIfPresent() {
-    const code = getCodeFromUrl();
+  async function joinSessionFromUrlIfPresent(urlCode = '') {
+    const code = normalizeCode(urlCode || getCodeFromUrl());
     if (!code) return false;
 
+    const retryDelays = [0, 900, 1800];
+    let lastErr = null;
+
+    for (let attempt = 0; attempt < retryDelays.length; attempt++) {
+      if (retryDelays[attempt] > 0) {
+        updateJoinProgressOverlay(`Retrying connection (${attempt + 1}/${retryDelays.length})...`);
+        await sleep(retryDelays[attempt]);
+      }
+
+      try {
+        updateJoinProgressOverlay('Checking access code...');
+        await joinSessionWithCode(code, { showSuccessToast: false });
+        clearCodeFromUrl();
+        focusScorecardAfterUrlJoin();
+        setStatus(`Cloud: joined from shared link (${state.session?.role || 'viewer'})`);
+        completeJoinProgressOverlay(state.session?.role);
+        return true;
+      } catch (err) {
+        lastErr = err;
+        console.error('[CloudSync] Failed to join session from URL code:', err);
+        if (!isRetryableAutoJoinError(err)) {
+          break;
+        }
+      }
+    }
+
     try {
-      updateJoinProgressOverlay('Checking access code...');
-      await joinSessionWithCode(code, { showSuccessToast: false });
-      clearCodeFromUrl();
-      focusScorecardAfterUrlJoin();
-      setStatus(`Cloud: joined from shared link (${state.session?.role || 'viewer'})`);
-      completeJoinProgressOverlay(state.session?.role);
-      return true;
-    } catch (err) {
-      console.error('[CloudSync] Failed to join session from URL code:', err);
       // Pre-fill the join input so the user can retry manually
       const joinInput = EL.joinCode();
       if (joinInput) joinInput.value = code;
-      setStatus(`Cloud: couldn't auto-join (${err.message}). Tap Join to retry.`);
-      failJoinProgressOverlay(err?.message || 'Unable to connect to the live game.');
-      return false;
-    }
+      setStatus(`Cloud: couldn't auto-join (${lastErr?.message || 'connection issue'}). Tap Join to retry.`);
+      failJoinProgressOverlay(lastErr?.message || 'Unable to connect to the live game.');
+    } catch {}
+
+    return false;
   }
 
   async function init() {
@@ -2463,7 +2587,13 @@
       showJoinProgressOverlay('Connecting to cloud services...');
     }
 
-    const ok = await initFirebase();
+    let ok = await initFirebase();
+    if (!ok && urlJoinCode) {
+      // First-load browsers (especially on mobile) can briefly race cloud SDK
+      // readiness; one delayed retry avoids requiring a manual Join tap.
+      await sleep(900);
+      ok = await initFirebase();
+    }
     if (!ok) {
       resetToDisconnectedState();
       if (urlJoinCode) {
@@ -2478,7 +2608,7 @@
       return;
     }
 
-    const joinedFromUrl = await joinSessionFromUrlIfPresent();
+    const joinedFromUrl = await joinSessionFromUrlIfPresent(urlJoinCode);
     if (!joinedFromUrl) {
       if (!urlJoinCode) {
         clearJoinProgressOverlay();

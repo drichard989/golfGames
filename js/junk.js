@@ -49,8 +49,11 @@
   let junkCoreListenersBound = false;
   let junkAchievementListenersBound = false;
   let persistedAchievementState = [];
+  let persistedTeamAssignments = null;
   let junkInitialized = false;
   let lastBuiltPlayerCount = 0;
+  const JUNK_SCORING_TYPE_INDIVIDUAL = 'individual';
+  const JUNK_SCORING_TYPE_TEAMS = 'teams';
   
   // Access game constants with fallbacks
   const getJunkConstants = () => {
@@ -175,6 +178,135 @@
     return { useNet, netHcpMode };
   }
 
+  function setJunkScoringTypeBtnState(activeId) {
+    const buttons = document.querySelectorAll('#junkScoringTypeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('junkScoringTypeIndividual');
+      if (fallback) {
+        fallback.dataset.active = 'true';
+        fallback.setAttribute('aria-checked', 'true');
+      }
+    }
+  }
+
+  function getJunkScoringType() {
+    const activeBtn = document.querySelector('#junkScoringTypeGroup .hcp-mode-btn[data-active="true"]');
+    const mode = activeBtn?.dataset.value || JUNK_SCORING_TYPE_INDIVIDUAL;
+    return mode === JUNK_SCORING_TYPE_TEAMS ? JUNK_SCORING_TYPE_TEAMS : JUNK_SCORING_TYPE_INDIVIDUAL;
+  }
+
+  function isJunkTeamsMode() {
+    return getJunkScoringType() === JUNK_SCORING_TYPE_TEAMS;
+  }
+
+  function buildDefaultJunkTeamAssignments(playerCount = getPlayerCount()) {
+    const team1 = [];
+    const team2 = [];
+    const splitIndex = Math.max(1, Math.ceil(playerCount / 2));
+    for (let i = 0; i < playerCount; i++) {
+      if (i < splitIndex) team1.push(i);
+      else team2.push(i);
+    }
+    return { team1, team2 };
+  }
+
+  function normalizeJunkTeamAssignments(assignments, playerCount = getPlayerCount()) {
+    const team1Set = new Set(Array.isArray(assignments?.team1) ? assignments.team1 : []);
+    const team2Set = new Set(Array.isArray(assignments?.team2) ? assignments.team2 : []);
+    const team1 = [];
+    const team2 = [];
+
+    for (let i = 0; i < playerCount; i++) {
+      if (team1Set.has(i)) {
+        team1.push(i);
+      } else if (team2Set.has(i)) {
+        team2.push(i);
+      }
+    }
+
+    if (!team1.length && !team2.length) {
+      return buildDefaultJunkTeamAssignments(playerCount);
+    }
+
+    for (let i = 0; i < playerCount; i++) {
+      if (!team1.includes(i) && !team2.includes(i)) {
+        if (team1.length <= team2.length) team1.push(i);
+        else team2.push(i);
+      }
+    }
+
+    return { team1, team2 };
+  }
+
+  function getJunkTeamAssignments() {
+    const playerCount = getPlayerCount();
+    const team1 = [];
+    const team2 = [];
+    let hasRenderedControls = false;
+
+    for (let i = 0; i < playerCount; i++) {
+      const team1Radio = document.querySelector(`input[name="junkTeam_${i}"][value="1"]`);
+      const team2Radio = document.querySelector(`input[name="junkTeam_${i}"][value="2"]`);
+      if (team1Radio || team2Radio) {
+        hasRenderedControls = true;
+        if (team1Radio?.checked) team1.push(i);
+        else team2.push(i);
+      }
+    }
+
+    const source = hasRenderedControls
+      ? { team1, team2 }
+      : (persistedTeamAssignments || { team1: [], team2: [] });
+    const normalized = normalizeJunkTeamAssignments(source, playerCount);
+    persistedTeamAssignments = {
+      team1: normalized.team1.slice(),
+      team2: normalized.team2.slice()
+    };
+    return normalized;
+  }
+
+  function setJunkTeamAssignments(assignments) {
+    const playerCount = getPlayerCount();
+    const normalized = normalizeJunkTeamAssignments(assignments, playerCount);
+    persistedTeamAssignments = {
+      team1: normalized.team1.slice(),
+      team2: normalized.team2.slice()
+    };
+
+    let hasRenderedControls = false;
+    for (let i = 0; i < playerCount; i++) {
+      const team1Radio = document.querySelector(`input[name="junkTeam_${i}"][value="1"]`);
+      const team2Radio = document.querySelector(`input[name="junkTeam_${i}"][value="2"]`);
+      if (!team1Radio || !team2Radio) continue;
+      hasRenderedControls = true;
+      team1Radio.checked = normalized.team1.includes(i);
+      team2Radio.checked = !team1Radio.checked;
+    }
+    if (!hasRenderedControls) {
+      return normalized;
+    }
+    return normalized;
+  }
+
+  function applyJunkScoringType(mode) {
+    const nextMode = mode === JUNK_SCORING_TYPE_TEAMS ? JUNK_SCORING_TYPE_TEAMS : JUNK_SCORING_TYPE_INDIVIDUAL;
+    const activeId = nextMode === JUNK_SCORING_TYPE_TEAMS ? 'junkScoringTypeTeams' : 'junkScoringTypeIndividual';
+    setJunkScoringTypeBtnState(activeId);
+    toggleJunkTeamControls();
+    if (nextMode === JUNK_SCORING_TYPE_TEAMS) {
+      renderJunkTeamControls();
+    }
+    updateJunk();
+  }
+
   function getJunkSkinsDotsConfig() {
     const baseConfig = getJunkScoringConfig();
     const useNet = baseConfig.useNet;
@@ -258,6 +390,13 @@
     const playerCount = getPlayerCount();
     const awards = Array.from({ length: HOLES }, () => Array(playerCount).fill(0));
     let pot = 1;
+    const teamMode = isJunkTeamsMode();
+    const teamAssignments = teamMode ? getJunkTeamAssignments() : null;
+    const teamByPlayer = new Map();
+    if (teamMode && teamAssignments) {
+      teamAssignments.team1.forEach((idx) => teamByPlayer.set(idx, 1));
+      teamAssignments.team2.forEach((idx) => teamByPlayer.set(idx, 2));
+    }
 
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
@@ -279,6 +418,20 @@
 
       const min = Math.min(...filled.map((x) => x.n));
       const winners = filled.filter((x) => x.n === min).map((x) => x.p);
+
+      if (teamMode) {
+        const winningTeams = new Set(winners.map((p) => teamByPlayer.get(p) || 1));
+        if (winningTeams.size === 1) {
+          const representative = winners.slice().sort((a, b) => a - b)[0];
+          awards[h - 1][representative] = pot;
+          pot = 1;
+          continue;
+        }
+
+        if (config.carry) pot += 1;
+        continue;
+      }
+
       if (winners.length !== 1) {
         if (config.carry) pot += 1;
         continue;
@@ -470,11 +623,59 @@
       return;
     }
 
-    // Build sorted standings with net vs field average
+    const teamAssignments = getJunkTeamAssignments();
+    const teamByPlayer = new Map();
+    teamAssignments.team1.forEach((idx) => teamByPlayer.set(idx, 1));
+    teamAssignments.team2.forEach((idx) => teamByPlayer.set(idx, 2));
+
+    // Build sorted standings with net vs field average (individual mode)
     const validTotals = totals.slice(0, playerCount).map((t, i) => ({
       name: names[i] || `P${i + 1}`,
+      playerIndex: i,
+      team: teamByPlayer.get(i) || 1,
       dots: Number.isFinite(t) ? t : 0
     }));
+
+    if (isJunkTeamsMode()) {
+      const sortedPlayers = validTotals.slice().sort((a, b) => b.dots - a.dots);
+      const teamTotals = [0, 0];
+      validTotals.forEach((p) => {
+        const teamIdx = Math.max(1, Math.min(2, Number(p.team) || 1));
+        teamTotals[teamIdx - 1] += p.dots;
+      });
+
+      const individualRows = sortedPlayers.map((p) => {
+        const teamIdx = Math.max(1, Math.min(2, Number(p.team) || 1));
+        const teamDots = teamTotals[teamIdx - 1] || 0;
+        return `
+        <tr class="live-results-data-row">
+          <td class="live-results-label">${p.name}</td>
+          <td>${p.dots}</td>
+          <td>Team ${teamIdx} (${teamDots})</td>
+        </tr>`;
+      }).join('');
+
+      const html = `
+        <table class="live-results-table junk-standings-table" aria-label="Current Junk Individual Dots">
+          <tbody>
+            <tr class="live-results-title-row"><th colspan="3">Individual Dots</th></tr>
+            <tr class="live-results-data-row">
+              <td class="live-results-label">Player</td>
+              <td class="live-results-label">Dots</td>
+              <td class="live-results-label">Team</td>
+            </tr>
+            ${individualRows}
+          </tbody>
+        </table>
+      `;
+
+      containers.forEach(c => {
+        if (c.dataset.renderCache === html) return;
+        c.innerHTML = html;
+        c.dataset.renderCache = html;
+      });
+      return;
+    }
 
     const avg = validTotals.reduce((s, p) => s + p.dots, 0) / playerCount;
     const sorted = validTotals
@@ -552,6 +753,67 @@
       const data = Junk.compute();
       Junk.render(data);
     }
+  }
+
+  function toggleJunkTeamControls() {
+    const teamsWrap = document.getElementById('junkTeamsWrap');
+    if (!teamsWrap) return;
+    teamsWrap.hidden = !isJunkTeamsMode();
+  }
+
+  function renderJunkTeamControls() {
+    const box = document.getElementById('junkTeams');
+    if (!box) return;
+
+    const names = getPlayerNames();
+    const playerCount = getPlayerCount();
+    const previousAssignments = getJunkTeamAssignments();
+    box.innerHTML = '';
+
+    for (let i = 0; i < playerCount; i++) {
+      const row = document.createElement('div');
+      row.className = 'vegas-team-row';
+
+      const label = document.createElement('div');
+      label.className = 'vegas-team-name';
+      label.textContent = names[i] || `Player ${i + 1}`;
+
+      const choices = document.createElement('div');
+      choices.className = 'vegas-team-choice-group';
+
+      const t1Wrap = document.createElement('label');
+      t1Wrap.className = 'vegas-choice-btn vegas-choice-radio';
+      const t1 = document.createElement('input');
+      t1.type = 'radio';
+      t1.name = `junkTeam_${i}`;
+      t1.value = '1';
+      t1.addEventListener('change', () => {
+        updateJunk();
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
+      });
+      t1Wrap.appendChild(t1);
+      t1Wrap.appendChild(document.createTextNode('Team 1'));
+
+      const t2Wrap = document.createElement('label');
+      t2Wrap.className = 'vegas-choice-btn vegas-choice-radio';
+      const t2 = document.createElement('input');
+      t2.type = 'radio';
+      t2.name = `junkTeam_${i}`;
+      t2.value = '2';
+      t2.addEventListener('change', () => {
+        updateJunk();
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
+      });
+      t2Wrap.appendChild(t2);
+      t2Wrap.appendChild(document.createTextNode('Team 2'));
+
+      choices.append(t1Wrap, t2Wrap);
+      row.append(label, choices);
+      box.appendChild(row);
+    }
+
+    setJunkTeamAssignments(previousAssignments);
+    toggleJunkTeamControls();
   }
 
   function updateJunk(){
@@ -893,6 +1155,7 @@
     if(junkSection && junkSection.classList.contains('open')){
       ensureJunkTableBuilt(true);
       refreshJunkHeaderNames();
+      renderJunkTeamControls();
       updateJunk();
       setTimeout(() => initJunkAchievements(), 0);
     }
@@ -906,6 +1169,8 @@
     const didRebuild = ensureJunkTableBuilt();
     
     refreshJunkHeaderNames();
+    renderJunkTeamControls();
+    toggleJunkTeamControls();
     updateJunk();
     syncJunkNetModeVisibility();
 
@@ -939,6 +1204,13 @@
       });
       document.getElementById('junkSkinsBuyIn')?.addEventListener('input', () => {
         updateJunk();
+        if (typeof window.saveDebounced === 'function') window.saveDebounced();
+      });
+
+      document.getElementById('junkScoringTypeGroup')?.addEventListener('click', (e) => {
+        const btn = e.target.closest('.hcp-mode-btn');
+        if (!btn) return;
+        applyJunkScoringType(btn.dataset.value);
         if (typeof window.saveDebounced === 'function') window.saveDebounced();
       });
     }
@@ -1089,7 +1361,11 @@
     render: Junk.render,
     clearAllAchievements: clearAllAchievements,
     getAchievementState: getAchievementState,
-    setAchievementState: setAchievementState
+    setAchievementState: setAchievementState,
+    getTeamAssignments: getJunkTeamAssignments,
+    setTeamAssignments: setJunkTeamAssignments,
+    getScoringType: getJunkScoringType,
+    setScoringType: applyJunkScoringType
   };
 
 })();

@@ -3871,6 +3871,19 @@
               const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
               return activeBtn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
             })(),
+            scoringType: (() => {
+              if (typeof window.Junk?.getScoringType === 'function') {
+                return window.Junk.getScoringType();
+              }
+              const activeBtn = document.querySelector('#junkScoringTypeGroup .hcp-mode-btn[data-active="true"]');
+              return activeBtn?.dataset.value === 'teams' ? 'teams' : 'individual';
+            })(),
+            teams: (() => {
+              if (typeof window.Junk?.getTeamAssignments === 'function') {
+                return window.Junk.getTeamAssignments();
+              }
+              return existingState?.junk?.teams ?? null;
+            })(),
             achievements: (() => {
               if (typeof window.Junk?.getAchievementState === 'function') {
                 return window.Junk.getAchievementState();
@@ -4015,6 +4028,8 @@
             ?? rawState.junk?.useNet
             ?? ((games.junk?.mode ?? rawState.junk?.mode) === 'net'),
           netHcpMode: games.junk?.netHcpMode ?? rawState.junk?.netHcpMode ?? 'playOffLow',
+          scoringType: games.junk?.scoringType ?? rawState.junk?.scoringType ?? 'individual',
+          teams: games.junk?.teams ?? rawState.junk?.teams ?? null,
           achievements: games.junk?.achievements ?? rawState.junk?.achievements,
           skinsDots: games.junk?.skinsDots ?? rawState.junk?.skinsDots ?? {
             mode: 'gross',
@@ -4192,6 +4207,19 @@
           netHcpMode: (() => {
             const activeBtn = document.querySelector('#junkHcpModeGroup .hcp-mode-btn[data-active="true"]');
             return activeBtn?.dataset.value === 'rawHandicap' ? 'rawHandicap' : 'playOffLow';
+          })(),
+          scoringType: (() => {
+            if (typeof window.Junk?.getScoringType === 'function') {
+              return window.Junk.getScoringType();
+            }
+            const activeBtn = document.querySelector('#junkScoringTypeGroup .hcp-mode-btn[data-active="true"]');
+            return activeBtn?.dataset.value === 'teams' ? 'teams' : 'individual';
+          })(),
+          teams: (() => {
+            if (typeof window.Junk?.getTeamAssignments === 'function') {
+              return window.Junk.getTeamAssignments();
+            }
+            return existingState?.junk?.teams ?? null;
           })(),
           open: $(ids.junkSection)?.classList.contains("open"),
           achievements: (() => {
@@ -4644,6 +4672,20 @@
         if (junkSkinsHalfEl) junkSkinsHalfEl.checked = s.junk?.skinsDots?.half ?? false;
         const junkSkinsBuyInEl = document.getElementById('junkSkinsBuyIn');
         if (junkSkinsBuyInEl) junkSkinsBuyInEl.value = String(s.junk?.skinsDots?.buyIn ?? 1);
+        const junkScoringType = s.junk?.scoringType === 'teams' ? 'teams' : 'individual';
+        const junkScoringTypeBtnId = junkScoringType === 'teams'
+          ? 'junkScoringTypeTeams'
+          : 'junkScoringTypeIndividual';
+        setJunkScoringTypeBtnState(junkScoringTypeBtnId);
+        setTimeout(() => {
+          if (typeof window.Junk?.setScoringType === 'function') {
+            window.Junk.setScoringType(junkScoringType);
+          }
+          if (typeof window.Junk?.setTeamAssignments === 'function' && s.junk?.teams) {
+            window.Junk.setTeamAssignments(s.junk.teams);
+            window.Junk.update?.();
+          }
+        }, 150);
         // Restore achievements even if section is closed
         if(s.junk?.achievements) {
           setTimeout(() => {
@@ -4824,12 +4866,15 @@
 
       const resetJunk = () => {
         setJunkModeBtnState('junkHcpModeGross');
+        setJunkScoringTypeBtnState('junkScoringTypeIndividual');
         const junkSkinsCarry = document.getElementById('junkSkinsCarry');
         const junkSkinsHalf = document.getElementById('junkSkinsHalf');
         const junkSkinsBuyIn = document.getElementById('junkSkinsBuyIn');
         if (junkSkinsCarry) junkSkinsCarry.checked = true;
         if (junkSkinsHalf) junkSkinsHalf.checked = false;
         if (junkSkinsBuyIn) junkSkinsBuyIn.value = '1';
+        window.Junk?.setScoringType?.('individual');
+        window.Junk?.setTeamAssignments?.(null);
         window.Junk?.clearAllAchievements?.();
       };
 
@@ -4999,6 +5044,29 @@
     if (halfEl) {
       halfEl.disabled = !isNet;
       if (!isNet) halfEl.checked = false;
+    }
+  }
+
+  /**
+   * Set active button in the Junk result mode button group.
+   * @param {string} activeId - Target button id
+   */
+  function setJunkScoringTypeBtnState(activeId) {
+    const buttons = document.querySelectorAll('#junkScoringTypeGroup .hcp-mode-btn');
+    if (!buttons.length) return;
+    let matched = false;
+    buttons.forEach((btn) => {
+      const isActive = btn.id === activeId;
+      if (isActive) matched = true;
+      btn.dataset.active = isActive ? 'true' : 'false';
+      btn.setAttribute('aria-checked', isActive ? 'true' : 'false');
+    });
+    if (!matched) {
+      const fallback = document.getElementById('junkScoringTypeIndividual');
+      if (fallback) {
+        fallback.dataset.active = 'true';
+        fallback.setAttribute('aria-checked', 'true');
+      }
     }
   }
 
