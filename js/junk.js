@@ -1101,10 +1101,19 @@
     
     // Add score relative to par (only if earning junk points)
     const config = getJunkScoringConfig();
+    let achCHs = null;
+    if (isJunkTeamsMode()) {
+      const teamAssignments = getJunkTeamAssignments();
+      achCHs = buildTeamHandicapCHs(teamAssignments);
+    }
     const score = getJunkScoreForHole(p, h, config, {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
-      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : []
+      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap'
+        ? (achCHs ? (() => { const m = Math.min(...achCHs); return achCHs.map(c => c - m); })() : getAdjustedCHs())
+        : [],
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap'
+        ? (achCHs || getRawCHs())
+        : []
     });
     const par = getPar(h);
     
@@ -1176,10 +1185,19 @@
 
     const config = getJunkScoringConfig();
     const scoreMatrix = getScoreMatrix(players, HOLES);
+    let updateEffCHs = null;
+    if (isJunkTeamsMode()) {
+      const teamAssignments = getJunkTeamAssignments();
+      updateEffCHs = buildTeamHandicapCHs(teamAssignments);
+    }
     const cache = {
       HCPMEN: window.HCPMEN || Array(18).fill(1),
-      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap' ? getAdjustedCHs() : [],
-      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap' ? getRawCHs() : [],
+      adjustedCHs: config.useNet && config.netHcpMode !== 'rawHandicap'
+        ? (updateEffCHs ? (() => { const m = Math.min(...updateEffCHs); return updateEffCHs.map(c => c - m); })() : getAdjustedCHs())
+        : [],
+      rawCHs: config.useNet && config.netHcpMode === 'rawHandicap'
+        ? (updateEffCHs || getRawCHs())
+        : [],
       scores: scoreMatrix
     };
 
