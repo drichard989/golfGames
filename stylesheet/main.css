@@ -1724,9 +1724,9 @@ td {
 @media (max-width: 1024px) {
   #scorecard th:nth-child(2),
   #scorecard td:nth-child(2) {
-    min-width: 47px;
-    max-width: 47px;
-    width: 47px;
+    min-width: 52px;
+    max-width: 52px;
+    width: 52px;
   }
 
   .scorecard-ch-header-desktop {
