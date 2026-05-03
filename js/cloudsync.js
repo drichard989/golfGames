@@ -92,6 +92,7 @@
     'strokeIndicatorSymbols',
     'strokeIndicatorBoth'
   ]);
+  const VIEWER_ALLOWED_CLICK_SELECTORS = '.results-collapse-bar';
 
   const VIEWER_BLOCK_CONTAINERS = '#main-scorecard, #vegasSection, #bankerSection, #skinsSection, #junkSection, #hiloSection, #wolfSection';
 
@@ -617,6 +618,7 @@
 
       // Never disable buttons that viewers are explicitly allowed to click
       if (el instanceof HTMLButtonElement && el.id && VIEWER_ALLOWED_CLICK_IDS.has(el.id)) return;
+      if (el instanceof HTMLButtonElement && el.matches(VIEWER_ALLOWED_CLICK_SELECTORS)) return;
 
       if (enabled) {
         if (el.dataset.cloudPrevDisabled === undefined) {
@@ -685,6 +687,11 @@
     if (eventType === 'click' || eventType === 'pointerdown' || eventType === 'mousedown' || eventType === 'touchstart') {
       const allowedBtn = target.closest('button[id], [role="button"][id]');
       if (allowedBtn instanceof HTMLElement && VIEWER_ALLOWED_CLICK_IDS.has(allowedBtn.id)) {
+        return false;
+      }
+
+      const allowedByClass = target.closest(VIEWER_ALLOWED_CLICK_SELECTORS);
+      if (allowedByClass instanceof HTMLElement) {
         return false;
       }
     }
