@@ -8,7 +8,7 @@
    BASE SCORING:
    • Eagle or better: 4 dots
    • Birdie: 2 dots
-   • Par: 1 dot
+   • Par: 0 dots (can still win skins)
    • Bogey or worse: 0 dots
    
    SCORING OPTIONS:
@@ -480,8 +480,7 @@
     const diff = score - par;
     if(diff <= -2) return POINTS.EAGLE; // eagle or better
     if(diff === -1) return POINTS.BIRDIE; // birdie
-    if(diff === 0)  return POINTS.PAR; // par
-    return POINTS.BOGEY; // bogey or worse
+    return POINTS.BOGEY; // par or worse earns no dots
   }
 
   // =============================================================================
