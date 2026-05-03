@@ -274,6 +274,9 @@
     currentHole = hole;
     focusPlayerIdx = player;
     loadDraftForHole(currentHole);
+    // Materialize fallback par defaults right away so cloud sync/state saves
+    // include untouched default values shown in the sheet UI.
+    commitCurrentHoleDraft();
     renderSheet();
     lastOpenedAt = Date.now();
 
