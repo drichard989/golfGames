@@ -925,9 +925,8 @@
     const createBtn = document.getElementById('cloudCreateBadgeBtn');
     if (createBtn) {
       const isLive = createBtn.getAttribute('data-live') === 'true';
-      const full = isLive ? 'Go offline' : 'Go live';
-      const short = isLive ? 'Offline' : 'Live';
-      createBtn.textContent = compact ? short : full;
+      const full = isLive ? 'Go Offline' : 'Go live';
+      createBtn.textContent = full;
     }
 
     labels.forEach(({ id, full, compact: short }) => {

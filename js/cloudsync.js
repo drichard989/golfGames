@@ -372,7 +372,7 @@
       const isLive = EL.status()?.getAttribute('data-live') === 'true';
       createBtn.hidden = false;
       createBtn.disabled = false;
-      createBtn.textContent = isLive ? 'Go offline' : 'Go live';
+      createBtn.textContent = isLive ? 'Go Offline' : 'Go live';
       createBtn.title = isLive ? 'Leave live session' : 'Create live session';
       createBtn.setAttribute('data-live', isLive ? 'true' : 'false');
     }
