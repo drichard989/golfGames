@@ -2940,7 +2940,8 @@
         header.appendChild(thPlayer);
 
         const thCh = document.createElement("th");
-        thCh.textContent = "CH";
+        thCh.className = "scorecard-ch-header";
+        thCh.innerHTML = '<span class="scorecard-ch-header-desktop">CH</span><span class="scorecard-ch-header-mobile">To Par</span>';
         header.appendChild(thCh);
 
         for(let h=1;h<=HOLES;h++){ 
@@ -2968,13 +2969,17 @@
         parLabel.className = "align-left";
         parLabel.innerHTML = "<strong>Par</strong>";
         parRow.appendChild(parLabel);
-        parRow.appendChild(document.createElement("td"));
+        const parChPlaceholder = document.createElement("td");
+        parChPlaceholder.className = 'scorecard-ch-col-placeholder';
+        parRow.appendChild(parChPlaceholder);
 
         const hcpLabel = document.createElement("td");
         hcpLabel.className = "align-left";
         hcpLabel.innerHTML = "<strong>HCP Index</strong>";
         hcpRow.appendChild(hcpLabel);
-        hcpRow.appendChild(document.createElement("td"));
+        const hcpChPlaceholder = document.createElement("td");
+        hcpChPlaceholder.className = 'scorecard-ch-col-placeholder';
+        hcpRow.appendChild(hcpChPlaceholder);
 
         for(let h=1;h<=HOLES;h++){
           const tdp=document.createElement("td"), ip=document.createElement("input"); 
@@ -3059,11 +3064,18 @@
           
           nameCellContainer.appendChild(deleteBtn);
           nameCellContainer.appendChild(nameInput);
+
+          const handicapChip = document.createElement('span');
+          handicapChip.className = 'scorecard-mobile-handicap-chip';
+          handicapChip.textContent = '0';
+          nameCellContainer.appendChild(handicapChip);
+
           nameTd.appendChild(nameCellContainer); 
           tr.appendChild(nameTd);
 
           // Course Handicap input
           const chTd=document.createElement("td");
+          chTd.className = 'scorecard-ch-col';
           
           const chInput=document.createElement("input"); 
           chInput.type="text"; 
@@ -3098,6 +3110,12 @@
             syncHandicapInput(chInput, { normalizeDisplay: true });
           });
           chTd.appendChild(chInput); 
+
+          const toParMobile = document.createElement('span');
+          toParMobile.className = 'scorecard-mobile-to-par';
+          toParMobile.textContent = '—';
+          chTd.appendChild(toParMobile);
+
           tr.appendChild(chTd);
 
           // Score inputs for each hole
@@ -3186,7 +3204,9 @@
         label.className = "subtle align-left";
         label.textContent = "Totals";
         totalsRow.appendChild(label);
-        totalsRow.appendChild(document.createElement("td"));
+        const totalsChPlaceholder = document.createElement("td");
+        totalsChPlaceholder.className = 'scorecard-ch-col-placeholder';
+        totalsRow.appendChild(totalsChPlaceholder);
         for(let h=1;h<=HOLES;h++){
           const td=document.createElement("td"); 
           td.className="subtle"; 
@@ -3456,12 +3476,17 @@
         const totalEl = $(".total",rowEl);
         if(totalEl) totalEl.replaceChildren(document.createTextNode(total||"—"));
 
-        const parTotal = sum(PARS);
-        const delta = (total && parTotal) ? total - parTotal : 0;
+        const enteredHoleIndexes = s
+          .map((score, idx) => (score > 0 ? idx : -1))
+          .filter((idx) => idx >= 0);
+        const enteredScoreTotal = enteredHoleIndexes.reduce((acc, idx) => acc + (s[idx] || 0), 0);
+        const enteredParTotal = enteredHoleIndexes.reduce((acc, idx) => acc + (PARS[idx] || 0), 0);
+        const hasEnteredScores = enteredHoleIndexes.length > 0;
+        const delta = hasEnteredScores ? enteredScoreTotal - enteredParTotal : 0;
         const el = $(".to-par", rowEl);
         
         if(el) {
-          if(!total){ 
+          if(!hasEnteredScores){ 
             el.textContent = "—"; 
             el.dataset.sign = ""; 
           } else { 
@@ -3469,6 +3494,25 @@
             el.dataset.sign = sign; 
             el.textContent = (delta > 0 ? "+" : "") + delta; 
           }
+        }
+
+        const toParMobileEl = rowEl.querySelector('.scorecard-mobile-to-par');
+        if (toParMobileEl) {
+          if (!hasEnteredScores) {
+            toParMobileEl.textContent = '—';
+            toParMobileEl.dataset.sign = '';
+          } else {
+            const sign = delta === 0 ? '0' : delta > 0 ? '+' : '-';
+            toParMobileEl.dataset.sign = sign;
+            toParMobileEl.textContent = (delta > 0 ? '+' : '') + delta;
+          }
+        }
+
+        const handicapChip = rowEl.querySelector('.scorecard-mobile-handicap-chip');
+        if (handicapChip) {
+          const chInput = rowEl.querySelector('.ch-input');
+          const handicapValue = formatDisplayedHandicap(getActualHandicapValue(chInput)) || '0';
+          handicapChip.textContent = handicapValue;
         }
 
         // Calculate net score with NDB (Net Double Bogey) cap and apply stroke highlighting
@@ -6304,11 +6348,18 @@
     
     nameCellContainer.appendChild(deleteBtn);
     nameCellContainer.appendChild(nameInput);
+
+    const handicapChip = document.createElement('span');
+    handicapChip.className = 'scorecard-mobile-handicap-chip';
+    handicapChip.textContent = '0';
+    nameCellContainer.appendChild(handicapChip);
+
     nameTd.appendChild(nameCellContainer);
     tr.appendChild(nameTd);
     
     // Course Handicap input
     const chTd = document.createElement("td");
+    chTd.className = 'scorecard-ch-col';
     const chInput = document.createElement("input");
     chInput.type = "text";
     chInput.inputMode = "text";
@@ -6334,6 +6385,12 @@
       syncHandicapInput(chInput, { normalizeDisplay: true });
     });
     chTd.appendChild(chInput);
+
+    const toParMobile = document.createElement('span');
+    toParMobile.className = 'scorecard-mobile-to-par';
+    toParMobile.textContent = '—';
+    chTd.appendChild(toParMobile);
+
     tr.appendChild(chTd);
     
     // Score inputs for each hole
