@@ -189,25 +189,29 @@
   function buildTeamHandicapCHs(teamAssignments) {
     const rawCHs = getRawCHs();
     const { team1, team2 } = teamAssignments;
+    const playerCount = rawCHs.length;
 
     const sumCH = (members) => members.reduce((s, idx) => s + (rawCHs[idx] || 0), 0);
     const t1Total = sumCH(team1);
     const t2Total = sumCH(team2);
 
-    if (t1Total === t2Total) return rawCHs.slice(); // no adjustment needed
+    // All players start at 0 — only the stroke receiver gets strokes.
+    // This ensures ONLY that one player benefits; everyone else plays at gross.
+    const result = Array(playerCount).fill(0);
+
+    if (t1Total === t2Total) return result;
 
     const higherTeam = t1Total > t2Total ? team1 : team2;
     const netStrokes = Math.abs(t1Total - t2Total);
 
-    // Find the highest-handicap player on the higher team
+    // The highest-handicap player on the higher team receives the strokes
     let strokeReceiver = higherTeam[0];
     higherTeam.forEach((idx) => {
       if ((rawCHs[idx] || 0) > (rawCHs[strokeReceiver] || 0)) strokeReceiver = idx;
     });
 
-    const adjusted = rawCHs.slice();
-    adjusted[strokeReceiver] = (rawCHs[strokeReceiver] || 0) + netStrokes;
-    return adjusted;
+    result[strokeReceiver] = netStrokes;
+    return result;
   }
 
   function getJunkScoringConfig() {
